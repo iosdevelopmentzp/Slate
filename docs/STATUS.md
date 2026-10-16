@@ -1,36 +1,49 @@
 # Status
 
-Last updated: 2026-10-16
+Last updated: 2026-10-17
 
 ## Stage
 
-M0 to M7 built and merged into `main` (commit `aad80a0`). The owner tried the app and asked for a simpler, softer first version: **Phase 2, milestones S1 to S4 of `docs/ROADMAP.md`** (ADR 0007 scope, ADR 0008 rich text editor, `UX.md` revision 2). Next: S1.
+Phase 2 on branch `phase2-simple-v1`. **S1 Simplify is done.** Next: S2 Folders and the soft look. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
 
-The Screens table below describes the M7 state and is the inventory for S1: everything not in `SPEC.md` section 0.9 leaves the UI.
+## Removed in S1 (ADR 0007)
+
+The Presentation code below was deleted. Domain and Data code and tests stay. To bring a feature back, start from commit `545e0d6`.
+
+| Feature | Removed from Presentation |
+|---|---|
+| Note kinds, New menu, Insert Template | `Shell/NewNoteMenu.swift`, kind menu of the quick note field, kind icons on rows and results |
+| Tasks, tickets, branches, status, `⌘⇧T`, `⌘⇧D` | `EditorStore+Tasks.swift`, `NoteChip`, `NoteChipsMapper`, `NoteStatusText`, `TaskGroupText`, task groups in the list, status dots and badges |
+| Ticket details | `Features/Issues/IssueStore.swift` |
+| Today, daily notes, `⌥⌘T`, `⌘[`, `⌘]`, `⌥Enter` | `Features/Daily/DailyStore.swift`, the Today hotkey, the daily section of Settings |
+| Tags and `#` completion | tag rows in the sidebar, tag chips, `SearchStore.tags`, `showTag` |
+| Saved searches and Open TODOs | `Features/Todos/`, saved rows in the sidebar and the folder menu, `ListSource.todos`, `showSaved` |
+| Palette `⌘K`, `⌘⇧M` move picker | `Features/Palette/`, the recent and often lists of `Navigator` |
+| Actions, export, Copy for Slack, Copy as Markdown | `EditorStore+Export.swift`, `Views/NoteMenu.swift`, `Shared/ActionRunner.swift` |
+| Float on Top, note windows, `⌘⇧N` note window | `Features/Floating/`, `Shell/NoteWindowController.swift`, `EnvironmentValues+OpenNoteWindow.swift` |
+| Outline | `Views/OutlineView.swift` |
+| Links and History pages of Settings | `LinkSettingsView.swift`, `HistorySettingsView.swift`, `SettingsStore.saveTracker` |
+| Footer history, push state, Activity button | parts of `FooterView.swift`; Activity is in Settings → General → Check-up |
+| Archive in the row menu | `NoteListStore.archiveNote` |
+| Link patterns in the editor | `EditorConfiguration.linkPatterns` is empty; pasted URLs stay as they are |
+| First-launch files | `_templates/`, `.slate/types/`, `views.json`, `actions/` and the five extra folders are no longer written |
 
 ## Screens
 
 | Screen | State | Notes |
 |---|---|---|
-| First launch | real | "Where should Slate keep your notes?", the default path, Choose…, Start. A folder that cannot be prepared shows the reason under the path |
-| Panel | real | Header: folder menu (All notes, folders, Trash, Sort by), search (`⌘F`), New (`⌘N`; the menu offers Note, Task, Snippet, Meeting, Today and Insert Template), Open as window (`⌘⇧O`), Settings (`⌘,`). Footer: note count and "saved just now". The status item: left click toggles the panel, right click shows New Note, New Task, Quick Note, Today, Open Window, Settings, Quit |
-| Window | real | The panel plus a sidebar: Folders with counts, New folder (+), Tags with counts (click searches `tag:`), Trash. Right click on a folder: Rename, Icon, Move up, Move down. `⌘0` hides the sidebar. No Saved searches yet (C9, M6) |
-| Capture field | real | `⌃⌥Space` from any app: a 520 pt field 20 % down the screen, folder and kind menus, hints. Enter saves, `⌘Enter` saves and opens the note in the panel, `⌥Enter` adds a line to Today's Log, `⇧Enter` is a new line, Esc closes and keeps the draft, a click outside closes. The panel is non-activating (`PLAYBOOK.md` section 2). A text starting with a ticket key becomes a task. No pasted images in the field yet |
-| Tasks | real | A folder whose default kind is Task groups its list into Active, To do and Done (Done is folded). The editor chips: the ticket opens the tracker (or copies when no tracker is set), the branch copies, the merge request opens, the status is a menu. `⌘⇧D` marks the task done. A new task takes the ticket from its title and gets the branch `feature/<ticket>-<slug>` |
-| Daily | real | `⌥⌘T` from any app, Today in the New menu and in the status menu: `Daily/YYYY-MM-DD.md` from the daily template, with the open checkboxes of the latest earlier daily note under "Carried over". `⌘[` and `⌘]` go to the day before and after |
-| Note list | real | Rows: status dot, kind icon for non-plain notes, title, relative date, pin, preview, badges (ticket, subfolder, images and files, open checkboxes). Hover and right click: Pin, Move to, Duplicate, Archive, Move to Trash (inline confirmation, toast with Undo). Badges come from the in-memory index |
-| Trash | real | Lists trashed notes with their folder and age; Restore and Delete now on hover and right click (Delete now asks inline and moves the file to the macOS Trash). "Notes are removed from the Trash after 30 days." The purge runs at launch and once a day with the days from Settings |
-| Editor | real | Title field, chips, autosave, the "Changed on disk" banner (M1). Markdown styling with visible marks, code blocks with highlighting and a Copy button, checkboxes, list editing, images under their line, paste rules with the "Paste as code" bar, screenshots, `⌘`-click links (M2). `[[` completes note names, `#` completes tags; a link to a missing note makes that note; tag chips under the title search the tag (M3). Outline popover (headings, click jumps), find and replace in the note (`⌘F` with the text focused, `⌥⌘F`), move line (`⌥↑`/`⌥↓`), duplicate line (`⌘D`), comment in code (`⌘/`), backtick pairs and closing fences on Enter, the ticket's title, status and person under the chips when a token is set (M7). "Changed on disk" offers Keep mine, Take theirs and Open both; unsaved text is kept in a journal every second and offered with Restore and Discard when the note opens again (M5). No link titles (P1), no hover preview of a link target |
-| History | real | A clock button next to the title lists the versions of the note (git snapshots outside the notes folder) with Restore. The footer says "history 09:50", "pushed" or "push failed" (opens Activity) |
-| Activity | real | The footer button opens a list of what went wrong (and a few successes) with Clear and Copy |
-| Note windows | real | "Float on Top" (note menu, File menu) opens the note in a small panel that stays above other apps; "Open in New Window" (`⌘⇧N` in the window) opens it in a normal window. Each has its own editor; `⌘W` closes; checkbox clicks work. Editors on the same note reload after the other one saves |
-| Main menu | real | While the window is open Slate shows a menu bar (and a Dock icon) with every shortcut of `SPEC.md` section 10: Slate, File, Edit, Format, Note, Go, View, Window. Editor items reach the text through the responder chain and are off when the text has no focus |
-| Palette | real | `⌘K`: one field over the panel or the window. Empty: recent and often opened notes and the main commands. Typing: notes (titles at once, text from the index, filters work) and commands (new notes, Today, Open TODOs, folders, saved searches, templates, actions, export, versions, Rebuild search, Settings). Arrows, Enter, `⌘Enter` opens in the window, `⌘C` copies the note path, Esc closes |
-| Open TODOs | real | A list of every open checkbox, grouped by note or by ticket. A click on the box checks it in its file and the open editor reloads. Double click opens the note. In the folder menu, the sidebar and the palette |
-| Saved searches | real | From `.slate/views.json` (written on first launch with the five defaults of `STORAGE-FORMAT.md` 7.3): in the sidebar, the folder menu and the palette; a click runs the search over all notes |
-| Extension points | real | `slate://new`, `open`, `append`, `capture`, `search` (cold start too). The `slate` CLI: `new`, `open`, `append`, `today`, `search`, `list`, `path`, `version`, with `--vault` and `--json`. Services → Add to Slate makes a note from the selected text. Actions from `.slate/actions/*.json` (three examples written on first launch) in the note menu and the palette, with the output in Activity, the clipboard or the note. The note menu (`…`): Copy as Markdown, Copy for Slack, Save as HTML, Save as PDF (both into Downloads, then shown in Finder) |
-| Search | real | The header field searches titles, text, tags and tickets in the current folder ("Search all notes" widens it) with the filters of `SPEC.md` 6.1. Title matches show at once; the index answers within 80 ms plus the query. Rows show the snippet with the words in bold; Enter or a click opens the note with the caret on the first match. Esc clears. No palette yet (A7, M6) |
-| Settings | real | One window with General (Open at login, the quick note folder, text size, appearance, Trash days, daily notes on or off, carry-over, daily template, Doctor with the notes count, the last version, the remote, the three shortcuts and Rebuild search), Notes folder (Choose another folder…), Shortcuts (three recorders), Links (tracker and git host addresses, ticket pattern, labels, email and API token for ticket details with Test; Save writes `.slate/links.json`; the token goes to the Keychain), History (versions on or off, interval, remote, push on quit, Save a version now) |
+| First launch | real | "Where should Slate keep your notes?", the default path, Choose…, Start. A new folder gets `Notes/` with the welcome note, `_attachments/` and `.slate/spaces.json` only |
+| Panel | real (S1) | Header: folder menu (All notes, folders, Trash, Sort by), search (`⌘F`), New note button (`⌘N`), Open as window (`⌘⇧O`), Settings (`⌘,`). Footer: note count, "saved just now", Quit. The status item: left click toggles the panel, right click shows New Note, Quick Note, Open Window, Settings, Quit. S2 brings the three columns |
+| Window | real (S1) | The panel plus a sidebar: All notes, Folders with counts, New folder (+), Trash. Right click on a folder: Rename, Icon, Move up, Move down. `⌘0` hides the sidebar |
+| Quick note field | real (S1) | `⌃⌥Space` from any app: a 520 pt field, the folder menu, Enter saves, `⌘Enter` saves and opens, `⇧Enter` new line, Esc closes and keeps the draft |
+| Note list | real (S1) | Rows: title, relative date, pin, two-line preview. Hover and right click: Pin, Move to, Duplicate, Move to Trash (inline confirmation, toast with Undo) |
+| Trash | real | Trashed notes with their folder and age; Restore and Delete now; "Notes are removed from the Trash after 30 days." |
+| Editor | real (S1) | Title field and the versions button (clock). The M2 Markdown editor with visible marks until S3: code blocks, checkboxes, images under their line, paste rules, screenshots, `[[` completion. Autosave, journal with Restore and Discard, the "Changed on disk" banner with Keep mine, Take theirs and Open both |
+| Versions | real | The clock button lists the versions of the note with Restore. Snapshots run quietly with the stored settings |
+| Search | real | Titles and text in the current folder, "Search all notes" widens it. Rows show the matched text with the words in bold and the folder name. No filters are offered |
+| Settings | real (S1) | Two pages. General: notes folder with Choose another folder…, Open at login, quick note folder, text size, appearance, Trash days, Check-up (checks, Check again, Activity, Rebuild search). Shortcuts: Open Slate, Quick note, New note |
+| Main menu | real (S1) | While the window is open: Slate, File (New Note, Quick Note), Edit, Format (M2 editor commands), Note (Pin, Move to Trash), Go (previous and next note and folder, All Notes, folders `⌘1`…`⌘9`), View (sidebar), Window |
+| Extension points | real, no UI | `slate://` and the `slate` CLI (`new`, `open`, `append`, `search`, and the parked `today`), Services → Add to Slate (a plain note in the quick note folder) |
 
 States: planned, placeholder, mock, real, partial (say what is missing).
 
@@ -113,15 +126,26 @@ Numbered. What, then why. A later session must not undo these without a new numb
 16. The look follows `UX.md` revision 2: rounded cards and pills, no divider lines, tinted folder icons, a format bar, friendly empty states.
 17. First launch creates one folder, `Notes`, and no templates, types, views, links or actions. Existing vaults keep working.
 
+63. S1 parked-word check: `git grep -n -i -E` for the ten words over `Sources/SlatePresentation`, word-like. The hits that stay are Swift and AppKit names, not features: `Task {…}`, `.task(id:)`, `refreshTask` and the other `*Task` properties, and `NSImage.isTemplate`.
+64. `SpacesConfig.defaults` is one folder, `Notes` (`folder.fill`); the capture and archive fallback is `Notes`. The six folders of M1 are `SpacesConfig.sixFolders`, used by the test spies so the parked use cases keep their tests.
+65. `slate://open` goes through `OpenTargetUseCase` (Domain): id, title, and ticket. A ticket without a note still makes a task note, because the CLI contract (`slate open --ticket`) stays (ADR 0007, kept but quiet). Presentation only shows the outcome.
+66. The quick note field and Services always save a plain note (`type: note`); a leading ticket key no longer makes a task.
+67. The New note global shortcut has no default keys: `UX.md` section 8 lists only two global keys, and a third default could take a key from another app.
+68. Activity lives in Settings → General → Check-up as a button with a popover. Toasts that point to it say "See Activity in Settings". S4 adds "Details" on error toasts.
+69. Search offers no filters. The parser still reads `tag:` and the others when typed by hand; nothing on screen mentions them.
+70. The search hit field `snippet` is now `excerpt` in Domain, Data and Presentation, so "snippet" only means the parked note kind.
+71. The footer stays until S2 (note count, save state, Quit, resize grip). The Format menu keeps the M2 editor commands without Code, Paste as Code and Toggle Comment until S3 replaces the editor.
+72. `VaultConfigRepository.ensureDefaults` writes only `spaces.json`. The writers for the example actions and the type files were removed from Data; they are in commit `545e0d6`.
+
 ## Next steps
 
-1. S1 Simplify (`docs/ROADMAP.md`, Phase 2).
-2. S2 Folders and the soft look.
-3. S3 Rich text editor.
-4. S4 Polish and the owner's pass.
+1. S2 Folders and the soft look.
+2. S3 Rich text editor.
+3. S4 Polish and the owner's pass.
 
 ## Known gaps
 
+- `FSEventsVaultWatcherIntegrationTests.externalEditArrivesAsAPathChange` failed once in a full run before S1 started (timing under load) and passes alone. Watch it.
 - The agent did not run the manual checks. A scripted click opens the panel but does not make Slate the active app, so scripted keystrokes go to the frontmost app (a few of them went to the Terminal during this session). The borderless panel also hides its content from the Accessibility API.
 - No shortcut for Move to Trash: `⌘⌫` would take the key from the editor text. No `⌘⇧M` move picker. Both are in the row menu.
 - No drag of a row onto a folder (C8 part). Moving works from the row menu.

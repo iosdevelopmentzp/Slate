@@ -100,15 +100,6 @@ import Testing
         #expect(harness.posted.contains(.noteCreated(created.id, caret: 0)))
     }
 
-    @Test func newTaskGoesToTasksAndShowsTasks() async throws {
-        store.show(.space(SpaceName(rawValue: "Inbox")))
-
-        await store.createNote(type: "task")
-
-        #expect(harness.spies.files.paths == [VaultPath(rawValue: "Tasks/Untitled.md")])
-        #expect(store.source == .space(SpaceName(rawValue: "Tasks")))
-    }
-
     @Test func pinWritesTheHeaderAndAnnouncesTheChange() async throws {
         let path = harness.seed("Inbox/A.md", id: "a")
         try await harness.index()
@@ -133,16 +124,6 @@ import Testing
         #expect(harness.spies.files.paths == [target])
         #expect(harness.posted.contains(.noteMoved(from: path, to: target)))
         #expect(harness.toaster.text == "Moved to Notes")
-    }
-
-    @Test func archiveMovesToTheArchiveSpace() async throws {
-        harness.seed("Inbox/A.md", id: "a")
-        try await harness.index()
-        await store.refresh()
-
-        await store.archiveNote(try #require(store.summaries.first))
-
-        #expect(harness.spies.files.paths == [VaultPath(rawValue: "Archive/A.md")])
     }
 
     @Test func duplicateSelectsTheCopy() async throws {

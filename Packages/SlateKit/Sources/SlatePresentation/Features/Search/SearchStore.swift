@@ -16,7 +16,6 @@ final class SearchStore {
     }
     private(set) var results: [SearchHit] = []
     private(set) var isSearching = false
-    private(set) var tags: [TagCount] = []
     private(set) var parsed = SearchQuery()
     private(set) var scope: SpaceName?
 
@@ -58,20 +57,6 @@ final class SearchStore {
         query = ""
     }
 
-    func showTag(_ tag: String) {
-        if navigator.source == .trash {
-            navigator.show(.all)
-        }
-        query = "tag:\(tag)"
-    }
-
-    func showSaved(_ view: SmartView) {
-        if navigator.source != .all {
-            navigator.show(.all)
-        }
-        query = view.query
-    }
-
     func searchAllNotes() {
         navigator.show(.all)
         run()
@@ -89,15 +74,6 @@ final class SearchStore {
     func openFirst() {
         guard let first = results.first else { return }
         open(first)
-    }
-
-    func refreshTags() async {
-        do {
-            let loaded = try await index.tags()
-            if loaded != tags { tags = loaded }
-        } catch {
-            activity.log("Cannot read the tags", detail: error.localizedDescription, outcome: .failure)
-        }
     }
 
     func waitForResults() async {
@@ -150,7 +126,7 @@ final class SearchStore {
             let title = summary.title.lowercased()
             return words.allSatisfy { title.contains($0) }
         }
-        let hits = matching.map { SearchHit(summary: $0, snippet: $0.preview, rank: 0) }
+        let hits = matching.map { SearchHit(summary: $0, excerpt: $0.preview, rank: 0) }
         return Array(SearchMatchPolicy.sorted(hits, words: query.words).prefix(Self.limit))
     }
 
@@ -158,10 +134,6 @@ final class SearchStore {
         switch event {
         case .indexUpdated, .noteSaved:
             if isActive { run() }
-            Task { [weak self] in
-                guard let self else { return }
-                await refreshTags()
-            }
         default:
             break
         }

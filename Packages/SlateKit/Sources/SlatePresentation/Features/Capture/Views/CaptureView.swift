@@ -8,7 +8,6 @@ struct CaptureView: View {
 
     let onSave: () -> Void
     let onOpen: () -> Void
-    let onToday: () -> Void
     let onCancel: () -> Void
 
     var body: some View {
@@ -23,18 +22,16 @@ struct CaptureView: View {
                         .padding(.vertical, 6)
                         .allowsHitTesting(false)
                 }
-                CaptureTextView(text: $capture.text, focusToken: capture.focusToken, onSave: onSave, onOpen: onOpen, onToday: onToday, onCancel: onCancel)
+                CaptureTextView(text: $capture.text, focusToken: capture.focusToken, onSave: onSave, onOpen: onOpen, onCancel: onCancel)
             }
             .frame(minHeight: 64, maxHeight: 120)
             .padding(.horizontal, 10)
             .padding(.top, 10)
             HStack(spacing: 8) {
                 spaceMenu
-                typeMenu
                 Spacer()
-                hint("⏎", "Save")
                 hint("⌘⏎", "Open")
-                hint("⌥⏎", "Today")
+                hint("⏎", "Save")
             }
             .font(.caption)
             .padding(.horizontal, 14)
@@ -47,8 +44,7 @@ struct CaptureView: View {
     }
 
     private var spaceName: String {
-        if capture.type == NoteType.task.name { return vault.type(named: NoteType.task.name)?.defaultSpace?.rawValue ?? "Tasks" }
-        return (capture.space ?? vault.config.captureSpace).rawValue
+        (capture.space ?? vault.config.captureSpace).rawValue
     }
 
     private var spaceMenu: some View {
@@ -63,23 +59,7 @@ struct CaptureView: View {
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
-        .disabled(capture.type == NoteType.task.name)
         .help("Folder for the note")
-    }
-
-    private var typeMenu: some View {
-        Menu {
-            ForEach(NewNoteMenu.kinds, id: \.self) { kind in
-                Button(vault.type(named: kind)?.title ?? kind.capitalized, systemImage: vault.type(named: kind)?.icon ?? "doc") {
-                    capture.typeOverride = kind
-                }
-            }
-        } label: {
-            Text(vault.type(named: capture.type)?.title ?? capture.type.capitalized)
-        }
-        .menuStyle(.borderlessButton)
-        .fixedSize()
-        .help("Kind of note")
     }
 
     private func hint(_ keys: String, _ title: String) -> some View {
@@ -91,14 +71,14 @@ struct CaptureView: View {
 }
 
 #Preview("Light") {
-    CaptureView(onSave: {}, onOpen: {}, onToday: {}, onCancel: {})
+    CaptureView(onSave: {}, onOpen: {}, onCancel: {})
         .previewEnvironment()
         .padding()
         .preferredColorScheme(.light)
 }
 
 #Preview("Dark") {
-    CaptureView(onSave: {}, onOpen: {}, onToday: {}, onCancel: {})
+    CaptureView(onSave: {}, onOpen: {}, onCancel: {})
         .previewEnvironment()
         .padding()
         .preferredColorScheme(.dark)

@@ -20,13 +20,14 @@ import Testing
     }
 
     @Test func withoutAFileTheDefaultOrderAppliesToExistingFolders() async throws {
-        try makeFolders(["Tasks", "Inbox", "Reading", "_attachments", ".slate"])
+        try makeFolders(["Work", "Notes", "Ideas", "_attachments", ".slate"])
 
         let config = try await repository.spaces()
 
-        #expect(config.spaces.map(\.folder.rawValue) == ["Inbox", "Tasks", "Reading"])
-        #expect(config.spaces.first?.icon == "tray")
+        #expect(config.spaces.map(\.folder.rawValue) == ["Notes", "Ideas", "Work"])
+        #expect(config.spaces.first?.icon == "folder.fill")
         #expect(config.spaces.last?.icon == "folder")
+        #expect(config.captureSpace == SpaceName(rawValue: "Notes"))
     }
 
     @Test func savedOrderAndIconsAreReadBackAndUnknownKeysSurvive() async throws {
@@ -64,27 +65,19 @@ import Testing
         #expect(types.last?.defaultSpace == SpaceName(rawValue: "Tasks"))
     }
 
-    @Test func ensureDefaultsWritesSpacesAndTypesOnce() async throws {
-        try makeFolders(["Inbox"])
+    @Test func ensureDefaultsWritesOnlyTheFolderList() async throws {
+        try makeFolders(["Notes"])
 
         try await repository.ensureDefaults()
 
         #expect(FileManager.default.fileExists(atPath: folder.path(".slate/spaces.json")))
-        #expect(FileManager.default.fileExists(atPath: folder.path(".slate/types/task.json")))
-        let task = try String(contentsOf: folder.url.appendingPathComponent(".slate/types/task.json"), encoding: .utf8)
-        #expect(task.contains(#""branchPattern" : "feature/{{ticket}}-{{slug}}""#))
+        let written = try FileManager.default.contentsOfDirectory(atPath: folder.path(".slate"))
+        #expect(written == ["spaces.json"])
     }
 
-    @Test func viewsAndExampleActionsAreWrittenOnce() async throws {
-        try makeFolders(["Inbox"])
-
-        try await repository.ensureDefaults()
-
+    @Test func withoutFilesViewsAndActionsAreTheBuiltInOnes() async throws {
         #expect(try await repository.views().map(\.id) == ["open-todos", "active-tasks", "this-week", "untagged", "conflicts"])
-        let actions = try await repository.actions()
-        #expect(actions.map(\.id) == ["copy-branch", "list-folder", "open-folder-in-terminal"])
-        #expect(actions.first?.condition == .hasBranch)
-        #expect(actions.first?.output == .clipboard)
+        #expect(try await repository.actions().isEmpty)
     }
 
     @Test func linkPatternsRoundTripAndKeepUnknownKeys() async throws {

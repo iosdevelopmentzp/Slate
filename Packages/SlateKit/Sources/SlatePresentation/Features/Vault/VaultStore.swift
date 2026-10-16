@@ -8,14 +8,8 @@ final class VaultStore {
     static let icons = ["folder", "tray", "checkmark.circle", "note.text", "calendar", "archivebox", "star", "book", "lightbulb", "hammer", "chevron.left.forwardslash.chevron.right", "person.2"]
 
     var config = SpacesConfig(spaces: [])
-    var types: [NoteType] = NoteType.builtIn
-    var linkPatterns: [LinkPattern] = []
-    var templateNames: [String] = []
-    var views: [SmartView] = SmartView.defaults
-    var actions: [ActionDefinition] = []
 
     @ObservationIgnored private let repository: any VaultConfigRepository
-    @ObservationIgnored private let templates: any TemplateRepository
     @ObservationIgnored private let createSpace: CreateSpaceUseCase
     @ObservationIgnored private let renameSpace: RenameSpaceUseCase
     @ObservationIgnored private let navigator: Navigator
@@ -26,7 +20,6 @@ final class VaultStore {
 
     init(
         config: any VaultConfigRepository,
-        templates: any TemplateRepository,
         createSpace: CreateSpaceUseCase,
         renameSpace: RenameSpaceUseCase,
         navigator: Navigator,
@@ -34,7 +27,6 @@ final class VaultStore {
         events: AppEvents
     ) {
         repository = config
-        self.templates = templates
         self.createSpace = createSpace
         self.renameSpace = renameSpace
         self.navigator = navigator
@@ -55,25 +47,11 @@ final class VaultStore {
             guard let self else { return }
             do {
                 let loaded = try await repository.spaces()
-                let loadedTypes = try await repository.types()
                 if loaded != config { config = loaded }
-                if loadedTypes != types { types = loadedTypes }
-                let patterns = (try? await repository.linkPatterns()) ?? []
-                if patterns != linkPatterns { linkPatterns = patterns }
-                let names = (try? await templates.names()) ?? []
-                if names != templateNames { templateNames = names }
-                let loadedViews = (try? await repository.views()) ?? SmartView.defaults
-                if loadedViews != views { views = loadedViews }
-                let loadedActions = (try? await repository.actions()) ?? []
-                if loadedActions != actions { actions = loadedActions }
             } catch {
                 activity.log("Cannot read the folders", detail: error.localizedDescription, outcome: .failure)
             }
         }
-    }
-
-    func type(named name: String) -> NoteType? {
-        types.first { $0.name == name }
     }
 
     @discardableResult

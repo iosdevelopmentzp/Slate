@@ -94,7 +94,6 @@ public final class AppContainer: NSObject, NSApplicationDelegate {
         }
         Task {
             try? await ports.config.ensureDefaults()
-            try? await ports.templates.ensureDefaults()
             assembly.start()
         }
     }

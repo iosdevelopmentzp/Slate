@@ -9,11 +9,11 @@ import Testing
         let store = InMemoryKeyValueStore()
         let first = Navigator(store: store)
 
-        first.show(.space(SpaceName(rawValue: "Tasks")))
+        first.show(.space(SpaceName(rawValue: "Ideas")))
         first.select(NoteID(rawValue: "c"))
         let second = Navigator(store: store)
 
-        #expect(second.source == .space(SpaceName(rawValue: "Tasks")))
+        #expect(second.source == .space(SpaceName(rawValue: "Ideas")))
         #expect(second.selectedNote == NoteID(rawValue: "c"))
     }
 

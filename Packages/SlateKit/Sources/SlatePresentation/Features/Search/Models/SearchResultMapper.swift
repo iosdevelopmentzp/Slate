@@ -3,26 +3,14 @@ import SlateDomain
 import SlateUI
 
 enum SearchResultMapper {
-    static func model(for hit: SearchHit, words: [String], type: NoteType?, now: Date) -> SearchResultRowModel {
+    static func model(for hit: SearchHit, words: [String], now: Date) -> SearchResultRowModel {
         let summary = hit.summary
-        var badges: [TagModel] = []
-        if let ticket = summary.ticket {
-            badges.append(TagModel(ticket, tint: .blue, systemImage: "ticket"))
-        }
-        if let status = summary.status {
-            badges.append(TagModel(NoteStatusText.title(status), tint: NoteStatusText.tint(status)))
-        }
-        if summary.openTodos > 0 {
-            badges.append(TagModel("\(summary.openTodos)", tint: .secondary, systemImage: "checklist", hint: CountText.count(summary.openTodos, "open checkbox", "open checkboxes")))
-        }
         return SearchResultRowModel(
             id: summary.id,
             title: highlighted(summary.title, words: words),
-            snippet: highlighted(hit.snippet, words: words),
+            excerpt: highlighted(hit.excerpt, words: words),
             folder: summary.space?.rawValue,
-            date: summary.updated.relativeDescription(to: now),
-            typeIcon: summary.type == NoteType.defaultName ? nil : type?.icon,
-            badges: badges
+            date: summary.updated.relativeDescription(to: now)
         )
     }
 

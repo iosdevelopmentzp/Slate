@@ -12,12 +12,8 @@ struct RootView: View {
     @Environment(\.surface) private var surface
     @Environment(\.openAsWindow) private var openAsWindow
     @Environment(\.openSettings) private var openSettings
-    @Environment(DailyStore.self) private var daily
-    @Environment(PaletteStore.self) private var palette
     @Environment(VaultStore.self) private var vault
     @Environment(SearchStore.self) private var search
-    @Environment(\.openNoteWindow) private var openNoteWindow
-
 
     var body: some View {
         VStack(spacing: 0) {
@@ -50,19 +46,6 @@ struct RootView: View {
             FooterView()
         }
         .background(shortcuts)
-        .overlay(alignment: .top) {
-            if palette.isOpen {
-                ZStack(alignment: .top) {
-                    Theme.scrim
-                        .contentShape(Rectangle())
-                        .onTapGesture { palette.close() }
-                    PaletteView()
-                        .padding(.top, 60)
-                }
-                .transition(.opacity)
-            }
-        }
-        .animation(.easeInOut(duration: 0.12), value: palette.isOpen)
         .overlay {
             if let hintCenter {
                 HintOverlay(center: hintCenter)
@@ -82,20 +65,11 @@ struct RootView: View {
     private var shortcuts: some View {
         ZStack {
             shortcut("n", modifiers: .command) { Task { await noteList.createNote() } }
-            shortcut("t", modifiers: [.command, .shift]) { Task { await noteList.createNote(type: NoteType.task.name) } }
             shortcut("p", modifiers: [.command, .shift]) {
                 guard let selected = noteList.selected else { return }
                 Task { await noteList.togglePin(selected) }
             }
-            shortcut("d", modifiers: [.command, .shift]) { Task { await editor.markDone() } }
-            shortcut("[", modifiers: .command) { Task { await daily.openDay(-1) } }
-            shortcut("]", modifiers: .command) { Task { await daily.openDay(1) } }
             shortcut(",", modifiers: .command) { openSettings() }
-            shortcut("k", modifiers: .command) { palette.isOpen ? palette.close() : palette.open() }
-            shortcut("m", modifiers: [.command, .shift]) {
-                guard noteList.selected != nil else { return }
-                palette.open(query: "move to ")
-            }
             shortcut("[", modifiers: [.command, .shift]) { noteList.show(ListSource.cycle(from: noteList.source, spaces: vault.spaces.map(\.folder), by: -1)) }
             shortcut("]", modifiers: [.command, .shift]) { noteList.show(ListSource.cycle(from: noteList.source, spaces: vault.spaces.map(\.folder), by: 1)) }
             shortcut(.upArrow, modifiers: [.command, .option]) { selectNeighbour(-1) }
@@ -115,12 +89,6 @@ struct RootView: View {
             }
             ForEach(Array(vault.spaces.prefix(9).enumerated()), id: \.element.id) { position, space in
                 shortcut(KeyEquivalent(Character("\(position + 1)")), modifiers: .command) { noteList.show(.space(space.folder)) }
-            }
-            if surface == .window {
-                shortcut("n", modifiers: [.command, .shift]) {
-                    guard let selected = navigator.selectedNote else { return }
-                    openNoteWindow(selected, false)
-                }
             }
             if surface == .panel {
                 shortcut("o", modifiers: [.command, .shift]) { openAsWindow() }

@@ -15,18 +15,6 @@ struct NoteRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                if let status = model.status {
-                    StatusDot(color: status.color)
-                        .hint(model.statusHint)
-                        .accessibilityLabel(model.statusHint ?? "")
-                }
-                if let typeIcon = model.typeIcon {
-                    Image(systemName: typeIcon)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .hint(model.typeTitle)
-                        .accessibilityLabel(model.typeTitle ?? "")
-                }
                 Text(model.title)
                     .font(.body.weight(.semibold))
                     .lineLimit(1)
@@ -50,9 +38,6 @@ struct NoteRow: View {
                     .lineLimit(2)
             }
             HStack(spacing: 4) {
-                ForEach(model.badges, id: \.self) { badge in
-                    ModelTag(model: badge)
-                }
                 Spacer(minLength: 0)
                 HoverActions(isVisible: isHovered || isSelected, count: 2, spacing: 2) {
                     IconButton(systemImage: model.isPinned ? "pin.slash" : "pin", help: model.isPinned ? "Unpin (⌘⇧P)" : "Pin to the top (⌘⇧P)", action: actions.pin)

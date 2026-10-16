@@ -108,7 +108,7 @@ struct GRDBSearchIndex: SearchIndex {
                 let rows = try Row.fetchAll(db, sql: sql, arguments: StatementArguments(filters.arguments + [limit.databaseValue]))
                 return rows.map { row in
                     let summary = Self.summary(row)
-                    return SearchHit(summary: summary, snippet: summary.preview, rank: 0)
+                    return SearchHit(summary: summary, excerpt: summary.preview, rank: 0)
                 }
             }
             let sql = """
@@ -119,7 +119,7 @@ struct GRDBSearchIndex: SearchIndex {
                 """
             let arguments: [DatabaseValue] = [match.databaseValue] + filters.arguments + [max(limit * 2, 100).databaseValue]
             return try Row.fetchAll(db, sql: sql, arguments: StatementArguments(arguments)).map { row in
-                SearchHit(summary: Self.summary(row), snippet: row["snippet"] ?? "", rank: row["rank"] ?? 0)
+                SearchHit(summary: Self.summary(row), excerpt: row["snippet"] ?? "", rank: row["rank"] ?? 0)
             }
         }
         return Array(SearchMatchPolicy.sorted(hits, words: query.words).prefix(limit))

@@ -6,9 +6,9 @@ struct ShortcutSettingsView: View {
     var body: some View {
         Form {
             Section {
-                KeyboardShortcuts.Recorder("Show or hide Slate", name: .togglePanel)
+                KeyboardShortcuts.Recorder("Open Slate", name: .togglePanel)
                 KeyboardShortcuts.Recorder("Quick note", name: .capture)
-                KeyboardShortcuts.Recorder("Today", name: .today)
+                KeyboardShortcuts.Recorder("New note", name: .newNote)
             } footer: {
                 Text("These shortcuts work in every app.")
                     .font(.caption)

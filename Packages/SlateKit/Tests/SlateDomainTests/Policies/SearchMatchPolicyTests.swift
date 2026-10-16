@@ -23,12 +23,12 @@ import Testing
         #expect(SearchMatchPolicy.matches(audio, SearchQuery(excludedTerms: ["x"])) == false)
     }
 
-    @Test func snippetCentresOnTheFirstMatch() {
+    @Test func excerptCentresOnTheFirstMatch() {
         let body = String(repeating: "lorem ", count: 30) + "retain cycle " + String(repeating: "ipsum ", count: 30)
 
-        let snippet = SearchMatchPolicy.snippet(of: body, words: ["retain"])
+        let excerpt = SearchMatchPolicy.excerpt(of: body, words: ["retain"])
 
-        #expect(snippet.hasPrefix("…"))
-        #expect(snippet.contains("retain cycle"))
+        #expect(excerpt.hasPrefix("…"))
+        #expect(excerpt.contains("retain cycle"))
     }
 }

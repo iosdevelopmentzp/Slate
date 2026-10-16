@@ -4,7 +4,6 @@ import SlateUI
 
 struct SearchResultsView: View {
     @Environment(SearchStore.self) private var search
-    @Environment(VaultStore.self) private var vault
     @Environment(Navigator.self) private var navigator
 
     var body: some View {
@@ -35,7 +34,7 @@ struct SearchResultsView: View {
                     LazyVStack(spacing: 0) {
                         ForEach(results) { hit in
                             SearchResultRow(
-                                model: SearchResultMapper.model(for: hit, words: search.words, type: vault.type(named: hit.summary.type), now: now),
+                                model: SearchResultMapper.model(for: hit, words: search.words, now: now),
                                 isSelected: hit.id == navigator.selectedNote
                             )
                             .onTapGesture { search.open(hit) }

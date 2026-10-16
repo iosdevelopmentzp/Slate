@@ -23,11 +23,11 @@ final class NoteListStore: NoteLookup {
     @ObservationIgnored private let create: CreateNoteUseCase
     @ObservationIgnored private let updateHeader: UpdateHeaderUseCase
     @ObservationIgnored private let move: MoveNoteUseCase
-    @ObservationIgnored private let archive: ArchiveNoteUseCase
     @ObservationIgnored private let duplicate: DuplicateNoteUseCase
     @ObservationIgnored private let trashNote: TrashNoteUseCase
     @ObservationIgnored private let restore: RestoreNoteUseCase
     @ObservationIgnored private let appendUseCase: AppendToNoteUseCase
+    @ObservationIgnored private let openTarget: OpenTargetUseCase
     @ObservationIgnored private let navigator: Navigator
     @ObservationIgnored private let toaster: Toaster
     @ObservationIgnored private let activity: ActivityLog
@@ -43,11 +43,11 @@ final class NoteListStore: NoteLookup {
         create: CreateNoteUseCase,
         updateHeader: UpdateHeaderUseCase,
         move: MoveNoteUseCase,
-        archive: ArchiveNoteUseCase,
         duplicate: DuplicateNoteUseCase,
         trashNote: TrashNoteUseCase,
         restore: RestoreNoteUseCase,
         append: AppendToNoteUseCase,
+        openTarget: OpenTargetUseCase,
         navigator: Navigator,
         toaster: Toaster,
         activity: ActivityLog,
@@ -59,11 +59,11 @@ final class NoteListStore: NoteLookup {
         self.create = create
         self.updateHeader = updateHeader
         self.move = move
-        self.archive = archive
         self.duplicate = duplicate
         self.trashNote = trashNote
         self.restore = restore
         appendUseCase = append
+        self.openTarget = openTarget
         self.navigator = navigator
         self.toaster = toaster
         self.activity = activity
@@ -85,7 +85,7 @@ final class NoteListStore: NoteLookup {
         switch source {
         case .all: inSource = summaries
         case .space(let space): inSource = summaries.filter { $0.space == space }
-        case .trash, .todos: inSource = []
+        case .trash: inSource = []
         }
         let query = filterText.trimmingCharacters(in: .whitespacesAndNewlines)
         let matching = query.isEmpty ? inSource : inSource.filter { $0.title.localizedCaseInsensitiveContains(query) }
@@ -143,10 +143,9 @@ final class NoteListStore: NoteLookup {
         navigator.select(id)
     }
 
-    func createNote(type: String? = nil) async {
-        let space = type == nil ? source.space : nil
+    func createNote() async {
         do {
-            let created = try await create.execute(NoteDraft(type: type, space: space))
+            let created = try await create.execute(NoteDraft(space: source.space))
             let id = created.document.id
             await refresh()
             if let space = created.document.path.space, source != .all, source != .space(space) {
@@ -156,7 +155,7 @@ final class NoteListStore: NoteLookup {
             navigator.select(id)
         } catch {
             activity.log("Cannot create the note", detail: error.localizedDescription, outcome: .failure)
-            toaster.show("The note was not created. See Activity.")
+            toaster.show("The note was not created. See Activity in Settings.")
         }
     }
 
@@ -176,26 +175,15 @@ final class NoteListStore: NoteLookup {
 
     func open(_ target: URLCommand.OpenTarget) async {
         do {
-            switch target {
-            case .id(let id):
-                guard try await index.summary(id: id) != nil else {
-                    toaster.show("No note has this id")
-                    return
-                }
+            switch try await openTarget.execute(target) {
+            case .found(let id):
                 showContaining(id)
-            case .ticket(let ticket):
-                if let found = try await index.notes(withTicket: ticket).first {
-                    showContaining(found.id)
-                } else {
-                    await create(NoteDraft(title: ticket, type: NoteType.task.name, ticket: ticket))
-                }
-            case .title(let title):
-                let all = try await index.summaries(space: nil)
-                guard let found = all.first(where: { StemPolicy.isSame($0.title, title) }) ?? all.first(where: { StemPolicy.isSame($0.stem, StemPolicy.stem(forTitle: title)) }) else {
-                    toaster.show("No note is called \(title)")
-                    return
-                }
-                showContaining(found.id)
+            case .created(let created):
+                await refresh()
+                events.post(.noteCreated(created.document.id, caret: created.caret))
+                showContaining(created.document.id)
+            case .missing:
+                toaster.show("Slate found no such note")
             }
         } catch {
             activity.log("Cannot open the note", detail: error.localizedDescription, outcome: .failure)
@@ -233,15 +221,6 @@ final class NoteListStore: NoteLookup {
             await finishMove(summary, to: target, message: "Moved to \(space.rawValue)")
         } catch {
             activity.log("Cannot move the note", detail: error.localizedDescription, outcome: .failure)
-        }
-    }
-
-    func archiveNote(_ summary: NoteSummary) async {
-        do {
-            let target = try await archive.execute(summary.path)
-            await finishMove(summary, to: target, message: target.space.map { "Moved to \($0.rawValue)" } ?? "Archived")
-        } catch {
-            activity.log("Cannot archive the note", detail: error.localizedDescription, outcome: .failure)
         }
     }
 

@@ -79,16 +79,6 @@ import Testing
         #expect(harness.posted == [.searchOpened(first.id, words: ["engine"])])
     }
 
-    @Test func tagsComeFromTheIndex() async throws {
-        try await seed()
-
-        await search.refreshTags()
-
-        #expect(search.tags == [TagCount(tag: "audio", count: 1)])
-        search.showTag("audio")
-        #expect(search.query == "tag:audio")
-    }
-
     @Test func openedSearchMovesTheCaretToTheMatch() async throws {
         try await seed()
         harness.navigator.select(NoteID(rawValue: "b"))

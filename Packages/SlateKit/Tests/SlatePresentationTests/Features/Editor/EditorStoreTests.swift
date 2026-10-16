@@ -107,16 +107,6 @@ import Testing
         #expect(editor.document?.path == VaultPath(rawValue: "Inbox/Chosen.md"))
     }
 
-    @Test func submitTitleMovesTheFocusToTheTemplateCaret() async throws {
-        _ = editor
-        await harness.noteList.createNote(type: "task")
-        await editor.open(try #require(harness.navigator.selectedNote))
-
-        editor.submitTitle()
-
-        #expect(editor.bodyFocus == BodyFocus(token: 1, caret: "## Context\n\n".utf16.count))
-    }
-
     @Test func externalChangeReloadsACleanEditor() async throws {
         let path = try await open("Inbox/A.md")
         harness.seed(path.rawValue, id: "a", title: "A", body: "From Obsidian")

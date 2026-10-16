@@ -6,6 +6,18 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 
 ## [Unreleased]
 
+### Changed
+- Slate now shows only folders and notes. The menus, the panel, the window, the quick note field and Settings have no other kinds of notes any more.
+- A new notes folder starts with one folder, Notes, and the welcome note. Slate no longer writes `_templates/`, `.slate/types/`, `.slate/views.json` or `.slate/actions/`. Folders and files from older versions stay and keep working.
+- The quick note field has the folder menu and two keys: Enter saves, `⌘Enter` saves and opens the note. A text that starts with a ticket key is a plain note.
+- Settings has two pages: General (notes folder, login, text size, appearance, Trash days, quick note folder, Check-up with Activity) and Shortcuts (Open Slate, Quick note, New note). The New note shortcut has no keys until you set them.
+- The status item menu offers New Note, Quick Note, Open Window, Settings and Quit.
+- A note card shows its title, date, a two-line preview and the pin. The note header shows the title and the versions button.
+- `slate://open` with a title or an id that matches no note says "Slate found no such note".
+
+### Removed
+- Note kinds and the New menu, tasks, ticket and branch chips, status, `⌘⇧D`, Today and daily notes (`⌥⌘T`, `⌘[`, `⌘]`), snippets, meetings, tags and tag chips, Insert Template, saved searches, Open TODOs, the palette (`⌘K`), actions, Copy for Slack, Copy as Markdown, Save as HTML and PDF, Float on Top and note windows, the outline, ticket details, the Links and History pages of Settings, the history and push state and the Activity button in the footer. The files and the command line keep working; the code for them is in commit `545e0d6`.
+
 ### Added
 - Float on Top keeps a note in a small window above other apps, for a checklist next to Xcode. Open in New Window (`⌘⇧N`) opens a note in its own window.
 - While the window is open, Slate has a menu bar with every command and its shortcut.

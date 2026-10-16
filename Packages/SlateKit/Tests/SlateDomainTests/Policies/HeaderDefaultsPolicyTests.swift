@@ -27,12 +27,12 @@ import Testing
     }
 
     @Test func spaceComesFromTheRequestThenTheTypeThenCapture() {
-        let config = SpacesConfig.defaults
+        let config = SpacesConfig.sixFolders
         let notes = SpaceName(rawValue: "Notes")
 
         #expect(HeaderDefaultsPolicy.space(for: .task, requested: notes, config: config) == notes)
         #expect(HeaderDefaultsPolicy.space(for: .task, requested: nil, config: config) == SpaceName(rawValue: "Tasks"))
         #expect(HeaderDefaultsPolicy.space(for: .note, requested: nil, config: config) == SpaceName(rawValue: "Inbox"))
-        #expect(HeaderDefaultsPolicy.space(for: .task, requested: nil, config: SpacesConfig(spaces: [])) == SpaceName(rawValue: "Inbox"))
+        #expect(HeaderDefaultsPolicy.space(for: .task, requested: nil, config: SpacesConfig(spaces: [])) == SpaceName(rawValue: "Notes"))
     }
 }

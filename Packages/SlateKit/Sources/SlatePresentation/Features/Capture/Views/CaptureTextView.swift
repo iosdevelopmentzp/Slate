@@ -6,7 +6,6 @@ struct CaptureTextView: NSViewRepresentable {
     let focusToken: Int
     let onSave: () -> Void
     let onOpen: () -> Void
-    let onToday: () -> Void
     let onCancel: () -> Void
 
     func makeCoordinator() -> Coordinator {
@@ -72,17 +71,11 @@ struct CaptureTextView: NSViewRepresentable {
                     textView.insertNewlineIgnoringFieldEditor(nil)
                 } else if flags.contains(.command) {
                     parent.onOpen()
-                } else if flags.contains(.option) {
-                    parent.onToday()
                 } else {
                     parent.onSave()
                 }
                 return true
             case #selector(NSResponder.insertLineBreak(_:)), #selector(NSResponder.insertNewlineIgnoringFieldEditor(_:)):
-                if flags.contains(.option) {
-                    parent.onToday()
-                    return true
-                }
                 textView.insertText("\n", replacementRange: textView.selectedRange())
                 return true
             case #selector(NSResponder.cancelOperation(_:)):

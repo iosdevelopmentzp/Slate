@@ -18,7 +18,6 @@ package final class AppWindows: NSObject, NSWindowDelegate {
     private var captureMonitor: Any?
     private var settingsWindow: NSWindow?
     package var onChangeVault: (URL) -> Void = { _ in }
-    private var noteWindows: [NoteWindowController] = []
     private let menuTarget = MenuTarget()
 
     private var layout: WindowLayout {
@@ -54,7 +53,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         observeAppearance()
         registerHotkeys()
         assembly.settings.extraChecks = {
-            let names: [(KeyboardShortcuts.Name, String)] = [(.togglePanel, "Show or hide Slate"), (.capture, "Quick note"), (.today, "Today")]
+            let names: [(KeyboardShortcuts.Name, String)] = [(.togglePanel, "Open Slate"), (.capture, "Quick note"), (.newNote, "New note")]
             return names.map { name, title in
                 let shortcut = KeyboardShortcuts.getShortcut(for: name)
                 return DoctorCheck(id: "hotkey.\(name.rawValue)", title: title, isOK: shortcut != nil, detail: shortcut.map { "\($0)" } ?? "No shortcut set")
@@ -70,9 +69,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         }
         panel.onCancel = { [weak self] in
             guard let self else { return }
-            if assembly.palette.isOpen {
-                assembly.palette.close()
-            } else if assembly.search.isActive {
+            if assembly.search.isActive {
                 assembly.search.clear()
             } else {
                 closePanel()
@@ -129,10 +126,6 @@ package final class AppWindows: NSObject, NSWindowDelegate {
 
     private func mainMenu() -> NSMenu {
         let noteList = assembly.noteList
-        let navigator = assembly.navigator
-        let palette = assembly.palette
-        let daily = assembly.daily
-        let editor = assembly.editor
         let search = assembly.search
         let layout = layout
         let spaces = assembly.vault.spaces
@@ -141,15 +134,11 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         }
         typealias Command = MainMenuBuilder.Command
         var go: [Command] = [
-            Command(title: "Find a Note or Command", key: "k", modifiers: [.command]) { palette.open() },
             Command(title: "Previous Note", key: String(UnicodeScalar(NSUpArrowFunctionKey)!), modifiers: [.command, .option]) { selectNeighbour(-1) },
             Command(title: "Next Note", key: String(UnicodeScalar(NSDownArrowFunctionKey)!), modifiers: [.command, .option]) { selectNeighbour(1) },
             Command(title: "Previous Folder", key: "[", modifiers: [.command, .shift]) { noteList.show(ListSource.cycle(from: noteList.source, spaces: spaces.map(\.folder), by: -1)) },
             Command(title: "Next Folder", key: "]", modifiers: [.command, .shift]) { noteList.show(ListSource.cycle(from: noteList.source, spaces: spaces.map(\.folder), by: 1)) },
-            Command(title: "Previous Day", key: "[", modifiers: [.command]) { Task { await daily.openDay(-1) } },
-            Command(title: "Next Day", key: "]", modifiers: [.command]) { Task { await daily.openDay(1) } },
             Command(title: "All Notes", key: "", modifiers: []) { noteList.show(.all) },
-            Command(title: "Open TODOs", key: "", modifiers: []) { noteList.show(.todos) },
         ]
         for (position, space) in spaces.prefix(9).enumerated() {
             go.append(Command(title: space.folder.rawValue, key: "\(position + 1)", modifiers: [.command]) { noteList.show(.space(space.folder)) })
@@ -158,25 +147,13 @@ package final class AppWindows: NSObject, NSWindowDelegate {
             app: [Command(title: "Settings…", key: ",", modifiers: [.command]) { [weak self] in self?.openSettings() }],
             file: [
                 Command(title: "New Note", key: "n", modifiers: [.command]) { Task { await noteList.createNote() } },
-                Command(title: "New Task", key: "t", modifiers: [.command, .shift]) { Task { await noteList.createNote(type: NoteType.task.name) } },
                 Command(title: "Quick Note", key: "", modifiers: []) { [weak self] in self?.showCapture() },
-                Command(title: "Today", key: "t", modifiers: [.command, .option]) { Task { await daily.openToday() } },
-                Command(title: "Open Note in New Window", key: "n", modifiers: [.command, .shift]) { [weak self] in
-                    guard let self, let id = navigator.selectedNote else { return }
-                    openNoteWindow(id, floating: false)
-                },
-                Command(title: "Float Note on Top", key: "", modifiers: []) { [weak self] in
-                    guard let self, let id = navigator.selectedNote else { return }
-                    openNoteWindow(id, floating: true)
-                },
             ],
             note: [
                 Command(title: "Pin or Unpin", key: "p", modifiers: [.command, .shift]) {
                     guard let selected = noteList.selected else { return }
                     Task { await noteList.togglePin(selected) }
                 },
-                Command(title: "Mark as Done", key: "d", modifiers: [.command, .shift]) { Task { await editor.markDone() } },
-                Command(title: "Move to Folder…", key: "m", modifiers: [.command, .shift]) { palette.open(query: "move to ") },
                 Command(title: "Move to Trash", key: String(UnicodeScalar(NSBackspaceCharacter)!), modifiers: [.command]) {
                     if TextFocus.isEditingText {
                         TextFocus.send(#selector(NSResponder.deleteToBeginningOfLine(_:)))
@@ -223,7 +200,6 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         closeCapture()
         window?.close()
         settingsWindow?.close()
-        noteWindows.forEach { $0.window.close() }
         if let resignObserver {
             NotificationCenter.default.removeObserver(resignObserver)
         }
@@ -267,20 +243,6 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         }
     }
 
-    func openNoteWindow(_ id: NoteID, floating: Bool) {
-        if floating {
-            closePanel()
-        }
-        let controller = NoteWindowController(store: assembly.makeNoteEditor(), assembly: assembly, floating: floating)
-        controller.onClose = { [weak self] closed in
-            guard let self else { return }
-            noteWindows.removeAll { $0 === closed }
-        }
-        noteWindows.append(controller)
-        controller.window.appearance = currentAppearance
-        controller.show(id)
-    }
-
     func openSettings() {
         closePanel()
         let window = settingsWindow ?? makeSettingsWindow()
@@ -298,11 +260,11 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         }
     }
 
-    func openToday() {
+    func newNoteFromHotkey() {
         if window?.isVisible != true, panel.isVisible == false {
             showPanel()
         }
-        Task { await assembly.daily.openToday() }
+        Task { await assembly.noteList.createNote() }
     }
 
     private func registerHotkeys() {
@@ -318,10 +280,10 @@ package final class AppWindows: NSObject, NSWindowDelegate {
                 toggleCapture()
             }
         }
-        KeyboardShortcuts.onKeyUp(for: .today) { [weak self] in
+        KeyboardShortcuts.onKeyUp(for: .newNote) { [weak self] in
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                openToday()
+                newNoteFromHotkey()
             }
         }
     }
@@ -331,15 +293,11 @@ package final class AppWindows: NSObject, NSWindowDelegate {
             let root = CaptureView(
                 onSave: { [weak self] in
                     guard let self else { return }
-                    saveCapture(to: .newNote, open: false)
+                    saveCapture(open: false)
                 },
                 onOpen: { [weak self] in
                     guard let self else { return }
-                    saveCapture(to: .newNote, open: true)
-                },
-                onToday: { [weak self] in
-                    guard let self else { return }
-                    saveCapture(to: .today, open: false)
+                    saveCapture(open: true)
                 },
                 onCancel: { [weak self] in
                     guard let self else { return }
@@ -364,9 +322,9 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         installCaptureMonitor()
     }
 
-    private func saveCapture(to destination: CaptureInput.Destination, open: Bool) {
+    private func saveCapture(open: Bool) {
         Task {
-            guard await assembly.capture.save(to: destination, select: open) != nil else { return }
+            guard await assembly.capture.save(select: open) != nil else { return }
             closeCapture()
             if open {
                 showPanel()
@@ -438,7 +396,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
 
     private func applyAppearance() {
         let appearance = currentAppearance
-        for target in [panel, capturePanel, window, settingsWindow].compactMap({ $0 }) + noteWindows.map(\.window) {
+        for target in [panel, capturePanel, window, settingsWindow].compactMap({ $0 }) {
             target.appearance = appearance
         }
     }
@@ -446,9 +404,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
     private func statusMenu() -> NSMenu {
         let menu = NSMenu()
         menu.addItem(item("New Note", key: "n", action: #selector(menuNewNote)))
-        menu.addItem(item("New Task", key: "t", modifiers: [.command, .shift], action: #selector(menuNewTask)))
         menu.addItem(item("Quick Note", action: #selector(menuCapture)))
-        menu.addItem(item("Today", action: #selector(menuToday)))
         menu.addItem(.separator())
         menu.addItem(item("Open Window", key: "o", modifiers: [.command, .shift], action: #selector(menuOpenWindow)))
         menu.addItem(item("Settings…", key: ",", action: #selector(menuSettings)))
@@ -469,17 +425,8 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         Task { await assembly.noteList.createNote() }
     }
 
-    @objc private func menuNewTask() {
-        showPanel()
-        Task { await assembly.noteList.createNote(type: NoteType.task.name) }
-    }
-
     @objc private func menuCapture() {
         showCapture()
-    }
-
-    @objc private func menuToday() {
-        openToday()
     }
 
     @objc private func menuOpenWindow() {
@@ -573,10 +520,6 @@ package final class AppWindows: NSObject, NSWindowDelegate {
             .environment(\.openSettings, { [weak self] in
                 guard let self else { return }
                 openSettings()
-            })
-            .environment(\.openNoteWindow, { [weak self] id, floating in
-                guard let self else { return }
-                openNoteWindow(id, floating: floating)
             })
         let controller = NSHostingController(rootView: root)
         controller.sizingOptions = surface == .window ? [.minSize] : []

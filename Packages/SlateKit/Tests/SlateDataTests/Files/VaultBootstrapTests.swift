@@ -5,7 +5,7 @@ import Testing
 @testable import SlateData
 
 @Suite struct VaultBootstrapTests {
-    @Test func newVaultGetsTheDefaultFoldersAndAWelcomeNote() throws {
+    @Test func newVaultGetsOneFolderAndAWelcomeNote() throws {
         let folder = try TemporaryDirectory()
         let root = folder.url.appendingPathComponent("Slate")
 
@@ -13,8 +13,8 @@ import Testing
 
         #expect(isNew)
         let names = Set(try FileManager.default.contentsOfDirectory(atPath: root.path))
-        #expect(names.isSuperset(of: ["Inbox", "Tasks", "Notes", "Daily", "Snippets", "Archive", "_attachments", "_templates", ".slate"]))
-        let welcome = try String(contentsOf: root.appendingPathComponent("Inbox/Welcome to Slate.md"), encoding: .utf8)
+        #expect(names == ["Notes", "_attachments", ".slate"])
+        let welcome = try String(contentsOf: root.appendingPathComponent("Notes/Welcome to Slate.md"), encoding: .utf8)
         #expect(welcome.contains("title: Welcome to Slate"))
         #expect(welcome.contains("⌘N"))
     }

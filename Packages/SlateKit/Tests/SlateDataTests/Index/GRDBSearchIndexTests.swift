@@ -83,12 +83,12 @@ import Testing
         #expect(try await search("reta") == ["Retain cycle", "Engine notes"])
     }
 
-    @Test func snippetShowsTheMatchingText() async throws {
+    @Test func excerptShowsTheMatchingText() async throws {
         try await index.upsert(note("Notes/A.md", id: "a", body: String(repeating: "filler ", count: 40) + "the retain cycle " + String(repeating: "more ", count: 40)))
 
         let hit = try #require(try await index.search(SearchQuery(terms: ["retain"]), limit: 5).first)
-        #expect(hit.snippet.contains("retain"))
-        #expect(hit.snippet.contains("…"))
+        #expect(hit.excerpt.contains("retain"))
+        #expect(hit.excerpt.contains("…"))
     }
 
     @Test func phrasesAndExclusions() async throws {

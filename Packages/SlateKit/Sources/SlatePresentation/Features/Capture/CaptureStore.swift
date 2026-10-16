@@ -7,30 +7,21 @@ import SlateDomain
 final class CaptureStore {
     var text = ""
     var space: SpaceName?
-    var typeOverride: String?
     private(set) var isSaving = false
     private(set) var focusToken = 0
 
     @ObservationIgnored private let capture: QuickCaptureUseCase
-    @ObservationIgnored private let config: any VaultConfigRepository
-    @ObservationIgnored private let store: any KeyValueStore
     @ObservationIgnored private let navigator: Navigator
     @ObservationIgnored private let toaster: Toaster
     @ObservationIgnored private let activity: ActivityLog
     @ObservationIgnored private let events: AppEvents
 
-    init(capture: QuickCaptureUseCase, config: any VaultConfigRepository, store: any KeyValueStore, navigator: Navigator, toaster: Toaster, activity: ActivityLog, events: AppEvents) {
+    init(capture: QuickCaptureUseCase, navigator: Navigator, toaster: Toaster, activity: ActivityLog, events: AppEvents) {
         self.capture = capture
-        self.config = config
-        self.store = store
         self.navigator = navigator
         self.toaster = toaster
         self.activity = activity
         self.events = events
-    }
-
-    var type: String {
-        typeOverride ?? QuickCaptureUseCase.suggestedType(for: text, settings: TrackerSettings.load(from: store))
     }
 
     var canSave: Bool {
@@ -41,9 +32,9 @@ final class CaptureStore {
         let trimmed = selection.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.isEmpty == false else { return }
         do {
-            guard let document = try await capture.execute(CaptureInput(text: trimmed)) else { return }
+            guard let document = try await capture.execute(CaptureInput(text: trimmed, type: NoteType.defaultName)) else { return }
             events.post(.indexUpdated)
-            toaster.show("Added to \(document.path.space?.rawValue ?? "Inbox")")
+            toaster.show(savedMessage(for: document))
         } catch {
             activity.log("Cannot add the selected text", detail: error.localizedDescription, outcome: .failure)
         }
@@ -54,26 +45,28 @@ final class CaptureStore {
     }
 
     @discardableResult
-    func save(to destination: CaptureInput.Destination, select: Bool = false) async -> NoteDocument? {
+    func save(select: Bool = false) async -> NoteDocument? {
         guard canSave else { return nil }
         isSaving = true
         defer { isSaving = false }
         do {
-            let input = CaptureInput(text: text, space: type == NoteType.task.name ? nil : space, type: typeOverride ?? type, destination: destination)
-            guard let document = try await capture.execute(input) else { return nil }
+            guard let document = try await capture.execute(CaptureInput(text: text, space: space, type: NoteType.defaultName)) else { return nil }
             text = ""
-            typeOverride = nil
             events.post(.indexUpdated)
             events.post(.vaultChanged([document.path]))
             if select {
                 navigator.select(document.id)
             }
-            toaster.show(destination == .today ? "Added to Today" : "Saved to \(document.path.space?.rawValue ?? "Inbox")")
+            toaster.show(savedMessage(for: document))
             return document
         } catch {
             activity.log("Cannot save the quick note", detail: error.localizedDescription, outcome: .failure)
-            toaster.show("The quick note was not saved. See Activity.")
+            toaster.show("The quick note was not saved. See Activity in Settings.")
             return nil
         }
+    }
+
+    private func savedMessage(for document: NoteDocument) -> String {
+        document.path.space.map { "Saved to \($0.rawValue)" } ?? "Saved"
     }
 }

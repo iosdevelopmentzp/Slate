@@ -5,10 +5,20 @@ import SlateUI
 struct GeneralSettingsView: View {
     @Environment(SettingsStore.self) private var settings
     @Environment(VaultStore.self) private var vault
+    @State private var showsActivity = false
 
     var body: some View {
         @Bindable var settings = settings
         Form {
+            Section {
+                LabeledContent("Notes folder") {
+                    Text(settings.vaultPath)
+                        .textSelection(.enabled)
+                        .lineLimit(2)
+                        .truncationMode(.middle)
+                }
+                Button("Choose another folder…") { settings.changeVault() }
+            }
             Section {
                 Toggle("Open Slate at login", isOn: Binding(
                     get: { settings.loginStatus == .enabled || settings.loginStatus == .requiresApproval },
@@ -45,18 +55,7 @@ struct GeneralSettingsView: View {
                     }
                 }
             }
-            Section("Daily notes") {
-                Toggle("Make a daily note for each day", isOn: $settings.daily.isEnabled)
-                Toggle("Carry open checkboxes to the new day", isOn: $settings.daily.carriesOver)
-                    .disabled(settings.daily.isEnabled == false)
-                Picker("Template", selection: $settings.daily.template) {
-                    ForEach(vault.templateNames, id: \.self) { name in
-                        Text(vault.type(named: name)?.title ?? name.capitalized).tag(name)
-                    }
-                }
-                .disabled(settings.daily.isEnabled == false)
-            }
-            Section("Doctor") {
+            Section("Check-up") {
                 ForEach(settings.checks) { check in
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Image(systemName: check.isOK ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
@@ -75,6 +74,10 @@ struct GeneralSettingsView: View {
                 HStack {
                     Button("Check again") { Task { await settings.runDoctor() } }
                         .disabled(settings.isChecking)
+                    Button("Activity") { showsActivity.toggle() }
+                        .popover(isPresented: $showsActivity, arrowEdge: .bottom) {
+                            ActivityView()
+                        }
                     Spacer()
                     if settings.isRebuilding {
                         ProgressView().controlSize(.small)

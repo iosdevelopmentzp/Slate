@@ -9,7 +9,7 @@ package final class SpyVaultConfigRepository: VaultConfigRepository, @unchecked 
 
     private let lock = NSLock()
     private var _calls: [Call] = []
-    private var _config = SpacesConfig.defaults
+    private var _config = SpacesConfig.sixFolders
     private var _types = NoteType.builtIn
     private var _spacesError: TestError?
     private var _patterns: [LinkPattern] = []

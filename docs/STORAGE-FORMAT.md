@@ -10,26 +10,24 @@ Vocabulary: the **vault** is the root folder. A **space** is a top-level folder 
 
 ```
 Slate/                          the vault (user-chosen folder, default ~/Documents/Slate, ADR 0002)
-  Inbox/                        space
-  Tasks/                        space
-  Notes/                        space
-  Daily/                        space, notes named YYYY-MM-DD.md
-  Snippets/                     space
-  Archive/                      space
+  Notes/                        space; the only folder a new vault gets (ADR 0007)
+  <Folder>/                     every other space the user makes
   _attachments/                 every image and file, flat (section 5)
-  _templates/                   one Markdown body per note type (section 6)
+  _templates/                   optional: one Markdown body per note type (section 6); not created since ADR 0007
   .slate/                       configuration that syncs with the vault (section 7)
-    spaces.json
-    links.json
-    views.json
-    types/<type>.json
-    actions/<name>.json
+    spaces.json                 written on first launch
+    links.json                  optional (parked by ADR 0007)
+    views.json                  optional (parked by ADR 0007)
+    types/<type>.json           optional (parked by ADR 0007)
+    actions/<name>.json         optional (parked by ADR 0007)
     prompts/<name>.md
   .trash/                       trashed notes and attachments (section 8)
     manifest.json
     <Space>/<file>.md
     _attachments/<file>
 ```
+
+Before ADR 0007 a new vault got six spaces: `Inbox`, `Tasks`, `Notes`, `Daily`, `Snippets`, `Archive`. Such vaults stay valid; every folder in them is shown.
 
 Rules:
 

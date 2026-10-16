@@ -41,8 +41,8 @@ struct FileVaultConfigRepository: VaultConfigRepository {
         spaces += folders.filter { listed.contains($0) == false }.map { Space(folder: $0, icon: "folder", defaultType: NoteType.defaultName) }
         return SpacesConfig(
             spaces: spaces,
-            captureSpace: (stored?["captureSpace"] as? String).map(SpaceName.init(rawValue:)) ?? SpacesConfig.defaultCaptureSpace,
-            archiveSpace: (stored?["archiveSpace"] as? String).map(SpaceName.init(rawValue:)) ?? SpacesConfig.defaultArchiveSpace,
+            captureSpace: (stored?["captureSpace"] as? String).map(SpaceName.init(rawValue:)) ?? SpacesConfig.defaultSpace,
+            archiveSpace: (stored?["archiveSpace"] as? String).map(SpaceName.init(rawValue:)) ?? SpacesConfig.defaultSpace,
             dailySpace: (stored?["dailySpace"] as? String).map(SpaceName.init(rawValue:)) ?? SpacesConfig.defaultDailySpace
         )
     }
@@ -86,22 +86,8 @@ struct FileVaultConfigRepository: VaultConfigRepository {
     }
 
     func ensureDefaults() async throws {
-        if FileManager.default.fileExists(atPath: spacesURL.path) == false {
-            try await saveSpaces(try await spaces())
-        }
-        if FileManager.default.fileExists(atPath: viewsURL.path) == false {
-            try JSONFile.write(["version": 1, "views": SmartView.defaults.map(Self.object)], to: viewsURL)
-        }
-        if FileManager.default.fileExists(atPath: actionsFolder.path) == false {
-            for (name, action) in Self.exampleActions {
-                try JSONFile.write(Self.object(for: action), to: actionsFolder.appendingPathComponent("\(name).json"))
-            }
-        }
-        for type in NoteType.builtIn {
-            let url = typesFolder.appendingPathComponent("\(type.name).json")
-            guard FileManager.default.fileExists(atPath: url.path) == false else { continue }
-            try JSONFile.write(Self.object(for: type), to: url)
-        }
+        guard FileManager.default.fileExists(atPath: spacesURL.path) == false else { return }
+        try await saveSpaces(try await spaces())
     }
 
     func linkPatterns() async throws -> [LinkPattern] {
@@ -153,22 +139,6 @@ struct FileVaultConfigRepository: VaultConfigRepository {
         }
     }
 
-    static let exampleActions: [(String, ActionDefinition)] = [
-        ("open-folder-in-terminal", ActionDefinition(id: "open-folder-in-terminal", title: "Open the note's folder in Terminal", icon: "terminal", command: "open -a Terminal \"$(dirname \"$SLATE_NOTE_PATH\")\"")),
-        ("copy-branch", ActionDefinition(id: "copy-branch", title: "Copy the branch name", icon: "arrow.branch", command: "printf %s \"$SLATE_BRANCH\"", condition: .hasBranch, output: .clipboard)),
-        ("list-folder", ActionDefinition(id: "list-folder", title: "Add the list of files in the note's folder", icon: "list.bullet", command: "ls -1 \"$(dirname \"$SLATE_NOTE_PATH\")\"", output: .appendToNote)),
-    ]
-
-    private static func object(for view: SmartView) -> [String: Any] {
-        ["id": view.id, "title": view.title, "icon": view.icon, "query": view.query]
-    }
-
-    private static func object(for action: ActionDefinition) -> [String: Any] {
-        var object: [String: Any] = ["version": 1, "title": action.title, "command": action.command, "when": action.condition.rawValue, "output": action.output.rawValue]
-        object["icon"] = action.icon
-        return object
-    }
-
     private static func pattern(from entry: [String: Any]) -> LinkPattern? {
         guard let id = entry["id"] as? String, let regex = entry["regex"] as? String, let url = entry["url"] as? String else { return nil }
         return LinkPattern(id: id, regex: regex, url: url, label: entry["label"] as? String ?? "$0", icon: entry["icon"] as? String)
@@ -192,23 +162,5 @@ struct FileVaultConfigRepository: VaultConfigRepository {
             statuses: object["statuses"] as? [String] ?? [],
             doneStatuses: object["doneStatuses"] as? [String] ?? []
         )
-    }
-
-    private static func object(for type: NoteType) -> [String: Any] {
-        var object: [String: Any] = [
-            "version": 1,
-            "type": type.name,
-            "title": type.title,
-            "icon": type.icon,
-            "fields": type.fields,
-        ]
-        object["defaultSpace"] = type.defaultSpace?.rawValue
-        object["titlePattern"] = type.titlePattern
-        object["branchPattern"] = type.branchPattern
-        if type.statuses.isEmpty == false {
-            object["statuses"] = type.statuses
-            object["doneStatuses"] = type.doneStatuses
-        }
-        return object
     }
 }

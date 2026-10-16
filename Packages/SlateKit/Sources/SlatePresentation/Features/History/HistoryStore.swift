@@ -115,7 +115,7 @@ final class HistoryStore {
             }
         } catch {
             activity.log("Cannot restore the version", detail: error.localizedDescription, outcome: .failure)
-            toaster.show("The version was not restored. See Activity.")
+            toaster.show("The version was not restored. See Activity in Settings.")
         }
     }
 

@@ -11,12 +11,6 @@ struct SearchResultRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                if let typeIcon = model.typeIcon {
-                    Image(systemName: typeIcon)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .accessibilityHidden(true)
-                }
                 Text(model.title)
                     .font(.body)
                     .lineLimit(1)
@@ -27,19 +21,16 @@ struct SearchResultRow: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
-            if model.snippet.characters.isEmpty == false {
-                Text(model.snippet)
+            if model.excerpt.characters.isEmpty == false {
+                Text(model.excerpt)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
-            HStack(spacing: 4) {
-                if let folder = model.folder {
-                    ModelTag(model: TagModel(folder, systemImage: "folder"))
-                }
-                ForEach(model.badges, id: \.self) { badge in
-                    ModelTag(model: badge)
-                }
+            if let folder = model.folder {
+                Label(folder, systemImage: "folder")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.horizontal, 12)

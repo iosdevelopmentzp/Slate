@@ -15,11 +15,17 @@ import Testing
         #expect(harness.navigator.selectedNote == note.id)
     }
 
-    @Test func openByAnUnknownTicketMakesATask() async throws {
+    @Test func openThatMakesANoteSelectsIt() async throws {
         await harness.noteList.open(.ticket("ABC-5"))
 
-        let task = try #require(harness.spies.index.indexed[VaultPath(rawValue: "Tasks/ABC-5.md")])
-        #expect(harness.navigator.selectedNote == task.id)
+        let made = try #require(harness.spies.index.indexed[VaultPath(rawValue: "Tasks/ABC-5.md")])
+        #expect(harness.navigator.selectedNote == made.id)
+    }
+
+    @Test func openOfAMissingNoteSaysSo() async {
+        await harness.noteList.open(.title("Nothing like this"))
+
+        #expect(harness.toaster.text == "Slate found no such note")
     }
 
     @Test func openByTitleSelectsIt() async throws {

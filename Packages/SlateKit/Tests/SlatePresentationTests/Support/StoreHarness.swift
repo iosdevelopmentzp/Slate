@@ -20,7 +20,6 @@ final class StoreHarness {
     lazy var toaster = Toaster { [weak self] in self?.copied.append($0) }
     lazy var vault = VaultStore(
         config: ports.config,
-        templates: ports.templates,
         createSpace: useCases.createSpace,
         renameSpace: useCases.renameSpace,
         navigator: navigator,
@@ -33,11 +32,11 @@ final class StoreHarness {
         create: useCases.create,
         updateHeader: useCases.updateHeader,
         move: useCases.move,
-        archive: useCases.archive,
         duplicate: useCases.duplicate,
         trashNote: useCases.trash,
         restore: useCases.restore,
         append: useCases.append,
+        openTarget: useCases.openTarget,
         navigator: navigator,
         toaster: toaster,
         activity: activity,
@@ -60,10 +59,7 @@ final class StoreHarness {
         panel: panelVisibility,
         toaster: toaster,
         create: useCases.create,
-        templates: ports.templates,
-        journal: ports.journal,
-        runAction: useCases.runAction,
-        exporter: ports.exporter
+        journal: ports.journal
     )
     lazy var settings = SettingsStore(
         store: keyValues,
@@ -77,7 +73,7 @@ final class StoreHarness {
         activity: activity,
         events: events
     )
-    lazy var capture = CaptureStore(capture: useCases.capture, config: ports.config, store: keyValues, navigator: navigator, toaster: toaster, activity: activity, events: events)
+    lazy var capture = CaptureStore(capture: useCases.capture, navigator: navigator, toaster: toaster, activity: activity, events: events)
     lazy var history = HistoryStore(
         history: ports.history,
         snapshot: useCases.snapshot,
@@ -88,10 +84,6 @@ final class StoreHarness {
         toaster: toaster,
         events: events
     )
-    lazy var issues = IssueStore(tracker: ports.tracker, secrets: ports.secrets)
-    lazy var palette = PaletteStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock)
-    lazy var todos = TodoStore(index: ports.index, toggleTodo: useCases.toggleTodo, notes: noteList, navigator: navigator, store: keyValues, activity: activity, events: events)
-    lazy var daily = DailyStore(ensureDaily: useCases.ensureDaily, notes: noteList, navigator: navigator, clock: ports.clock, store: ports.keyValues, toaster: toaster, activity: activity, events: events)
     lazy var search = SearchStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
     lazy var panelVisibility = PanelVisibility()
     lazy var feed = VaultChangeFeed(watcher: ports.watcher, reindex: useCases.reindex, activity: activity, events: events)

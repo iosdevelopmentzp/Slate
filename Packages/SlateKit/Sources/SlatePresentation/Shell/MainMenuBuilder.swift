@@ -35,7 +35,6 @@ struct MainMenuBuilder {
             standard("Cut", #selector(NSText.cut(_:)), key: "x"),
             standard("Copy", #selector(NSText.copy(_:)), key: "c"),
             standard("Paste", #selector(NSText.paste(_:)), key: "v"),
-            standard("Paste as Code", EditorMenuActions.pasteAsCode, key: "v", modifiers: [.command, .shift]),
             standard("Select All", #selector(NSText.selectAll(_:)), key: "a"),
             .separator(),
             standard("Find in Note", EditorMenuActions.find, key: "f"),
@@ -44,7 +43,6 @@ struct MainMenuBuilder {
         main.addItem(submenu("Format", items: [
             standard("Bold", EditorMenuActions.bold, key: "b"),
             standard("Italic", EditorMenuActions.italic, key: "i"),
-            standard("Code", EditorMenuActions.code, key: "`"),
             standard("Insert Link", EditorMenuActions.link, key: "k", modifiers: [.command, .shift]),
             standard("Open Link", EditorMenuActions.openLink, key: "\r"),
             .separator(),
@@ -52,7 +50,6 @@ struct MainMenuBuilder {
             standard("Move Line Up", EditorMenuActions.moveLineUp, key: String(UnicodeScalar(NSUpArrowFunctionKey)!), modifiers: [.option]),
             standard("Move Line Down", EditorMenuActions.moveLineDown, key: String(UnicodeScalar(NSDownArrowFunctionKey)!), modifiers: [.option]),
             standard("Duplicate Line", EditorMenuActions.duplicateLine, key: "d"),
-            standard("Toggle Comment", EditorMenuActions.toggleComment, key: "/"),
             .separator(),
             standard("Screenshot of a Region", EditorMenuActions.screenshot, key: "s", modifiers: [.command, .shift]),
             standard("Screenshot of a Window", EditorMenuActions.windowScreenshot, key: "w", modifiers: [.command, .shift]),

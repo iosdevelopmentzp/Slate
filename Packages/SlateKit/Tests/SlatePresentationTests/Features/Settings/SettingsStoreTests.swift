@@ -25,17 +25,6 @@ import Testing
         #expect(harness.keyValues.string(forKey: "appearance") == "dark")
     }
 
-    @Test func savingTheTrackerWritesTheLinkPatterns() async throws {
-        harness.spies.config.patterns = [LinkPattern(id: "own", regex: "x", url: "https://example.com/$1", label: "$1")]
-        settings.tracker.trackerBaseURL = "https://example.atlassian.net"
-
-        await settings.saveTracker()
-
-        #expect(harness.spies.config.patterns.map(\.id) == ["jira", "own"])
-        #expect(TrackerSettings.load(from: harness.keyValues).trackerBaseURL == "https://example.atlassian.net")
-        #expect(harness.posted.contains(.vaultRescanned))
-    }
-
     @Test func loginItemAsksForApprovalWithAHint() async {
         harness.spies.loginItem.current = .requiresApproval
 

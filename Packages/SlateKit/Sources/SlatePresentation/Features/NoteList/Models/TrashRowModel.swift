@@ -6,5 +6,5 @@ struct TrashRowModel: Identifiable, Hashable {
     let title: String
     let detail: String
 
-    static let preview = TrashRowModel(id: VaultPath(rawValue: "Inbox/Old meeting notes.md"), title: "Old meeting notes", detail: "From Inbox · 3 days ago")
+    static let preview = TrashRowModel(id: VaultPath(rawValue: "Notes/Old shopping list.md"), title: "Old shopping list", detail: "From Notes · 3 days ago")
 }

@@ -5,11 +5,11 @@ package struct VaultBootstrap: Sendable {
     static let staleTemporaryAge: TimeInterval = 3_600
     static let welcomeTitle = "Welcome to Slate"
     static let welcomeBody = """
-    Notes are plain Markdown files in your notes folder. Any text editor can open them.
+    Slate keeps your notes in folders. Each note is a plain text file in your notes folder, so other apps can open it too.
 
     - ⌘N makes a new note in the current folder.
-    - ⌘F searches the notes.
-    - ⌘⇧O opens Slate in a window.
+    - ⌃⌥Space writes a quick note from any app.
+    - ⌘F searches your notes.
 
     """
 
@@ -24,7 +24,7 @@ package struct VaultBootstrap: Sendable {
         let manager = FileManager.default
         let isNew = manager.fileExists(atPath: root.appendingPathComponent(FileVaultConfigRepository.folderName).path) == false
         try manager.createDirectory(at: root, withIntermediateDirectories: true)
-        for name in ["_attachments", FileTemplateRepository.folderName, FileVaultConfigRepository.folderName] {
+        for name in ["_attachments", FileVaultConfigRepository.folderName] {
             try manager.createDirectory(at: root.appendingPathComponent(name, isDirectory: true), withIntermediateDirectories: true)
         }
         if isNew {
@@ -38,7 +38,7 @@ package struct VaultBootstrap: Sendable {
     }
 
     private func writeWelcomeNote(now: Date, timeZone: TimeZone) throws {
-        let path = VaultPath(space: SpacesConfig.defaultCaptureSpace, stem: Self.welcomeTitle)
+        let path = VaultPath(space: SpacesConfig.defaultSpace, stem: Self.welcomeTitle)
         let url = root.appendingPathComponent(path.rawValue)
         guard FileManager.default.fileExists(atPath: url.path) == false else { return }
         let header = HeaderDefaultsPolicy.header(id: .generate(), title: Self.welcomeTitle, type: .note, now: now)

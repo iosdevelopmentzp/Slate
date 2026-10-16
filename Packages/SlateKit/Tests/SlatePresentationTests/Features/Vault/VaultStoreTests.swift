@@ -12,11 +12,10 @@ import Testing
         harness.vault
     }
 
-    @Test func refreshLoadsTheFoldersAndKinds() async {
+    @Test func refreshLoadsTheFolders() async {
         await vault.refresh()
 
         #expect(vault.spaces.map(\.folder.rawValue) == ["Inbox", "Tasks", "Notes", "Daily", "Snippets", "Archive"])
-        #expect(vault.type(named: "task")?.title == "Task")
     }
 
     @Test func createShowsTheNewFolder() async {

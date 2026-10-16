@@ -3,7 +3,7 @@ import Foundation
 package enum SearchMatchPolicy {
     package static func hits(in notes: [IndexedNote], query: SearchQuery, limit: Int) -> [SearchHit] {
         let hits = notes.filter { matches($0, query) }.map { note in
-            SearchHit(summary: note.summary, snippet: snippet(of: note.body, words: query.words), rank: 0)
+            SearchHit(summary: note.summary, excerpt: excerpt(of: note.body, words: query.words), rank: 0)
         }
         return Array(sorted(hits, words: query.words).prefix(limit))
     }
@@ -56,7 +56,7 @@ package enum SearchMatchPolicy {
         }
     }
 
-    package static func snippet(of body: String, words: [String], radius: Int = 60) -> String {
+    package static func excerpt(of body: String, words: [String], radius: Int = 60) -> String {
         let flat = body.replacingOccurrences(of: "\n", with: " ")
         guard let first = SearchHighlightPolicy.ranges(of: words, in: flat).first else {
             return String(flat.prefix(radius * 2)).trimmingCharacters(in: .whitespaces)

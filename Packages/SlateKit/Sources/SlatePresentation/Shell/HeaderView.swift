@@ -18,14 +18,18 @@ struct HeaderView: View {
             SearchField(prompt: store.source == .trash ? "Search the Trash" : "Search", text: store.source == .trash ? $store.filterText : $search.query, focus: $isSearchFocused)
                 .frame(maxWidth: .infinity)
                 .onSubmit { search.openFirst() }
-                .hint("Search notes (⌘F). Try tag:, type: or is:todo. Enter opens the first result, Esc clears.")
+                .hint("Search notes (⌘F). Enter opens the first result, Esc clears.")
                 .background(
                     Button("") { isSearchFocused = true }
                         .keyboardShortcut("f", modifiers: .command)
                         .opacity(0)
                         .allowsHitTesting(false)
                 )
-            NewNoteMenu()
+            IconButton(systemImage: "square.and.pencil", help: "New note (⌘N)") {
+                Task { await store.createNote() }
+            }
+            .disabled(store.source == .trash)
+            .accessibilityLabel("New note")
             if surface == .panel {
                 IconButton(systemImage: "macwindow", help: "Open as window (⌘⇧O)") {
                     openAsWindow()

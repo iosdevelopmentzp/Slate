@@ -17,15 +17,10 @@ final class SettingsStore {
     var trashRetentionDays: Int {
         didSet { store.set(trashRetentionDays, forKey: Keys.retention) }
     }
-    var tracker: TrackerSettings
-    var daily: DailySettings {
-        didSet { daily.save(to: store) }
-    }
     private(set) var loginStatus: LoginItemStatus = .disabled
     private(set) var checks: [DoctorCheck] = []
     private(set) var isChecking = false
     private(set) var isRebuilding = false
-    private(set) var trackerSaved = false
     let vaultPath: String
 
     @ObservationIgnored var changeVault: () -> Void = {}
@@ -67,8 +62,6 @@ final class SettingsStore {
         appearance = store.string(forKey: Keys.appearance).flatMap(AppAppearance.init(rawValue:)) ?? .system
         let retention = store.integer(forKey: Keys.retention)
         trashRetentionDays = retention > 0 ? retention : 30
-        tracker = TrackerSettings.load(from: store)
-        daily = DailySettings.load(from: store)
     }
 
     var loginHint: String? {
@@ -90,21 +83,6 @@ final class SettingsStore {
             activity.log("Cannot change Open at login", detail: error.localizedDescription, outcome: .failure)
         }
         await refreshLoginStatus()
-    }
-
-    func saveTracker() async {
-        tracker.save(to: store)
-        do {
-            let existing = try await config.linkPatterns()
-            let defaults = LinkPatternPolicy.defaults(for: tracker)
-            let defaultIDs = Set(["jira", "gitlab-mr", "gitlab-issue"])
-            let kept = existing.filter { defaultIDs.contains($0.id) == false }
-            try await config.saveLinkPatterns(defaults + kept)
-            trackerSaved = true
-            events.post(.vaultRescanned)
-        } catch {
-            activity.log("Cannot save the link settings", detail: error.localizedDescription, outcome: .failure)
-        }
     }
 
     func runDoctor() async {

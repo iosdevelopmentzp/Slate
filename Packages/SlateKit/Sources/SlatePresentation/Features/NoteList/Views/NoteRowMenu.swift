@@ -17,9 +17,6 @@ struct NoteRowMenu: View {
             }
         }
         Button("Duplicate", systemImage: "plus.square.on.square", action: actions.duplicate)
-        if actions.canArchive {
-            Button("Archive", systemImage: "archivebox", action: actions.archive)
-        }
         Divider()
         Button("Move to Trash", systemImage: "trash", role: .destructive, action: actions.requestTrash)
     }
