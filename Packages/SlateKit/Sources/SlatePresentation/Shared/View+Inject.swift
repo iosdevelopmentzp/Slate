@@ -9,7 +9,9 @@ extension View {
             .environment(assembly.activity)
             .environment(assembly.toaster)
             .environment(assembly.layout)
+            .environment(assembly.vault)
             .environment(assembly.noteList)
+            .environment(assembly.editor)
             .environment(\.hintCenter, assembly.hints)
             .environment(\.copyToPasteboard, { value, label in assembly.toaster.copy(value, label: label) })
     }

@@ -4,19 +4,21 @@ Last updated: 2026-10-16
 
 ## Stage
 
-M0 done (skeleton), manual checks by the owner still open. The menu bar icon opens the panel: a header with the folder menu and title search, the note list, the selected note with a plain editor, and a footer. "Open as window" opens a normal window with a sidebar of folders. The notes come from `MockVault` (six notes in Inbox and Tasks); nothing is read from or written to disk. 48 tests in 19 suites pass. Next: milestone M1 of `docs/ROADMAP.md`.
+M1 done (vault and notes), manual checks by the owner still open. On first launch Slate asks for the notes folder (default `~/Documents/Slate`) and prepares it: six folders, `_attachments/`, `_templates/`, `.slate/` with `spaces.json` and the five note types, and a welcome note. Notes are real Markdown files with the header of `STORAGE-FORMAT.md` section 2. The list is built by a full scan at launch and kept current by the FSEvents watcher. 222 tests in 57 suites pass. Next: milestone M1.5 (editor spike) of `docs/ROADMAP.md`.
 
 ## Screens
 
 | Screen | State | Notes |
 |---|---|---|
-| Panel | mock | `MenuBarPanel`, `WindowLayout`, drag and resize from DevHub. Header: folder menu, title search (`⌘F`), Open as window. No New button and no Settings button yet: both arrive with M1 and M7 |
-| Window | mock | Same root view with a sidebar (Folders with counts, `⌘0` hides it). No Tags, Saved searches or Trash in the sidebar yet |
-| Capture field | planned | |
-| Note list | mock | Rows from `NoteRowMapper`: title, relative date, two-line preview, status dot, ticket, attachment and checkbox badges, pin. No hover actions yet (Pin, More) |
-| Editor | placeholder | `NoteDetailView` shows the title, chips and `MarkdownEditorView` filled with the note preview; edits are not saved. M1 brings `EditorStore` |
+| First launch | real | "Where should Slate keep your notes?", the default path, Choose…, Start. A folder that cannot be prepared shows the reason under the path |
+| Panel | real | Header: folder menu (All notes, folders, Trash, Sort by), title search (`⌘F`), New (`⌘N`; the menu offers Note, Task, Snippet, Meeting), Open as window (`⌘⇧O`). Footer: note count and "saved just now". No Settings button yet (H1, M4) |
+| Window | real | The panel plus a sidebar: Folders with counts, New folder (+), Trash. Right click on a folder: Rename, Icon, Move up, Move down. `⌘0` hides the sidebar. No Tags or Saved searches yet (M3, P1) |
+| Capture field | planned | M4 |
+| Note list | real | Rows: status dot, kind icon for non-plain notes, title, relative date, pin, preview, badges (ticket, subfolder, images and files, open checkboxes). Hover and right click: Pin, Move to, Duplicate, Archive, Move to Trash (inline confirmation, toast with Undo). Badges come from the in-memory index |
+| Trash | partial | Lists trashed notes with their folder and age, Restore on hover. No "Delete now" and no auto-empty yet (F4, M5) |
+| Editor | partial | Title field (Enter, focus loss or 1.5 s renames the file), chips (kind, ticket, status, folder, subfolder, tags, read-only details), plain `MarkdownEditorView`, autosave after 500 ms, save on note switch, panel close, window close and quit. A new untitled note takes its title from the first line until the title is typed. A small "Changed on disk" banner with Keep mine and Take theirs. No styling (M2), no journal (M5) |
 | Search | partial | Filters the loaded list by title only. Full-text search is M3 |
-| Settings | planned | |
+| Settings | planned | M4 (H1) |
 
 States: planned, placeholder, mock, real, partial (say what is missing).
 
@@ -43,22 +45,47 @@ Numbered. What, then why. A later session must not undo these without a new numb
     - The pinned floating window became a normal window (`UX.md` section 2.2). `isPinnedWindow` became the `Surface` environment value.
     - Verba rows of `BOOTSTRAP.md` section 3 are not copied yet; each one comes with the milestone that needs it.
 13. Until a port has a live implementation, `Ports.live(pending:)` takes it from `Ports.mock()` (`ARCHITECTURE.md` section 4.3). M1 replaces the mock index and config with live ones and removes the parameter.
+14. M1 removed `Ports.live(pending:)`; every port has a live implementation (`Ports.live(root:keyValues:)`). This closes decision 13.
+15. Until M3 the live index is `MemorySearchIndex`: an actor rebuilt by a full scan at each launch. The list, the badges and the editor lookup read it. M3 replaces it with `GRDBSearchIndex` behind the same port.
+16. The panel and the window share one `EditorStore` until a second editor surface exists (more windows and floating notes, M7). Only one of the two is open at a time, because opening the window closes the panel.
+17. A small conflict banner (Keep mine, Take theirs) came forward from M5, so a conflict never leaves typed text without a way to save it. M5 adds Open both, the journal and the S11 check.
+18. `VaultChange` is `.paths(Set<VaultPath>)` or `.rescan`, without a kind: the reindex reads the disk for each path. `ARCHITECTURE.md` section 4.1 says so.
+19. Stem rule, `STORAGE-FORMAT.md` 3.1 steps 3 and 4: tabs and line breaks count as whitespace (step 4 collapses them); step 3 removes the other control characters. No format change.
+20. The New menu offers Note, Task, Snippet and Meeting. Daily comes with C10 (M4), because a daily note is named by its date and opened, not created twice.
+21. M1 is one commit, not one per feature ID: C1, C2, C5, C7, C8, D6, D7, F1, F2 and B2 share the new ports, use cases and stores, and the steps between them would not build.
+22. `STORAGE-FORMAT.md` section 1 said "default in iCloud Drive"; it now says `~/Documents/Slate` as ADR 0002 decided. This fixes the text, not the format.
+23. Quit saves through `AppContainer`: a selector observer for `willTerminate` (main actor, no `assumeIsolated`) runs `EditorStore.pendingSave()` off the main actor and waits up to 3 s.
 
 ## Next steps
 
-1. Owner: run the M0 manual checks (below) and commit. The repository has no commit yet.
-2. M1: vault and notes. Read `STORAGE-FORMAT.md` in full first.
+1. Owner: run the M1 manual checks (below). Merge the branch `m1-vault-and-notes` when they pass.
+2. M1.5: editor spike, one session, two throwaway branches (`ROADMAP.md`).
+3. M2: editor v1. Read `PLAYBOOK.md` section 9 first.
 
-M0 manual checks for the owner: `Scripts/run.sh`; click the menu bar icon; the panel shows six notes, the folder menu switches between All notes, Inbox and Tasks; a click outside closes the panel; drag the header to move it, drag the grip to resize it, double-click the header to put it back under the icon; Open as window shows the sidebar and `⌘0` hides it; switch the system to dark mode and check both surfaces.
+M1 manual checks for the owner:
+
+1. Run `Scripts/run.sh`. The first launch window appears. Press Start. `~/Documents/Slate` now has the six folders and `Inbox/Welcome to Slate.md`.
+2. Open the panel. Press `⌘N`, type a title, press Enter, type a line. Within one second the file is in Finder with a header (`id`, `title`, `type`, `created`, `updated`).
+3. Change the title in the title field and press Enter. The file in Finder has the new name.
+4. In Finder, make a new `.md` file in `Inbox`. It appears in the list. Edit it in TextEdit and save: the open note reloads.
+5. Type in a note, and at the same time change the same file in TextEdit. The "Changed on disk" banner appears; Keep mine and Take theirs both work.
+6. Pin, Move to, Duplicate, Archive and Move to Trash from the row menu; Undo in the toast; Restore from the Trash.
+7. In the window: New folder, Rename, Move up and Icon on a folder. Make a folder in Finder: it appears in the sidebar.
+8. Type, then quit with `⌘Q` within half a second: the text is in the file.
 
 ## Known gaps
 
-- The seven skills under `.claude/skills/` were copied from DevHub with a rename. Their examples still name DevHub features. Each one needs a pass against `docs/ARCHITECTURE.md` when its topic is first touched.
-- `.claude/rules/presentation.md` and `testing.md` still show DevHub examples (worktrees, simulators). Same treatment.
+- The agent did not run the manual checks. A scripted click opens the panel but does not make Slate the active app, so scripted keystrokes go to the frontmost app (a few of them went to the Terminal during this session). The borderless panel also hides its content from the Accessibility API.
+- No shortcut for Move to Trash: `⌘⌫` would take the key from the editor text. No `⌘⇧M` move picker. Both are in the row menu.
+- No drag of a row onto a folder (C8 part). Moving works from the row menu.
+- No way to delete a folder.
+- Esc does not close the panel yet (`UX.md` section 6). The search field clears on Esc.
+- The status chip is not a menu yet, and the ticket and branch chips have no actions (C3, M4).
+- Changing the notes folder needs `defaults delete local.slate.app vault.path` until Settings (H1, M4).
+- The in-memory index is rebuilt by a full scan at each launch. With thousands of notes the list fills a few seconds after launch until M3.
+- Crash safety is the 500 ms autosave and the save on quit. The journal comes in M5.
+- The list column uses `HSplitView` (240 to 400 pt); its width is not saved.
+- `ActivityRecorder` and `ShellRunner` have no user yet (M5 git history).
+- `.claude/skills/add-feature`, `add-use-case`, `build-and-run` and `update-docs` and the example in `.claude/rules/presentation.md` still show DevHub features.
 - No `generate-vault.sh` yet (needed from M2).
 - Previews in package files were not opened in Xcode yet.
-- M0 visual check was not done by the agent: no Screen Recording permission, and the borderless panel hides its content from the Accessibility API. Checked: the app starts, and a click on the icon puts a 883 × 613 panel on screen (clamped to this screen, layer 25).
-- Esc does not close the panel yet (`UX.md` section 6). The search field clears on Esc.
-- The list column uses `HSplitView` (240 to 400 pt); its width is not saved.
-- `RowContainer` and other copied blocks pad 14 pt; `UX.md` asks for 12. Change them when a screen first uses them.
-- `.claude/skills/add-feature`, `add-use-case`, `testing`, `build-and-run` and `update-docs` still show DevHub examples.

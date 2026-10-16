@@ -4,11 +4,14 @@ import SlateDomain
 package final class SpySearchIndex: SearchIndex, @unchecked Sendable {
     package enum Call: Hashable {
         case summaries(space: SpaceName?)
+        case upsert(VaultPath)
+        case updateState(VaultPath)
+        case remove(VaultPath)
     }
 
     private let lock = NSLock()
     private var _calls: [Call] = []
-    private var _summariesResult: [NoteSummary] = []
+    private var notes: [VaultPath: IndexedNote] = [:]
     private var _summariesError: TestError?
 
     package init() {}
@@ -17,21 +20,57 @@ package final class SpySearchIndex: SearchIndex, @unchecked Sendable {
         lock.withLock { _calls }
     }
 
-    package var summariesResult: [NoteSummary] {
-        get { lock.withLock { _summariesResult } }
-        set { lock.withLock { _summariesResult = newValue } }
-    }
-
     package var summariesError: TestError? {
         get { lock.withLock { _summariesError } }
         set { lock.withLock { _summariesError = newValue } }
+    }
+
+    package var indexed: [VaultPath: NoteSummary] {
+        lock.withLock { notes.mapValues(\.summary) }
+    }
+
+    package func seed(_ summaries: [NoteSummary]) {
+        lock.withLock {
+            for summary in summaries {
+                notes[summary.path] = IndexedNote(summary: summary, state: IndexedFileState(modified: summary.updated, size: 0, hash: ContentHash(rawValue: "seed")))
+            }
+        }
     }
 
     package func summaries(space: SpaceName?) async throws -> [NoteSummary] {
         try lock.withLock {
             _calls.append(.summaries(space: space))
             if let _summariesError { throw _summariesError }
-            return _summariesResult
+            return notes.values.map(\.summary).filter { space == nil || $0.space == space }.sorted { $0.path.rawValue < $1.path.rawValue }
+        }
+    }
+
+    package func summary(id: NoteID) async throws -> NoteSummary? {
+        lock.withLock { notes.values.first { $0.summary.id == id }?.summary }
+    }
+
+    package func fileStates() async throws -> [VaultPath: IndexedFileState] {
+        lock.withLock { notes.mapValues(\.state) }
+    }
+
+    package func upsert(_ note: IndexedNote) async throws {
+        lock.withLock {
+            _calls.append(.upsert(note.summary.path))
+            notes[note.summary.path] = note
+        }
+    }
+
+    package func updateState(_ state: IndexedFileState, for path: VaultPath) async throws {
+        lock.withLock {
+            _calls.append(.updateState(path))
+            notes[path]?.state = state
+        }
+    }
+
+    package func remove(path: VaultPath) async throws {
+        lock.withLock {
+            _calls.append(.remove(path))
+            notes[path] = nil
         }
     }
 }

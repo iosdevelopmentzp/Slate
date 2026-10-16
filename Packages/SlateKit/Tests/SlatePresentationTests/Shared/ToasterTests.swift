@@ -11,23 +11,29 @@ import Testing
 
         #expect(written == ["ABC-123-fix-the-crash"])
         #expect(toaster.text == "Branch copied")
+        #expect(toaster.actionTitle == nil)
     }
 
     @Test func aNewMessageReplacesTheOldOne() {
         let toaster = Toaster { _ in }
 
-        toaster.show("First")
+        toaster.show("First", action: ToastAction(title: "Undo") {})
         toaster.show("Second")
 
         #expect(toaster.text == "Second")
+        #expect(toaster.actionTitle == nil)
     }
 
-    @Test func dismissClearsTheMessage() {
+    @Test func actionRunsOnceAndDismisses() {
         let toaster = Toaster { _ in }
-        toaster.show("Saved")
+        var runs = 0
+        toaster.show("Moved to the Trash", action: ToastAction(title: "Undo") { runs += 1 })
 
-        toaster.dismiss()
+        #expect(toaster.actionTitle == "Undo")
+        toaster.performAction()
+        toaster.performAction()
 
+        #expect(runs == 1)
         #expect(toaster.text == nil)
     }
 }

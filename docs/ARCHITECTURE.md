@@ -112,8 +112,8 @@ Packages/SlateKit/
       Errors/                    SlateError and friends, LocalizedError
       Assembly/                  Ports, UseCases(ports:)
     SlateData/
-      Files/                     FileVaultStore, FileAttachmentStore, FileTrashRepository, FileTemplateRepository, FileVaultConfigRepository, FileJournalStore, VaultBootstrap
-      Index/                     GRDBSearchIndex, IndexSchema, IndexedNoteBuilder (swift-markdown), FTSMatchBuilder
+      Files/                     FileVaultStore, FileCoordination (coordinated read, write, move, atomic replace), OwnWrites, VaultFolder, JSONFile, FileAttachmentStore, FileTrashRepository, FileTemplateRepository, FileVaultConfigRepository, FileJournalStore, VaultBootstrap
+      Index/                     MemorySearchIndex (M1 to M3), GRDBSearchIndex, IndexSchema, IndexedNoteBuilder (swift-markdown), FTSMatchBuilder
       Watch/                     FSEventsVaultWatcher, ChangeCoalescer
       Shell/                     ShellRunner, ShellResult, CommandFormatter
       History/                   GitHistoryRepository, GitLogParser
@@ -139,12 +139,12 @@ Packages/SlateKit/
       Rendering/                 ImageLayoutFragment, CheckboxGlyph, CodeBlockBackground, LinkChipAttributes, CopyButtonOverlay
       Find/                      FindBar (P1)
     SlatePresentation/
-      Shared/                    Surface, Navigator, ActivityLog, ActivityRecorder (CommandRecording → ActivityLog), Toaster, PasteboardWriter, SettingsStore, WindowLayout, AppActions, ActionRunner, RefreshTask, VaultChangeFeed, lookup protocols, PresentationAssembly (+Preview), View+Inject, View+PreviewEnvironment
+      Shared/                    Surface, ListSource, Navigator, ActivityLog, ActivityRecorder (CommandRecording → ActivityLog), Toaster (+ ToastAction for Undo), PasteboardWriter, SettingsStore, WindowLayout, AppActions, ActionRunner, RefreshTask, VaultChangeFeed, lookup protocols, PresentationAssembly (+Preview), View+Inject, View+PreviewEnvironment
       Shared/Events/             AppEvent, AppEvents, SubscriptionToken
-      Shell/                     AppWindows (status item, panel, windows, capture panel, floating notes), RootView, HeaderView, FooterView, SidebarView, SpacePicker, drag and resize
+      Shell/                     AppWindows (status item, panel, windows, capture panel, floating notes), FirstLaunchWindow, FirstLaunchView, RootView, HeaderView, NewNoteMenu, FooterView, SidebarView, SpacePicker, drag and resize
       Features/Vault/            VaultStore, Models/, Views/
-      Features/NoteList/         NoteListStore, Models/ (NoteRowModel, NoteRowMapper), Views/
-      Features/Editor/           EditorStore, NoteDetailView (M0 stand-in), NoteHeaderView, ConflictBanner, PasteAsCodeBar, Views/
+      Features/NoteList/         NoteListStore, Models/ (NoteRowModel, NoteRowMapper, NoteRowActions, NoteStatusText, TrashRowModel, TrashRowMapper), Views/ (NoteListView, NoteRow, NoteRowMenu, TrashListView, TrashRow)
+      Features/Editor/           EditorStore, Models/ (SaveState, SaveStatusText, BodyFocus, NoteChipsMapper), Views/ (EditorView, ConflictBanner), later NoteHeaderView, PasteAsCodeBar
       Features/Search/           SearchStore, SearchQueryModel, Views/ (palette, results)
       Features/Capture/          CaptureStore, Views/
       Features/Todos/            TodoStore, Models/, Views/           (P1)
@@ -196,7 +196,7 @@ Same as DevHub:
 | `Link` | `kind` (`wiki(target, alias, heading)`, `url`, `pattern(id)`), `range` |
 | `SearchQuery` | `terms: [String]`, `phrases: [String]`, `filters: [SearchFilter]`, `excludes` |
 | `SearchHit` | `summary`, `snippet`, `matchRanges`, `score` |
-| `VaultChange` | `paths: [VaultPath]`, `kind` (`changed`, `removed`, `renamed(from)`) |
+| `VaultChange` | enum: `.paths(Set<VaultPath>)` for changed, new or removed notes, `.rescan` for folder, config and template changes. The reindex reads the disk for each path, so the kind of change is not needed |
 | `CloudStatus` | `local`, `current`, `downloading(progress)`, `notDownloaded`, `conflict(count)` |
 | `ConflictVersion` | `id`, `modified`, `deviceName`, `size` |
 | `Snapshot` | `hash`, `date`, `message` |
@@ -215,14 +215,14 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 
 | Port | Methods | Live implementation |
 |---|---|---|
-| `VaultFileStore` | `enumerate() -> [FileMeta]`, `read(VaultPath) -> FileContents` (bytes, hash, meta), `write(VaultPath, Data, expected: ContentHash?) -> WriteResult` (`.written(hash)`, `.conflict(diskHash)`), `move(from, to)`, `remove(VaultPath)`, `exists`, `createFolder` | `FileVaultStore` |
-| `SearchIndex` | `summaries(space:, sort:)`, `summary(id:)`, `byTicket(_:)`, `byStem(_:)`, `search(SearchQuery, limit:)`, `linksTo(stem:)`, `todos(open:)`, `tags()`, `upsert(IndexedNote)`, `remove(path:)`, `allMetas()`, `reset()` | `GRDBSearchIndex` |
-| `IndexedNoteBuilding` | `build(document, meta) -> IndexedNote` (uses swift-markdown) | `IndexedNoteBuilder` |
+| `VaultFileStore` | `enumerate() -> [FileMeta]`, `read(VaultPath) -> FileContents` (bytes, hash, meta), `meta(VaultPath) -> FileMeta?`, `write(VaultPath, data:, expected: ContentHash?) -> WriteResult` (`.written(hash)`, `.conflict(diskHash:)`), `create(VaultPath, data:) -> ContentHash` (fails when the file exists), `move(from:to:)`, `fileNames(inFolder:)`, `createFolder(SpaceName)`, `moveFolder(from:to:)` | `FileVaultStore` (an actor) |
+| `SearchIndex` | M1: `summaries(space:)`, `summary(id:)`, `fileStates() -> [VaultPath: IndexedFileState]`, `upsert(IndexedNote)`, `updateState(_:for:)`, `remove(path:)`. M3 adds `byTicket(_:)`, `byStem(_:)`, `search(SearchQuery, limit:)`, `linksTo(stem:)`, `todos(open:)`, `tags()`, `reset()` | M1: `MemorySearchIndex` (an actor, rebuilt by a full scan at launch). M3: `GRDBSearchIndex` |
+| `IndexedNoteBuilding` | `build(NoteDocument) -> IndexedNote` (the document carries its meta and hash; uses swift-markdown) | `IndexedNoteBuilder` |
 | `VaultWatching` | `changes() -> AsyncStream<VaultChange>` | `FSEventsVaultWatcher` |
 | `AttachmentStore` | `importData(Data, ext:, source:) -> Attachment`, `importFile(URL) -> Attachment`, `absoluteURL(for: relativeLink, from: VaultPath)`, `allFiles()`, `moveToTrash(file)` | `FileAttachmentStore` |
-| `TrashRepository` | `trash(VaultPath) -> TrashItem`, `restore(TrashItem) -> VaultPath`, `items()`, `purge(olderThan:) -> Int` | `FileTrashRepository` |
-| `TemplateRepository` | `body(for: NoteType) -> String`, `ensureDefaults()` | `FileTemplateRepository` |
-| `VaultConfigRepository` | `spaces()`, `saveSpaces`, `linkPatterns()`, `views()`, `types()`, `actions()`, `ensureDefaults(from: TrackerSettings)` | `FileVaultConfigRepository` |
+| `TrashRepository` | `trash(VaultPath, at: Date) -> TrashItem`, `restore(TrashItem) -> VaultPath`, `items()`; M5 adds `purge(olderThan:) -> Int` | `FileTrashRepository` |
+| `TemplateRepository` | `body(for: String) -> String` (type name; a missing file falls back to `BuiltInTemplates`), `ensureDefaults()` | `FileTemplateRepository` |
+| `VaultConfigRepository` | M1: `spaces() -> SpacesConfig` (folders on disk merged with `spaces.json`), `saveSpaces(SpacesConfig)`, `types() -> [NoteType]` (built-ins plus `.slate/types/`), `ensureDefaults()`. M4 adds `linkPatterns()`, `views()`, `actions()` and tracker settings for the defaults | `FileVaultConfigRepository` |
 | `JournalStore` | `save(id, text)`, `load(id) -> (text, date)?`, `clear(id)` | `FileJournalStore` |
 | `ScreenCapturing` | `captureRegion(to: URL) -> Bool`, `captureWindow(to: URL) -> Bool` | `ScreencaptureTool` |
 | `HistoryRepository` | `ensureRepository()`, `snapshot(message:) -> Bool`, `history(of: VaultPath) -> [Snapshot]`, `contents(of:, at:) -> Data`, `push() -> Bool`, `isAvailable` | `GitHistoryRepository` |
@@ -236,9 +236,9 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 | `WorkspaceOpening` | `open(URL)`, `reveal(URL)`, `quickLook(URL)` | `WorkspaceOpener` |
 | `CommandRecording` | `record(CommandRecord)` | `ActivityLog` conformance in Presentation |
 
-`Ports` (Domain `Assembly/Ports.swift`) is a struct with one property per port. `Ports.live(vault:appSupport:shell:recorder:)` in Data, `Ports.mock()` in Mocks, `Ports.spies(keyValues:)` in TestSupport.
+`Ports` (Domain `Assembly/Ports.swift`) is a struct with one property per port. `Ports.live(root:keyValues:)` in Data (later milestones add the Application Support folder, the shell and the recorder), `Ports.mock()` in Mocks, `Ports.spies(keyValues:)` in TestSupport (the key-value store defaults to `SpyKeyValueStore`).
 
-Since M0 the code has three ports: `keyValues`, `index` (`SearchIndex.summaries(space:)` only) and `config` (`VaultConfigRepository.spaces()` only). Until a port has a live implementation, `Ports.live(pending:)` takes it from the `pending` value; `AppContainer.live()` passes `Ports.mock()`. Each milestone that adds a live type moves its port out of `pending`, and M1 removes the parameter.
+Since M1 the code has nine ports: `keyValues`, `files`, `index`, `builder`, `watcher`, `trash`, `templates`, `config`, `clock`. The spies are in-memory fakes that also record their calls, so use case and store tests run without a disk.
 
 ### 4.4 Policies (pure, `enum XPolicy { static func … }`)
 
@@ -366,9 +366,9 @@ The editor owns the `NSTextView`, the styling, the list commands, paste classifi
 
 | Store | Owns | Gets in `init` |
 |---|---|---|
-| `VaultStore` | vault URL, spaces, config, index progress, cloud summary, doctor results | ports (config, index, cloud, history), `ReindexVaultUseCase`, `VaultChangeFeed`, `AppEvents`, `ActivityLog`, `KeyValueStore` |
-| `NoteListStore` | selected space or view, summaries, sort, filter text, selection, pinned, move, trash | index, use cases (move, trash, restore, create), `Navigator`, `AppEvents` |
-| `EditorStore` | open document, `text`, `selection`, dirty flag, autosave task, conflict state, header edits, title commit, attachment import, link resolution | files, index, journal, use cases (save, rename, attach, import, toggleTodo), `Clock`, `AppEvents`, `ActivityLog` |
+| `VaultStore` | M1: spaces config and note types; create, rename, reorder a folder and set its icon. Later: index progress, cloud summary, doctor results | M1: config, `CreateSpaceUseCase`, `RenameSpaceUseCase`, `Navigator`, `ActivityLog`, `AppEvents` |
+| `NoteListStore` | summaries, trash items, sort, filter text, the trash confirmation; create, pin, move, archive, duplicate, trash with Undo, restore. The list source (all, a space, the Trash) and the selection live in `Navigator` | index, trash, use cases (create, updateHeader, move, archive, duplicate, trash, restore), `Navigator`, `Toaster`, `ActivityLog`, `AppEvents`, `KeyValueStore` |
+| `EditorStore` | open document, `text`, `title`, dirty flag, autosave (500 ms) and title commit (Enter, focus loss, 1.5 s), the title that follows the first body line for a new untitled note, focus requests, conflict state with Keep mine and Take theirs, `pendingSave()` for quit. M2 and later: selection, attachment import, link resolution, journal | files, index, use cases (save, rename), `Navigator`, `Clock`, `AppEvents`, `ActivityLog` |
 | `SearchStore` | query text, parsed query, results, highlighted ranges, palette mode | index, `SearchQueryParser`, config (views), `AppEvents` |
 | `CaptureStore` | draft text, target space, type, saving | `QuickCaptureUseCase`, config, `AppEvents` |
 | `TodoStore` (P1) | open todos grouped | index, `ToggleTodoUseCase`, `AppEvents` |
@@ -376,13 +376,13 @@ The editor owns the `NSTextView`, the styling, the list commands, paste classifi
 | `HistoryStore` (P1) | snapshots of the open note, restore | history, `RestoreVersionUseCase` |
 | `SettingsStore` | every preference, tracker settings, hotkeys names | `KeyValueStore`, `SecretStore`, config |
 
-Rules as DevHub: a store never holds another feature's concrete store (lookup protocols in `Shared/`), never imports SwiftUI, never reads `UserDefaults`, never runs a command. `RefreshTask` for refreshes (latest wins). Every failure goes to `ActivityLog`. One `EditorStore` per editor surface (panel, each window, each floating note); two surfaces on the same note stay consistent through `noteSaved` events and the own-writes filter.
+Rules as DevHub: a store never holds another feature's concrete store (lookup protocols in `Shared/`), never imports SwiftUI, never reads `UserDefaults`, never runs a command. `RefreshTask` for refreshes (latest wins). Every failure goes to `ActivityLog`. One `EditorStore` per editor surface (panel, each window, each floating note); two surfaces on the same note stay consistent through `noteSaved` events and the own-writes filter. Until M7 adds a second window and floating notes, the panel and the one window share one `EditorStore` (only one of them is open at a time).
 
 ### 7.2 Events
 
-`AppEvent`: `vaultChanged([VaultPath])`, `indexUpdated`, `noteCreated(NoteID)`, `noteSaved(NoteID, ContentHash)`, `noteRenamed(from: VaultPath, to: VaultPath)`, `noteMoved(NoteID)`, `noteTrashed(NoteID)`, `noteRestored(NoteID)`, `spacesChanged`, `configChanged(ConfigKind)`, `conflictDetected(NoteID)`, `settingsChanged`, `captureSaved(NoteID)`, `snapshotTaken`. Subscribe in `init`, keep the `SubscriptionToken`. A store ignores the echo of its own post. Add a case only when a second store needs to react.
+`AppEvent` since M1: `indexUpdated`, `spacesChanged`, `vaultChanged(Set<VaultPath>)` (an external edit, or a header edit from the list), `vaultRescanned`, `noteCreated(NoteID, caret:)`, `noteSaved(NoteID)`, `noteMoved(from:to:)` (move and rename), `noteTrashed(VaultPath)`. Planned: `configChanged(ConfigKind)`, `settingsChanged`, `captureSaved(NoteID)`, `snapshotTaken`. Subscribe in `init`, keep the `SubscriptionToken`. A store ignores the echo of its own post. Add a case only when a second store needs to react.
 
-`VaultChangeFeed` (Shared) is the one consumer of `VaultWatching.changes()`: it runs the incremental reindex through `ReindexVaultUseCase` and posts `vaultChanged` and `indexUpdated`.
+`VaultChangeFeed` (Shared) is the one consumer of `VaultWatching.changes()`: it runs a full scan when it starts, then the incremental reindex through `ReindexVaultUseCase` for each change, and posts `vaultChanged` and `indexUpdated` (for `.rescan`: `indexUpdated`, `spacesChanged`, `vaultRescanned`). `EditorStore` answers `vaultChanged` and `vaultRescanned` with `ConflictPolicy.decide`: ignore, reload, adopt a header-only change, or conflict. On a rescan a missing file is looked up again by its id, so a rename in Finder keeps the note open.
 
 ### 7.3 Rows, mappers, views
 
@@ -403,13 +403,13 @@ As DevHub: `<Row>Model` is a plain struct with display strings, `Tint`, icon nam
 | Piece | Module | Does |
 |---|---|---|
 | `Ports` | Domain | struct of every port |
-| `Ports.live(vault:appSupport:shell:recorder:)` | Data | builds every live implementation once (M0: `Ports.live(pending:)`, section 4.3) |
+| `Ports.live(root:keyValues:)` | Data | builds every live implementation once, with one shared `OwnWrites` for the file store and the watcher |
 | `Ports.mock()` | Mocks | in-memory everything, `MockVault` sample |
 | `UseCases(ports:)` | Domain | builds every use case |
 | `PresentationAssembly(ports:useCases:kv:…)` | Presentation | builds shared objects and stores in dependency order |
 | `PresentationAssembly.preview()` | Presentation | mocks for previews |
 | `AppWindows(assembly:)` | Presentation | windows and panels |
-| `AppContainer.live()` | Composition | reads the vault URL from `UserDefaults` (first launch: picks the default, runs `VaultBootstrap`), builds `ShellRunner`, `Ports.live`, `UseCases`, `PresentationAssembly`, `AppWindows`, registers hotkeys (`KeyboardShortcuts`), `ServicesProvider`, `LoginItem`; exposes `handle(urls:)` and `flush()` |
+| `AppContainer.live()` | Composition | M1: reads `vault.path` from `UserDefaults`; without it shows `FirstLaunchWindow` (default `~/Documents/Slate`, Choose…, Start). Then runs `VaultBootstrap`, builds `Ports.live`, `UseCases`, `PresentationAssembly`, `AppWindows`, writes the default config and templates, and starts the change feed. On `willTerminate` (a selector observer, so it runs on the main actor) it runs `pendingSave()` off the main actor and waits up to 3 s. Later: `ShellRunner`, hotkeys (`KeyboardShortcuts`), `ServicesProvider`, `LoginItem`, `handle(urls:)` |
 | `URLCommandParser` | Composition | `URL` → `URLCommand` enum (`new`, `open`, `append`, `capture`, `search`); rejects anything else |
 | `URLCommandHandler` | Composition | `URLCommand` → use case call and `AppActions` navigation |
 | `ServicesProvider` | Composition | `@objc addToSlate(_:userData:error:)` → `QuickCaptureUseCase` |

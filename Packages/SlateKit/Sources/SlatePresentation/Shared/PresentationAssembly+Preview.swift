@@ -7,9 +7,13 @@ extension PresentationAssembly {
     static func preview() -> PresentationAssembly {
         let ports = Ports.mock()
         let assembly = PresentationAssembly(ports: ports, useCases: UseCases(ports: ports), activity: ActivityLog())
-        assembly.noteList.spaces = MockVault.spaces
+        assembly.vault.config = MockVault.config
+        assembly.vault.types = NoteType.builtIn
         assembly.noteList.summaries = MockVault.notes
-        assembly.navigator.selectedNote = MockVault.taskNotes.first?.id
+        if let document = MockVault.documents.first(where: { $0.header.ticket == "ABC-123" }) {
+            assembly.navigator.selectedNote = document.id
+            assembly.editor.show(document)
+        }
         return assembly
     }
 }

@@ -5,10 +5,10 @@ import SlateDomain
 @MainActor
 @Observable
 final class Navigator {
-    var space: SpaceName? {
+    var source: ListSource {
         didSet {
-            guard space != oldValue else { return }
-            store.set(space?.rawValue, forKey: Keys.space)
+            guard source != oldValue else { return }
+            store.set(source.storedValue, forKey: Keys.source)
         }
     }
 
@@ -23,12 +23,16 @@ final class Navigator {
 
     init(store: any KeyValueStore) {
         self.store = store
-        space = store.string(forKey: Keys.space).map(SpaceName.init(rawValue:))
+        source = ListSource(storedValue: store.string(forKey: Keys.source))
         selectedNote = store.string(forKey: Keys.selectedNote).map(NoteID.init(rawValue:))
     }
 
-    func show(space: SpaceName?) {
-        self.space = space
+    var space: SpaceName? {
+        source.space
+    }
+
+    func show(_ source: ListSource) {
+        self.source = source
     }
 
     func select(_ id: NoteID?) {
@@ -36,7 +40,7 @@ final class Navigator {
     }
 
     private enum Keys {
-        static let space = "navigator.space"
+        static let source = "navigator.source"
         static let selectedNote = "navigator.selectedNote"
     }
 }

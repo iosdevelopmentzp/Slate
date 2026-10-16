@@ -5,25 +5,25 @@ import Testing
 
 @MainActor
 @Suite struct NavigatorTests {
-    @Test func restoresTheSpaceAndTheSelectedNote() {
+    @Test func restoresTheSourceAndTheSelectedNote() {
         let store = InMemoryKeyValueStore()
         let first = Navigator(store: store)
 
-        first.show(space: SpaceName(rawValue: "Tasks"))
+        first.show(.space(SpaceName(rawValue: "Tasks")))
         first.select(NoteID(rawValue: "c"))
         let second = Navigator(store: store)
 
-        #expect(second.space == SpaceName(rawValue: "Tasks"))
+        #expect(second.source == .space(SpaceName(rawValue: "Tasks")))
         #expect(second.selectedNote == NoteID(rawValue: "c"))
     }
 
-    @Test func clearingTheSpaceRemovesTheStoredValue() {
+    @Test func trashAndAllAreRestoredToo() {
         let store = InMemoryKeyValueStore()
-        let navigator = Navigator(store: store)
-        navigator.show(space: SpaceName(rawValue: "Inbox"))
+        Navigator(store: store).show(.trash)
 
-        navigator.show(space: nil)
+        #expect(Navigator(store: store).source == .trash)
 
-        #expect(Navigator(store: store).space == nil)
+        Navigator(store: store).show(.all)
+        #expect(Navigator(store: store).source == .all)
     }
 }

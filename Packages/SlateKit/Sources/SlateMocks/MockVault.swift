@@ -7,71 +7,78 @@ package enum MockVault {
 
     package static let reference = Date(timeIntervalSince1970: 1_792_000_000)
 
-    package static let spaces: [Space] = [
-        Space(folder: inbox, icon: "tray", noteCount: inboxNotes.count),
-        Space(folder: tasks, icon: "checklist", noteCount: taskNotes.count),
-    ]
+    package static let config = SpacesConfig(spaces: [
+        Space(folder: inbox, icon: "tray", defaultType: "note"),
+        Space(folder: tasks, icon: "checkmark.circle", defaultType: "task"),
+    ])
 
-    package static var notes: [NoteSummary] {
-        inboxNotes + taskNotes
+    package static var spaces: [Space] {
+        config.spaces
     }
 
-    package static let inboxNotes: [NoteSummary] = [
-        NoteSummary(
-            id: NoteID(rawValue: "0b6c1f7e-2a3d-4c5e-8f90-1a2b3c4d5e01"),
-            path: VaultPath(rawValue: "Inbox/Welcome to Slate.md"),
-            title: "Welcome to Slate",
-            pinned: true,
-            updated: reference.addingTimeInterval(-120),
-            preview: "Notes are plain Markdown files in your notes folder. Press ⌘N for a new note, ⌘F to search, ⌘0 to show the sidebar."
+    package static var notes: [NoteSummary] {
+        documents.map { MockIndexedNoteBuilder().build($0).summary }
+    }
+
+    package static var inboxNotes: [NoteSummary] {
+        notes.filter { $0.space == inbox }
+    }
+
+    package static var taskNotes: [NoteSummary] {
+        notes.filter { $0.space == tasks }
+    }
+
+    package static let documents: [NoteDocument] = [
+        document(
+            "0b6c1f7e-2a3d-4c5e-8f90-1a2b3c4d5e01", space: inbox, title: "Welcome to Slate", pinned: true, minutesAgo: 2,
+            body: "Notes are plain Markdown files in your notes folder.\n\n- ⌘N makes a new note in the current folder.\n- ⌘F searches the notes.\n- ⌘⇧O opens Slate in a window.\n"
         ),
-        NoteSummary(
-            id: NoteID(rawValue: "0b6c1f7e-2a3d-4c5e-8f90-1a2b3c4d5e02"),
-            path: VaultPath(rawValue: "Inbox/Swift concurrency reading list.md"),
-            title: "Swift concurrency reading list",
-            updated: reference.addingTimeInterval(-3_600 * 5),
-            preview: "Sendable checking, actor reentrancy, task groups and cancellation. Read the evolution proposals first.",
-            openTodos: 3
+        document(
+            "0b6c1f7e-2a3d-4c5e-8f90-1a2b3c4d5e02", space: inbox, title: "Swift concurrency reading list", minutesAgo: 300,
+            body: "Sendable checking, actor reentrancy, task groups and cancellation.\n\n- [ ] SE-0306 actors\n- [ ] SE-0304 structured concurrency\n- [ ] SE-0337 incremental migration\n"
         ),
-        NoteSummary(
-            id: NoteID(rawValue: "0b6c1f7e-2a3d-4c5e-8f90-1a2b3c4d5e03"),
-            path: VaultPath(rawValue: "Inbox/Screenshot of the login screen.md"),
-            title: "Screenshot of the login screen",
-            updated: reference.addingTimeInterval(-86_400),
-            preview: "The button overlaps the keyboard on small screens.",
-            attachmentCount: 2
+        document(
+            "0b6c1f7e-2a3d-4c5e-8f90-1a2b3c4d5e03", space: inbox, title: "Screenshot of the login screen", minutesAgo: 1_440,
+            body: "The button overlaps the keyboard on small screens.\n\n![](../_attachments/20261015-101500-screenshot.png)\n![](../_attachments/20261015-101530-screenshot.png)\n"
+        ),
+        document(
+            "0b6c1f7e-2a3d-4c5e-8f90-1a2b3c4d5e11", space: tasks, title: "ABC-123 Fix the crash on launch", type: .task, status: .active, ticket: "ABC-123", minutesAgo: 10,
+            body: "## Context\n\nThe crash happens when the cache folder is missing.\n\n## Plan\n\n- [x] Reproduce\n- [ ] Create the folder on launch\n- [ ] Add a test\n"
+        ),
+        document(
+            "0b6c1f7e-2a3d-4c5e-8f90-1a2b3c4d5e12", space: tasks, title: "ABC-124 Add dark mode to settings", type: .task, status: .review, ticket: "ABC-124", minutesAgo: 2_880,
+            body: "## Context\n\nAll colours come from the theme. Check every screen in both appearances.\n\n![](../_attachments/20261014-090000-window.png)\n"
+        ),
+        document(
+            "0b6c1f7e-2a3d-4c5e-8f90-1a2b3c4d5e13", space: tasks, title: "ABC-120 Update the onboarding text", type: .task, status: .done, ticket: "ABC-120", minutesAgo: 12_960,
+            body: "## Context\n\nShorter sentences on every page. Approved.\n"
         ),
     ]
 
-    package static let taskNotes: [NoteSummary] = [
-        NoteSummary(
-            id: NoteID(rawValue: "0b6c1f7e-2a3d-4c5e-8f90-1a2b3c4d5e11"),
-            path: VaultPath(rawValue: "Tasks/ABC-123 Fix the crash on launch.md"),
-            title: "Fix the crash on launch",
-            status: .active,
-            ticket: "ABC-123",
-            updated: reference.addingTimeInterval(-600),
-            preview: "The crash happens when the cache folder is missing. Steps to reproduce, findings and the fix plan.",
-            openTodos: 2
-        ),
-        NoteSummary(
-            id: NoteID(rawValue: "0b6c1f7e-2a3d-4c5e-8f90-1a2b3c4d5e12"),
-            path: VaultPath(rawValue: "Tasks/ABC-124 Add dark mode to settings.md"),
-            title: "Add dark mode to settings",
-            status: .review,
-            ticket: "ABC-124",
-            updated: reference.addingTimeInterval(-86_400 * 2),
-            preview: "All colours come from the theme. Check every screen in both appearances.",
-            attachmentCount: 1
-        ),
-        NoteSummary(
-            id: NoteID(rawValue: "0b6c1f7e-2a3d-4c5e-8f90-1a2b3c4d5e13"),
-            path: VaultPath(rawValue: "Tasks/ABC-120 Update the onboarding text.md"),
-            title: "Update the onboarding text",
-            status: .done,
-            ticket: "ABC-120",
-            updated: reference.addingTimeInterval(-86_400 * 9),
-            preview: "Shorter sentences on every page. Approved."
-        ),
-    ]
+    private static func document(
+        _ id: String,
+        space: SpaceName,
+        title: String,
+        type: NoteType = .note,
+        status: NoteStatus? = nil,
+        ticket: String? = nil,
+        pinned: Bool = false,
+        minutesAgo: Double,
+        body: String
+    ) -> NoteDocument {
+        let date = reference.addingTimeInterval(-minutesAgo * 60)
+        var header = HeaderDefaultsPolicy.header(id: NoteID(rawValue: id), title: title, type: type, now: date)
+        header.status = status?.rawValue
+        header.ticket = ticket
+        header.pinned = pinned ? true : nil
+        let path = VaultPath(space: space, stem: StemPolicy.stem(forTitle: title))
+        let data = NoteCodec.encode(header: header, body: body, opaqueHeader: nil, timeZone: .gmt)
+        return NoteDocument(
+            path: path,
+            header: header,
+            body: body,
+            hash: .of(data),
+            meta: FileMeta(path: path, created: date, modified: date, size: data.count)
+        )
+    }
 }

@@ -7,6 +7,7 @@ import Testing
         let id = NoteID(rawValue: "a")
 
         #expect(AppEvent.noteSaved(id) == .noteSaved(id))
-        #expect(AppEvent.noteSaved(id) != .noteCreated(id))
+        #expect(AppEvent.noteSaved(id) != .noteCreated(id, caret: 0))
+        #expect(AppEvent.noteCreated(id, caret: 1) != .noteCreated(id, caret: 2))
     }
 }

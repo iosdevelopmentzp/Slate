@@ -1,14 +1,24 @@
 import Foundation
 import SlateDomain
 
-package final class MockVaultConfigRepository: VaultConfigRepository {
-    private let spaces: [Space]
+actor MockVaultConfigRepository: VaultConfigRepository {
+    private var config: SpacesConfig
 
-    package init(spaces: [Space] = MockVault.spaces) {
-        self.spaces = spaces
+    init(config: SpacesConfig = MockVault.config) {
+        self.config = config
     }
 
-    package func spaces() async throws -> [Space] {
-        spaces
+    func spaces() -> SpacesConfig {
+        config
     }
+
+    func saveSpaces(_ config: SpacesConfig) {
+        self.config = config
+    }
+
+    func types() -> [NoteType] {
+        NoteType.builtIn
+    }
+
+    func ensureDefaults() {}
 }

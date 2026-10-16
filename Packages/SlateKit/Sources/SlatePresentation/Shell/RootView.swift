@@ -4,10 +4,13 @@ import SlateUI
 
 struct RootView: View {
     @Environment(NoteListStore.self) private var noteList
+    @Environment(EditorStore.self) private var editor
+    @Environment(Navigator.self) private var navigator
     @Environment(Toaster.self) private var toaster
     @Environment(WindowLayout.self) private var layout
     @Environment(\.hintCenter) private var hintCenter
     @Environment(\.surface) private var surface
+    @Environment(\.openAsWindow) private var openAsWindow
 
     @State private var showsSidebar = true
 
@@ -24,22 +27,24 @@ struct RootView: View {
                 HSplitView {
                     NoteListView()
                         .frame(minWidth: 240, idealWidth: 300, maxWidth: 400)
-                    NoteDetailView()
+                    EditorView()
                         .frame(minWidth: 320, maxWidth: .infinity)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay(alignment: .bottom) {
                 if let toast = toaster.text {
-                    ToastView(text: toast)
-                        .padding(.bottom, 12)
+                    ToastView(text: toast, actionTitle: toaster.actionTitle) {
+                        toaster.performAction()
+                    }
+                    .padding(.bottom, 12)
                 }
             }
             .animation(.easeInOut(duration: 0.15), value: toaster.text)
             Divider()
             FooterView()
         }
-        .background(sidebarShortcut)
+        .background(shortcuts)
         .overlay {
             if let hintCenter {
                 HintOverlay(center: hintCenter)
@@ -51,16 +56,34 @@ struct RootView: View {
         .task(id: layout.openCount) {
             await noteList.refresh()
         }
+        .onChange(of: navigator.selectedNote, initial: true) { _, id in
+            Task { await editor.open(id) }
+        }
     }
 
-    @ViewBuilder
-    private var sidebarShortcut: some View {
-        if surface == .window {
-            Button("") { showsSidebar.toggle() }
-                .keyboardShortcut("0", modifiers: .command)
-                .opacity(0)
-                .allowsHitTesting(false)
+    private var shortcuts: some View {
+        ZStack {
+            shortcut("n", modifiers: .command) { Task { await noteList.createNote() } }
+            shortcut("t", modifiers: [.command, .shift]) { Task { await noteList.createNote(type: NoteType.task.name) } }
+            shortcut("p", modifiers: [.command, .shift]) {
+                guard let selected = noteList.selected else { return }
+                Task { await noteList.togglePin(selected) }
+            }
+            if surface == .panel {
+                shortcut("o", modifiers: [.command, .shift]) { openAsWindow() }
+            }
+            if surface == .window {
+                shortcut("0", modifiers: .command) { showsSidebar.toggle() }
+            }
         }
+    }
+
+    private func shortcut(_ key: KeyEquivalent, modifiers: EventModifiers, action: @escaping () -> Void) -> some View {
+        Button("", action: action)
+            .keyboardShortcut(key, modifiers: modifiers)
+            .opacity(0)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 }
 

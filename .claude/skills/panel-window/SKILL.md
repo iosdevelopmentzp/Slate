@@ -5,7 +5,7 @@ description: "How Slate's menu bar item, panel and window work: NSStatusItem plu
 
 # Panel and window
 
-Matches the code since milestone M0. Hot keys, the capture panel and the login item come later (`docs/PLAYBOOK.md` sections 1 to 3); their notes below are the plan, not code yet.
+Matches the code since milestone M1. Hot keys, the capture panel and the login item come later (`docs/PLAYBOOK.md` sections 1 to 3); their notes below are the plan, not code yet.
 
 ## Why not `MenuBarExtra`
 
@@ -30,6 +30,9 @@ Matches the code since milestone M0. Hot keys, the capture panel and the login i
 - First open creates the `NSHostingController` and keeps it. Later opens only set the frame and call `makeKeyAndOrderFront`, then `layout.openCount += 1`. `RootView` runs `.task(id: layout.openCount)` to refresh `NoteListStore`.
 - `NSApp.activate()` before `makeKeyAndOrderFront`, `statusItem.button?.highlight(true)` while open.
 - Close on a global mouse-down monitor (`NSEvent.addGlobalMonitorForEvents`) and `NSApplication.didResignActiveNotification`. Remove the monitor on close. Opening the window closes the panel.
+- Save before a surface goes away: `closePanel()`, `windowWillClose` and `windowDidResignKey` (AppWindows is the window delegate) call `assembly.flush()`. Quit is handled in `AppContainer` (`willTerminate` runs `pendingSave()` and waits up to 3 s).
+- First launch: `AppContainer` shows `FirstLaunchWindow` (a normal titled window with `FirstLaunchView`) before any `AppWindows` exists, because the ports need the vault folder.
+- A synthetic click from `osascript` opens the panel but does not make Slate the active app, so scripted keystrokes go to the frontmost app. UI checks with the keyboard need a person.
 - Callbacks from AppKit hop to the main actor with `Task { @MainActor [weak self] in guard let self else { return } … }`. Never `MainActor.assumeIsolated`, never `DispatchQueue.main` (`docs/ARCHITECTURE.md` sections 3 and 11).
 
 ## Position and size

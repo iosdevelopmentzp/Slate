@@ -7,10 +7,19 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
-- The menu bar icon opens a panel with a list of sample notes in two folders, Inbox and Tasks. The panel can be moved and resized and remembers both.
-- The folder menu in the header switches between All notes and one folder. The search field (`⌘F`) filters the list by title.
+- On first launch Slate asks where to keep the notes (default `~/Documents/Slate`) and prepares the folder with six folders, templates, settings files and a welcome note.
+- Notes are Markdown files with a header. The list shows the notes on disk and follows changes made in Finder or another editor.
+- `⌘N` makes a note in the current folder and puts the cursor in the title; `⌘⇧T` makes a task in Tasks from the task template. The New menu also offers Snippet and Meeting.
+- The editor saves half a second after you stop typing, when you switch notes, when the panel or the window closes, and on quit.
+- Changing the title renames the file. A new untitled note takes its title from its first line until you type a title.
+- A note that changes on disk reloads when you have not edited it. When you have, a banner offers Keep mine or Take theirs; nothing is overwritten without asking.
+- Pin, Move to, Duplicate, Archive and Move to Trash on each row (hover or right click). Moving to the Trash asks first and the toast offers Undo. The Trash lists the notes with their folder and restores them.
+- Sort the list by date changed, date created or title (folder menu). Pinned notes stay on top.
+- In the window sidebar: New folder, and Rename, Icon, Move up, Move down for each folder. A folder made in Finder appears as a folder in Slate.
+- The menu bar icon opens a panel with the note list and the editor. The panel can be moved and resized and remembers both.
+- The folder menu in the header switches between All notes, one folder and the Trash. The search field (`⌘F`) filters the list by title.
 - List rows show the title, the date, a two-line preview, the status, the ticket, the number of images and open checkboxes, and a pin for pinned notes.
-- The selected note shows its title and chips above a plain editor. Changes are not saved yet.
+- The selected note shows its title and chips above a plain editor.
 - "Open as window" opens a normal window with a sidebar of folders and their note counts. `⌘0` hides the sidebar.
 - The app follows the system appearance, light or dark.
 
@@ -19,6 +28,10 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ### Fixed
 
 ### Infrastructure
+- M1: note codec (header parser and writer, opaque headers kept byte for byte), stem, preview, title, template and conflict policies, twelve use cases, coordinated atomic file store, trash with manifest, config and template files, vault bootstrap, in-memory index, FSEvents watcher with coalescing and own-write filter. 222 tests in 57 suites, among them integration tests over real FSEvents and a concurrent `touch` loop.
+- Test spies are in-memory fakes that record their calls; `StoreHarness` builds the stores over them.
+- `docs/PLAYBOOK.md` sections 4 and 5 are verified, with the traps found (`/private` paths, rescan batches, stream cancellation).
+- `testing` and `panel-window` skills, `ARCHITECTURE.md`, the data rule and `CLAUDE.md` match the M1 code.
 - Specification: `docs/SPEC.md`, `docs/STORAGE-FORMAT.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/PLAYBOOK.md`, `docs/BOOTSTRAP.md`, `docs/UX.md`, six ADRs.
 - Xcode project with the settings from `docs/BOOTSTRAP.md` section 1 and the local package `Packages/SlateKit` (nine modules, five test targets, one test each).
 - `Scripts/`: `build.sh`, `test.sh`, `run.sh`, `install.sh`, `check-layers.sh`, `layer-exceptions.txt`.

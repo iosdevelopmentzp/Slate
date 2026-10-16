@@ -3,7 +3,7 @@ import SwiftUI
 import SlateUI
 
 @MainActor
-package final class AppWindows: NSObject {
+package final class AppWindows: NSObject, NSWindowDelegate {
     private let assembly: PresentationAssembly
     private let statusItem: NSStatusItem
     private let panel: MenuBarPanel
@@ -75,6 +75,14 @@ package final class AppWindows: NSObject {
         window.makeKeyAndOrderFront(nil)
     }
 
+    package func windowWillClose(_ notification: Notification) {
+        Task { await assembly.flush() }
+    }
+
+    package func windowDidResignKey(_ notification: Notification) {
+        Task { await assembly.flush() }
+    }
+
     @objc private func statusItemClicked() {
         togglePanel()
     }
@@ -95,6 +103,7 @@ package final class AppWindows: NSObject {
 
     private func closePanel() {
         guard panel.isVisible else { return }
+        Task { await assembly.flush() }
         panel.orderOut(nil)
         statusItem.button?.highlight(false)
         if let clickMonitor {
@@ -132,6 +141,7 @@ package final class AppWindows: NSObject {
         window.title = "Slate"
         window.isReleasedWhenClosed = false
         window.contentMinSize = WindowLayout.minimumSize
+        window.delegate = self
         window.contentViewController = hostingController(surface: .window)
         return window
     }

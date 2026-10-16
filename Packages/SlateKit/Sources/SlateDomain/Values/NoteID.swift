@@ -10,4 +10,12 @@ package struct NoteID: Hashable, Sendable, Codable {
     package static func generate() -> NoteID {
         NoteID(rawValue: UUID().uuidString.lowercased())
     }
+
+    package static func forPath(_ path: VaultPath) -> NoteID {
+        NoteID(rawValue: "path:\(path.rawValue)")
+    }
+
+    package var isPathBased: Bool {
+        rawValue.hasPrefix("path:")
+    }
 }

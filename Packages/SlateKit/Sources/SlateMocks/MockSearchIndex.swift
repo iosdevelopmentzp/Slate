@@ -1,15 +1,35 @@
 import Foundation
 import SlateDomain
 
-package final class MockSearchIndex: SearchIndex {
-    private let notes: [NoteSummary]
+actor MockSearchIndex: SearchIndex {
+    private var notes: [VaultPath: IndexedNote]
 
-    package init(notes: [NoteSummary] = MockVault.notes) {
-        self.notes = notes
+    init(documents: [NoteDocument] = MockVault.documents) {
+        let builder = MockIndexedNoteBuilder()
+        notes = Dictionary(uniqueKeysWithValues: documents.map { ($0.path, builder.build($0)) })
     }
 
-    package func summaries(space: SpaceName?) async throws -> [NoteSummary] {
-        guard let space else { return notes }
-        return notes.filter { $0.space == space }
+    func summaries(space: SpaceName?) -> [NoteSummary] {
+        notes.values.map(\.summary).filter { space == nil || $0.space == space }
+    }
+
+    func summary(id: NoteID) -> NoteSummary? {
+        notes.values.first { $0.summary.id == id }?.summary
+    }
+
+    func fileStates() -> [VaultPath: IndexedFileState] {
+        notes.mapValues(\.state)
+    }
+
+    func upsert(_ note: IndexedNote) {
+        notes[note.summary.path] = note
+    }
+
+    func updateState(_ state: IndexedFileState, for path: VaultPath) {
+        notes[path]?.state = state
+    }
+
+    func remove(path: VaultPath) {
+        notes[path] = nil
     }
 }

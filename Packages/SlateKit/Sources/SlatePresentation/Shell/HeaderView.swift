@@ -21,8 +21,9 @@ struct HeaderView: View {
                         .opacity(0)
                         .allowsHitTesting(false)
                 )
+            NewNoteMenu()
             if surface == .panel {
-                IconButton(systemImage: "macwindow", help: "Open as window") {
+                IconButton(systemImage: "macwindow", help: "Open as window (⌘⇧O)") {
                     openAsWindow()
                 }
                 .accessibilityLabel("Open as window")

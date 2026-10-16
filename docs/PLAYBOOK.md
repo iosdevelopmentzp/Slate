@@ -32,7 +32,7 @@ Copy `FloatingPanel` and the rules in `../Verba/.claude/rules/ui-panel.md`.
 - No Accessibility permission is needed. A conflict with a system shortcut shows in the recorder; the Doctor lists the current values.
 - Fallback with no dependency: Carbon `RegisterEventHotKey` as in DevHub's `GlobalHotKey`; no recorder then.
 
-## 4. File coordination and atomic writes — verify first
+## 4. File coordination and atomic writes — verified (M1)
 
 Expected approach (standard AppKit, used by document-based apps):
 
@@ -40,15 +40,21 @@ Expected approach (standard AppKit, used by document-based apps):
 - **Never nest coordinated calls** for the same URL: it deadlocks. One coordinated block per file operation; the use case orders operations, the store never coordinates.
 - Coordinated calls block the calling thread: never on the main actor. Port methods are `async` and run in the nonisolated Data module.
 - Do not register an `NSFilePresenter` per note: it does not scale to thousands of files. FSEvents (section 5) is the change source.
-- Check (M1): write a note while `touch`ing it from a terminal loop; no partial reads, no lost writes, the conflict path returns `.conflict`.
+- Check (M1), done: `FileVaultStoreIntegrationTests` writes 40 versions while `sh` touches the file 200 times; every read is a whole version and the last write wins. `FileVaultStoreTests` covers the conflict path, the kept creation date and that no `.slate-tmp` file stays behind.
+- The store is an `actor`, so coordinated calls never run on the main actor. With `NonisolatedNonsendingByDefault`, a plain `nonisolated async` method runs on the caller's actor: long work in a struct needs `@concurrent` (`ReindexVaultUseCase.execute`).
+- A folder rename that changes only the case (`Reading` → `reading`) fails as one move on a case-insensitive disk. Move through a temporary hidden name (`FileVaultStore.moveFolder`).
 
-## 5. FSEvents watcher — verify first
+## 5. FSEvents watcher — verified (M1)
 
 - `FSEventStreamCreate` on the vault root with `kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagUseCFTypes | kFSEventStreamCreateFlagNoDefer`, latency `0.3`, since `kFSEventStreamEventIdSinceNow`. `FSEventStreamSetDispatchQueue` to a serial queue, `FSEventStreamStart`. Stop, invalidate and release on deinit.
 - Paths arrive as strings; standardise before comparing (`URL(fileURLWithPath:).standardizedFileURL.resolvingSymlinksInPath()`): the vault may be reported under `/private/var` or with a different case.
 - `kFSEventStreamEventFlagMustScanSubDirs` or `kFSEventStreamEventFlagRootChanged`: run a full scan.
 - Events come for our own writes, for `.slate-tmp` files and for `.icloud` placeholders. `ChangeCoalescer` groups paths for 300 ms, drops ignored names, drops own writes (same path, same hash on disk within two seconds).
-- Check (M1): create, edit, rename and delete a file in Finder and from `echo >>`; each produces exactly one `VaultChange` with the right kind.
+- Check (M1), done in `FSEventsVaultWatcherIntegrationTests`: an edit gives `.paths([path])`, a rename gives both paths, a delete gives the path, a new folder gives `.rescan`, and an own write gives nothing. `VaultChange` has no kind: the reindex reads the disk for each path.
+- Trap: `URL.resolvingSymlinksInPath()` removes `/private` only when the file exists. A deleted or renamed-away file then keeps `/private/var/…` and no longer matches the root. `ChangeCoalescer` resolves the root once and removes the `/private` prefix from event paths by hand.
+- Trap: the event for the root folder itself and the events for folders made just before the stream started arrive in the first batch. The root path is ignored; a folder event means `.rescan`, and `.rescan` wins over the paths of the same batch.
+- `String.write(atomically:)` from other tools writes `<name>.sb-…` temporary files next to the note; they are not `.md` and are ignored.
+- Cancelling the task that iterates an `AsyncStream` finishes the stream and stops the FSEvents session. Tests use one consumer for the whole test.
 
 ## 6. Vault inside iCloud Drive (F3, P2) — verify first
 

@@ -63,7 +63,7 @@ port. Requirements carry no access keyword.
 - `SlateTestSupport/SpyDeviceRepository.swift`: a `Call` enum, scripted `listResult` and `reconnectError`, a lock.
   Copy the shape of `SpyWorktreeRepository`.
 - One field in `Ports` (`SlateDomain/Assembly/Ports.swift`, also in its `package init`), one line in
-  `Ports.live(shell:)` (`SlateData/Assembly/Ports+Live.swift`), one in `Ports.mock()`
+  `Ports.live(root:keyValues:)` (`SlateData/Assembly/Ports+Live.swift`), one in `Ports.mock()`
   (`SlateMocks/Ports+Mock.swift`), one in `PortSpies` and in `Ports.spies(keyValues:)` (`SlateTestSupport/`).
 
 ## 4. Use case — only when there is logic

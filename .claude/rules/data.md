@@ -13,12 +13,12 @@ paths:
 - Nonisolated is the module default: never write `nonisolated` on a type. A member of an actor may be `nonisolated`
   (`ShellRunner.run`).
 - Access: the live repositories, runners and parsers stay internal. `package` only on what Composition or the tests
-  need from outside: `Ports.live(shell:)`, `ShellRunner.init(recorder:)`, `UserDefaultsKeyValueStore.init(defaults:)`,
+  need from outside: `Ports.live(root:keyValues:)`, `VaultBootstrap`, `ShellRunner.init(recorder:)`, `UserDefaultsKeyValueStore.init(defaults:)`,
   `GlobalHotKey`. Tests reach the rest with `@testable import SlateData`.
 - Named by technology: `FileVaultStore`, `GRDBSearchIndex`, `FSEventsVaultWatcher`, `GitHistoryRepository`,
   `ScreencaptureTool`, `KeychainSecretStore`, `URLSessionLinkTitleFetcher`.
 - Everything a repository needs comes through `init`, including file roots. No repository builds another
-  repository. No `.shared`. `Ports.live(shell:)` (`Assembly/Ports+Live.swift`) builds every repository once.
+  repository. No `.shared`. `Ports.live(root:keyValues:)` (`Assembly/Ports+Live.swift`) builds every repository once.
 
 ```swift
 struct ShellWorktreeRepository: WorktreeRepository {

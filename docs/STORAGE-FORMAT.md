@@ -9,7 +9,7 @@ Vocabulary: the **vault** is the root folder. A **space** is a top-level folder 
 ## 1. Vault layout
 
 ```
-Slate/                          the vault (user-chosen folder, default in iCloud Drive)
+Slate/                          the vault (user-chosen folder, default ~/Documents/Slate, ADR 0002)
   Inbox/                        space
   Tasks/                        space
   Notes/                        space
