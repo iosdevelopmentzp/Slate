@@ -33,7 +33,7 @@ forbid SlateDomain '\b(Process|UserDefaults|NSWorkspace|NSPasteboard|NSScreen|NS
 
 forbid SlateData '^import (SwiftUI|Observation)' 'SlateData imports SwiftUI or Observation'
 forbid SlateData '^import AppKit' 'SlateData imports AppKit outside SlateData/System' '/SlateData/System/'
-forbid SlateData '\.shared\b' 'SlateData uses a shared singleton' 'URLSession\.shared|NSWorkspace\.shared'
+forbid SlateData '\.shared\b' 'SlateData uses a shared singleton' 'URLSession\.shared|NSWorkspace\.shared|QLPreviewPanel\.shared'
 forbid SlateData '\bProcess\(' 'SlateData runs a process outside ShellRunner' '/SlateData/Shell/ShellRunner\.swift:'
 forbid SlateData '\bUserDefaults\b' 'SlateData uses UserDefaults outside UserDefaultsKeyValueStore' '/SlateData/Persistence/UserDefaultsKeyValueStore\.swift:'
 forbid SlateData 'NSFileCoordinator' 'SlateData coordinates files outside SlateData/Files' '/SlateData/Files/'
@@ -62,7 +62,7 @@ for module in SlateDomain SlateData SlateMocks SlateTestSupport SlateCLI; do
     forbid "$module" '^nonisolated ' "$module declares nonisolated at the top level (it is the module default)"
 done
 
-matches="$(grep -rEn --include='*.swift' '\bpublic\b' "$SRC" "$TESTS" | grep -v "^$SRC/SlateComposition/" || true)"
+matches="$(grep -rEn --include='*.swift' '\bpublic\b' "$SRC" "$TESTS" | grep -v "^$SRC/SlateComposition/" | grep -v '"public"' || true)"
 if [ -n "$matches" ]; then
     report 'public used outside SlateComposition'
     printf '%s\n' "$matches" | sed "s#^$ROOT/#  #"

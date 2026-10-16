@@ -5,55 +5,50 @@ package struct MarkdownEditorView: NSViewRepresentable {
     @Binding private var text: String
     private let configuration: EditorConfiguration
     private let focus: EditorFocusRequest?
+    private let insertion: EditorInsertion?
     private let handlers: EditorHandlers
 
-    package init(text: Binding<String>, configuration: EditorConfiguration, focus: EditorFocusRequest? = nil, handlers: EditorHandlers = EditorHandlers()) {
+    package init(
+        text: Binding<String>,
+        configuration: EditorConfiguration,
+        focus: EditorFocusRequest? = nil,
+        insertion: EditorInsertion? = nil,
+        handlers: EditorHandlers = EditorHandlers()
+    ) {
         _text = text
         self.configuration = configuration
         self.focus = focus
+        self.insertion = insertion
         self.handlers = handlers
     }
 
     package func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text, handlers: handlers)
+        Coordinator(controller: EditorController(configuration: configuration))
     }
 
-    package func makeNSView(context: Context) -> NSScrollView {
-        let textView = NSTextView(usingTextLayoutManager: true)
-        textView.isRichText = false
-        textView.allowsUndo = true
-        textView.usesFontPanel = false
-        textView.isAutomaticQuoteSubstitutionEnabled = false
-        textView.isAutomaticDashSubstitutionEnabled = false
-        textView.isAutomaticTextReplacementEnabled = false
-        textView.isAutomaticDataDetectionEnabled = false
-        textView.isAutomaticLinkDetectionEnabled = false
-        textView.drawsBackground = false
-        textView.font = configuration.proseFont
-        textView.textContainerInset = NSSize(width: 16, height: 12)
-        textView.isVerticallyResizable = true
-        textView.isHorizontallyResizable = false
-        textView.autoresizingMask = [.width]
-        textView.textContainer?.widthTracksTextView = true
-        textView.delegate = context.coordinator
-        textView.string = text
-
-        let scrollView = NSScrollView()
-        scrollView.hasVerticalScroller = true
-        scrollView.drawsBackground = false
-        scrollView.documentView = textView
-        return scrollView
-    }
-
-    package func updateNSView(_ scrollView: NSScrollView, context: Context) {
-        context.coordinator.text = $text
-        context.coordinator.handlers = handlers
-        guard let textView = scrollView.documentView as? NSTextView else { return }
-        if textView.string != text {
-            textView.string = text
+    package func makeNSView(context: Context) -> NSView {
+        let coordinator = context.coordinator
+        coordinator.text = $text
+        coordinator.controller.handlers = handlers
+        coordinator.controller.onTextChange = { [weak coordinator] string in
+            guard let coordinator else { return }
+            coordinator.text?.wrappedValue = string
         }
-        guard let focus, focus.token != context.coordinator.focusToken else { return }
-        context.coordinator.focusToken = focus.token
+        coordinator.controller.setText(text)
+        return coordinator.controller.container
+    }
+
+    package func updateNSView(_ view: NSView, context: Context) {
+        let coordinator = context.coordinator
+        let controller = coordinator.controller
+        coordinator.text = $text
+        controller.handlers = handlers
+        controller.apply(configuration: configuration)
+        controller.setText(text)
+        controller.apply(insertion: insertion)
+        guard let focus, focus.token != coordinator.focusToken else { return }
+        coordinator.focusToken = focus.token
+        let textView = controller.textView
         let length = (textView.string as NSString).length
         let caret = min(max(focus.caret ?? length, 0), length)
         Task { @MainActor in
@@ -63,23 +58,19 @@ package struct MarkdownEditorView: NSViewRepresentable {
         }
     }
 
-    package final class Coordinator: NSObject, NSTextViewDelegate {
-        var text: Binding<String>
-        var handlers: EditorHandlers
+    package final class Coordinator: NSObject {
+        let controller: EditorController
+        var text: Binding<String>?
         var focusToken: Int?
 
-        init(text: Binding<String>, handlers: EditorHandlers) {
-            self.text = text
-            self.handlers = handlers
+        init(controller: EditorController) {
+            self.controller = controller
+            super.init()
+            NotificationCenter.default.addObserver(self, selector: #selector(didEndEditing), name: NSText.didEndEditingNotification, object: controller.textView)
         }
 
-        package func textDidChange(_ notification: Notification) {
-            guard let textView = notification.object as? NSTextView else { return }
-            text.wrappedValue = textView.string
-        }
-
-        package func textDidEndEditing(_ notification: Notification) {
-            handlers.didEndEditing()
+        @objc private func didEndEditing() {
+            controller.handlers.didEndEditing()
         }
     }
 }

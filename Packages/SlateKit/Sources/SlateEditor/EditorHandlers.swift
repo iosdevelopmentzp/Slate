@@ -2,8 +2,31 @@ import Foundation
 
 package struct EditorHandlers {
     package var didEndEditing: () -> Void
+    package var resolveImage: (String) -> URL?
+    package var openLink: (EditorLink) -> Void
+    package var attachment: (String, AttachmentAction) -> Void
+    package var pasteImage: (Data, String) -> Void
+    package var pasteFiles: ([URL]) -> Void
+    package var pasteURL: (String) -> String?
+    package var requestScreenshot: (ScreenshotKind) -> Void
 
-    package init(didEndEditing: @escaping () -> Void = {}) {
+    package init(
+        didEndEditing: @escaping () -> Void = {},
+        resolveImage: @escaping (String) -> URL? = { _ in nil },
+        openLink: @escaping (EditorLink) -> Void = { _ in },
+        attachment: @escaping (String, AttachmentAction) -> Void = { _, _ in },
+        pasteImage: @escaping (Data, String) -> Void = { _, _ in },
+        pasteFiles: @escaping ([URL]) -> Void = { _ in },
+        pasteURL: @escaping (String) -> String? = { _ in nil },
+        requestScreenshot: @escaping (ScreenshotKind) -> Void = { _ in }
+    ) {
         self.didEndEditing = didEndEditing
+        self.resolveImage = resolveImage
+        self.openLink = openLink
+        self.attachment = attachment
+        self.pasteImage = pasteImage
+        self.pasteFiles = pasteFiles
+        self.pasteURL = pasteURL
+        self.requestScreenshot = requestScreenshot
     }
 }

@@ -59,7 +59,7 @@ let package = Package(
         ),
         .testTarget(name: "SlateDomainTests", dependencies: ["SlateDomain", "SlateTestSupport"], swiftSettings: shared),
         .testTarget(name: "SlateDataTests", dependencies: ["SlateData", "SlateMocks", "SlateTestSupport"], swiftSettings: shared),
-        .testTarget(name: "SlateEditorTests", dependencies: ["SlateEditor"], swiftSettings: mainActor),
+        .testTarget(name: "SlateEditorTests", dependencies: ["SlateEditor"], resources: [.copy("Fixtures")], swiftSettings: mainActor),
         .testTarget(name: "SlateUITests", dependencies: ["SlateUI"], swiftSettings: mainActor),
         .testTarget(name: "SlatePresentationTests", dependencies: ["SlatePresentation", "SlateMocks", "SlateTestSupport"], swiftSettings: mainActor),
     ]
