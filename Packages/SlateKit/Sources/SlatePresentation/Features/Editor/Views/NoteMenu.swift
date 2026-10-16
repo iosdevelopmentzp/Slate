@@ -5,6 +5,8 @@ import SlateUI
 struct NoteMenu: View {
     @Environment(EditorStore.self) private var editor
     @Environment(VaultStore.self) private var vault
+    @Environment(\.openNoteWindow) private var openNoteWindow
+    @Environment(\.surface) private var surface
     let document: NoteDocument
 
     var body: some View {
@@ -17,6 +19,12 @@ struct NoteMenu: View {
                             Task { await editor.run(action) }
                         }
                     }
+                }
+            }
+            if surface != .floating {
+                Section {
+                    Button("Float on Top", systemImage: "pin.circle") { openNoteWindow(document.id, true) }
+                    Button("Open in New Window", systemImage: "macwindow.badge.plus") { openNoteWindow(document.id, false) }
                 }
             }
             Section("Share") {

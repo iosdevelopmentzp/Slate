@@ -22,6 +22,7 @@ package final class PresentationAssembly {
     let history: HistoryStore
     let todos: TodoStore
     let palette: PaletteStore
+    let issues: IssueStore
 
     package init(ports: Ports, useCases: UseCases, activity: ActivityLog, vaultRoot: URL) {
         events = AppEvents()
@@ -59,27 +60,34 @@ package final class PresentationAssembly {
             store: ports.keyValues
         )
         search = SearchStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
-        editor = EditorStore(
-            files: ports.files,
-            index: ports.index,
-            save: useCases.save,
-            rename: useCases.rename,
-            navigator: navigator,
-            activity: activity,
-            events: events,
-            clock: ports.clock,
-            importAttachment: useCases.importAttachment,
-            attachScreenshot: useCases.attachScreenshot,
-            workspace: ports.workspace,
-            vaultRoot: vaultRoot,
-            panel: panelVisibility,
-            toaster: toaster,
-            create: useCases.create,
-            templates: ports.templates,
-            journal: ports.journal,
-            runAction: useCases.runAction,
-            exporter: ports.exporter
-        )
+        let navigator = navigator
+        let events = events
+        let panelVisibility = panelVisibility
+        let toaster = toaster
+        editorFactory = {
+            EditorStore(
+                files: ports.files,
+                index: ports.index,
+                save: useCases.save,
+                rename: useCases.rename,
+                navigator: navigator,
+                activity: activity,
+                events: events,
+                clock: ports.clock,
+                importAttachment: useCases.importAttachment,
+                attachScreenshot: useCases.attachScreenshot,
+                workspace: ports.workspace,
+                vaultRoot: vaultRoot,
+                panel: panelVisibility,
+                toaster: toaster,
+                create: useCases.create,
+                templates: ports.templates,
+                journal: ports.journal,
+                runAction: useCases.runAction,
+                exporter: ports.exporter
+            )
+        }
+        editor = editorFactory()
         settings = SettingsStore(
             store: ports.keyValues,
             config: ports.config,
@@ -87,6 +95,7 @@ package final class PresentationAssembly {
             system: ports.system,
             index: ports.index,
             reindex: useCases.reindex,
+            history: ports.history,
             vaultPath: vaultRoot.path,
             activity: activity,
             events: events
@@ -102,9 +111,18 @@ package final class PresentationAssembly {
             toaster: toaster,
             events: events
         )
+        issues = IssueStore(tracker: ports.tracker, secrets: ports.secrets)
         palette = PaletteStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock)
         todos = TodoStore(index: ports.index, toggleTodo: useCases.toggleTodo, notes: noteList, navigator: navigator, store: ports.keyValues, activity: activity, events: events)
-        daily = DailyStore(ensureDaily: useCases.ensureDaily, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
+        daily = DailyStore(ensureDaily: useCases.ensureDaily, notes: noteList, navigator: navigator, clock: ports.clock, store: ports.keyValues, toaster: toaster, activity: activity, events: events)
+    }
+
+    private let editorFactory: () -> EditorStore
+
+    func makeNoteEditor() -> EditorStore {
+        let store = editorFactory()
+        store.followsNavigator = false
+        return store
     }
 
     package func start() {
@@ -113,6 +131,7 @@ package final class PresentationAssembly {
         Task {
             await vault.refresh()
             await search.refreshTags()
+            await issues.refreshToken()
         }
     }
 

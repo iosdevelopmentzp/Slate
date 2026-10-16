@@ -51,4 +51,22 @@ import Testing
         #expect(document.header.ticket == "ABC-9")
         #expect(document.body.contains("## Findings\nfound\n") || document.body.contains("## Findings\n\nfound\n"))
     }
+
+    @Test func carryOverCanBeTurnedOff() async throws {
+        DailySettings(carriesOver: false).save(to: ports.keyValues)
+        spies.files.seed(VaultPath(rawValue: "Daily/2027-01-14.md"), NoteText.make(title: "2027-01-14", body: "- [ ] still open"))
+
+        let today = try await UseCases(ports: ports).ensureDaily.execute()
+
+        #expect(today.document.body.hasPrefix("## Log"))
+    }
+
+    @Test func aChosenTemplateIsUsed() async throws {
+        DailySettings(template: "standup").save(to: ports.keyValues)
+        spies.templates.bodies["standup"] = "Yesterday:\nToday:\n"
+
+        let today = try await UseCases(ports: ports).ensureDaily.execute()
+
+        #expect(today.document.body == "Yesterday:\nToday:\n")
+    }
 }

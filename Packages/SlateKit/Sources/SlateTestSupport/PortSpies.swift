@@ -18,6 +18,8 @@ package struct PortSpies: Sendable {
     package let journal = SpyJournalStore()
     package let actions = SpyActionRunner()
     package let exporter = SpyExporter()
+    package let secrets = SpySecretStore()
+    package let tracker = SpyIssueTracker()
 
     package init() {
         trash = SpyTrashRepository(files: files)

@@ -36,4 +36,13 @@ import Testing
 
         #expect(harness.navigator.selectedNote == NoteID(rawValue: "a"))
     }
+
+    @Test func dailyNotesOffShowsAHint() async {
+        DailySettings(isEnabled: false).save(to: harness.keyValues)
+
+        await harness.daily.openToday()
+
+        #expect(harness.toaster.text == "Daily notes are off. Turn them on in Settings → General.")
+        #expect(harness.navigator.selectedNote == nil)
+    }
 }

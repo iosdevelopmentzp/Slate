@@ -256,6 +256,17 @@ final class NoteListStore: NoteLookup {
         }
     }
 
+    func selectNeighbour(_ offset: Int, in notes: [NoteSummary]? = nil) {
+        let list = notes ?? visibleNotes
+        guard list.isEmpty == false else { return }
+        guard let current = navigator.selectedNote, let index = list.firstIndex(where: { $0.id == current }) else {
+            navigator.select(offset > 0 ? list.first?.id : list.last?.id)
+            return
+        }
+        let target = min(max(index + offset, 0), list.count - 1)
+        navigator.select(list[target].id)
+    }
+
     func requestTrash(_ id: NoteID) {
         confirmingTrash = id
         confirmationTask?.cancel()

@@ -6,6 +6,7 @@ extension Ports {
         let ownWrites = OwnWrites()
         let shell = ShellRunner(recorder: recorder)
         let indexURL = support.appendingPathComponent("index.sqlite")
+        let secrets = KeychainSecretStore(service: "local.slate.app")
         let index = try GRDBSearchIndex.open(at: indexURL, vaultPath: VaultSupportFolder.standardizedPath(of: root))
         return Ports(
             keyValues: keyValues,
@@ -25,7 +26,9 @@ extension Ports {
             history: GitHistoryRepository(shell: shell, gitDirectory: support.appendingPathComponent("history.git", isDirectory: true), workTree: root),
             journal: FileJournalStore(folder: support.appendingPathComponent("journal", isDirectory: true)),
             actions: ShellActionRunner(shell: shell),
-            exporter: NoteExporter()
+            exporter: NoteExporter(),
+            secrets: secrets,
+            tracker: JiraIssueClient(keyValues: keyValues, secrets: secrets, session: URLSession.shared)
         )
     }
 }

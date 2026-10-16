@@ -50,7 +50,31 @@ final class MarkdownTextView: NSTextView {
 
     override func cancelOperation(_ sender: Any?) {
         if controller?.dismissPasteSuggestion() == true { return }
-        super.cancelOperation(sender)
+        guard let next = nextResponder, next.tryToPerform(#selector(NSResponder.cancelOperation(_:)), with: sender) else {
+            super.cancelOperation(sender)
+            return
+        }
+    }
+
+    @objc func slateBold(_ sender: Any?) { controller?.wrap(with: "**") }
+    @objc func slateItalic(_ sender: Any?) { controller?.wrap(with: "*") }
+    @objc func slateCode(_ sender: Any?) { controller?.wrap(with: "`") }
+    @objc func slateLink(_ sender: Any?) { controller?.insertLink() }
+    @objc func slateToggleCheckbox(_ sender: Any?) { controller?.toggleCurrentLine() }
+    @objc func slateMoveLineUp(_ sender: Any?) { controller?.moveLine(up: true) }
+    @objc func slateMoveLineDown(_ sender: Any?) { controller?.moveLine(up: false) }
+    @objc func slateDuplicateLine(_ sender: Any?) { controller?.duplicateLine() }
+    @objc func slateToggleComment(_ sender: Any?) { controller?.toggleComment() }
+    @objc func slatePasteAsCode(_ sender: Any?) { controller?.paste(asCode: true) }
+    @objc func slateFind(_ sender: Any?) { controller?.showFind(replace: false) }
+    @objc func slateFindAndReplace(_ sender: Any?) { controller?.showFind(replace: true) }
+    @objc func slateScreenshot(_ sender: Any?) { controller?.handlers.requestScreenshot(.region) }
+    @objc func slateWindowScreenshot(_ sender: Any?) { controller?.handlers.requestScreenshot(.window) }
+    @objc func slateOpenLink(_ sender: Any?) { controller?.openLinkAtCaret() }
+
+    override func insertText(_ string: Any, replacementRange: NSRange) {
+        if (string as? String) == "`", replacementRange.location == NSNotFound, controller?.handleBacktick() == true { return }
+        super.insertText(string, replacementRange: replacementRange)
     }
 
     override func paste(_ sender: Any?) {

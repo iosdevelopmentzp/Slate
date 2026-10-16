@@ -18,6 +18,8 @@ package final class AppWindows: NSObject, NSWindowDelegate {
     private var captureMonitor: Any?
     private var settingsWindow: NSWindow?
     package var onChangeVault: (URL) -> Void = { _ in }
+    private var noteWindows: [NoteWindowController] = []
+    private let menuTarget = MenuTarget()
 
     private var layout: WindowLayout {
         assembly.layout
@@ -51,6 +53,13 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         observeLayout()
         observeAppearance()
         registerHotkeys()
+        assembly.settings.extraChecks = {
+            let names: [(KeyboardShortcuts.Name, String)] = [(.togglePanel, "Show or hide Slate"), (.capture, "Quick note"), (.today, "Today")]
+            return names.map { name, title in
+                let shortcut = KeyboardShortcuts.getShortcut(for: name)
+                return DoctorCheck(id: "hotkey.\(name.rawValue)", title: title, isOK: shortcut != nil, detail: shortcut.map { "\($0)" } ?? "No shortcut set")
+            }
+        }
         assembly.settings.changeVault = { [weak self] in
             guard let self else { return }
             chooseVault()
@@ -58,6 +67,16 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         capturePanel.onCancel = { [weak self] in
             guard let self else { return }
             closeCapture()
+        }
+        panel.onCancel = { [weak self] in
+            guard let self else { return }
+            if assembly.palette.isOpen {
+                assembly.palette.close()
+            } else if assembly.search.isActive {
+                assembly.search.clear()
+            } else {
+                closePanel()
+            }
         }
         resignObserver = NotificationCenter.default.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor [weak self] in
@@ -96,12 +115,81 @@ package final class AppWindows: NSObject, NSWindowDelegate {
             window.center()
         }
         window.setFrameAutosaveName(WindowLayout.windowAutosaveName)
+        NSApp.setActivationPolicy(.regular)
+        NSApp.mainMenu = mainMenu()
         NSApp.activate()
         window.makeKeyAndOrderFront(nil)
     }
 
     package func windowWillClose(_ notification: Notification) {
         Task { await assembly.flush() }
+        guard (notification.object as? NSWindow) === window else { return }
+        NSApp.setActivationPolicy(.accessory)
+    }
+
+    private func mainMenu() -> NSMenu {
+        let noteList = assembly.noteList
+        let navigator = assembly.navigator
+        let palette = assembly.palette
+        let daily = assembly.daily
+        let editor = assembly.editor
+        let search = assembly.search
+        let layout = layout
+        let spaces = assembly.vault.spaces
+        let selectNeighbour: (Int) -> Void = { offset in
+            noteList.selectNeighbour(offset, in: search.isActive ? search.results.map(\.summary) : nil)
+        }
+        typealias Command = MainMenuBuilder.Command
+        var go: [Command] = [
+            Command(title: "Find a Note or Command", key: "k", modifiers: [.command]) { palette.open() },
+            Command(title: "Previous Note", key: String(UnicodeScalar(NSUpArrowFunctionKey)!), modifiers: [.command, .option]) { selectNeighbour(-1) },
+            Command(title: "Next Note", key: String(UnicodeScalar(NSDownArrowFunctionKey)!), modifiers: [.command, .option]) { selectNeighbour(1) },
+            Command(title: "Previous Folder", key: "[", modifiers: [.command, .shift]) { noteList.show(ListSource.cycle(from: noteList.source, spaces: spaces.map(\.folder), by: -1)) },
+            Command(title: "Next Folder", key: "]", modifiers: [.command, .shift]) { noteList.show(ListSource.cycle(from: noteList.source, spaces: spaces.map(\.folder), by: 1)) },
+            Command(title: "Previous Day", key: "[", modifiers: [.command]) { Task { await daily.openDay(-1) } },
+            Command(title: "Next Day", key: "]", modifiers: [.command]) { Task { await daily.openDay(1) } },
+            Command(title: "All Notes", key: "", modifiers: []) { noteList.show(.all) },
+            Command(title: "Open TODOs", key: "", modifiers: []) { noteList.show(.todos) },
+        ]
+        for (position, space) in spaces.prefix(9).enumerated() {
+            go.append(Command(title: space.folder.rawValue, key: "\(position + 1)", modifiers: [.command]) { noteList.show(.space(space.folder)) })
+        }
+        let builder = MainMenuBuilder(
+            app: [Command(title: "Settings…", key: ",", modifiers: [.command]) { [weak self] in self?.openSettings() }],
+            file: [
+                Command(title: "New Note", key: "n", modifiers: [.command]) { Task { await noteList.createNote() } },
+                Command(title: "New Task", key: "t", modifiers: [.command, .shift]) { Task { await noteList.createNote(type: NoteType.task.name) } },
+                Command(title: "Quick Note", key: "", modifiers: []) { [weak self] in self?.showCapture() },
+                Command(title: "Today", key: "t", modifiers: [.command, .option]) { Task { await daily.openToday() } },
+                Command(title: "Open Note in New Window", key: "n", modifiers: [.command, .shift]) { [weak self] in
+                    guard let self, let id = navigator.selectedNote else { return }
+                    openNoteWindow(id, floating: false)
+                },
+                Command(title: "Float Note on Top", key: "", modifiers: []) { [weak self] in
+                    guard let self, let id = navigator.selectedNote else { return }
+                    openNoteWindow(id, floating: true)
+                },
+            ],
+            note: [
+                Command(title: "Pin or Unpin", key: "p", modifiers: [.command, .shift]) {
+                    guard let selected = noteList.selected else { return }
+                    Task { await noteList.togglePin(selected) }
+                },
+                Command(title: "Mark as Done", key: "d", modifiers: [.command, .shift]) { Task { await editor.markDone() } },
+                Command(title: "Move to Folder…", key: "m", modifiers: [.command, .shift]) { palette.open(query: "move to ") },
+                Command(title: "Move to Trash", key: String(UnicodeScalar(NSBackspaceCharacter)!), modifiers: [.command]) {
+                    if TextFocus.isEditingText {
+                        TextFocus.send(#selector(NSResponder.deleteToBeginningOfLine(_:)))
+                    } else if let selected = noteList.selected {
+                        noteList.requestTrash(selected.id)
+                    }
+                },
+            ],
+            go: go,
+            view: [Command(title: "Show or Hide the Sidebar", key: "0", modifiers: [.command]) { layout.showsSidebar.toggle() }],
+            target: menuTarget
+        )
+        return builder.build()
     }
 
     package func windowDidResignKey(_ notification: Notification) {
@@ -135,6 +223,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         closeCapture()
         window?.close()
         settingsWindow?.close()
+        noteWindows.forEach { $0.window.close() }
         if let resignObserver {
             NotificationCenter.default.removeObserver(resignObserver)
         }
@@ -176,6 +265,20 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         } else if panel.isVisible == false {
             showPanel()
         }
+    }
+
+    func openNoteWindow(_ id: NoteID, floating: Bool) {
+        if floating {
+            closePanel()
+        }
+        let controller = NoteWindowController(store: assembly.makeNoteEditor(), assembly: assembly, floating: floating)
+        controller.onClose = { [weak self] closed in
+            guard let self else { return }
+            noteWindows.removeAll { $0 === closed }
+        }
+        noteWindows.append(controller)
+        controller.window.appearance = currentAppearance
+        controller.show(id)
     }
 
     func openSettings() {
@@ -325,13 +428,17 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         }
     }
 
-    private func applyAppearance() {
-        let appearance: NSAppearance? = switch assembly.settings.appearance {
+    private var currentAppearance: NSAppearance? {
+        switch assembly.settings.appearance {
         case .system: nil
         case .light: NSAppearance(named: .aqua)
         case .dark: NSAppearance(named: .darkAqua)
         }
-        for target in [panel, capturePanel, window, settingsWindow].compactMap({ $0 }) {
+    }
+
+    private func applyAppearance() {
+        let appearance = currentAppearance
+        for target in [panel, capturePanel, window, settingsWindow].compactMap({ $0 }) + noteWindows.map(\.window) {
             target.appearance = appearance
         }
     }
@@ -466,6 +573,10 @@ package final class AppWindows: NSObject, NSWindowDelegate {
             .environment(\.openSettings, { [weak self] in
                 guard let self else { return }
                 openSettings()
+            })
+            .environment(\.openNoteWindow, { [weak self] id, floating in
+                guard let self else { return }
+                openNoteWindow(id, floating: floating)
             })
         let controller = NSHostingController(rootView: root)
         controller.sizingOptions = surface == .window ? [.minSize] : []

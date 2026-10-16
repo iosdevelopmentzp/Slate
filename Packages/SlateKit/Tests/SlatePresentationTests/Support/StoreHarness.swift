@@ -72,6 +72,7 @@ final class StoreHarness {
         system: ports.system,
         index: ports.index,
         reindex: useCases.reindex,
+        history: ports.history,
         vaultPath: "/vault",
         activity: activity,
         events: events
@@ -87,9 +88,10 @@ final class StoreHarness {
         toaster: toaster,
         events: events
     )
+    lazy var issues = IssueStore(tracker: ports.tracker, secrets: ports.secrets)
     lazy var palette = PaletteStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock)
     lazy var todos = TodoStore(index: ports.index, toggleTodo: useCases.toggleTodo, notes: noteList, navigator: navigator, store: keyValues, activity: activity, events: events)
-    lazy var daily = DailyStore(ensureDaily: useCases.ensureDaily, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
+    lazy var daily = DailyStore(ensureDaily: useCases.ensureDaily, notes: noteList, navigator: navigator, clock: ports.clock, store: ports.keyValues, toaster: toaster, activity: activity, events: events)
     lazy var search = SearchStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
     lazy var panelVisibility = PanelVisibility()
     lazy var feed = VaultChangeFeed(watcher: ports.watcher, reindex: useCases.reindex, activity: activity, events: events)

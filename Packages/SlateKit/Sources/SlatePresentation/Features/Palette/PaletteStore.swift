@@ -42,10 +42,10 @@ final class PaletteStore {
         return ids.compactMap { byID[$0] }.prefix(Self.noteLimit).map { SearchHit(summary: $0, snippet: $0.space?.rawValue ?? "", rank: 0) }
     }
 
-    func open() {
-        query = ""
+    func open(query initial: String = "") {
+        query = initial
         selection = 0
-        hits = []
+        if initial.isEmpty { hits = [] }
         isOpen = true
     }
 

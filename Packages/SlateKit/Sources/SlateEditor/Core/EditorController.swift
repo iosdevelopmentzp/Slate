@@ -117,6 +117,8 @@ final class EditorController: NSObject {
         textView.textStorage?.delegate = self
         textView.textLayoutManager?.delegate = self
         textView.postsFrameChangedNotifications = true
+        textView.usesFindBar = true
+        textView.isIncrementalSearchingEnabled = true
         NotificationCenter.default.addObserver(self, selector: #selector(frameChanged), name: NSView.frameDidChangeNotification, object: textView)
         scrollView.hasVerticalScroller = true
         scrollView.drawsBackground = false

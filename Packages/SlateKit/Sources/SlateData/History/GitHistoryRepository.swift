@@ -73,6 +73,11 @@ actor GitHistoryRepository: HistoryRepository {
         return GitLogParser.snapshots(from: result.stdout).first
     }
 
+    func canReach(_ remote: String) async -> Bool {
+        let result = try? await shell.run("git", ["ls-remote", "--heads", remote], cwd: workTree.path, environment: ["GIT_TERMINAL_PROMPT": "0", "GIT_SSH_COMMAND": "ssh -o BatchMode=yes -o ConnectTimeout=5"])
+        return result?.exitCode == 0
+    }
+
     @discardableResult
     private func git(_ arguments: [String]) async throws -> ShellResult {
         let result = try await run(arguments)

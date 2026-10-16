@@ -21,6 +21,12 @@ enum ListSource: Hashable {
         }
     }
 
+    static func cycle(from current: ListSource, spaces: [SpaceName], by offset: Int) -> ListSource {
+        let list: [ListSource] = [.all] + spaces.map { .space($0) } + [.todos, .trash]
+        let index = list.firstIndex(of: current) ?? 0
+        return list[(index + offset % list.count + list.count) % list.count]
+    }
+
     init(storedValue: String?) {
         switch storedValue {
         case "trash":

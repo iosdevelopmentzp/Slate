@@ -18,6 +18,9 @@ final class SettingsStore {
         didSet { store.set(trashRetentionDays, forKey: Keys.retention) }
     }
     var tracker: TrackerSettings
+    var daily: DailySettings {
+        didSet { daily.save(to: store) }
+    }
     private(set) var loginStatus: LoginItemStatus = .disabled
     private(set) var checks: [DoctorCheck] = []
     private(set) var isChecking = false
@@ -32,6 +35,8 @@ final class SettingsStore {
     @ObservationIgnored private let system: any SystemChecking
     @ObservationIgnored private let index: any SearchIndex
     @ObservationIgnored private let reindex: ReindexVaultUseCase
+    @ObservationIgnored private let history: any HistoryRepository
+    @ObservationIgnored var extraChecks: () -> [DoctorCheck] = { [] }
     @ObservationIgnored private let activity: ActivityLog
     @ObservationIgnored private let events: AppEvents
 
@@ -42,6 +47,7 @@ final class SettingsStore {
         system: any SystemChecking,
         index: any SearchIndex,
         reindex: ReindexVaultUseCase,
+        history: any HistoryRepository,
         vaultPath: String,
         activity: ActivityLog,
         events: AppEvents
@@ -52,6 +58,7 @@ final class SettingsStore {
         self.system = system
         self.index = index
         self.reindex = reindex
+        self.history = history
         self.vaultPath = vaultPath
         self.activity = activity
         self.events = events
@@ -61,6 +68,7 @@ final class SettingsStore {
         let retention = store.integer(forKey: Keys.retention)
         trashRetentionDays = retention > 0 ? retention : 30
         tracker = TrackerSettings.load(from: store)
+        daily = DailySettings.load(from: store)
     }
 
     var loginHint: String? {
@@ -101,7 +109,20 @@ final class SettingsStore {
 
     func runDoctor() async {
         isChecking = true
-        checks = await system.checks()
+        var found = await system.checks()
+        let count = (try? await index.summaries(space: nil).count) ?? 0
+        found.append(DoctorCheck(id: "notes", title: "Notes found", isOK: true, detail: count == 1 ? "1 note" : "\(count) notes"))
+        let historySettings = HistorySettings.load(from: store)
+        if historySettings.isEnabled {
+            let last = try? await history.lastSnapshot()
+            found.append(DoctorCheck(id: "snapshot", title: "Last version", isOK: last != nil, detail: last.map { $0.date.formatted(date: .abbreviated, time: .shortened) } ?? "No version yet"))
+            if historySettings.hasRemote {
+                let reachable = await history.canReach(historySettings.remote)
+                found.append(DoctorCheck(id: "remote", title: "Backup remote", isOK: reachable, detail: reachable ? historySettings.remote : "Cannot reach \(historySettings.remote). Check the address and your SSH key."))
+            }
+        }
+        found += extraChecks()
+        checks = found
         isChecking = false
     }
 

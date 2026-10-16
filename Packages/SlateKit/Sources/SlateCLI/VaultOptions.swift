@@ -7,4 +7,7 @@ struct VaultOptions: ParsableArguments {
 
     @Flag(name: .long, help: "Print JSON.")
     var json = false
+
+    @Option(name: .long, help: .hidden)
+    var supportFolder: String?
 }

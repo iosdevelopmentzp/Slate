@@ -7,6 +7,13 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Float on Top keeps a note in a small window above other apps, for a checklist next to Xcode. Open in New Window (`⌘⇧N`) opens a note in its own window.
+- While the window is open, Slate has a menu bar with every command and its shortcut.
+- More keys: `⌘1`…`⌘9` and `⌘⇧[` `⌘⇧]` for folders, `⌘⌥↑` `⌘⌥↓` for the previous and next note, `⌘⇧M` to move a note, `⌘⌫` to move it to the Trash, Esc to close the panel.
+- Editor: move lines with `⌥↑` and `⌥↓`, duplicate with `⌘D`, comment code with `⌘/`, find and replace in the note, an outline of the headings, backticks in pairs and a closing fence after Enter.
+- With an API token in Settings → Links, a task shows the title, status and person of its ticket. The token stays in the Keychain.
+- Daily notes can be turned off, carry-over can be turned off, and the daily template can be chosen.
+- The Doctor also shows the number of notes, the last version, whether the backup remote answers, and the global shortcuts.
 - `⌘K` opens a palette: recent notes when empty, then notes and commands as you type. Enter runs, `⌘Enter` opens in the window, `⌘C` copies the note's path.
 - Open TODOs lists every open checkbox in every note, grouped by note or by ticket. Checking one writes the file.
 - Saved searches from `.slate/views.json`: Open TODOs, Active tasks, Changed this week, Untagged, Conflicts. Edit the file to add your own.
@@ -62,6 +69,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ### Fixed
 
 ### Infrastructure
+- M7: secret store and issue tracker ports (Keychain, Jira REST), `IssueStore`, per-window editor stores, `MainMenuBuilder`, line commands, fence completion and outline in the editor module. CLI tests use their own support folder.
 - M6: `Config/Slate-Info.plist` (URL scheme, Services); `AppContainer` is the app delegate; URL command parser, Slack format, action environment policies; toggle todo and run action use cases; action runner and exporter ports; `TodoStore`, `PaletteStore`; a sixth test target, `SlateCLITests`.
 - M5: history and journal ports with `GitHistoryRepository` (real git integration tests, push to a bare remote) and `FileJournalStore`; trash retention, journal and conflict copy policies; snapshot, restore and purge use cases; `HistoryStore`; tolerated exit codes in `ShellRunner`.
 - M4: title, slug, daily, section append, link pattern and task group policies; create, daily, append and quick capture use cases; ports for the login item and the Doctor checks with live, mock and spy versions; `CaptureStore`, `DailyStore`, `SettingsStore`.

@@ -29,6 +29,7 @@ final class WindowLayout {
     }
 
     var openCount = 0
+    var showsSidebar = true
 
     @ObservationIgnored private let store: any KeyValueStore
 

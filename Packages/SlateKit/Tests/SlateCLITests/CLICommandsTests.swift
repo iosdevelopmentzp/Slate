@@ -7,16 +7,18 @@ import Testing
 
 @Suite(.serialized) struct CLICommandsTests {
     private let vault: TemporaryDirectory
+    private let support: TemporaryDirectory
 
     init() throws {
         vault = try TemporaryDirectory()
+        support = try TemporaryDirectory()
         for space in ["Inbox", "Tasks", "Notes", "Daily"] {
             try FileManager.default.createDirectory(at: vault.url.appendingPathComponent(space), withIntermediateDirectories: true)
         }
     }
 
     private func run(_ arguments: [String]) async throws {
-        var command = try SlateCommand.parseAsRoot(arguments + ["--vault", vault.url.path])
+        var command = try SlateCommand.parseAsRoot(arguments + ["--vault", vault.url.path, "--support-folder", support.url.path])
         if var async = command as? AsyncParsableCommand {
             try await async.run()
         } else {

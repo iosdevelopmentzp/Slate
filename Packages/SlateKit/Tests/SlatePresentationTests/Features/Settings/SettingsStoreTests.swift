@@ -54,7 +54,8 @@ import Testing
 
         #expect(harness.spies.index.calls.contains(.reset))
         #expect(harness.spies.index.indexed.count == 1)
-        #expect(settings.checks.map(\.id) == ["vault"])
+        #expect(settings.checks.map(\.id) == ["vault", "notes", "snapshot"])
+        #expect(settings.checks.first { $0.id == "notes" }?.detail == "1 note")
         #expect(harness.posted.contains(.indexUpdated))
     }
 }

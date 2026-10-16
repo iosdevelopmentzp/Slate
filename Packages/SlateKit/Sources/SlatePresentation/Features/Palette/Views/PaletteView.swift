@@ -200,6 +200,15 @@ struct PaletteView: View {
             list.append(PaletteCommand("Save as HTML", icon: "globe") { Task { await editor.saveHTML() } })
             list.append(PaletteCommand("Save as PDF", icon: "doc.richtext") { Task { await editor.savePDF() } })
         }
+        if let selected = noteList.selected {
+            for space in vault.spaces where space.folder != selected.space {
+                list.append(PaletteCommand("Move to \(space.folder.rawValue)", icon: "folder", id: "move:\(space.folder.rawValue)") {
+                    Task { await noteList.moveNote(selected, to: space.folder) }
+                })
+            }
+            list.append(PaletteCommand(selected.pinned ? "Unpin" : "Pin", icon: "pin", keys: "⌘⇧P") { Task { await noteList.togglePin(selected) } })
+            list.append(PaletteCommand("Move to Trash", icon: "trash", keys: "⌘⌫") { noteList.requestTrash(selected.id) })
+        }
         list.append(PaletteCommand("Save a version now", icon: "clock.arrow.circlepath") { Task { await history.snapshotNow() } })
         list.append(PaletteCommand("Rebuild search", icon: "arrow.clockwise") { Task { await settings.rebuildIndex() } })
         list.append(PaletteCommand("Open as window", icon: "macwindow", keys: "⌘⇧O") { openAsWindow() })

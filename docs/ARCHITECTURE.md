@@ -228,8 +228,8 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 | `HistoryRepository` | `isAvailable()`, `ensureRepository()`, `snapshot(message:) -> Bool`, `history(of:) -> [Snapshot]`, `contents(of:at:) -> Data`, `push(to:)`, `lastSnapshot()` | `GitHistoryRepository` (an actor, `<support>/history.git`) |
 | `CloudStatusProviding` | `status(of: VaultPath) -> CloudStatus`, `startDownload(VaultPath)`, `conflictVersions(VaultPath) -> [ConflictVersion]`, `keep(version:, for:)`, `isCloudFolder(URL) -> Bool` | `UbiquityStatusProvider` |
 | `LinkTitleFetching` | `title(for: URL) -> String?` (2 s timeout) | `URLSessionLinkTitleFetcher` |
-| `IssueTrackerClient` | `issue(TicketKey) -> IssueDetails` | `JiraIssueClient` |
-| `SecretStore` | `get(key)`, `set(key, value)`, `remove(key)` | `KeychainSecretStore` |
+| `IssueTrackerClient` | `issue(_:) -> IssueDetails`, `currentUser()` | `JiraIssueClient` (REST v3, basic auth, 5 s) with `JiraIssueParser` |
+| `SecretStore` | `secret(for:)`, `setSecret(_:for:)`, `removeSecret(for:)` | `KeychainSecretStore` (generic password, service `local.slate.app`) |
 | `KeyValueStore` | `string/bool/int/data(forKey:)`, setters | `UserDefaultsKeyValueStore` |
 | `Clock` | `now() -> Date`, `timeZone` | `SystemClock` |
 | `ActionRunning` | `run(command, environment:, workingDirectory:) -> ActionResult`; `/bin/zsh -c`, 60 s limit | `ShellActionRunner` |
@@ -239,7 +239,7 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 
 `Ports` (Domain `Assembly/Ports.swift`) is a struct with one property per port. `Ports.live(root:keyValues:)` in Data (later milestones add the Application Support folder, the shell and the recorder), `Ports.mock()` in Mocks, `Ports.spies(keyValues:)` in TestSupport (the key-value store defaults to `SpyKeyValueStore`).
 
-Since M6 the code has eighteen ports (`actions`, `exporter` added in M6): `keyValues`, `files`, `index`, `builder`, `watcher`, `trash`, `templates`, `config`, `clock`, `attachments`, `capture`, `workspace`, `loginItem` (M4), `system` (M4, the Doctor checks), `history`, `journal` (M5). `Ports.live(root:support:keyValues:recorder:)` throws when the index cannot open, builds one `ShellRunner` with the recorder, and opens `index.sqlite` in the support folder (`VaultSupportFolder.url(for:)`, `~/Library/Application Support/Slate/<vault-id>/`). The spies are in-memory fakes that also record their calls, so use case and store tests run without a disk.
+Since M7 the code has twenty ports (`actions`, `exporter` in M6; `secrets`, `tracker` in M7): `keyValues`, `files`, `index`, `builder`, `watcher`, `trash`, `templates`, `config`, `clock`, `attachments`, `capture`, `workspace`, `loginItem` (M4), `system` (M4, the Doctor checks), `history`, `journal` (M5). `Ports.live(root:support:keyValues:recorder:)` throws when the index cannot open, builds one `ShellRunner` with the recorder, and opens `index.sqlite` in the support folder (`VaultSupportFolder.url(for:)`, `~/Library/Application Support/Slate/<vault-id>/`). The spies are in-memory fakes that also record their calls, so use case and store tests run without a disk.
 
 ### 4.4 Policies (pure, `enum XPolicy { static func … }`)
 

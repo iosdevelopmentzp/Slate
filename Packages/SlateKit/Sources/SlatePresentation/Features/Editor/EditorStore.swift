@@ -46,6 +46,7 @@ final class EditorStore {
     @ObservationIgnored var journalTask: Task<Void, Never>?
     @ObservationIgnored let runAction: RunActionUseCase
     @ObservationIgnored let exporter: any NoteExporting
+    @ObservationIgnored var followsNavigator = true
     @ObservationIgnored var insertionCounter = 0
     @ObservationIgnored private var subscription: SubscriptionToken?
     @ObservationIgnored private var isApplying = false
@@ -146,7 +147,7 @@ final class EditorStore {
         do {
             guard let summary = try await index.summary(id: id) else { return }
             let loaded = try NoteCodec.decode(try await files.read(summary.path))
-            guard navigator.selectedNote == id else { return }
+            guard followsNavigator == false || navigator.selectedNote == id else { return }
             show(loaded)
             await checkJournal(for: loaded)
             if let match = pendingMatch, match.id == id {
@@ -342,6 +343,10 @@ final class EditorStore {
         return trimmed.isEmpty ? StemPolicy.untitled : title
     }
 
+    func reveal(location: Int) {
+        requestBodyFocus(caret: location)
+    }
+
     private func revealMatch(of words: [String]) {
         guard let first = SearchHighlightPolicy.ranges(of: words, in: text).first else { return }
         requestBodyFocus(caret: first.location)
@@ -374,6 +379,9 @@ final class EditorStore {
             isApplying = true
             document = moved
             isApplying = false
+        case .noteSaved(let id):
+            guard id == document?.id, inFlight == nil else { return }
+            Task { await checkDisk(relocate: false) }
         case .noteTrashed(let path):
             guard document?.path == path else { return }
             close()

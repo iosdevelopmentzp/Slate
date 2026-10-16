@@ -21,7 +21,9 @@ extension Ports {
             history: MockHistoryRepository(),
             journal: MockJournalStore(),
             actions: MockActionRunner(),
-            exporter: MockExporter()
+            exporter: MockExporter(),
+            secrets: MockSecretStore(),
+            tracker: MockIssueTracker()
         )
     }
 }

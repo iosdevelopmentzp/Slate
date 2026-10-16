@@ -39,7 +39,7 @@ package struct UseCases: Sendable {
         renameSpace = RenameSpaceUseCase(files: ports.files, config: ports.config, reindex: reindex)
         importAttachment = ImportAttachmentUseCase(attachments: ports.attachments, clock: ports.clock)
         attachScreenshot = AttachScreenshotUseCase(capture: ports.capture, attachments: ports.attachments, clock: ports.clock)
-        ensureDaily = EnsureDailyNoteUseCase(files: ports.files, config: ports.config, create: create, clock: ports.clock)
+        ensureDaily = EnsureDailyNoteUseCase(files: ports.files, config: ports.config, create: create, keyValues: ports.keyValues, clock: ports.clock)
         append = AppendToNoteUseCase(files: ports.files, index: ports.index, save: save, create: create, ensureDaily: ensureDaily, clock: ports.clock)
         capture = QuickCaptureUseCase(create: create, append: append, config: ports.config, keyValues: ports.keyValues)
         purgeTrash = PurgeTrashUseCase(trash: ports.trash, keyValues: ports.keyValues, clock: ports.clock)

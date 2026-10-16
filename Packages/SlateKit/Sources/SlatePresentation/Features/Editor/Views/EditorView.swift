@@ -11,6 +11,9 @@ struct EditorView: View {
     @Environment(SettingsStore.self) private var settings
     @Environment(Toaster.self) private var toaster
     @State private var showsHistory = false
+    @State private var showsOutline = false
+    @Environment(IssueStore.self) private var issues
+    @Environment(\.surface) private var surface
     @FocusState private var isTitleFocused: Bool
 
     var body: some View {
@@ -68,6 +71,16 @@ struct EditorView: View {
                     .onSubmit { editor.submitTitle() }
                     .disabled(document.isHeaderOpaque)
                     .accessibilityLabel("Title")
+                IconButton(systemImage: "list.bullet.indent", help: "Outline") {
+                    showsOutline.toggle()
+                }
+                .popover(isPresented: $showsOutline, arrowEdge: .bottom) {
+                    OutlineView(items: OutlineItem.items(in: editor.text)) { item in
+                        showsOutline = false
+                        editor.reveal(location: item.location)
+                    }
+                }
+                .accessibilityLabel("Outline")
                 IconButton(systemImage: "clock.arrow.circlepath", help: "Versions of this note") {
                     showsHistory.toggle()
                 }
@@ -78,7 +91,9 @@ struct EditorView: View {
                 NoteMenu(document: document)
             }
             let chips = NoteChipsMapper.noteChips(for: document, type: vault.type(named: document.type), ticketURL: document.header.ticket.flatMap(ticketURL))
-            let tags = TagPolicy.merged(header: document.header.tags, lines: []) + (noteList.selected?.tags ?? []).filter { (document.header.tags ?? []).map(TagPolicy.normalized).contains($0) == false }
+            issueLine(document.header.ticket)
+            let indexed = noteList.summaries.first { $0.id == document.id }?.tags ?? []
+            let tags = TagPolicy.merged(header: document.header.tags, lines: []) + indexed.filter { (document.header.tags ?? []).map(TagPolicy.normalized).contains($0) == false }
             if chips.isEmpty == false || tags.isEmpty == false {
                 FlowLayout(spacing: 6) {
                     ForEach(chips, id: \.self) { chip in
@@ -99,6 +114,22 @@ struct EditorView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        .task(id: document.header.ticket) {
+            guard let ticket = document.header.ticket else { return }
+            await issues.load(ticket)
+        }
+    }
+
+    @ViewBuilder
+    private func issueLine(_ ticket: String?) -> some View {
+        if let ticket, let issue = issues.details[ticket] {
+            Text([issue.summary, issue.status, issue.assignee].compactMap { $0 }.filter { $0.isEmpty == false }.joined(separator: " · "))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .textSelection(.enabled)
+                .help("From the tracker")
+        }
     }
 
     private var configuration: EditorConfiguration {

@@ -19,6 +19,8 @@ package struct Ports: Sendable {
     package let journal: any JournalStore
     package let actions: any ActionRunning
     package let exporter: any NoteExporting
+    package let secrets: any SecretStore
+    package let tracker: any IssueTrackerClient
 
     package init(
         keyValues: any KeyValueStore,
@@ -38,7 +40,9 @@ package struct Ports: Sendable {
         history: any HistoryRepository,
         journal: any JournalStore,
         actions: any ActionRunning,
-        exporter: any NoteExporting
+        exporter: any NoteExporting,
+        secrets: any SecretStore,
+        tracker: any IssueTrackerClient
     ) {
         self.keyValues = keyValues
         self.files = files
@@ -58,5 +62,7 @@ package struct Ports: Sendable {
         self.journal = journal
         self.actions = actions
         self.exporter = exporter
+        self.secrets = secrets
+        self.tracker = tracker
     }
 }

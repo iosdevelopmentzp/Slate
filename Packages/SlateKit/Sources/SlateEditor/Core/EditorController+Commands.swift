@@ -7,10 +7,61 @@ extension EditorController {
             return true
         }
         let selection = textView.selectedRange()
-        guard tracker.state(at: selection.location).kind.isCode == false,
+        let line = tracker.state(at: selection.location)
+        if case .fenceOpen = line.kind, selection.length == 0, selection.location == line.range.upperBound, line.openFence != nil,
+           isUnclosedFence(from: line), let closing = FenceCompletion.closingFence(afterLine: nsText.substring(with: line.range), isUnclosed: true) {
+            let insertion = "\n\n" + closing
+            textView.apply(TextEdit(range: selection, replacement: insertion, selection: NSRange(location: selection.location + 1, length: 0)))
+            return true
+        }
+        guard line.kind.isCode == false,
               let edit = ListEditing.newline(in: nsText, selection: selection) else { return false }
         textView.apply(edit)
         return true
+    }
+
+    private func isUnclosedFence(from line: LineState) -> Bool {
+        let index = tracker.lineIndex(containing: line.start)
+        return tracker.lines[(index + 1)...].contains { $0.kind == .fenceClose } == false
+    }
+
+    func moveLine(up: Bool) {
+        guard let edit = LineCommands.moveLines(in: nsText, selection: textView.selectedRange(), up: up) else { return }
+        textView.apply(edit)
+    }
+
+    func duplicateLine() {
+        textView.apply(LineCommands.duplicateLines(in: nsText, selection: textView.selectedRange()))
+    }
+
+    func toggleComment() {
+        let selection = textView.selectedRange()
+        guard case .code(let language) = tracker.state(at: selection.location).kind else { return }
+        textView.apply(LineCommands.toggleComment(in: nsText, selection: selection, prefix: LineCommands.commentPrefix(for: language)))
+    }
+
+    func handleBacktick() -> Bool {
+        let selection = textView.selectedRange()
+        guard tracker.state(at: selection.location).kind.isCode == false, let edit = FenceCompletion.backtick(in: nsText, selection: selection) else { return false }
+        if edit.replacement.isEmpty, edit.range.length == 0 {
+            textView.setSelectedRange(edit.selection)
+            return true
+        }
+        textView.apply(edit)
+        return true
+    }
+
+    func showFind(replace: Bool) {
+        let item = NSMenuItem()
+        item.tag = replace ? NSTextFinder.Action.showReplaceInterface.rawValue : NSTextFinder.Action.showFindInterface.rawValue
+        textView.performTextFinderAction(item)
+    }
+
+    func reveal(location: Int) {
+        let range = NSRange(location: min(location, nsText.length), length: 0)
+        textView.window?.makeFirstResponder(textView)
+        textView.setSelectedRange(range)
+        textView.scrollRangeToVisible(range)
     }
 
     func handleTab(outdent: Bool) -> Bool {
@@ -47,6 +98,18 @@ extension EditorController {
             insertLink()
         case ([.command], "\r"):
             openLinkAtCaret()
+        case ([.option], _) where event.keyCode == 126:
+            moveLine(up: true)
+        case ([.option], _) where event.keyCode == 125:
+            moveLine(up: false)
+        case ([.command], "d"):
+            duplicateLine()
+        case ([.command], "/"):
+            toggleComment()
+        case ([.command], "f"):
+            showFind(replace: false)
+        case ([.command, .option], "f"):
+            showFind(replace: true)
         default:
             return false
         }

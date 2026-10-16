@@ -4,9 +4,12 @@ package struct EnsureDailyNoteUseCase: Sendable {
     let files: any VaultFileStore
     let config: any VaultConfigRepository
     let create: CreateNoteUseCase
+    let keyValues: any KeyValueStore
     let clock: any Clock
 
-    package func execute(stem requested: String? = nil, carryOver: Bool = true) async throws -> DailyNote {
+    package func execute(stem requested: String? = nil) async throws -> DailyNote {
+        let settings = DailySettings.load(from: keyValues)
+        let carryOver = settings.carriesOver
         let spaces = try await config.spaces()
         let stem = requested ?? DailyPolicy.stem(for: clock.now(), timeZone: clock.timeZone)
         let path = VaultPath(space: spaces.dailySpace, stem: stem)
@@ -26,7 +29,7 @@ package struct EnsureDailyNoteUseCase: Sendable {
                 }
             }
         }
-        let created = try await create.execute(NoteDraft(title: stem, type: NoteType.daily.name, space: spaces.dailySpace, bodyPrefix: prefix))
+        let created = try await create.execute(NoteDraft(title: stem, type: NoteType.daily.name, space: spaces.dailySpace, bodyPrefix: prefix, template: settings.template))
         return DailyNote(document: created.document, wasCreated: true, caret: created.caret)
     }
 }

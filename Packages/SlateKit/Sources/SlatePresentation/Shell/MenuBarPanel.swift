@@ -4,7 +4,13 @@ import SlateUI
 
 final class MenuBarPanel: NSPanel {
 
+    var onCancel: () -> Void = {}
+
     override var canBecomeKey: Bool { true }
+
+    override func cancelOperation(_ sender: Any?) {
+        onCancel()
+    }
 
     init() {
         super.init(

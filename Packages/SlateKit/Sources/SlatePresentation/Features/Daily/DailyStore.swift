@@ -11,8 +11,12 @@ final class DailyStore {
     @ObservationIgnored private let clock: any Clock
     @ObservationIgnored private let activity: ActivityLog
     @ObservationIgnored private let events: AppEvents
+    @ObservationIgnored private let store: any KeyValueStore
+    @ObservationIgnored private let toaster: Toaster
 
-    init(ensureDaily: EnsureDailyNoteUseCase, notes: any NoteLookup, navigator: Navigator, clock: any Clock, activity: ActivityLog, events: AppEvents) {
+    init(ensureDaily: EnsureDailyNoteUseCase, notes: any NoteLookup, navigator: Navigator, clock: any Clock, store: any KeyValueStore, toaster: Toaster, activity: ActivityLog, events: AppEvents) {
+        self.store = store
+        self.toaster = toaster
         self.ensureDaily = ensureDaily
         self.notes = notes
         self.navigator = navigator
@@ -37,6 +41,10 @@ final class DailyStore {
     }
 
     private func open(stem: String?) async {
+        guard DailySettings.load(from: store).isEnabled else {
+            toaster.show("Daily notes are off. Turn them on in Settings → General.")
+            return
+        }
         do {
             let daily = try await ensureDaily.execute(stem: stem)
             if daily.wasCreated {

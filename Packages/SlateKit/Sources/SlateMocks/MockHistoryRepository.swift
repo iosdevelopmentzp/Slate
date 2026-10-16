@@ -25,6 +25,10 @@ struct MockHistoryRepository: HistoryRepository {
 
     func push(to remote: String) async throws {}
 
+    func canReach(_ remote: String) async -> Bool {
+        true
+    }
+
     func lastSnapshot() async throws -> Snapshot? {
         Snapshot(hash: "a1b2c3d", date: MockVault.reference.addingTimeInterval(-600), message: "snapshot: 2 files")
     }

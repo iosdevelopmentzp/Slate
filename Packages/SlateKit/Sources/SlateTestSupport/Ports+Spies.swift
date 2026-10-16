@@ -21,7 +21,9 @@ package extension Ports {
             history: spies.history,
             journal: spies.journal,
             actions: spies.actions,
-            exporter: spies.exporter
+            exporter: spies.exporter,
+            secrets: spies.secrets,
+            tracker: spies.tracker
         )
         return (ports, spies)
     }

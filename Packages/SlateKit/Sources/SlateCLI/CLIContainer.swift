@@ -15,7 +15,8 @@ struct CLIContainer {
         let path = options.vault ?? ProcessInfo.processInfo.environment["SLATE_VAULT"] ?? keyValues.string(forKey: "vault.path")
         guard let path, FileManager.default.fileExists(atPath: (path as NSString).expandingTildeInPath) else { throw CLIError.noVault }
         root = URL(fileURLWithPath: (path as NSString).expandingTildeInPath, isDirectory: true)
-        ports = try Ports.live(root: root, support: VaultSupportFolder.url(for: root), keyValues: keyValues, recorder: NoopRecorder())
+        let support = options.supportFolder.map { URL(fileURLWithPath: $0, isDirectory: true) } ?? VaultSupportFolder.url(for: root)
+        ports = try Ports.live(root: root, support: support, keyValues: keyValues, recorder: NoopRecorder())
         useCases = UseCases(ports: ports)
         shell = ShellRunner(recorder: NoopRecorder())
     }

@@ -14,15 +14,17 @@ struct RootView: View {
     @Environment(\.openSettings) private var openSettings
     @Environment(DailyStore.self) private var daily
     @Environment(PaletteStore.self) private var palette
+    @Environment(VaultStore.self) private var vault
+    @Environment(SearchStore.self) private var search
+    @Environment(\.openNoteWindow) private var openNoteWindow
 
-    @State private var showsSidebar = true
 
     var body: some View {
         VStack(spacing: 0) {
             HeaderView()
             Divider()
             HStack(spacing: 0) {
-                if surface == .window, showsSidebar {
+                if surface == .window, layout.showsSidebar {
                     SidebarView()
                         .frame(width: 200)
                     Divider()
@@ -90,13 +92,47 @@ struct RootView: View {
             shortcut("]", modifiers: .command) { Task { await daily.openDay(1) } }
             shortcut(",", modifiers: .command) { openSettings() }
             shortcut("k", modifiers: .command) { palette.isOpen ? palette.close() : palette.open() }
+            shortcut("m", modifiers: [.command, .shift]) {
+                guard noteList.selected != nil else { return }
+                palette.open(query: "move to ")
+            }
+            shortcut("[", modifiers: [.command, .shift]) { noteList.show(ListSource.cycle(from: noteList.source, spaces: vault.spaces.map(\.folder), by: -1)) }
+            shortcut("]", modifiers: [.command, .shift]) { noteList.show(ListSource.cycle(from: noteList.source, spaces: vault.spaces.map(\.folder), by: 1)) }
+            shortcut(.upArrow, modifiers: [.command, .option]) { selectNeighbour(-1) }
+            shortcut(.downArrow, modifiers: [.command, .option]) { selectNeighbour(1) }
+            shortcut(.upArrow, modifiers: .command) {
+                if TextFocus.isEditingText { TextFocus.send(#selector(NSResponder.moveToBeginningOfDocument(_:))) } else { selectNeighbour(-1) }
+            }
+            shortcut(.downArrow, modifiers: .command) {
+                if TextFocus.isEditingText { TextFocus.send(#selector(NSResponder.moveToEndOfDocument(_:))) } else { selectNeighbour(1) }
+            }
+            shortcut(.delete, modifiers: .command) {
+                if TextFocus.isEditingText {
+                    TextFocus.send(#selector(NSResponder.deleteToBeginningOfLine(_:)))
+                } else if let selected = noteList.selected {
+                    noteList.requestTrash(selected.id)
+                }
+            }
+            ForEach(Array(vault.spaces.prefix(9).enumerated()), id: \.element.id) { position, space in
+                shortcut(KeyEquivalent(Character("\(position + 1)")), modifiers: .command) { noteList.show(.space(space.folder)) }
+            }
+            if surface == .window {
+                shortcut("n", modifiers: [.command, .shift]) {
+                    guard let selected = navigator.selectedNote else { return }
+                    openNoteWindow(selected, false)
+                }
+            }
             if surface == .panel {
                 shortcut("o", modifiers: [.command, .shift]) { openAsWindow() }
             }
             if surface == .window {
-                shortcut("0", modifiers: .command) { showsSidebar.toggle() }
+                shortcut("0", modifiers: .command) { layout.showsSidebar.toggle() }
             }
         }
+    }
+
+    private func selectNeighbour(_ offset: Int) {
+        noteList.selectNeighbour(offset, in: search.isActive ? search.results.map(\.summary) : nil)
     }
 
     private func shortcut(_ key: KeyEquivalent, modifiers: EventModifiers, action: @escaping () -> Void) -> some View {

@@ -95,4 +95,43 @@ import Testing
 
         #expect(harness.textView.undoManager?.canUndo == false)
     }
+
+    @Test func enterAfterAnOpeningFenceAddsTheClosingOne() {
+        let harness = EditorHarness(text: "```swift")
+        harness.textView.setSelectedRange(NSRange(location: 8, length: 0))
+
+        harness.textView.insertNewline(nil)
+
+        #expect(harness.controller.text == "```swift\n\n```")
+        #expect(harness.textView.selectedRange() == NSRange(location: 9, length: 0))
+    }
+
+    @Test func enterInsideAClosedFenceIsPlain() {
+        let harness = EditorHarness(text: "```\nx\n```")
+        harness.textView.setSelectedRange(NSRange(location: 3, length: 0))
+
+        harness.textView.insertNewline(nil)
+
+        #expect(harness.controller.text == "```\n\nx\n```")
+    }
+
+    @Test func toggleCommentWorksOnlyInCode() {
+        let harness = EditorHarness(text: "```yaml\nkey: 1\n```\nprose")
+        harness.textView.setSelectedRange(NSRange(location: 9, length: 0))
+
+        harness.controller.toggleComment()
+        harness.textView.setSelectedRange(NSRange(location: 22, length: 0))
+        harness.controller.toggleComment()
+
+        #expect(harness.controller.text == "```yaml\n# key: 1\n```\nprose")
+    }
+
+    @Test func typingABacktickAddsAPair() {
+        let harness = EditorHarness(text: "a ")
+        harness.textView.setSelectedRange(NSRange(location: 2, length: 0))
+
+        harness.textView.insertText("`", replacementRange: NSRange(location: NSNotFound, length: 0))
+
+        #expect(harness.controller.text == "a ``")
+    }
 }

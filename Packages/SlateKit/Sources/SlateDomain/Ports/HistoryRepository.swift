@@ -8,4 +8,5 @@ package protocol HistoryRepository: Sendable {
     func contents(of path: VaultPath, at hash: String) async throws -> Data
     func push(to remote: String) async throws
     func lastSnapshot() async throws -> Snapshot?
+    func canReach(_ remote: String) async -> Bool
 }

@@ -39,7 +39,7 @@ package struct CreateNoteUseCase: Sendable {
         if let text = draft.body {
             body = TemplateRenderer.Rendered(text: text, caret: (text as NSString).length)
         } else {
-            let template = try await templates.body(for: type.name)
+            let template = try await templates.body(for: draft.template ?? type.name)
             body = TemplateRenderer.render(template, values: TemplateRenderer.values(title: title, header: header, now: now, timeZone: clock.timeZone))
         }
         let prefix = draft.bodyPrefix ?? ""

@@ -16,6 +16,15 @@ package struct HistorySettings: Hashable, Sendable, Codable {
         self.pushOnQuit = pushOnQuit
     }
 
+    package init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = HistorySettings()
+        isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? defaults.isEnabled
+        intervalMinutes = try container.decodeIfPresent(Int.self, forKey: .intervalMinutes) ?? defaults.intervalMinutes
+        remote = try container.decodeIfPresent(String.self, forKey: .remote) ?? defaults.remote
+        pushOnQuit = try container.decodeIfPresent(Bool.self, forKey: .pushOnQuit) ?? defaults.pushOnQuit
+    }
+
     package var hasRemote: Bool {
         remote.trimmingCharacters(in: .whitespaces).isEmpty == false
     }

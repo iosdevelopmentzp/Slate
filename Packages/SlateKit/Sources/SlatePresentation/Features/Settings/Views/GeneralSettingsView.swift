@@ -45,6 +45,17 @@ struct GeneralSettingsView: View {
                     }
                 }
             }
+            Section("Daily notes") {
+                Toggle("Make a daily note for each day", isOn: $settings.daily.isEnabled)
+                Toggle("Carry open checkboxes to the new day", isOn: $settings.daily.carriesOver)
+                    .disabled(settings.daily.isEnabled == false)
+                Picker("Template", selection: $settings.daily.template) {
+                    ForEach(vault.templateNames, id: \.self) { name in
+                        Text(vault.type(named: name)?.title ?? name.capitalized).tag(name)
+                    }
+                }
+                .disabled(settings.daily.isEnabled == false)
+            }
             Section("Doctor") {
                 ForEach(settings.checks) { check in
                     HStack(alignment: .firstTextBaseline, spacing: 8) {

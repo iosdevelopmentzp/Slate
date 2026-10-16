@@ -83,6 +83,10 @@ package final class SpyHistoryRepository: HistoryRepository, @unchecked Sendable
         }
     }
 
+    package func canReach(_ remote: String) async -> Bool {
+        lock.withLock { _pushError == nil }
+    }
+
     package func lastSnapshot() async throws -> Snapshot? {
         lock.withLock { _snapshots.values.flatMap { $0 }.max { $0.date < $1.date } }
     }
