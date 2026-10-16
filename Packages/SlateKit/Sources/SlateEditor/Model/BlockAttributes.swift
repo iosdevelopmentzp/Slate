@@ -1,6 +1,6 @@
 import Foundation
 
-package struct BlockAttributes: Hashable, Sendable {
+nonisolated package struct BlockAttributes: Hashable, Sendable {
     package var kind: BlockKind
     package var indent: Int
     package var isDone: Bool

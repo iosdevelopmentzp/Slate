@@ -5,10 +5,10 @@ import SlateUI
 
 struct EditorView: View {
     @Environment(EditorStore.self) private var editor
-    @Environment(NoteListStore.self) private var noteList
     @Environment(SettingsStore.self) private var settings
     @Environment(Toaster.self) private var toaster
     @State private var showsHistory = false
+    @State private var commands = EditorCommands()
     @FocusState private var isTitleFocused: Bool
 
     @State private var showsSaved = false
@@ -37,10 +37,16 @@ struct EditorView: View {
                 header(for: document)
                     .frame(maxWidth: Self.textWidth + Self.sidePadding * 2)
                     .frame(maxWidth: .infinity)
-                MarkdownEditorView(
-                    text: Bindable(editor).text,
-                    configuration: configuration,
-                    focus: editor.bodyFocus.map { EditorFocusRequest(token: $0.token, caret: $0.caret) },
+                FormatBar(commands: commands)
+                    .padding(.horizontal, Self.sidePadding)
+                    .padding(.bottom, 8)
+                    .frame(maxWidth: Self.textWidth + Self.sidePadding * 2, alignment: .leading)
+                    .frame(maxWidth: .infinity)
+                RichTextEditorView(
+                    markdown: Bindable(editor).text,
+                    configuration: EditorConfiguration(textSize: CGFloat(settings.editorFontSize)),
+                    commands: commands,
+                    focus: editor.bodyFocus.map { EditorFocusRequest(token: $0.token, atStart: $0.atStart, words: $0.words) },
                     insertion: editor.insertion.map { EditorInsertion(token: $0.token, markdown: $0.markdown) },
                     handlers: handlers
                 )
@@ -54,6 +60,9 @@ struct EditorView: View {
             .animation(Theme.hoverAnimation, value: editor.hasConflict)
             .animation(Theme.hoverAnimation, value: editor.recovered)
             .background(Theme.surface)
+            .onAppear {
+                editor.flushBody = { [commands] in commands.flush() }
+            }
             .onChange(of: editor.titleFocusToken) {
                 isTitleFocused = true
             }
@@ -117,18 +126,8 @@ struct EditorView: View {
         .padding(.bottom, 8)
     }
 
-    private var configuration: EditorConfiguration {
-        let size = CGFloat(settings.editorFontSize)
-        return EditorConfiguration(
-            proseFont: .systemFont(ofSize: size),
-            codeFont: .monospacedSystemFont(ofSize: size - 1, weight: .regular),
-            lineHeightMultiple: 1.35
-        )
-    }
-
     private var handlers: EditorHandlers {
         let editor = editor
-        let noteList = noteList
         return EditorHandlers(
             didEndEditing: { editor.bodyEditingEnded() },
             resolveImage: { editor.resolveLink($0) },
@@ -137,7 +136,6 @@ struct EditorView: View {
                     switch link {
                     case .url(let target): await editor.openURL(target)
                     case .wiki(let target): await editor.openWikilink(target)
-                    case .pattern: break
                     }
                 }
             },
@@ -152,13 +150,7 @@ struct EditorView: View {
             },
             pasteImage: { data, fileExtension in Task { await editor.pasteImage(data, fileExtension: fileExtension) } },
             pasteFiles: { urls in Task { await editor.pasteFiles(urls) } },
-            requestScreenshot: { kind in Task { await editor.screenshot(kind == .region ? .region : .window) } },
-            completions: { kind, prefix in
-                switch kind {
-                case .note: CompletionPolicy.noteNames(matching: prefix, in: noteList.summaries)
-                default: []
-                }
-            }
+            requestScreenshot: { kind in Task { await editor.screenshot(kind == .region ? .region : .window) } }
         )
     }
 

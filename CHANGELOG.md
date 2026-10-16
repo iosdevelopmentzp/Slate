@@ -7,6 +7,13 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- The editor shows formatted text without Markdown marks: titles, headings, bold, italic, strikethrough, code, links, round checkboxes, bullets, numbers, quotes, code blocks, dividers and images in the text. The file stays plain Markdown.
+- A format bar above the text: the paragraph style menu (Title, Heading, Subheading, Body, Monospaced), Bold, Italic, Strikethrough, Checklist, Bulleted list, Numbered list, Quote, Link and Image, and a "…" menu with Divider and Screenshot. Active styles are tinted, and every button shows its shortcut.
+- Shortcuts and a Format menu: `⇧⌘T` `⇧⌘H` `⇧⌘J` `⇧⌘B` `⇧⌘M` for the paragraph styles, `⇧⌘L` `⇧⌘7` `⇧⌘9` for lists, `⌘'` quote, `⌘B` `⌘I` `⇧⌘X`, `⌘K` link, `⇧⌘I` image, `⇧⌘S` screenshot, `⌘]` and `⌘[` to indent a list item, `⌥⌘F` find in the note.
+- Lists behave as in other editors: Enter makes the next item, Enter on an empty item ends the list, Tab and `⇧Tab` indent, Backspace at the start turns the item into text. Typing "- ", "1. ", "[] ", "# " or "> " at the start of a line starts that style.
+- Images are blocks of their own: paste, drag, the Image button and `⇧⌘S` put them in the text; double-click opens Quick Look; the right-click menu has Open, Show in Finder and Copy Image.
+- `⌘K` on selected text asks for the address in a small popover; `⌘`-click opens a link or a note link.
+- Copy writes Markdown and plain text; paste keeps the formatting from Slate and from web pages.
 - Folders in the panel and the window: New folder at the bottom of the sidebar or `⇧⌘N` makes a folder and lets you name it at once. Double-click a folder to rename it. Right click for Rename, Colour, Icon, Move up, Move down and Delete folder.
 - Delete folder asks in the sidebar first: "Delete "Ideas"? Its 4 notes move to Notes. Yes · No". The notes move to the quick note folder and a toast offers Undo, which brings the folder and its notes back.
 - Folder colours: red, orange, yellow, green, teal, blue, purple or pink, saved as `color` in `.slate/spaces.json`.
@@ -17,6 +24,8 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - The panel and the window have the same three columns: folders, notes, the note. The header and the footer are gone; the sidebar has Settings and Open as window at the top, the list has the folder name, a round + button and a rounded search field.
 - A softer look: notes are rounded cards with a two-line preview, the selected folder and card have a soft tint, the window has no title bar line and the columns have no divider lines.
 - Friendly empty states: "Nothing here yet." with a New note button, "Pick a note or press ⌘N.", "No notes match." with Clear search, and "The Trash is empty."
+- Markdown Slate cannot show (tables, footnotes, HTML, deep headings) stays as it is, in a monospaced block on a light tint, and is saved without a change.
+- The default text size is 15.
 - The note title is larger, the text sits in a column up to 720 points wide, and a quiet "Saved" appears for a second after each save.
 - The Trash shows cards with Restore and Delete now on hover; Delete now asks "Yes · No" in the card.
 - The sort order is always "date changed", with pinned notes first.
@@ -29,6 +38,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - `slate://open` with a title or an id that matches no note says "Slate found no such note".
 
 ### Removed
+- Editor: the Markdown marks on screen, code colours, `[[` completion, moving and duplicating lines (`⌥↑` `⌥↓` `⌘D`), commenting code (`⌘/`) and Find and Replace in the menu (the find bar still has Replace).
 - Note kinds and the New menu, tasks, ticket and branch chips, status, `⌘⇧D`, Today and daily notes (`⌥⌘T`, `⌘[`, `⌘]`), snippets, meetings, tags and tag chips, Insert Template, saved searches, Open TODOs, the palette (`⌘K`), actions, Copy for Slack, Copy as Markdown, Save as HTML and PDF, Float on Top and note windows, the outline, ticket details, the Links and History pages of Settings, the history and push state and the Activity button in the footer. The files and the command line keep working; the code for them is in commit `545e0d6`.
 
 ### Added
@@ -94,6 +104,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ### Fixed
 
 ### Infrastructure
+- `SlateEditor` is a new TextKit 2 rich text editor (`RichTextEditorView`, `RichTextController`, `RichTextStyler`, `RichLayoutFragment`, `EditorCommands`). The M2 Markdown editor, its highlighter and the `[[` completion are removed. Tests drive the editor in a window: commands, list keys, undo, images, copy and the 5,000-line note (about 1.3 ms per key).
 - `SlateEditor` reads Markdown into formatted text and writes it back (`MarkdownReader`, `MarkdownWriter`, swift-markdown under `SlateEditor/Markdown/`). Files Slate wrote come back byte for byte; files from other tools keep the same Markdown tree; anything outside the subset stays as a raw block. Tests: a fixture set and 300 random documents.
 - M7: secret store and issue tracker ports (Keychain, Jira REST), `IssueStore`, per-window editor stores, `MainMenuBuilder`, line commands, fence completion and outline in the editor module. CLI tests use their own support folder.
 - M6: `Config/Slate-Info.plist` (URL scheme, Services); `AppContainer` is the app delegate; URL command parser, Slack format, action environment policies; toggle todo and run action use cases; action runner and exporter ports; `TodoStore`, `PaletteStore`; a sixth test target, `SlateCLITests`.

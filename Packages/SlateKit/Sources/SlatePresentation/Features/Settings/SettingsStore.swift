@@ -58,7 +58,7 @@ final class SettingsStore {
         self.activity = activity
         self.events = events
         let size = store.integer(forKey: Keys.fontSize)
-        editorFontSize = Self.fontSizes.contains(size) ? size : 14
+        editorFontSize = Self.fontSizes.contains(size) ? size : 15
         appearance = store.string(forKey: Keys.appearance).flatMap(AppAppearance.init(rawValue:)) ?? .system
         let retention = store.integer(forKey: Keys.retention)
         trashRetentionDays = retention > 0 ? retention : 30

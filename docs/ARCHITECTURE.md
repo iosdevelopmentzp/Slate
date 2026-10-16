@@ -313,48 +313,48 @@ A one-step action (search, list, load) is not a use case: the store calls the po
 ```swift
 package struct RichTextEditorView: NSViewRepresentable {
     package init(
-        document: Binding<RichTextDocument>,     // wraps an NSAttributedString with the slate.* attributes
-        configuration: EditorConfiguration,      // fonts and sizes of the fixed styles, text size scale, colours
-        handlers: EditorHandlers,
-        commands: EditorCommandSink               // the host receives an EditorCommands object once the view exists
+        markdown: Binding<String>,              // the note body; the editor reads it and writes it back
+        configuration: EditorConfiguration,     // text size (base 15), colours, image height limit
+        commands: EditorCommands,               // shared with the format bar
+        focus: EditorFocusRequest? = nil,       // token, at the start or at the first of some words
+        insertion: EditorInsertion? = nil,      // token and Markdown blocks to insert at the caret
+        handlers: EditorHandlers = EditorHandlers()
     )
 }
 
-package enum MarkdownRichText {
-    package static func read(_ markdown: String, configuration: EditorConfiguration) -> RichTextDocument
-    package static func write(_ document: RichTextDocument) -> String
-}
+package enum MarkdownReader { static func read(_ markdown: String) -> NSMutableAttributedString }
+package enum MarkdownWriter { static func write(_ text: NSAttributedString) -> String }
 
 package struct EditorHandlers {
-    package var resolveImage: (String) -> URL?            // relative link → file URL
-    package var importImage: (Data, String) -> String?     // bytes, extension → relative link to insert
-    package var importFiles: ([URL]) -> [String]           // dropped files → relative links
-    package var openLink: (URL) -> Void
-    package var requestScreenshot: () -> Void              // host runs the use case, then calls commands.insertImage
-    package var didChange: () -> Void
+    var didEndEditing: () -> Void
+    var resolveImage: (String) -> URL?             // relative link → file URL
+    var openLink: (EditorLink) -> Void              // .url(String) or .wiki(String)
+    var attachment: (String, AttachmentAction) -> Void   // Quick Look, open, reveal, copy image
+    var pasteImage: (Data, String) -> Void          // bytes, extension; the host inserts the link
+    var pasteFiles: ([URL]) -> Void
+    var requestScreenshot: (ScreenshotKind) -> Void
 }
 
-package final class EditorCommands {
-    package func apply(_ style: ParagraphStyleKind)      // title, heading, subheading, body, monospaced, quote
-    package func toggle(_ list: ListKind)                // bullet, numbered, checklist
-    package func toggle(_ inline: InlineStyle)           // bold, italic, strikethrough, code
-    package func insertLink(url: URL, text: String?)
-    package func insertImage(relativeLink: String)
-    package func insertDivider()
-    package func indent(_ delta: Int)
-    package var currentStyles: EditorStyleState { get }   // for the format bar: paragraph kind, list kind, inline flags
+@Observable package final class EditorCommands {
+    package internal(set) var state: EditorStyleState   // paragraph kind, inline flags, link, canFormatText
+    package func perform(_ command: EditorCommand)       // style, list, quote, inline, link, image, divider, screenshot, indent
+    package func flush()                                  // writes pending Markdown into the binding now
+    package func focus()
 }
 ```
+
+`EditorMenuActions` holds the selectors of the Format menu; `RichTextView` answers them.
 
 ### 6.2 Rules
 
 - TextKit 2 only; never read `textView.layoutManager`. Rich text mode (`isRichText = true`), no font panel, no automatic substitutions, undo on.
-- `MarkdownRichText` lives under `SlateEditor/Markdown/`: `MarkdownReader` (swift-markdown AST → attributed string with `slate.block`, `slate.inline`, `.link`, image attachments), `MarkdownWriter` (attributed string → the subset of `STORAGE-FORMAT.md` section 11), `RawBlock` for anything else. Both pure, both tested with a fixture set; `write(read(x)) == x` for files Slate wrote.
-- Commands act through `shouldChangeText(in:replacementString:)` / `didChangeText()` so undo works, and update typing attributes so the next character follows the style.
-- Paragraph styling: fonts, spacing and the list marker come from `slate.block` through the paragraph styler (`NSTextContentStorageDelegate`), so the attribute is the single truth and the Markdown writer reads it back.
-- List markers (bullet, number, checklist box) are drawn by a layout fragment subclass or as text attachments at the paragraph start; a click on a checklist box toggles the block's `done` flag.
-- Images: one paragraph per image, an `NSTextAttachment` with a cell that scales to the text width (max 360 pt high); the relative link lives in `slate.block = image(path)`.
-- Performance: style lazily per paragraph; an edit restyles the edited paragraphs only. The 5,000-line fixture must type without visible delay.
+- The model: one paragraph per block, separated by `\n`. A line break inside a block (a soft break, a line of code or of a raw block) is U+2028. Images and dividers are one U+FFFC character with an attachment. The `slate.*` attributes are the single truth: `slate.block`, `slate.indent`, `slate.done`, `slate.language`, `slate.imagePath`, `slate.imageAlt`, `slate.group` (which list or quote a paragraph belongs to), `slate.inline` (bold, italic, strikethrough, code as bits), `slate.href` (`wiki:` prefix for a wikilink), `slate.hardBreak`, `slate.listNumber`.
+- `SlateEditor/Markdown/` holds the reader and the writer, both pure. The reader uses swift-markdown with `.disableSmartOpts`; anything outside `STORAGE-FORMAT.md` section 11 becomes a raw block sliced from the source. `write(read(x)) == x` for files Slate wrote; the tests run a fixture set and random documents.
+- The storage holds the real fonts. `RichTextStyler` derives fonts, paragraph styles and attachments from the `slate.*` attributes; after an edit the controller restyles the edited paragraphs and the list around them (numbers in one pass).
+- Commands go through `replace(_:with:selection:)`: `shouldChangeText`, `replaceCharacters`, `didChangeText`, so undo works. The editor has its own `UndoManager`.
+- `RichLayoutFragment` draws the bullet, the number, the round checkbox, the quote bar and the code and raw backgrounds. A click on a checkbox toggles `slate.done`.
+- `publish()` writes the whole document. Up to 12,000 characters it writes at once; above that it waits 250 ms after the last edit. `flush()` (called when editing ends and before the store saves or switches notes) writes at once.
+- Performance: the 5,000-line fixture opens in about 120 ms and types at about 1.3 ms per key in a debug test build (`RichTextPerformanceTests`, limit 16 ms).
 
 ## 7. Presentation
 

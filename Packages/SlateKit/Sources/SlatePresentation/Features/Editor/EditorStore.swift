@@ -52,6 +52,7 @@ final class EditorStore {
     @ObservationIgnored private var pendingCreation: (id: NoteID, caret: Int)?
     @ObservationIgnored private var pendingMatch: (id: NoteID, words: [String])?
     @ObservationIgnored private var bodyCaret: Int?
+    @ObservationIgnored var flushBody: () -> Void = {}
     @ObservationIgnored private var focusCounter = 0
 
     init(
@@ -115,7 +116,7 @@ final class EditorStore {
     }
 
     func submitTitle() {
-        requestBodyFocus(caret: bodyCaret)
+        requestBodyFocus(atStart: bodyCaret == nil)
         bodyCaret = nil
         Task { await persist() }
     }
@@ -125,6 +126,7 @@ final class EditorStore {
     }
 
     func bodyEditingEnded() {
+        flushBody()
         Task { await persist() }
     }
 
@@ -184,6 +186,7 @@ final class EditorStore {
     }
 
     func flush() async {
+        flushBody()
         saveTask?.cancel()
         saveTask = nil
         await persist()
@@ -334,18 +337,14 @@ final class EditorStore {
         return trimmed.isEmpty ? StemPolicy.untitled : title
     }
 
-    func reveal(location: Int) {
-        requestBodyFocus(caret: location)
-    }
-
     private func revealMatch(of words: [String]) {
-        guard let first = SearchHighlightPolicy.ranges(of: words, in: text).first else { return }
-        requestBodyFocus(caret: first.location)
+        guard SearchHighlightPolicy.ranges(of: words, in: text).isEmpty == false else { return }
+        requestBodyFocus(atStart: false, words: words)
     }
 
-    private func requestBodyFocus(caret: Int?) {
+    private func requestBodyFocus(atStart: Bool, words: [String] = []) {
         focusCounter += 1
-        bodyFocus = BodyFocus(token: focusCounter, caret: caret)
+        bodyFocus = BodyFocus(token: focusCounter, atStart: atStart, words: words)
     }
 
     private func handle(_ event: AppEvent) {

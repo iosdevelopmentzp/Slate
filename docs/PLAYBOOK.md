@@ -106,6 +106,15 @@ Copy `ShellRunner`, `ShellResult`, `LineBatcher`, `CommandFormatter` from `../De
 - Performance: style only in the delegate (lazy, per paragraph as the viewport needs it). Never apply attributes to the whole storage after an edit. Measure with the 5,000-line fixture: an edit must restyle under 16 ms.
 - The open-source `MarkdownEngine` package (`swift-markdown-engine`, Apache 2.0, pre-1.0) was measured in the M1.5 spike and rejected: 79 ms per keystroke on the 5,000-line fixture against 2.2 ms for the own core, a wikilink storage form that conflicts with `[[Stem|alias]]`, and a highlighter that runs JavaScript (ADR 0005 amendment).
 
+### Rich text editor (S3, ADR 0008)
+
+- The S3 editor no longer uses the display-only styling of the content storage delegate above. The storage holds the real fonts, because the text has no marks; the `slate.*` attributes stay the single truth and the styler derives the look from them. The bullets above about `[ ]` glyphs and `FenceTracker` describe the M2 editor, which is gone.
+- Trap (S3): `replace` calls `textView.shouldChangeText`, which calls the delegate's `shouldChangeTextIn`. Set the "editing internally" flag before that call, or a redirect inside the delegate calls `replace` again and the stack overflows.
+- Trap (S3): an `NSTextAttachment` subclass with `allowsTextAttachmentView = false` must also set its `image` property. Overriding `image(for:attributes:location:textContainer:)` alone reserves the space but draws nothing.
+- Trap (S3): `layoutFragmentFrame.minX` is the paragraph indent. A background or a bar drawn from the left edge of the text column subtracts it.
+- Trap (S3): in a test there is no event loop, so the `UndoManager` puts every change into one group. Tests set `groupsByEvent = false` and open a group per step.
+- Writing Markdown for 130,000 characters takes about 100 ms in a debug build. The controller writes long notes 250 ms after the last key, and flushes before a save.
+
 ## 10. GRDB and FTS5 — verified (M3)
 
 - `DatabasePool(path:configuration:)` with `configuration.busyMode = .timeout(2)` and WAL (the pool's default). One pool per vault, owned by `GRDBSearchIndex`.

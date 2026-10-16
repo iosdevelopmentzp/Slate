@@ -14,7 +14,7 @@ import Testing
     }
 
     @Test func preferencesHaveDefaultsAndPersist() {
-        #expect(settings.editorFontSize == 14)
+        #expect(settings.editorFontSize == 15)
         #expect(settings.appearance == .system)
         #expect(settings.trashRetentionDays == 30)
 

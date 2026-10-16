@@ -2,10 +2,12 @@ import Foundation
 
 package struct EditorFocusRequest: Equatable, Sendable {
     package let token: Int
-    package let caret: Int?
+    package let atStart: Bool
+    package let words: [String]
 
-    package init(token: Int, caret: Int?) {
+    package init(token: Int, atStart: Bool = false, words: [String] = []) {
         self.token = token
-        self.caret = caret
+        self.atStart = atStart
+        self.words = words
     }
 }

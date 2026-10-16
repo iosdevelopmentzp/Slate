@@ -2,7 +2,7 @@
 
 Personal macOS menu bar notes app for an iOS developer. Markdown files in a local notes folder, a SQLite search index, task notes with ticket and branch, quick capture from a hotkey.
 
-Current stage: **Phase 2, S1 done** (branch `phase2-simple-v1`). v1 shows only Folders and Notes (ADR 0007); the parked features keep their Domain and Data code, their views are gone (the list is in `docs/STATUS.md`). A new notes folder gets one folder, `Notes`. Next: S2 folders and the soft look, S3 the rich text editor (ADR 0008), S4 polish. `docs/STATUS.md` says what is real.
+Current stage: **Phase 2, S3 done** (branch `phase2-simple-v1`). v1 shows only Folders and Notes (ADR 0007); the parked features keep their Domain and Data code, their views are gone (the list is in `docs/STATUS.md`). Folders can be made, renamed, coloured and deleted with Undo; the look is soft and rounded (`docs/UX.md` revision 2). The editor is a TextKit 2 rich text editor with a format bar; files stay Markdown (ADR 0008). Next: S4 polish and the owner's pass. `docs/STATUS.md` says what is real.
 
 Read first, in this order: this file, `docs/STATUS.md`, `docs/ROADMAP.md`, then the document for the milestone (`docs/SPEC.md`, `docs/STORAGE-FORMAT.md`, `docs/ARCHITECTURE.md`, `docs/UX.md`). `docs/PLAYBOOK.md` has verified solutions and traps per topic; read its section before touching that topic.
 

@@ -1,35 +1,21 @@
 import AppKit
 
-package struct EditorConfiguration: Equatable, Sendable {
-    package var proseFont: NSFont
-    package var codeFont: NSFont
-    package var lineHeightMultiple: CGFloat
-    package var codeLineHeightMultiple: CGFloat
+nonisolated package struct EditorConfiguration: Equatable, Sendable {
+    package static let baseTextSize: CGFloat = 15
+
+    package var textSize: CGFloat
     package var colors: EditorColors
-    package var linkPatterns: [EditorLinkPattern]
     package var imageMaxHeight: CGFloat
 
-    package init(
-        proseFont: NSFont,
-        codeFont: NSFont,
-        lineHeightMultiple: CGFloat,
-        codeLineHeightMultiple: CGFloat = 1.2,
-        colors: EditorColors = .system,
-        linkPatterns: [EditorLinkPattern] = [],
-        imageMaxHeight: CGFloat = 360
-    ) {
-        self.proseFont = proseFont
-        self.codeFont = codeFont
-        self.lineHeightMultiple = lineHeightMultiple
-        self.codeLineHeightMultiple = codeLineHeightMultiple
+    package init(textSize: CGFloat = EditorConfiguration.baseTextSize, colors: EditorColors = .system, imageMaxHeight: CGFloat = 360) {
+        self.textSize = textSize
         self.colors = colors
-        self.linkPatterns = linkPatterns
         self.imageMaxHeight = imageMaxHeight
     }
 
-    package static let standard = EditorConfiguration(
-        proseFont: .systemFont(ofSize: 14),
-        codeFont: .monospacedSystemFont(ofSize: 13, weight: .regular),
-        lineHeightMultiple: 1.35
-    )
+    package var scale: CGFloat {
+        textSize / Self.baseTextSize
+    }
+
+    package static let standard = EditorConfiguration()
 }

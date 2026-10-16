@@ -3,48 +3,84 @@ import Testing
 @testable import SlateEditor
 
 final class EditorHarness {
-    let controller: EditorController
+    let controller: RichTextController
     let window: NSWindow
+    let commands = EditorCommands()
+    private(set) var published: [String] = []
 
-    init(text: String = "", configuration: EditorConfiguration = .standard, resolveImage: @escaping (String) -> URL? = { _ in nil }) {
-        controller = EditorController(configuration: configuration)
-        controller.resolveImage = resolveImage
+    init(markdown: String = "", configuration: EditorConfiguration = .standard, resolveImage: @escaping (String) -> URL? = { _ in nil }) {
+        controller = RichTextController(configuration: configuration)
+        controller.handlers = EditorHandlers(resolveImage: resolveImage)
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 800, height: 600), styleMask: [.titled], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
-        controller.container.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-        window.contentView = controller.container
+        controller.scrollView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+        window.contentView = controller.scrollView
         controller.textView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-        controller.setText(text)
+        controller.commands = commands
+        controller.onMarkdownChange = { [weak self] value in self?.published.append(value) }
+        controller.setMarkdown(markdown)
+        window.makeFirstResponder(controller.textView)
         layout()
     }
 
-    var textView: MarkdownTextView { controller.textView }
+    var textView: RichTextView { controller.textView }
+
+    var markdown: String {
+        controller.flush()
+        return controller.markdown
+    }
+
+    var text: String { controller.storage.string }
 
     func layout() {
-        controller.container.layoutSubtreeIfNeeded()
         controller.textView.textLayoutManager?.textViewportLayoutController.layoutViewport()
         controller.textView.displayIfNeeded()
     }
 
-    func type(_ string: String, at location: Int) {
-        textView.setSelectedRange(NSRange(location: location, length: 0))
-        textView.insertText(string, replacementRange: NSRange(location: location, length: 0))
+    func select(_ location: Int, _ length: Int = 0) {
+        textView.setSelectedRange(NSRange(location: location, length: length))
+    }
+
+    func caret(after needle: String) {
+        let range = (text as NSString).range(of: needle)
+        select(NSMaxRange(range))
+    }
+
+    func selectText(_ needle: String) {
+        let range = (text as NSString).range(of: needle)
+        select(range.location, range.length)
+    }
+
+    func type(_ string: String) {
+        for character in string {
+            if character == "\n" {
+                textView.doCommand(by: #selector(NSResponder.insertNewline(_:)))
+            } else {
+                textView.insertText(String(character), replacementRange: textView.selectedRange())
+            }
+        }
         layout()
     }
 
-    func paragraph(at location: Int) -> NSAttributedString? {
-        guard let storage = textView.textContentStorage,
-              let start = storage.location(storage.documentRange.location, offsetBy: location) else { return nil }
-        var result: NSAttributedString?
-        storage.enumerateTextElements(from: start, options: []) { element in
-            result = (element as? NSTextParagraph)?.attributedString
-            return false
-        }
-        return result
+    func undoStep(_ body: () -> Void) {
+        let undo = controller.undoManager
+        undo.groupsByEvent = false
+        undo.beginUndoGrouping()
+        body()
+        undo.endUndoGrouping()
+    }
+
+    func command(_ selector: Selector) {
+        textView.doCommand(by: selector)
+        layout()
+    }
+
+    func block(at location: Int) -> BlockAttributes {
+        controller.block(at: location)
     }
 
     func font(at location: Int) -> NSFont? {
-        paragraph(at: location)?.attribute(.font, at: 0, effectiveRange: nil) as? NSFont
+        controller.storage.attribute(.font, at: location, effectiveRange: nil) as? NSFont
     }
 
     static func fixture(_ name: String) throws -> String {

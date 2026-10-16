@@ -1,6 +1,6 @@
 import Foundation
 
-package enum BlockKind: String, CaseIterable, Sendable {
+nonisolated package enum BlockKind: String, CaseIterable, Sendable {
     case title
     case heading
     case subheading

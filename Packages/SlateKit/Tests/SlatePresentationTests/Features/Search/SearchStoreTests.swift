@@ -86,6 +86,6 @@ import Testing
 
         harness.events.post(.searchOpened(NoteID(rawValue: "b"), words: ["cycle"]))
 
-        #expect(harness.editor.bodyFocus?.caret == 11)
+        #expect(harness.editor.bodyFocus?.words == ["cycle"])
     }
 }

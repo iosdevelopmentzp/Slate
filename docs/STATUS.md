@@ -4,7 +4,7 @@ Last updated: 2026-10-17
 
 ## Stage
 
-Phase 2 on branch `phase2-simple-v1`. **S1 Simplify and S2 Folders and the soft look are done.** Next: S3 the rich text editor. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
+Phase 2 on branch `phase2-simple-v1`. **S1 Simplify, S2 Folders and the soft look, and S3 the rich text editor are done.** Next: S4 polish and the owner's pass. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
 
 ## Removed in S1 (ADR 0007)
 
@@ -39,11 +39,11 @@ The Presentation code below was deleted. Domain and Data code and tests stay. To
 | Quick note field | real (S1) | `⌃⌥Space` from any app: a 520 pt field, the folder menu, Enter saves, `⌘Enter` saves and opens, `⇧Enter` new line, Esc closes and keeps the draft. The soft look comes in S4 |
 | Note list | real (S2) | The folder name (`.title2`), a round + button, a rounded search field and a thin progress line. Cards: title, date, pin, two-line preview; 12 pt padding, 10 pt radius, 6 pt gap; soft tint when selected or hovered. A "…" button on hover and the right-click menu: Pin, Move to, Duplicate, Move to Trash ("Move to the Trash? Yes · No" in the card). Cards can be dragged onto a folder. Empty folder: "Nothing here yet." with New note and `⌘N` |
 | Trash | real (S2) | Cards with the folder and the age; Restore and Delete now on hover ("Delete now? Yes · No"); "Notes are removed from the Trash after 30 days." under the list; "The Trash is empty." |
-| Editor | real (S2) | Title field (24 pt bold, up to two lines, placeholder "Title") and the versions button (clock); the text column is at most 720 pt wide with 24 pt side padding; "Saved" fades in at the top-right for a second after a save, "Not saved" stays when a save fails. Empty: "Pick a note or press ⌘N." Banners are rounded strips. The M2 Markdown editor with visible marks until S3: code blocks, checkboxes, images under their line, paste rules, screenshots, `[[` completion. Autosave, journal with Restore and Discard, the "Changed on disk" banner with Keep mine, Take theirs and Open both |
+| Editor | real (S3) | Title field (24 pt bold, up to two lines, placeholder "Title") and the versions button (clock); the format bar (36 pt, radius 10): style menu, Bold, Italic, Strikethrough, Checklist, Bulleted, Numbered, Quote, Link, Image, "…" with Divider and Screenshot. Rich text without marks: title 24, heading 18, subheading 15 semibold, body 15, monospaced 13; round checkboxes, bullets, numbers, quote bar, code and raw blocks on a tint, images as rounded blocks (max 360 pt high), dividers. List keys, typing shortcuts ("- ", "1. ", "[] ", "# ", "> "), `⌘K` link popover, `⌘`-click opens links, double-click on an image opens Quick Look. The text column is at most 720 pt wide; "Saved" fades in for a second after a save. Empty: "Pick a note or press ⌘N." Autosave, journal with Restore and Discard, the "Changed on disk" banner |
 | Versions | real | The clock button lists the versions of the note with Restore. Snapshots run quietly with the stored settings |
 | Search | real (S2) | Titles and text in the current folder, "Search all notes" widens it. Cards show the matched text with the words in bold and the folder name. "No notes match." with Clear search. No filters are offered |
 | Settings | real (S1) | Two pages. General: notes folder with Choose another folder…, Open at login, quick note folder, text size, appearance, Trash days, Check-up (checks, Check again, Activity, Rebuild search). Shortcuts: Open Slate, Quick note, New note |
-| Main menu | real (S2) | While the window is open: Slate, File (New Note, New Folder, Quick Note), Edit, Format (M2 editor commands), Note (Pin, Move to Trash), Go (previous and next note and folder, All Notes, folders `⌘1`…`⌘9`), View (sidebar), Window |
+| Main menu | real (S3) | While the window is open: Slate, File (New Note, New Folder, Quick Note), Edit (with Find in Note `⌥⌘F`), Format (the five styles, the three lists, Quote, Indent, Outdent, Bold, Italic, Strikethrough, Link, Image, Divider, Screenshot), Note (Pin, Move to Trash), Go (previous and next note and folder, All Notes, folders `⌘1`…`⌘9`), View (sidebar), Window |
 | Extension points | real, no UI | `slate://` and the `slate` CLI (`new`, `open`, `append`, `search`, and the parked `today`), Services → Add to Slate (a plain note in the quick note folder) |
 
 States: planned, placeholder, mock, real, partial (say what is missing).
@@ -149,11 +149,20 @@ Numbered. What, then why. A later session must not undo these without a new numb
 81. The window uses `.fullSizeContentView` with a transparent title bar; the sidebar title and, with the sidebar hidden, the list title leave 80 pt for the window buttons.
 82. The agent checks the look by rendering views offscreen with `NSHostingView.cacheDisplay` from a throwaway test (not committed). This found the colour problem of decision 78.
 
+83. S3 editor model: one paragraph per block; a line break inside a block is U+2028; images and dividers are U+FFFC with an attachment. The storage holds the real fonts and `RichTextStyler` restyles from the `slate.*` attributes after each edit. The content storage delegate of the M2 editor is not used, because the text has no marks to hide.
+84. Links use an own `slate.href` attribute instead of `.link`, so `NSTextView` does not open them on a plain click and does not change their look. A wikilink has the `wiki:` prefix. `⌘`-click opens both.
+85. On save, empty paragraphs and empty list items are dropped, and a blank line separates blocks. A nested list item is indented by the content offset of its parent item (CommonMark), so `1. ` children get three spaces.
+86. Two lists of the same kind next to each other keep apart with the other marker (`*` after `-`, `)` after `.`), as CommonMark needs. This is in the subset of `STORAGE-FORMAT.md` section 11.
+87. The `[[` completion of the M2 editor is gone: `UX.md` revision 2 has no completion popup. A typed `[[Name]]` is still read as a note link the next time the note opens.
+88. Long notes: above 12,000 characters the editor writes Markdown 250 ms after the last key and flushes before every save, when editing ends and before another note opens. Below that it writes at once.
+89. `⌘F` stays Search (`UX.md` section 8). Find in Note moved to `⌥⌘F`. Indent and outdent of list items are `⌘]` and `⌘[`, which are free since Today left.
+90. Inline code has no button and no shortcut (`UX.md` section 4 has none); code from a file is shown and kept, and paste from Slate keeps it.
+91. The default text size is 15 (`UX.md` section 3). The Text size setting scales every style.
+
 ## Next steps
 
-1. S2 Folders and the soft look.
-2. S3 Rich text editor.
-3. S4 Polish and the owner's pass.
+1. S4 Polish and the owner's pass.
+2. The owner's manual checks of S1 to S4.
 
 ## Known gaps
 
@@ -163,16 +172,15 @@ Numbered. What, then why. A later session must not undo these without a new numb
 - No shortcut for Move to Trash: `⌘⌫` would take the key from the editor text. No `⌘⇧M` move picker. Both are in the row menu.
 - Esc does not close the panel yet (`UX.md` section 6). The search field clears on Esc.
 - Capture (M4): the field does not take pasted images or files yet (`SPEC.md` 3.4). The agent did not test that the source app keeps the focus; scripted key presses do not reach the panel (first gap above).
-- Link chips (M4) are coloured text on a tinted background, without the SF Symbol from `links.json`.
-- The status chip and the other header chips are not reachable with Tab yet (keyboard pass, M7).
 - Search (M3): no progress bar or "Indexing 3,120 of 10,000" line during the first full scan (`UX.md` section 5). The list fills as the scan runs.
-- Search (M3): typing `#` offers tags only after one letter, so `#` alone at the start of a line stays a heading.
 - History (M5): no diff view and no preview of a version before Restore (Appendix B). The first snapshot of a large folder runs at launch in the background and can take seconds.
 - Quit waits up to 3 s for the save and the last snapshot; a slow push is cut off and runs at the next snapshot.
 - `.claude/skills/add-feature`, `add-use-case`, `build-and-run` and `update-docs` and the example in `.claude/rules/presentation.md` still show DevHub features.
-- Editor (M7): no heading fold (D8). TextKit 2 has no simple way to hide paragraphs; the outline popover covers moving through a long note.
 - Dark mode pass (M7) was done by reading the code: every colour is a `Theme` token, a `Tint` or a system colour, and the editor uses dynamic `NSColor`s. Nothing was looked at on screen.
 - The main menu (M7) appears only while the main window is open, because Slate has no Dock icon otherwise.
-- Editor (M2): no title fetch for a pasted URL (P1); no hover preview of a link target; file links show as coloured links, without an icon, and cannot be dragged out to Finder; the language of a code block shows on its fence line, not as a separate label; Remove Image does not ask first (Undo works).
-- Editor (M2): typing latency was measured by a test on the 5,000-line fixture (2.2 ms median), not with Instruments. The Screen Recording prompt of `PLAYBOOK.md` section 11 was not checked by the agent.
 - Previews in package files were not opened in Xcode yet.
+- Editor (S3): the agent checked the editor with tests in a window and with offscreen pictures, not by typing in the running app. Input methods (accents, Japanese), spell checking, drag and drop from Finder and the paste of web pages need a check by hand.
+- Editor (S3): in one offscreen picture of the whole window the list, quote and image buttons of the format bar looked faded while the others did not. The picture of the editor alone looked right. Check it on screen.
+- Editor (S3): typing latency was measured by a test on the 5,000-line fixture (1.3 ms median, open 120 ms), not with Instruments. Markdown for a long note is written 250 ms after the last key (decision 88).
+- Editor (S3): a code block has no language label and no colours; the language is kept in the file. Images have no resize handle; the right-click menu has no Remove (Backspace removes, Undo brings back).
+- Editor (S3): a pasted URL is not turned into a link with a title (P1). There is no hover preview of a link.

@@ -1,0 +1,79 @@
+import AppKit
+
+final class RichTextView: NSTextView {
+    weak var controller: RichTextController?
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        guard window?.firstResponder === self, let command = KeyboardMap.command(for: event), let controller else {
+            return super.performKeyEquivalent(with: event)
+        }
+        controller.perform(command)
+        return true
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        if controller?.handleMouseDown(event) == true { return }
+        super.mouseDown(with: event)
+    }
+
+    override func copy(_ sender: Any?) {
+        guard let controller, controller.copySelection(to: PasteboardBridge.general) else {
+            super.copy(sender)
+            return
+        }
+    }
+
+    override func cut(_ sender: Any?) {
+        guard let controller, controller.copySelection(to: PasteboardBridge.general) else {
+            super.cut(sender)
+            return
+        }
+        controller.replace(selectedRange(), with: NSAttributedString(), selection: NSRange(location: selectedRange().location, length: 0))
+    }
+
+    override func paste(_ sender: Any?) {
+        controller?.paste(from: PasteboardBridge.general)
+    }
+
+    override func pasteAsPlainText(_ sender: Any?) {
+        guard let text = PasteboardBridge.plainText() else { return }
+        controller?.insertPlain(text)
+    }
+
+    override func performDragOperation(_ sender: any NSDraggingInfo) -> Bool {
+        let point = convert(sender.draggingLocation, from: nil)
+        if controller?.drop(sender.draggingPasteboard, at: point) == true { return true }
+        return super.performDragOperation(sender)
+    }
+
+    @objc func slateTitle(_ sender: Any?) { controller?.perform(.style(.title)) }
+    @objc func slateHeading(_ sender: Any?) { controller?.perform(.style(.heading)) }
+    @objc func slateSubheading(_ sender: Any?) { controller?.perform(.style(.subheading)) }
+    @objc func slateBody(_ sender: Any?) { controller?.perform(.style(.body)) }
+    @objc func slateMonospaced(_ sender: Any?) { controller?.perform(.style(.monospaced)) }
+    @objc func slateChecklist(_ sender: Any?) { controller?.perform(.list(.checklist)) }
+    @objc func slateBulleted(_ sender: Any?) { controller?.perform(.list(.bullet)) }
+    @objc func slateNumbered(_ sender: Any?) { controller?.perform(.list(.numbered)) }
+    @objc func slateQuote(_ sender: Any?) { controller?.perform(.quote) }
+    @objc func slateBold(_ sender: Any?) { controller?.perform(.inline(.bold)) }
+    @objc func slateItalic(_ sender: Any?) { controller?.perform(.inline(.italic)) }
+    @objc func slateStrikethrough(_ sender: Any?) { controller?.perform(.inline(.strikethrough)) }
+    @objc func slateCode(_ sender: Any?) { controller?.perform(.inline(.code)) }
+    @objc func slateLink(_ sender: Any?) { controller?.perform(.link) }
+    @objc func slateImage(_ sender: Any?) { controller?.perform(.image) }
+    @objc func slateDivider(_ sender: Any?) { controller?.perform(.divider) }
+    @objc func slateScreenshot(_ sender: Any?) { controller?.perform(.screenshot) }
+    @objc func slateIndent(_ sender: Any?) { controller?.perform(.indent(1)) }
+    @objc func slateOutdent(_ sender: Any?) { controller?.perform(.indent(-1)) }
+
+    @objc func slateFind(_ sender: Any?) {
+        let item = NSMenuItem()
+        item.tag = Int(NSFindPanelAction.showFindPanel.rawValue)
+        performFindPanelAction(item)
+    }
+
+    @objc func slateImageAction(_ sender: NSMenuItem) {
+        guard let choice = sender.representedObject as? ImageMenuChoice else { return }
+        controller?.handlers.attachment(choice.path, choice.action)
+    }
+}

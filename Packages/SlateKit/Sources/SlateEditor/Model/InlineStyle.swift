@@ -1,6 +1,6 @@
 import Foundation
 
-package struct InlineStyle: OptionSet, Hashable, Sendable {
+nonisolated package struct InlineStyle: OptionSet, Hashable, Sendable {
     package let rawValue: Int
 
     package init(rawValue: Int) {
