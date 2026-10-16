@@ -4,21 +4,23 @@ Last updated: 2026-10-16
 
 ## Stage
 
-M3 done (index and search). Manual checks of M1, M2 and M3 by the owner still open. On first launch Slate asks for the notes folder (default `~/Documents/Slate`) and prepares it: six folders, `_attachments/`, `_templates/`, `.slate/` with `spaces.json` and the five note types, and a welcome note. Notes are real Markdown files with the header of `STORAGE-FORMAT.md` section 2. The list is built by a full scan at launch and kept current by the FSEvents watcher. 222 tests in 57 suites pass. Next: milestone M4 (capture and tasks).
+M4 done (capture and tasks). Manual checks of M1 to M4 by the owner still open. On first launch Slate asks for the notes folder (default `~/Documents/Slate`) and prepares it: six folders, `_attachments/`, `_templates/`, `.slate/` with `spaces.json` and the five note types, and a welcome note. Notes are real Markdown files with the header of `STORAGE-FORMAT.md` section 2. The list is built by a full scan at launch and kept current by the FSEvents watcher. 222 tests in 57 suites pass. Next: milestone M5 (safety and history).
 
 ## Screens
 
 | Screen | State | Notes |
 |---|---|---|
 | First launch | real | "Where should Slate keep your notes?", the default path, Choose…, Start. A folder that cannot be prepared shows the reason under the path |
-| Panel | real | Header: folder menu (All notes, folders, Trash, Sort by), title search (`⌘F`), New (`⌘N`; the menu offers Note, Task, Snippet, Meeting), Open as window (`⌘⇧O`). Footer: note count and "saved just now". No Settings button yet (H1, M4) |
+| Panel | real | Header: folder menu (All notes, folders, Trash, Sort by), search (`⌘F`), New (`⌘N`; the menu offers Note, Task, Snippet, Meeting, Today and Insert Template), Open as window (`⌘⇧O`), Settings (`⌘,`). Footer: note count and "saved just now". The status item: left click toggles the panel, right click shows New Note, New Task, Quick Note, Today, Open Window, Settings, Quit |
 | Window | real | The panel plus a sidebar: Folders with counts, New folder (+), Tags with counts (click searches `tag:`), Trash. Right click on a folder: Rename, Icon, Move up, Move down. `⌘0` hides the sidebar. No Saved searches yet (C9, M6) |
-| Capture field | planned | M4 |
+| Capture field | real | `⌃⌥Space` from any app: a 520 pt field 20 % down the screen, folder and kind menus, hints. Enter saves, `⌘Enter` saves and opens the note in the panel, `⌥Enter` adds a line to Today's Log, `⇧Enter` is a new line, Esc closes and keeps the draft, a click outside closes. The panel is non-activating (`PLAYBOOK.md` section 2). A text starting with a ticket key becomes a task. No pasted images in the field yet |
+| Tasks | real | A folder whose default kind is Task groups its list into Active, To do and Done (Done is folded). The editor chips: the ticket opens the tracker (or copies when no tracker is set), the branch copies, the merge request opens, the status is a menu. `⌘⇧D` marks the task done. A new task takes the ticket from its title and gets the branch `feature/<ticket>-<slug>` |
+| Daily | real | `⌥⌘T` from any app, Today in the New menu and in the status menu: `Daily/YYYY-MM-DD.md` from the daily template, with the open checkboxes of the latest earlier daily note under "Carried over". `⌘[` and `⌘]` go to the day before and after |
 | Note list | real | Rows: status dot, kind icon for non-plain notes, title, relative date, pin, preview, badges (ticket, subfolder, images and files, open checkboxes). Hover and right click: Pin, Move to, Duplicate, Archive, Move to Trash (inline confirmation, toast with Undo). Badges come from the in-memory index |
 | Trash | partial | Lists trashed notes with their folder and age, Restore on hover. No "Delete now" and no auto-empty yet (F4, M5) |
 | Editor | real | Title field, chips, autosave, the "Changed on disk" banner (M1). Markdown styling with visible marks, code blocks with highlighting and a Copy button, checkboxes, list editing, images under their line, paste rules with the "Paste as code" bar, screenshots, `⌘`-click links (M2). `[[` completes note names, `#` completes tags; a link to a missing note makes that note; tag chips under the title search the tag (M3). No link titles (P1), no hover preview of a link target, no journal (M5) |
 | Search | real | The header field searches titles, text, tags and tickets in the current folder ("Search all notes" widens it) with the filters of `SPEC.md` 6.1. Title matches show at once; the index answers within 80 ms plus the query. Rows show the snippet with the words in bold; Enter or a click opens the note with the caret on the first match. Esc clears. No palette yet (A7, M6) |
-| Settings | planned | M4 (H1) |
+| Settings | real | One window with General (Open at login, the quick note folder, text size, appearance, Trash days, Doctor with Rebuild search), Notes folder (Choose another folder…), Shortcuts (three recorders), Links (tracker and git host addresses, ticket pattern, labels; Save writes `.slate/links.json`). No History page yet (M5) |
 
 States: planned, placeholder, mock, real, partial (say what is missing).
 
@@ -62,6 +64,13 @@ Numbered. What, then why. A later session must not undo these without a new numb
 33. A rename rewrites `[[Old]]` links only in notes where the link resolves to the renamed note, so a link to another note with the same name in another folder stays. The toast says how many notes were updated; failures go to Activity.
 34. `IndexFactsPolicy` (Domain) builds the index facts from the line-based policies; `IndexedNoteBuilder` adds what swift-markdown sees (code blocks, images, URLs, attachments). The spy and mock builders use the policy, so tests over spies index tags, links and checkboxes like the app.
 35. M3 is one commit: the search port grew by eight methods, and the spies, the mock, the GRDB index, the rename use case and the stores change together.
+36. M4 global hotkeys: the `KeyboardShortcuts.Name` values live in `SlatePresentation` (`Shared/KeyboardShortcuts+Slate.swift`) and `AppWindows` registers them, because the Settings recorder (Presentation) and the handlers need the same names and Presentation cannot import Composition. `PLAYBOOK.md` section 3 named `SlateComposition/Hotkeys.swift`; the playbook now says so.
+37. M4 quick note: the first line becomes the title and the other lines the body. A text that starts with a ticket key is a task (in Tasks, from the task template unless more lines follow). `⌥Enter` writes `- HH:mm text` under Today's "Log".
+38. M4 links: `.slate/links.json` is written when the owner saves Settings → Links, not on first launch, because the app has no tracker address before that (ADR 0006). Saving keeps every pattern whose id is not one of the three defaults. Until then a ticket chip copies the key. A pasted URL that matches a pattern becomes its short form at once, and `⌘Z` brings the full URL back; the toast says so.
+39. M4 tasks: a new task writes `ticket`, `branch` (from the type's `branchPattern`) and `status: todo` into the header. The title keeps the ticket (`titlePattern` `{{ticket}} {{title}}`).
+40. M4 settings: text size is the only editor font setting (the font itself stays the system font, `UX.md` section 1). Appearance sets the appearance of Slate's own windows, never `NSApp.appearance` (`PLAYBOOK.md` section 1). The Trash days setting is stored now and used by the auto-empty in M5. Changing the notes folder stops the windows and the change feed and opens the new folder; the old folder and its index stay.
+41. Section append (`STORAGE-FORMAT.md` section 4): an empty section gets one blank line after its heading before the first entry, and an append without a section is added as its own paragraph. No format change.
+42. M4 is one commit: the capture, daily and task features share the new use cases, the settings and the windows.
 25. Branches during the long build: one branch per milestone, each made from the one before (`m1.5-editor-spike`, `m2-editor`, `m3-index-and-search`, …). Merging the last one brings all of them.
 26. M2 editor details: a tag needs at least one letter (`#123` stays text, it is the issue pattern of `links.json`). Tab indents a list item by the width of its own marker plus one space (`- ` two spaces, `1. ` three). Remove Image deletes the line (Undo brings it back); the file stays in `_attachments/` until "Clean attachments" (M5). The "Paste as code" bar lives inside `SlateEditor`, so Enter and Esc reach it while the text has focus.
 27. The host gives text to the editor with `EditorInsertion(token:markdown:)`, like `EditorFocusRequest`; the editor inserts it on its own line once per token. `ARCHITECTURE.md` section 6.1 had an `EditorCommands` object; the token value replaced it, so no store holds an AppKit object.
@@ -72,8 +81,17 @@ Numbered. What, then why. A later session must not undo these without a new numb
 ## Next steps
 
 1. Owner: run the M1 manual checks (below). Merge the branch `m1-vault-and-notes` when they pass.
-2. Owner: run the M2 and M3 manual checks (below).
-3. M4: capture and tasks. Read `PLAYBOOK.md` sections 1, 2, 3 and 8 first.
+2. Owner: run the M2, M3 and M4 manual checks (below).
+3. M5: safety and history. Read `PLAYBOOK.md` sections 4, 5 and 8 first.
+
+M4 manual checks for the owner:
+
+1. In Xcode, press `⌃⌥Space`, type two lines, press Enter. Xcode keeps the focus; the note is in Inbox with the first line as its title (S5).
+2. `⌥⌘N` opens the panel. `⌘⇧T`, paste `ABC-2324 Profile screen leaks memory`, Enter: a task in Tasks with the ticket, the branch `feature/ABC-2324-profile-screen-leaks-memory` and the status To do (S1).
+3. Settings → Links: set a tracker address and save. `.slate/links.json` appears; `ABC-2324` in a note gets a tinted background and `⌘`-click opens the tracker. Edit `links.json` in another editor: the change applies without a restart.
+4. `⌘⇧D` in the task: the status chip says Done and the task moves to the folded Done group (S7).
+5. `⌥⌘T`: today's note opens; yesterday's open checkboxes are under "Carried over" (S4, Today part). `⌘[` goes to yesterday.
+6. Settings → Shortcuts: change the quick note shortcut and try it. Settings → General: Open at login, Doctor, Rebuild search.
 
 M3 manual checks for the owner:
 
@@ -111,8 +129,9 @@ M1 manual checks for the owner:
 - No drag of a row onto a folder (C8 part). Moving works from the row menu.
 - No way to delete a folder.
 - Esc does not close the panel yet (`UX.md` section 6). The search field clears on Esc.
-- The status chip is not a menu yet, and the ticket and branch chips have no actions (C3, M4).
-- Changing the notes folder needs `defaults delete local.slate.app vault.path` until Settings (H1, M4).
+- Capture (M4): the field does not take pasted images or files yet (`SPEC.md` 3.4). The agent did not test that the source app keeps the focus; scripted key presses do not reach the panel (first gap above).
+- Link chips (M4) are coloured text on a tinted background, without the SF Symbol from `links.json`.
+- The status chip and the other header chips are not reachable with Tab yet (keyboard pass, M7).
 - Search (M3): no progress bar or "Indexing 3,120 of 10,000" line during the first full scan (`UX.md` section 5). The list fills as the scan runs.
 - Search (M3): typing `#` offers tags only after one letter, so `#` alone at the start of a line stays a heading.
 - Crash safety is the 500 ms autosave and the save on quit. The journal comes in M5.

@@ -15,7 +15,9 @@ extension Ports {
             clock: MockClock(),
             attachments: MockAttachmentStore(),
             capture: MockScreenCapture(),
-            workspace: MockWorkspace()
+            workspace: MockWorkspace(),
+            loginItem: MockLoginItem(),
+            system: MockSystemChecks()
         )
     }
 }

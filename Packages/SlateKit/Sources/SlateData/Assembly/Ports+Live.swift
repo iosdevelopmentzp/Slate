@@ -6,7 +6,8 @@ extension Ports {
     package static func live(root: URL, support: URL, keyValues: any KeyValueStore, recorder: any CommandRecording) throws -> Ports {
         let ownWrites = OwnWrites()
         let shell = ShellRunner(recorder: recorder)
-        let index = try GRDBSearchIndex.open(at: support.appendingPathComponent("index.sqlite"), vaultPath: VaultSupportFolder.standardizedPath(of: root))
+        let indexURL = support.appendingPathComponent("index.sqlite")
+        let index = try GRDBSearchIndex.open(at: indexURL, vaultPath: VaultSupportFolder.standardizedPath(of: root))
         return Ports(
             keyValues: keyValues,
             files: FileVaultStore(root: root, ownWrites: ownWrites),
@@ -19,7 +20,9 @@ extension Ports {
             clock: SystemClock(),
             attachments: FileAttachmentStore(root: root),
             capture: ScreencaptureTool(shell: shell),
-            workspace: WorkspaceOpener(quickLookSource: QuickLookSource())
+            workspace: WorkspaceOpener(quickLookSource: QuickLookSource()),
+            loginItem: LoginItemService(),
+            system: SystemChecks(root: root, indexURL: indexURL, shell: shell)
         )
     }
 }

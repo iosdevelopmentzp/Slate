@@ -21,4 +21,10 @@ actor MockVaultConfigRepository: VaultConfigRepository {
     }
 
     func ensureDefaults() {}
+
+    func linkPatterns() -> [LinkPattern] {
+        LinkPatternPolicy.defaults(for: TrackerSettings(trackerBaseURL: "https://example.atlassian.net", gitHostBaseURL: "https://gitlab.example.com", gitProjectPath: "group/project"))
+    }
+
+    func saveLinkPatterns(_ patterns: [LinkPattern]) {}
 }

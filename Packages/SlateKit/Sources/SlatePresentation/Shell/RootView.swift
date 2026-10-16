@@ -11,6 +11,8 @@ struct RootView: View {
     @Environment(\.hintCenter) private var hintCenter
     @Environment(\.surface) private var surface
     @Environment(\.openAsWindow) private var openAsWindow
+    @Environment(\.openSettings) private var openSettings
+    @Environment(DailyStore.self) private var daily
 
     @State private var showsSidebar = true
 
@@ -69,6 +71,10 @@ struct RootView: View {
                 guard let selected = noteList.selected else { return }
                 Task { await noteList.togglePin(selected) }
             }
+            shortcut("d", modifiers: [.command, .shift]) { Task { await editor.markDone() } }
+            shortcut("[", modifiers: .command) { Task { await daily.openDay(-1) } }
+            shortcut("]", modifiers: .command) { Task { await daily.openDay(1) } }
+            shortcut(",", modifiers: .command) { openSettings() }
             if surface == .panel {
                 shortcut("o", modifiers: [.command, .shift]) { openAsWindow() }
             }

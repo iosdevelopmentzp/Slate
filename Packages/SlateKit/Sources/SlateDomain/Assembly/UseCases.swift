@@ -15,9 +15,12 @@ package struct UseCases: Sendable {
     package let renameSpace: RenameSpaceUseCase
     package let importAttachment: ImportAttachmentUseCase
     package let attachScreenshot: AttachScreenshotUseCase
+    package let ensureDaily: EnsureDailyNoteUseCase
+    package let append: AppendToNoteUseCase
+    package let capture: QuickCaptureUseCase
 
     package init(ports: Ports) {
-        create = CreateNoteUseCase(files: ports.files, index: ports.index, builder: ports.builder, templates: ports.templates, config: ports.config, clock: ports.clock)
+        create = CreateNoteUseCase(files: ports.files, index: ports.index, builder: ports.builder, templates: ports.templates, config: ports.config, keyValues: ports.keyValues, clock: ports.clock)
         save = SaveNoteUseCase(files: ports.files, index: ports.index, builder: ports.builder, clock: ports.clock)
         rename = RenameNoteUseCase(files: ports.files, index: ports.index, builder: ports.builder, save: save)
         move = MoveNoteUseCase(files: ports.files, index: ports.index, builder: ports.builder)
@@ -31,5 +34,8 @@ package struct UseCases: Sendable {
         renameSpace = RenameSpaceUseCase(files: ports.files, config: ports.config, reindex: reindex)
         importAttachment = ImportAttachmentUseCase(attachments: ports.attachments, clock: ports.clock)
         attachScreenshot = AttachScreenshotUseCase(capture: ports.capture, attachments: ports.attachments, clock: ports.clock)
+        ensureDaily = EnsureDailyNoteUseCase(files: ports.files, config: ports.config, create: create, clock: ports.clock)
+        append = AppendToNoteUseCase(files: ports.files, index: ports.index, save: save, create: create, ensureDaily: ensureDaily, clock: ports.clock)
+        capture = QuickCaptureUseCase(create: create, append: append, config: ports.config, keyValues: ports.keyValues)
     }
 }

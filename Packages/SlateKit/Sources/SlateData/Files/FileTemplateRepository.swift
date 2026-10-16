@@ -18,6 +18,12 @@ struct FileTemplateRepository: TemplateRepository {
         return String(decoding: try FileCoordination.readCoordinated(url), as: UTF8.self)
     }
 
+    func names() async throws -> [String] {
+        let files = (try? FileManager.default.contentsOfDirectory(atPath: templates.path)) ?? []
+        let stored = files.filter { $0.hasSuffix(".md") && $0.hasPrefix(".") == false }.map { String($0.dropLast(3)) }
+        return Array(Set(stored).union(BuiltInTemplates.bodies.keys)).sorted()
+    }
+
     func ensureDefaults() async throws {
         for (type, body) in BuiltInTemplates.bodies {
             let url = templates.appendingPathComponent("\(type).md")

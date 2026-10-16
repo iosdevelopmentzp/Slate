@@ -12,6 +12,7 @@ package final class SpyVaultConfigRepository: VaultConfigRepository, @unchecked 
     private var _config = SpacesConfig.defaults
     private var _types = NoteType.builtIn
     private var _spacesError: TestError?
+    private var _patterns: [LinkPattern] = []
 
     package init() {}
 
@@ -49,4 +50,17 @@ package final class SpyVaultConfigRepository: VaultConfigRepository, @unchecked 
     }
 
     package func ensureDefaults() async throws {}
+
+    package var patterns: [LinkPattern] {
+        get { lock.withLock { _patterns } }
+        set { lock.withLock { _patterns = newValue } }
+    }
+
+    package func linkPatterns() async throws -> [LinkPattern] {
+        lock.withLock { _patterns }
+    }
+
+    package func saveLinkPatterns(_ patterns: [LinkPattern]) async throws {
+        lock.withLock { _patterns = patterns }
+    }
 }

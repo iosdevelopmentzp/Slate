@@ -8,6 +8,8 @@ struct EditorView: View {
     @Environment(VaultStore.self) private var vault
     @Environment(SearchStore.self) private var search
     @Environment(NoteListStore.self) private var noteList
+    @Environment(SettingsStore.self) private var settings
+    @Environment(Toaster.self) private var toaster
     @FocusState private var isTitleFocused: Bool
 
     var body: some View {
@@ -24,7 +26,7 @@ struct EditorView: View {
                 Divider()
                 MarkdownEditorView(
                     text: Bindable(editor).text,
-                    configuration: .standard,
+                    configuration: configuration,
                     focus: editor.bodyFocus.map { EditorFocusRequest(token: $0.token, caret: $0.caret) },
                     insertion: editor.insertion.map { EditorInsertion(token: $0.token, markdown: $0.markdown) },
                     handlers: handlers
@@ -55,12 +57,12 @@ struct EditorView: View {
                 .onSubmit { editor.submitTitle() }
                 .disabled(document.isHeaderOpaque)
                 .accessibilityLabel("Title")
-            let chips = NoteChipsMapper.chips(for: document, type: vault.type(named: document.type))
+            let chips = NoteChipsMapper.noteChips(for: document, type: vault.type(named: document.type), ticketURL: document.header.ticket.flatMap(ticketURL))
             let tags = TagPolicy.merged(header: document.header.tags, lines: []) + (noteList.selected?.tags ?? []).filter { (document.header.tags ?? []).map(TagPolicy.normalized).contains($0) == false }
             if chips.isEmpty == false || tags.isEmpty == false {
                 FlowLayout(spacing: 6) {
                     ForEach(chips, id: \.self) { chip in
-                        ModelTag(model: chip)
+                        chipView(chip, document: document)
                     }
                     ForEach(tags, id: \.self) { tag in
                         Button {
@@ -79,10 +81,77 @@ struct EditorView: View {
         .padding(.vertical, 12)
     }
 
+    private var configuration: EditorConfiguration {
+        let size = CGFloat(settings.editorFontSize)
+        var configuration = EditorConfiguration(
+            proseFont: .systemFont(ofSize: size),
+            codeFont: .monospacedSystemFont(ofSize: size - 1, weight: .regular),
+            lineHeightMultiple: 1.35
+        )
+        configuration.linkPatterns = vault.linkPatterns.map { EditorLinkPattern(id: $0.id, regex: $0.regex) }
+        return configuration
+    }
+
+    private func ticketURL(_ ticket: String) -> String? {
+        LinkPatternPolicy.url(for: "jira", match: ticket, patterns: vault.linkPatterns)
+    }
+
+    @ViewBuilder
+    private func chipView(_ chip: NoteChip, document: NoteDocument) -> some View {
+        switch chip.kind {
+        case .ticket(let ticket):
+            Button {
+                if let url = ticketURL(ticket) {
+                    Task { await editor.openURL(url) }
+                } else {
+                    toaster.copy(ticket, label: "Ticket")
+                }
+            } label: {
+                ModelTag(model: chip.model)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Open ticket \(ticket)")
+        case .branch(let branch):
+            Button {
+                toaster.copy(branch, label: "Branch")
+            } label: {
+                ModelTag(model: chip.model)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Copy branch \(branch)")
+        case .mergeRequest(let mr):
+            Button {
+                let url = mr.contains("://") ? mr : LinkPatternPolicy.url(for: "gitlab-mr", match: mr, patterns: vault.linkPatterns)
+                if let url { Task { await editor.openURL(url) } }
+            } label: {
+                ModelTag(model: chip.model)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Open merge request")
+        case .status:
+            Menu {
+                ForEach(NoteStatus.allCases, id: \.self) { status in
+                    Button(NoteStatusText.title(status)) { Task { await editor.setStatus(status) } }
+                }
+            } label: {
+                ModelTag(model: chip.model)
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .hint("Change the status (⌘⇧D marks it done)")
+            .accessibilityLabel("Status")
+        case .type, .folder, .details:
+            ModelTag(model: chip.model)
+        }
+    }
+
     private var handlers: EditorHandlers {
         let editor = editor
         let noteList = noteList
         let search = search
+        let patterns = vault.linkPatterns
+        let toaster = toaster
         return EditorHandlers(
             didEndEditing: { editor.bodyEditingEnded() },
             resolveImage: { editor.resolveLink($0) },
@@ -91,7 +160,10 @@ struct EditorView: View {
                     switch link {
                     case .url(let target): await editor.openURL(target)
                     case .wiki(let target): await editor.openWikilink(target)
-                    case .pattern: break
+                    case .pattern(let id, let match):
+                        if let url = LinkPatternPolicy.url(for: id, match: match, patterns: patterns) {
+                            await editor.openURL(url)
+                        }
                     }
                 }
             },
@@ -106,6 +178,11 @@ struct EditorView: View {
             },
             pasteImage: { data, fileExtension in Task { await editor.pasteImage(data, fileExtension: fileExtension) } },
             pasteFiles: { urls in Task { await editor.pasteFiles(urls) } },
+            pasteURL: { url in
+                guard let short = LinkPatternPolicy.shortForm(for: url, patterns: patterns) else { return nil }
+                toaster.show("Pasted as \(short). ⌘Z pastes the full link.")
+                return short
+            },
             requestScreenshot: { kind in Task { await editor.screenshot(kind == .region ? .region : .window) } },
             completions: { kind, prefix in
                 switch kind {

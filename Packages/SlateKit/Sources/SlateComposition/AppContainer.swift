@@ -60,6 +60,10 @@ public final class AppContainer: NSObject {
         let useCases = UseCases(ports: ports)
         let assembly = PresentationAssembly(ports: ports, useCases: useCases, activity: activity, vaultRoot: vault)
         let windows = AppWindows(assembly: assembly)
+        windows.onChangeVault = { [weak self] folder in
+            guard let self else { return }
+            switchVault(to: folder, from: vault)
+        }
         self.assembly = assembly
         self.windows = windows
         windows.start()
@@ -67,6 +71,18 @@ public final class AppContainer: NSObject {
             try? await ports.config.ensureDefaults()
             try? await ports.templates.ensureDefaults()
             assembly.start()
+        }
+    }
+
+    private func switchVault(to folder: URL, from current: URL) {
+        guard folder.standardizedFileURL != current.standardizedFileURL else { return }
+        Task {
+            await assembly?.flush()
+            windows?.stop()
+            assembly?.stop()
+            windows = nil
+            assembly = nil
+            open(folder)
         }
     }
 

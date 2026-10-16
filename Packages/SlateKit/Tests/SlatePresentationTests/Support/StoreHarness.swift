@@ -20,6 +20,7 @@ final class StoreHarness {
     lazy var toaster = Toaster { [weak self] in self?.copied.append($0) }
     lazy var vault = VaultStore(
         config: ports.config,
+        templates: ports.templates,
         createSpace: useCases.createSpace,
         renameSpace: useCases.renameSpace,
         navigator: navigator,
@@ -57,8 +58,22 @@ final class StoreHarness {
         vaultRoot: URL(fileURLWithPath: "/vault", isDirectory: true),
         panel: panelVisibility,
         toaster: toaster,
-        create: useCases.create
+        create: useCases.create,
+        templates: ports.templates
     )
+    lazy var settings = SettingsStore(
+        store: keyValues,
+        config: ports.config,
+        loginItem: ports.loginItem,
+        system: ports.system,
+        index: ports.index,
+        reindex: useCases.reindex,
+        vaultPath: "/vault",
+        activity: activity,
+        events: events
+    )
+    lazy var capture = CaptureStore(capture: useCases.capture, config: ports.config, store: keyValues, navigator: navigator, toaster: toaster, activity: activity, events: events)
+    lazy var daily = DailyStore(ensureDaily: useCases.ensureDaily, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
     lazy var search = SearchStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
     lazy var panelVisibility = PanelVisibility()
     lazy var feed = VaultChangeFeed(watcher: ports.watcher, reindex: useCases.reindex, activity: activity, events: events)

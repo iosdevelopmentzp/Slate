@@ -14,6 +14,10 @@ struct FileVaultConfigRepository: VaultConfigRepository {
         configFolder.appendingPathComponent("spaces.json")
     }
 
+    private var linksURL: URL {
+        configFolder.appendingPathComponent("links.json")
+    }
+
     private var typesFolder: URL {
         configFolder.appendingPathComponent("types", isDirectory: true)
     }
@@ -82,6 +86,34 @@ struct FileVaultConfigRepository: VaultConfigRepository {
             guard FileManager.default.fileExists(atPath: url.path) == false else { continue }
             try JSONFile.write(Self.object(for: type), to: url)
         }
+    }
+
+    func linkPatterns() async throws -> [LinkPattern] {
+        guard let object = try JSONFile.object(at: linksURL) else { return [] }
+        return (object["patterns"] as? [[String: Any]] ?? []).compactMap(Self.pattern)
+    }
+
+    func saveLinkPatterns(_ patterns: [LinkPattern]) async throws {
+        var object = try JSONFile.object(at: linksURL) ?? [:]
+        let previous = (object["patterns"] as? [[String: Any]] ?? []).reduce(into: [String: [String: Any]]()) { result, entry in
+            if let id = entry["id"] as? String { result[id] = entry }
+        }
+        object["version"] = 1
+        object["patterns"] = patterns.map { pattern -> [String: Any] in
+            var entry = previous[pattern.id] ?? [:]
+            entry["id"] = pattern.id
+            entry["regex"] = pattern.regex
+            entry["url"] = pattern.url
+            entry["label"] = pattern.label
+            entry["icon"] = pattern.icon
+            return entry
+        }
+        try JSONFile.write(object, to: linksURL)
+    }
+
+    private static func pattern(from entry: [String: Any]) -> LinkPattern? {
+        guard let id = entry["id"] as? String, let regex = entry["regex"] as? String, let url = entry["url"] as? String else { return nil }
+        return LinkPattern(id: id, regex: regex, url: url, label: entry["label"] as? String ?? "$0", icon: entry["icon"] as? String)
     }
 
     private static func space(from entry: [String: Any]) -> Space? {

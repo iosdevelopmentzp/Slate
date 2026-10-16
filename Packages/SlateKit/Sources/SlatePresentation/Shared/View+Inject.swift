@@ -13,6 +13,9 @@ extension View {
             .environment(assembly.noteList)
             .environment(assembly.editor)
             .environment(assembly.search)
+            .environment(assembly.settings)
+            .environment(assembly.capture)
+            .environment(assembly.daily)
             .environment(\.hintCenter, assembly.hints)
             .environment(\.copyToPasteboard, { value, label in assembly.toaster.copy(value, label: label) })
     }

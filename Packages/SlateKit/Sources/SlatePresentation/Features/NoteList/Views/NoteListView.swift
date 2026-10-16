@@ -7,6 +7,7 @@ struct NoteListView: View {
     @Environment(VaultStore.self) private var vault
     @Environment(Navigator.self) private var navigator
     @Environment(SearchStore.self) private var search
+    @State private var showsDone = false
 
     var body: some View {
         if store.source == .trash {
@@ -30,22 +31,59 @@ struct NoteListView: View {
         ) {
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    ForEach(notes) { summary in
-                        NoteRow(
-                            model: NoteRowMapper.model(for: summary, type: vault.type(named: summary.type), now: now),
-                            isSelected: summary.id == navigator.selectedNote,
-                            isConfirmingTrash: store.confirmingTrash == summary.id,
-                            actions: actions(for: summary),
-                            onCancelTrash: { store.cancelTrash() },
-                            onConfirmTrash: { Task { await store.confirmTrash(summary) } }
-                        )
-                        .onTapGesture { store.select(summary.id) }
+                    if groupsTasks {
+                        ForEach(TaskGroupPolicy.grouped(notes), id: \.group) { group in
+                            groupHeader(group.group, count: group.notes.count)
+                            if group.group != .done || showsDone {
+                                ForEach(group.notes) { summary in
+                                    row(summary, now: now)
+                                }
+                            }
+                        }
+                    } else {
+                        ForEach(notes) { summary in
+                            row(summary, now: now)
+                        }
                     }
                 }
                 .padding(8)
             }
         }
         .background(Theme.surface)
+    }
+
+    private var groupsTasks: Bool {
+        guard let space = store.source.space else { return false }
+        return vault.config.space(space)?.defaultType == NoteType.task.name
+    }
+
+    private func row(_ summary: NoteSummary, now: Date) -> some View {
+        NoteRow(
+            model: NoteRowMapper.model(for: summary, type: vault.type(named: summary.type), now: now),
+            isSelected: summary.id == navigator.selectedNote,
+            isConfirmingTrash: store.confirmingTrash == summary.id,
+            actions: actions(for: summary),
+            onCancelTrash: { store.cancelTrash() },
+            onConfirmTrash: { Task { await store.confirmTrash(summary) } }
+        )
+        .onTapGesture { store.select(summary.id) }
+    }
+
+    private func groupHeader(_ group: TaskGroupPolicy.Group, count: Int) -> some View {
+        ListSectionHeader(TaskGroupText.title(group).uppercased(), detail: group == .done ? "\(count)" : nil) {
+            if group == .done {
+                Button {
+                    showsDone.toggle()
+                } label: {
+                    Image(systemName: showsDone ? "chevron.down" : "chevron.right")
+                        .font(.caption)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .accessibilityLabel(showsDone ? "Hide done tasks" : "Show done tasks")
+            }
+        }
+        .padding(.horizontal, 12)
     }
 
     private func actions(for summary: NoteSummary) -> NoteRowActions {

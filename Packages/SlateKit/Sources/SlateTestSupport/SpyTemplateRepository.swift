@@ -17,4 +17,8 @@ package final class SpyTemplateRepository: TemplateRepository, @unchecked Sendab
     }
 
     package func ensureDefaults() async throws {}
+
+    package func names() async throws -> [String] {
+        lock.withLock { _bodies.keys.sorted() }
+    }
 }

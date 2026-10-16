@@ -7,4 +7,8 @@ struct MockTemplateRepository: TemplateRepository {
     }
 
     func ensureDefaults() async throws {}
+
+    func names() async throws -> [String] {
+        BuiltInTemplates.bodies.keys.sorted()
+    }
 }

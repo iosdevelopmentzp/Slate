@@ -9,8 +9,11 @@ final class VaultStore {
 
     var config = SpacesConfig(spaces: [])
     var types: [NoteType] = NoteType.builtIn
+    var linkPatterns: [LinkPattern] = []
+    var templateNames: [String] = []
 
     @ObservationIgnored private let repository: any VaultConfigRepository
+    @ObservationIgnored private let templates: any TemplateRepository
     @ObservationIgnored private let createSpace: CreateSpaceUseCase
     @ObservationIgnored private let renameSpace: RenameSpaceUseCase
     @ObservationIgnored private let navigator: Navigator
@@ -21,6 +24,7 @@ final class VaultStore {
 
     init(
         config: any VaultConfigRepository,
+        templates: any TemplateRepository,
         createSpace: CreateSpaceUseCase,
         renameSpace: RenameSpaceUseCase,
         navigator: Navigator,
@@ -28,13 +32,14 @@ final class VaultStore {
         events: AppEvents
     ) {
         repository = config
+        self.templates = templates
         self.createSpace = createSpace
         self.renameSpace = renameSpace
         self.navigator = navigator
         self.activity = activity
         self.events = events
         subscription = events.subscribe { [weak self] event in
-            guard let self, event == .spacesChanged else { return }
+            guard let self, event == .spacesChanged || event == .vaultRescanned else { return }
             Task { await self.refresh() }
         }
     }
@@ -51,6 +56,10 @@ final class VaultStore {
                 let loadedTypes = try await repository.types()
                 if loaded != config { config = loaded }
                 if loadedTypes != types { types = loadedTypes }
+                let patterns = (try? await repository.linkPatterns()) ?? []
+                if patterns != linkPatterns { linkPatterns = patterns }
+                let names = (try? await templates.names()) ?? []
+                if names != templateNames { templateNames = names }
             } catch {
                 activity.log("Cannot read the folders", detail: error.localizedDescription, outcome: .failure)
             }
@@ -104,6 +113,12 @@ final class VaultStore {
         var updated = config
         guard let index = updated.spaces.firstIndex(where: { $0.folder == space }) else { return }
         updated.spaces[index].icon = icon
+        await save(updated)
+    }
+
+    func setCaptureSpace(_ space: SpaceName) async {
+        var updated = config
+        updated.captureSpace = space
         await save(updated)
     }
 

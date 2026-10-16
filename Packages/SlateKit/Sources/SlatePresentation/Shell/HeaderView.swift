@@ -7,6 +7,7 @@ struct HeaderView: View {
     @Environment(SearchStore.self) private var search
     @Environment(\.surface) private var surface
     @Environment(\.openAsWindow) private var openAsWindow
+    @Environment(\.openSettings) private var openSettings
     @FocusState private var isSearchFocused: Bool
 
     var body: some View {
@@ -31,6 +32,10 @@ struct HeaderView: View {
                 }
                 .accessibilityLabel("Open as window")
             }
+            IconButton(systemImage: "gearshape", help: "Settings (⌘,)") {
+                openSettings()
+            }
+            .accessibilityLabel("Settings")
         }
         .controlSize(.regular)
         .padding(.horizontal, 12)

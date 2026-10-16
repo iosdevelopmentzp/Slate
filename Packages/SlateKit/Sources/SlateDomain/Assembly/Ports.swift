@@ -13,6 +13,8 @@ package struct Ports: Sendable {
     package let attachments: any AttachmentStore
     package let capture: any ScreenCapturing
     package let workspace: any WorkspaceOpening
+    package let loginItem: any LaunchAtLogin
+    package let system: any SystemChecking
 
     package init(
         keyValues: any KeyValueStore,
@@ -26,7 +28,9 @@ package struct Ports: Sendable {
         clock: any Clock,
         attachments: any AttachmentStore,
         capture: any ScreenCapturing,
-        workspace: any WorkspaceOpening
+        workspace: any WorkspaceOpening,
+        loginItem: any LaunchAtLogin,
+        system: any SystemChecking
     ) {
         self.keyValues = keyValues
         self.files = files
@@ -40,5 +44,7 @@ package struct Ports: Sendable {
         self.attachments = attachments
         self.capture = capture
         self.workspace = workspace
+        self.loginItem = loginItem
+        self.system = system
     }
 }

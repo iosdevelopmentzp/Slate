@@ -17,7 +17,7 @@ Copy `AppWindows`, `MenuBarPanel`, `WindowLayout`, the drag and resize views and
 - **Launch at login:** `SMAppService.mainApp.register()`; status `requiresApproval` means System Settings → Login Items; show the path in the activity log.
 - **Ad-hoc signing.** Each rebuild changes the binary; macOS may ask for a permission again (Screen Recording for screenshots). Keep the bundle ID stable and install to `/Applications` for daily use.
 
-## 2. Capture panel that does not steal focus — verified (Verba)
+## 2. Capture panel that does not steal focus — verified (Verba), built in M4 (`CapturePanel`, `CaptureTextView`)
 
 Copy `FloatingPanel` and the rules in `../Verba/.claude/rules/ui-panel.md`.
 
@@ -28,7 +28,7 @@ Copy `FloatingPanel` and the rules in `../Verba/.claude/rules/ui-panel.md`.
 
 ## 3. Global hotkeys — verified (Verba)
 
-- `KeyboardShortcuts` (sindresorhus). Define every `KeyboardShortcuts.Name` in one file in `SlateComposition` (`Hotkeys.swift`) with defaults: `togglePanel` ⌥⌘N, `capture` ⌃⌥Space, `today` ⌥⌘T. Register handlers in `AppContainer.live()`. The recorder view `KeyboardShortcuts.Recorder` goes into Settings; `SlatePresentation` imports the package for that view only.
+- `KeyboardShortcuts` (sindresorhus). Every `KeyboardShortcuts.Name` is in one file, `SlatePresentation/Shared/KeyboardShortcuts+Slate.swift`, with defaults: `togglePanel` ⌥⌘N, `capture` ⌃⌥Space, `today` ⌥⌘T. `AppWindows.start()` registers the handlers (`onKeyUp`, each handler hops with `Task { @MainActor … }`); `stop()` calls `removeAllHandlers()`. The recorder view `KeyboardShortcuts.Recorder` is in Settings → Shortcuts. (M4: the names moved from Composition because the recorder needs them in Presentation.)
 - No Accessibility permission is needed. A conflict with a system shortcut shows in the recorder; the Doctor lists the current values.
 - Fallback with no dependency: Carbon `RegisterEventHotKey` as in DevHub's `GlobalHotKey`; no recorder then.
 

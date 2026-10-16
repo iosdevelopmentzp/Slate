@@ -11,8 +11,10 @@ extension EditorController {
         case .image(let data, let fileExtension):
             handlers.pasteImage(data, fileExtension)
         case .url(let url):
-            let replacement = inCode ? url : (handlers.pasteURL(url) ?? url)
-            textView.insertText(replacement, replacementRange: selection)
+            textView.insertText(url, replacementRange: selection)
+            guard inCode == false, let short = handlers.pasteURL(url), short != url else { return }
+            textView.breakUndoCoalescing()
+            textView.insertText(short, replacementRange: NSRange(location: selection.location, length: (url as NSString).length))
         case .text(let string, let language):
             if inCode {
                 textView.insertText(string, replacementRange: selection)

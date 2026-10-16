@@ -7,6 +7,13 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Quick note: `⌃⌥Space` in any app opens a small field. Enter saves the note in Inbox and the app you were in keeps the focus. `⌘Enter` saves and opens the note, `⌥Enter` adds a timed line to Today, Esc closes and keeps the text for next time. A text that starts with a ticket key becomes a task.
+- Today: `⌥⌘T` opens today's note, made from the daily template. Open checkboxes from the last daily note come along under "Carried over". `⌘[` and `⌘]` go to the day before and after.
+- Tasks: a new task takes the ticket from its title, gets a suggested branch and the status To do. The ticket chip opens the tracker, the branch chip copies the branch, the status chip changes the status, `⌘⇧D` marks the task done. The Tasks folder groups its list into Active, To do and Done.
+- Ticket keys, merge requests (`!1234`) and issues (`#12`) in the text are links once the addresses are set in Settings → Links. Changes to `.slate/links.json` apply at once. A pasted tracker or merge request URL becomes its short form; `⌘Z` brings the full URL back.
+- Insert Template in the New menu puts a template into the open note.
+- Settings (`⌘,`, the gear button or the menu bar menu): open at login, the folder for quick notes, text size, appearance, days in the Trash, the notes folder, the three global shortcuts, the tracker and git host addresses, and a Doctor with Rebuild search.
+- Right click on the menu bar icon: New Note, New Task, Quick Note, Today, Open Window, Settings, Quit. `⌥⌘N` shows or hides Slate from any app.
 - Search finds words in titles, text, tags and tickets across thousands of notes in a few milliseconds. Filters work in the same field: `tag:`, `space:`, `type:`, `ticket:`, `status:`, `is:todo`, `is:pinned`, `has:image`, `has:code`, `has:link`, `before:`, `after:`, and `-` to leave out a word or a filter. Results show the matching text with the words in bold; Enter opens the first one with the cursor on the match.
 - Search stays in the folder you are in; "Search all notes" widens it.
 - Tags: `#tag` in the text and `tags:` in the details count as tags. The window sidebar lists them with counts; a click shows the notes with that tag. Tag chips under the title do the same. Typing `#` and a letter offers the tags you have.
@@ -42,6 +49,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ### Fixed
 
 ### Infrastructure
+- M4: title, slug, daily, section append, link pattern and task group policies; create, daily, append and quick capture use cases; ports for the login item and the Doctor checks with live, mock and spy versions; `CaptureStore`, `DailyStore`, `SettingsStore`.
 - M3: SQLite index with full-text search (GRDB, FTS5) in Application Support, rebuilt when it belongs to another folder or schema. `Scripts/generate-vault.sh` writes sample notes; with 10,000 of them a full scan takes 11 s and a search 28 ms in a debug build. The full scan reads and parses 200 files at a time in parallel.
 - M2: `AttachmentPolicy`, `ImportAttachmentUseCase`, `AttachScreenshotUseCase`, three new ports (attachments, screen capture, workspace) with live, mock and spy versions. `Ports.live` takes the command recorder and builds one `ShellRunner`.
 - `check-layers.sh` allows `QLPreviewPanel.shared()` in SlateData and the word `"public"` inside a string literal.

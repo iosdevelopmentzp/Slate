@@ -31,7 +31,7 @@ final class EditorStore {
     @ObservationIgnored let navigator: Navigator
     @ObservationIgnored let activity: ActivityLog
     @ObservationIgnored let events: AppEvents
-    @ObservationIgnored private let clock: any Clock
+    @ObservationIgnored let clock: any Clock
     @ObservationIgnored let importAttachment: ImportAttachmentUseCase
     @ObservationIgnored let attachScreenshot: AttachScreenshotUseCase
     @ObservationIgnored let workspace: any WorkspaceOpening
@@ -39,6 +39,7 @@ final class EditorStore {
     @ObservationIgnored let panel: PanelVisibility
     @ObservationIgnored let toaster: Toaster
     @ObservationIgnored let create: CreateNoteUseCase
+    @ObservationIgnored let templates: any TemplateRepository
     @ObservationIgnored var insertionCounter = 0
     @ObservationIgnored private var subscription: SubscriptionToken?
     @ObservationIgnored private var isApplying = false
@@ -64,7 +65,8 @@ final class EditorStore {
         vaultRoot: URL,
         panel: PanelVisibility,
         toaster: Toaster,
-        create: CreateNoteUseCase
+        create: CreateNoteUseCase,
+        templates: any TemplateRepository
     ) {
         self.files = files
         self.index = index
@@ -81,6 +83,7 @@ final class EditorStore {
         self.panel = panel
         self.toaster = toaster
         self.create = create
+        self.templates = templates
         subscription = events.subscribe { [weak self] event in
             guard let self else { return }
             handle(event)
@@ -176,6 +179,19 @@ final class EditorStore {
         saveTask?.cancel()
         saveTask = nil
         await persist()
+    }
+
+    func updateHeader(_ change: (inout NoteHeader) -> Void) async {
+        await flush()
+        guard let current = document, hasConflict == false, current.isHeaderOpaque == false else { return }
+        var header = current.header
+        change(&header)
+        guard header != current.header else { return }
+        do {
+            apply(try await save.execute(current, header: header, body: text), previous: current)
+        } catch {
+            activity.log("Cannot save the note", detail: error.localizedDescription, outcome: .failure)
+        }
     }
 
     func keepMine() async {

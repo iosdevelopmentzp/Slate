@@ -1,5 +1,7 @@
 import AppKit
+import KeyboardShortcuts
 import SwiftUI
+import SlateDomain
 import SlateUI
 
 @MainActor
@@ -12,6 +14,10 @@ package final class AppWindows: NSObject, NSWindowDelegate {
     private var resignObserver: NSObjectProtocol?
     private var lastPanelTopLeft: CGPoint?
     private var isCapturing = false
+    private let capturePanel = CapturePanel()
+    private var captureMonitor: Any?
+    private var settingsWindow: NSWindow?
+    package var onChangeVault: (URL) -> Void = { _ in }
 
     private var layout: WindowLayout {
         assembly.layout
@@ -43,6 +49,16 @@ package final class AppWindows: NSObject, NSWindowDelegate {
             button.sendAction(on: [.leftMouseDown, .rightMouseDown])
         }
         observeLayout()
+        observeAppearance()
+        registerHotkeys()
+        assembly.settings.changeVault = { [weak self] in
+            guard let self else { return }
+            chooseVault()
+        }
+        capturePanel.onCancel = { [weak self] in
+            guard let self else { return }
+            closeCapture()
+        }
         resignObserver = NotificationCenter.default.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
@@ -113,7 +129,241 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         self.clickMonitor = nil
     }
 
+    package func stop() {
+        KeyboardShortcuts.removeAllHandlers()
+        closePanel()
+        closeCapture()
+        window?.close()
+        settingsWindow?.close()
+        if let resignObserver {
+            NotificationCenter.default.removeObserver(resignObserver)
+        }
+        NSStatusBar.system.removeStatusItem(statusItem)
+    }
+
+    private func chooseVault() {
+        let current = URL(fileURLWithPath: assembly.settings.vaultPath, isDirectory: true)
+        guard let folder = FolderPicker.chooseFolder(directory: current.deletingLastPathComponent(), prompt: "Use This Folder", message: "Choose the folder for your notes.") else { return }
+        onChangeVault(folder)
+    }
+
+    func openSettings() {
+        closePanel()
+        let window = settingsWindow ?? makeSettingsWindow()
+        settingsWindow = window
+        applyAppearance()
+        NSApp.activate()
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    func toggleCapture() {
+        if capturePanel.isVisible {
+            closeCapture()
+        } else {
+            showCapture()
+        }
+    }
+
+    func openToday() {
+        if window?.isVisible != true, panel.isVisible == false {
+            showPanel()
+        }
+        Task { await assembly.daily.openToday() }
+    }
+
+    private func registerHotkeys() {
+        KeyboardShortcuts.onKeyUp(for: .togglePanel) { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                showWindowOrPanel()
+            }
+        }
+        KeyboardShortcuts.onKeyUp(for: .capture) { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                toggleCapture()
+            }
+        }
+        KeyboardShortcuts.onKeyUp(for: .today) { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                openToday()
+            }
+        }
+    }
+
+    private func showCapture() {
+        if capturePanel.contentViewController == nil {
+            let root = CaptureView(
+                onSave: { [weak self] in
+                    guard let self else { return }
+                    saveCapture(to: .newNote, open: false)
+                },
+                onOpen: { [weak self] in
+                    guard let self else { return }
+                    saveCapture(to: .newNote, open: true)
+                },
+                onToday: { [weak self] in
+                    guard let self else { return }
+                    saveCapture(to: .today, open: false)
+                },
+                onCancel: { [weak self] in
+                    guard let self else { return }
+                    closeCapture()
+                }
+            )
+            .inject(assembly)
+            let controller = NSHostingController(rootView: root)
+            controller.sizingOptions = [.preferredContentSize]
+            capturePanel.contentViewController = controller
+        }
+        applyAppearance()
+        capturePanel.setFrameOrigin(captureOrigin())
+        capturePanel.alphaValue = 0
+        capturePanel.orderFrontRegardless()
+        capturePanel.makeKey()
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.12
+            capturePanel.animator().alphaValue = 1
+        }
+        assembly.capture.prepare()
+        installCaptureMonitor()
+    }
+
+    private func saveCapture(to destination: CaptureInput.Destination, open: Bool) {
+        Task {
+            guard await assembly.capture.save(to: destination, select: open) != nil else { return }
+            closeCapture()
+            if open {
+                showPanel()
+            }
+        }
+    }
+
+    private func closeCapture() {
+        guard capturePanel.isVisible else { return }
+        capturePanel.orderOut(nil)
+        if let captureMonitor {
+            NSEvent.removeMonitor(captureMonitor)
+            self.captureMonitor = nil
+        }
+    }
+
+    private func installCaptureMonitor() {
+        guard captureMonitor == nil else { return }
+        captureMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                closeCapture()
+            }
+        }
+    }
+
+    private func captureOrigin() -> CGPoint {
+        let mouse = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) } ?? NSScreen.main
+        let visible = screen?.visibleFrame ?? .zero
+        let size = capturePanel.frame.size
+        return CGPoint(x: visible.midX - size.width / 2, y: visible.maxY - visible.height * 0.2 - size.height)
+    }
+
+    private func makeSettingsWindow() -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 680, height: 480),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "Slate Settings"
+        window.isReleasedWhenClosed = false
+        window.contentViewController = NSHostingController(rootView: SettingsView().inject(assembly))
+        window.center()
+        window.setFrameAutosaveName("SlateSettings")
+        return window
+    }
+
+    private func observeAppearance() {
+        withObservationTracking {
+            _ = assembly.settings.appearance
+        } onChange: {
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                applyAppearance()
+                observeAppearance()
+            }
+        }
+    }
+
+    private func applyAppearance() {
+        let appearance: NSAppearance? = switch assembly.settings.appearance {
+        case .system: nil
+        case .light: NSAppearance(named: .aqua)
+        case .dark: NSAppearance(named: .darkAqua)
+        }
+        for target in [panel, capturePanel, window, settingsWindow].compactMap({ $0 }) {
+            target.appearance = appearance
+        }
+    }
+
+    private func statusMenu() -> NSMenu {
+        let menu = NSMenu()
+        menu.addItem(item("New Note", key: "n", action: #selector(menuNewNote)))
+        menu.addItem(item("New Task", key: "t", modifiers: [.command, .shift], action: #selector(menuNewTask)))
+        menu.addItem(item("Quick Note", action: #selector(menuCapture)))
+        menu.addItem(item("Today", action: #selector(menuToday)))
+        menu.addItem(.separator())
+        menu.addItem(item("Open Window", key: "o", modifiers: [.command, .shift], action: #selector(menuOpenWindow)))
+        menu.addItem(item("Settings…", key: ",", action: #selector(menuSettings)))
+        menu.addItem(.separator())
+        menu.addItem(item("Quit Slate", key: "q", action: #selector(menuQuit)))
+        return menu
+    }
+
+    private func item(_ title: String, key: String = "", modifiers: NSEvent.ModifierFlags = [.command], action: Selector) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
+        item.keyEquivalentModifierMask = modifiers
+        item.target = self
+        return item
+    }
+
+    @objc private func menuNewNote() {
+        showPanel()
+        Task { await assembly.noteList.createNote() }
+    }
+
+    @objc private func menuNewTask() {
+        showPanel()
+        Task { await assembly.noteList.createNote(type: NoteType.task.name) }
+    }
+
+    @objc private func menuCapture() {
+        showCapture()
+    }
+
+    @objc private func menuToday() {
+        openToday()
+    }
+
+    @objc private func menuOpenWindow() {
+        openWindow()
+    }
+
+    @objc private func menuSettings() {
+        openSettings()
+    }
+
+    @objc private func menuQuit() {
+        NSApp.terminate(nil)
+    }
+
     @objc private func statusItemClicked() {
+        if NSApp.currentEvent?.type == .rightMouseDown {
+            closePanel()
+            statusItem.menu = statusMenu()
+            statusItem.button?.performClick(nil)
+            statusItem.menu = nil
+            return
+        }
         togglePanel()
     }
 
@@ -124,6 +374,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
             layout.openCount += 1
         }
         panel.setFrame(layout.panelFrame(anchor: iconAnchor(), anchorScreen: statusItem.button?.window?.screen), display: false)
+        applyAppearance()
         NSApp.activate()
         panel.makeKeyAndOrderFront(nil)
         panel.invalidateShadow()
@@ -180,6 +431,10 @@ package final class AppWindows: NSObject, NSWindowDelegate {
             .environment(\.openAsWindow, { [weak self] in
                 guard let self else { return }
                 openWindow()
+            })
+            .environment(\.openSettings, { [weak self] in
+                guard let self else { return }
+                openSettings()
             })
         let controller = NSHostingController(rootView: root)
         controller.sizingOptions = surface == .window ? [.minSize] : []

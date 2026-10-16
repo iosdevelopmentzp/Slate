@@ -16,6 +16,9 @@ package final class PresentationAssembly {
     let editor: EditorStore
     let panelVisibility: PanelVisibility
     let search: SearchStore
+    let settings: SettingsStore
+    let capture: CaptureStore
+    let daily: DailyStore
 
     package init(ports: Ports, useCases: UseCases, activity: ActivityLog, vaultRoot: URL) {
         events = AppEvents()
@@ -28,6 +31,7 @@ package final class PresentationAssembly {
         feed = VaultChangeFeed(watcher: ports.watcher, reindex: useCases.reindex, activity: activity, events: events)
         vault = VaultStore(
             config: ports.config,
+            templates: ports.templates,
             createSpace: useCases.createSpace,
             renameSpace: useCases.renameSpace,
             navigator: navigator,
@@ -66,8 +70,22 @@ package final class PresentationAssembly {
             vaultRoot: vaultRoot,
             panel: panelVisibility,
             toaster: toaster,
-            create: useCases.create
+            create: useCases.create,
+            templates: ports.templates
         )
+        settings = SettingsStore(
+            store: ports.keyValues,
+            config: ports.config,
+            loginItem: ports.loginItem,
+            system: ports.system,
+            index: ports.index,
+            reindex: useCases.reindex,
+            vaultPath: vaultRoot.path,
+            activity: activity,
+            events: events
+        )
+        capture = CaptureStore(capture: useCases.capture, config: ports.config, store: ports.keyValues, navigator: navigator, toaster: toaster, activity: activity, events: events)
+        daily = DailyStore(ensureDaily: useCases.ensureDaily, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
     }
 
     package func start() {
@@ -76,6 +94,10 @@ package final class PresentationAssembly {
             await vault.refresh()
             await search.refreshTags()
         }
+    }
+
+    package func stop() {
+        feed.stop()
     }
 
     package func flush() async {
