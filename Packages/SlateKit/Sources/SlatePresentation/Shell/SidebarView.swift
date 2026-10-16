@@ -6,138 +6,174 @@ struct SidebarView: View {
     @Environment(NoteListStore.self) private var store
     @Environment(VaultStore.self) private var vault
     @Environment(SearchStore.self) private var search
+    @Environment(\.surface) private var surface
+    @Environment(\.openAsWindow) private var openAsWindow
+    @Environment(\.openSettings) private var openSettings
 
-    @State private var editing: SpaceName?
-    @State private var isCreating = false
-    @State private var draft = ""
-    @FocusState private var isFieldFocused: Bool
+    @State private var dropTarget: SpaceName?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 2) {
-                HStack {
-                    Text("Folders")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    IconButton(systemImage: "plus", help: "New folder") {
-                        draft = ""
-                        editing = nil
-                        isCreating = true
-                        isFieldFocused = true
+        @Bindable var vault = vault
+        VStack(spacing: 0) {
+            topBar
+            ScrollView {
+                VStack(alignment: .leading, spacing: 2) {
+                    sourceRow(.all, title: "All notes", icon: "tray.full", count: store.count(in: nil))
+                    ForEach(models) { model in
+                        folder(model)
                     }
-                    .accessibilityLabel("New folder")
-                }
-                .padding(.leading, 8)
-                .padding(.bottom, 2)
-                row("All notes", systemImage: "tray.full", source: .all, count: store.count(in: nil))
-                ForEach(vault.spaces) { space in
-                    if editing == space.folder {
-                        nameField { name in await vault.rename(space.folder, to: name) }
-                    } else {
-                        row(space.folder.rawValue, systemImage: space.icon ?? "folder", source: .space(space.folder), count: store.count(in: space.folder))
-                            .contextMenu { menu(for: space) }
+                    if vault.editing == .new {
+                        FolderNameField(
+                            name: $vault.draftName,
+                            icon: "folder.fill",
+                            tint: Tint.blue.color,
+                            onCommit: { Task { await vault.commitEdit() } },
+                            onCancel: { vault.cancelEdit() }
+                        )
                     }
+                    sourceRow(.trash, title: "Trash", icon: "trash", count: nil)
+                        .padding(.top, 10)
                 }
-                if isCreating {
-                    nameField { name in await vault.create(named: name) }
-                }
-                Divider()
-                    .padding(.vertical, 6)
-                row("Trash", systemImage: "trash", source: .trash, count: nil)
+                .padding(.horizontal, 8)
+                .padding(.bottom, 8)
             }
-            .padding(8)
+            newFolderButton
         }
         .frame(maxHeight: .infinity)
         .background(Theme.base)
     }
 
+    private var models: [FolderRowModel] {
+        vault.spaces.map { space in
+            FolderRowMapper.model(for: space, count: store.count(in: space.folder), defaultFolder: vault.defaultFolder)
+        }
+    }
+
+    private var topBar: some View {
+        HStack(spacing: 4) {
+            Text("Folders")
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(.secondary)
+            Spacer()
+            if surface == .panel {
+                IconButton(systemImage: "macwindow", help: "Open as window (⌘⇧O)") { openAsWindow() }
+                    .accessibilityLabel("Open as window")
+            }
+            IconButton(systemImage: "gearshape", help: "Settings (⌘,)") { openSettings() }
+                .accessibilityLabel("Settings")
+        }
+        .padding(.leading, surface == .window ? WindowLayout.trafficLightsWidth : 16)
+        .padding(.trailing, 10)
+        .frame(height: 44)
+        .background(PanelDragArea())
+    }
+
     @ViewBuilder
-    private func menu(for space: Space) -> some View {
-        Button("Rename", systemImage: "pencil") {
-            draft = space.folder.rawValue
-            isCreating = false
-            editing = space.folder
-            isFieldFocused = true
-        }
-        Menu("Icon", systemImage: space.icon ?? "folder") {
-            ForEach(VaultStore.icons, id: \.self) { icon in
-                Button(icon, systemImage: icon) {
-                    Task { await vault.setIcon(icon, for: space.folder) }
+    private func folder(_ model: FolderRowModel) -> some View {
+        if vault.editing == .rename(model.id) {
+            @Bindable var vault = vault
+            FolderNameField(
+                name: $vault.draftName,
+                icon: model.icon,
+                tint: model.tint.color,
+                onCommit: { Task { await vault.commitEdit() } },
+                onCancel: { vault.cancelEdit() }
+            )
+        } else {
+            VStack(spacing: 4) {
+                FolderRow(
+                    title: model.title,
+                    icon: model.icon,
+                    tint: model.tint.color,
+                    count: model.count,
+                    isSelected: store.source == .space(model.id),
+                    isDropTarget: dropTarget == model.id
+                )
+                .onTapGesture { show(.space(model.id)) }
+                .simultaneousGesture(TapGesture(count: 2).onEnded { vault.startRename(model.id) })
+                .contextMenu { menu(for: model) }
+                .dropDestination(for: String.self) { items, _ in
+                    drop(items, on: model.id)
+                } isTargeted: { isTargeted in
+                    dropTarget = isTargeted ? model.id : (dropTarget == model.id ? nil : dropTarget)
                 }
-                .labelStyle(.iconOnly)
-            }
-        }
-        Divider()
-        Button("Move up", systemImage: "arrow.up") {
-            Task { await vault.move(space.folder, by: -1) }
-        }
-        .disabled(vault.canMove(space.folder, by: -1) == false)
-        Button("Move down", systemImage: "arrow.down") {
-            Task { await vault.move(space.folder, by: 1) }
-        }
-        .disabled(vault.canMove(space.folder, by: 1) == false)
-    }
-
-    private func nameField(commit: @escaping (String) async -> Bool) -> some View {
-        TextField("Folder name", text: $draft)
-            .textFieldStyle(.roundedBorder)
-            .focused($isFieldFocused)
-            .onSubmit {
-                let name = draft
-                Task {
-                    if await commit(name) {
-                        endEditing()
-                    }
+                if vault.confirmingDelete == model.id {
+                    FolderDeleteConfirmation(
+                        question: model.deleteQuestion,
+                        onConfirm: { Task { await vault.confirmDelete(model.id) } },
+                        onCancel: { vault.cancelDelete() }
+                    )
+                    .transition(.opacity)
                 }
             }
-            .onExitCommand(perform: endEditing)
-            .onChange(of: isFieldFocused) { _, focused in
-                if focused == false { endEditing() }
-            }
-            .padding(.horizontal, 4)
+            .animation(Theme.hoverAnimation, value: vault.confirmingDelete)
+        }
     }
 
-    private func endEditing() {
-        editing = nil
-        isCreating = false
-        draft = ""
+    private func menu(for model: FolderRowModel) -> some View {
+        FolderMenu(
+            model: model,
+            canMoveUp: vault.canMove(model.id, by: -1),
+            canMoveDown: vault.canMove(model.id, by: 1),
+            onRename: { vault.startRename(model.id) },
+            onColor: { color in Task { await vault.setColor(color, for: model.id) } },
+            onIcon: { icon in Task { await vault.setIcon(icon, for: model.id) } },
+            onMove: { offset in Task { await vault.move(model.id, by: offset) } },
+            onDelete: { vault.requestDelete(model.id) }
+        )
     }
 
-    private func row(_ title: String, systemImage: String, source: ListSource, count: Int?) -> some View {
-        let isSelected = store.source == source
-        return HStack(spacing: 8) {
-            Label(title, systemImage: systemImage)
-                .lineLimit(1)
-            Spacer(minLength: 4)
-            if let count {
-                Text("\(count)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+    private func sourceRow(_ source: ListSource, title: String, icon: String, count: Int?) -> some View {
+        FolderRow(title: title, icon: icon, tint: .secondary, count: count, isSelected: store.source == source, isDropTarget: false)
+            .onTapGesture { show(source) }
+    }
+
+    private var newFolderButton: some View {
+        Button {
+            vault.startNewFolder()
+        } label: {
+            Label("New folder", systemImage: "plus")
+                .font(.callout.weight(.medium))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .frame(height: 30)
+                .background(Theme.hover, in: RoundedRectangle(cornerRadius: Theme.pillRadius, style: .continuous))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.secondary)
+        .padding(8)
+        .hint("New folder (⇧⌘N)")
+        .accessibilityLabel("New folder")
+    }
+
+    private func show(_ source: ListSource) {
+        search.clear()
+        store.show(source)
+    }
+
+    private func drop(_ items: [String], on space: SpaceName) -> Bool {
+        let ids = items.compactMap(NoteDragPayload.noteID(from:))
+        guard ids.isEmpty == false else { return false }
+        Task {
+            for id in ids {
+                await store.moveNote(id: id, to: space)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(isSelected ? Theme.selection.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-        .contentShape(Rectangle())
-        .onTapGesture {
-            search.clear()
-            store.show(source)
-        }
+        return true
     }
 }
 
 #Preview("Light") {
     SidebarView()
         .previewEnvironment(surface: .window)
-        .frame(width: 200, height: 400)
+        .frame(width: 200, height: 420)
         .preferredColorScheme(.light)
 }
 
 #Preview("Dark") {
     SidebarView()
         .previewEnvironment(surface: .window)
-        .frame(width: 200, height: 400)
+        .frame(width: 200, height: 420)
         .preferredColorScheme(.dark)
 }

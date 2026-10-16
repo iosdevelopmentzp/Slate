@@ -26,7 +26,7 @@ import Testing
 
         #expect(config.spaces.map(\.folder.rawValue) == ["Notes", "Ideas", "Work"])
         #expect(config.spaces.first?.icon == "folder.fill")
-        #expect(config.spaces.last?.icon == "folder")
+        #expect(config.spaces.last?.icon == "folder.fill")
         #expect(config.captureSpace == SpaceName(rawValue: "Notes"))
     }
 
@@ -37,13 +37,16 @@ import Testing
         var config = try await repository.spaces()
         #expect(config.spaces.map(\.folder.rawValue) == ["Tasks", "Inbox"])
         #expect(config.spaces.first?.icon == "star")
+        #expect(config.spaces.map(\.color) == [.red, .blue])
 
         config.spaces[0].icon = "bolt"
+        config.spaces[1].color = .teal
         try await repository.saveSpaces(config)
 
         let text = try String(contentsOf: folder.url.appendingPathComponent(".slate/spaces.json"), encoding: .utf8)
         #expect(text.contains(#""theme" : "x""#))
         #expect(text.contains(#""color" : "red""#))
+        #expect(text.contains(#""color" : "teal""#))
         #expect(try await repository.spaces().spaces.first?.icon == "bolt")
     }
 

@@ -69,7 +69,7 @@ final class NoteListStore: NoteLookup {
         self.activity = activity
         self.events = events
         self.store = store
-        sort = store.string(forKey: Keys.sort).flatMap(NoteSort.init(rawValue:)) ?? .updated
+        sort = .updated
         subscription = events.subscribe { [weak self] event in
             guard let self else { return }
             handle(event)
@@ -222,6 +222,11 @@ final class NoteListStore: NoteLookup {
         } catch {
             activity.log("Cannot move the note", detail: error.localizedDescription, outcome: .failure)
         }
+    }
+
+    func moveNote(id: NoteID, to space: SpaceName) async {
+        guard let summary = summaries.first(where: { $0.id == id }), summary.space != space else { return }
+        await moveNote(summary, to: space)
     }
 
     func duplicateNote(_ summary: NoteSummary) async {

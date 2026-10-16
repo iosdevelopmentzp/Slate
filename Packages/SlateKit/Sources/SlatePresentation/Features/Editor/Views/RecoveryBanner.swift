@@ -16,9 +16,11 @@ struct RecoveryBanner: View {
             Button("Discard", action: onDiscard)
         }
         .controlSize(.small)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Tint.blue.color.opacity(0.12))
+        .background(Tint.blue.color.opacity(0.12), in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
     }
 }
 

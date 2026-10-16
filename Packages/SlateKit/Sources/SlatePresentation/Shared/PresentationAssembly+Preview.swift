@@ -8,7 +8,7 @@ extension PresentationAssembly {
         let ports = Ports.mock()
         let assembly = PresentationAssembly(ports: ports, useCases: UseCases(ports: ports), activity: ActivityLog(), vaultRoot: URL(fileURLWithPath: NSTemporaryDirectory()))
         assembly.vault.config = MockVault.config
-        assembly.noteList.summaries = MockVault.notes
+        assembly.noteList.summaries = MockVault.summaries
         if let document = MockVault.documents.first {
             assembly.navigator.selectedNote = document.id
             assembly.editor.show(document)

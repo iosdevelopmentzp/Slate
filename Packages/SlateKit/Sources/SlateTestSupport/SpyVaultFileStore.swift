@@ -10,6 +10,7 @@ package final class SpyVaultFileStore: VaultFileStore, @unchecked Sendable {
         case move(from: VaultPath, to: VaultPath)
         case createFolder(SpaceName)
         case moveFolder(from: SpaceName, to: SpaceName)
+        case removeFolder(SpaceName)
     }
 
     private struct File {
@@ -117,6 +118,16 @@ package final class SpyVaultFileStore: VaultFileStore, @unchecked Sendable {
             _calls.append(.createFolder(name))
             guard folders.contains(name) == false else { throw VaultError.alreadyExists(name.rawValue) }
             folders.insert(name)
+        }
+    }
+
+    package func removeFolder(_ name: SpaceName) async throws {
+        lock.withLock {
+            _calls.append(.removeFolder(name))
+            folders.remove(name)
+            for path in files.keys where path.space == name {
+                files[path] = nil
+            }
         }
     }
 

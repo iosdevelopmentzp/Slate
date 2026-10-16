@@ -11,7 +11,7 @@ import Testing
 
         #expect(space == SpaceName(rawValue: "Reading"))
         #expect(spies.files.folderNames == [space])
-        #expect(spies.config.config.spaces.last == Space(folder: space, icon: "folder", defaultType: "note"))
+        #expect(spies.config.config.spaces.last == Space(folder: space, icon: "folder.fill", defaultType: "note"))
     }
 
     @Test func existingNameIsRejectedCaseInsensitively() async throws {

@@ -20,8 +20,6 @@ struct WindowFrame: ViewModifier {
         case .panel:
             content
                 .frame(width: layout.size.width, height: layout.size.height)
-        case .floating:
-            content
         }
     }
 }

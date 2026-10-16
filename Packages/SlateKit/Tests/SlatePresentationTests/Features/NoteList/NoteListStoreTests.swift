@@ -126,6 +126,17 @@ import Testing
         #expect(harness.toaster.text == "Moved to Notes")
     }
 
+    @Test func dropMovesTheNoteByItsID() async throws {
+        harness.seed("Inbox/A.md", id: "a")
+        try await harness.index()
+        await store.refresh()
+
+        await store.moveNote(id: NoteID(rawValue: "a"), to: SpaceName(rawValue: "Notes"))
+        await store.moveNote(id: NoteID(rawValue: "unknown"), to: SpaceName(rawValue: "Notes"))
+
+        #expect(harness.spies.files.paths == [VaultPath(rawValue: "Notes/A.md")])
+    }
+
     @Test func duplicateSelectsTheCopy() async throws {
         harness.seed("Inbox/A.md", id: "a", body: "Body")
         try await harness.index()

@@ -11,6 +11,11 @@ struct EditorView: View {
     @State private var showsHistory = false
     @FocusState private var isTitleFocused: Bool
 
+    @State private var showsSaved = false
+
+    static let textWidth: CGFloat = 720
+    static let sidePadding: CGFloat = 24
+
     var body: some View {
         if let document = editor.document {
             VStack(alignment: .leading, spacing: 0) {
@@ -30,7 +35,8 @@ struct EditorView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 header(for: document)
-                Divider()
+                    .frame(maxWidth: Self.textWidth + Self.sidePadding * 2)
+                    .frame(maxWidth: .infinity)
                 MarkdownEditorView(
                     text: Bindable(editor).text,
                     configuration: configuration,
@@ -38,9 +44,15 @@ struct EditorView: View {
                     insertion: editor.insertion.map { EditorInsertion(token: $0.token, markdown: $0.markdown) },
                     handlers: handlers
                 )
+                .padding(.horizontal, Self.sidePadding - 4)
+                .frame(maxWidth: Self.textWidth + Self.sidePadding * 2)
+                .frame(maxWidth: .infinity)
             }
-            .animation(.easeInOut(duration: 0.15), value: editor.hasConflict)
-            .animation(.easeInOut(duration: 0.15), value: editor.recovered)
+            .overlay(alignment: .topTrailing) {
+                saveIndicator
+            }
+            .animation(Theme.hoverAnimation, value: editor.hasConflict)
+            .animation(Theme.hoverAnimation, value: editor.recovered)
             .background(Theme.surface)
             .onChange(of: editor.titleFocusToken) {
                 isTitleFocused = true
@@ -49,18 +61,45 @@ struct EditorView: View {
                 guard wasFocused, isFocused == false else { return }
                 editor.titleEditingEnded()
             }
+            .onChange(of: editor.saveState) { _, state in
+                guard case .saved = state else { return }
+                withAnimation(Theme.hoverAnimation) { showsSaved = true }
+            }
+            .task(id: showsSaved) {
+                guard showsSaved else { return }
+                try? await Task.sleep(for: .seconds(1))
+                withAnimation(.easeOut(duration: 0.4)) { showsSaved = false }
+            }
         } else {
-            ContentUnavailableView("No note selected.", systemImage: "note.text", description: Text("Pick a note in the list or press ⌘N."))
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            EmptyStateView(systemImage: "note.text", title: "Pick a note or press ⌘N.")
                 .background(Theme.surface)
         }
     }
 
+    @ViewBuilder
+    private var saveIndicator: some View {
+        if case .failed = editor.saveState {
+            Label("Not saved", systemImage: "exclamationmark.triangle.fill")
+                .font(.caption)
+                .foregroundStyle(Tint.orange.color)
+                .padding(10)
+                .hint("Slate could not save this note. See Activity in Settings.")
+        } else if showsSaved {
+            Text("Saved")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(10)
+                .transition(.opacity)
+                .accessibilityLabel("Saved")
+        }
+    }
+
     private func header(for document: NoteDocument) -> some View {
-        HStack(spacing: 6) {
-            TextField(StemPolicy.untitled, text: titleBinding)
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            TextField("Title", text: titleBinding, axis: .vertical)
                 .textFieldStyle(.plain)
-                .font(.title3.weight(.semibold))
+                .font(.system(size: 24, weight: .bold))
+                .lineLimit(1...2)
                 .focused($isTitleFocused)
                 .onSubmit { editor.submitTitle() }
                 .disabled(document.isHeaderOpaque)
@@ -73,8 +112,9 @@ struct EditorView: View {
             }
             .accessibilityLabel("Versions")
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, Self.sidePadding)
+        .padding(.top, 28)
+        .padding(.bottom, 8)
     }
 
     private var configuration: EditorConfiguration {

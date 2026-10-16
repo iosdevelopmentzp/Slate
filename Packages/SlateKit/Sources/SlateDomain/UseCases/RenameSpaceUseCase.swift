@@ -16,7 +16,7 @@ package struct RenameSpaceUseCase: Sendable {
         try await files.moveFolder(from: space, to: target)
         spaces.spaces = spaces.spaces.map { entry in
             guard entry.folder == space else { return entry }
-            return Space(folder: target, icon: entry.icon, defaultType: entry.defaultType, noteCount: entry.noteCount)
+            return entry.renamed(to: target)
         }
         if spaces.captureSpace == space { spaces.captureSpace = target }
         if spaces.archiveSpace == space { spaces.archiveSpace = target }

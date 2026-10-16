@@ -13,25 +13,27 @@ struct SearchResultsView: View {
             if let scope = search.scopeName {
                 HStack(spacing: 6) {
                     Text("In \(scope)")
-                        .font(.caption)
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                     Spacer()
                     Button("Search all notes") { search.searchAllNotes() }
                         .buttonStyle(.link)
-                        .font(.caption)
+                        .font(.callout)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
+                .padding(.horizontal, Theme.columnPadding + 4)
+                .padding(.bottom, 6)
             }
-            ListState(
-                failure: nil,
-                isLoading: search.isSearching && results.isEmpty,
-                loadingTitle: "Searching…",
-                empty: nil,
-                noResultsFor: results.isEmpty && search.isSearching == false ? search.query : nil
-            ) {
+            if results.isEmpty, search.isSearching == false {
+                VStack(spacing: 8) {
+                    Text("No notes match.")
+                        .foregroundStyle(.secondary)
+                    Button("Clear search") { search.clear() }
+                        .buttonStyle(.link)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
                 ScrollView {
-                    LazyVStack(spacing: 0) {
+                    LazyVStack(spacing: Theme.cardGap) {
                         ForEach(results) { hit in
                             SearchResultRow(
                                 model: SearchResultMapper.model(for: hit, words: search.words, now: now),
@@ -40,24 +42,26 @@ struct SearchResultsView: View {
                             .onTapGesture { search.open(hit) }
                         }
                     }
-                    .padding(8)
+                    .padding(.horizontal, Theme.columnPadding)
+                    .padding(.bottom, Theme.columnPadding)
                 }
             }
         }
-        .background(Theme.surface)
     }
 }
 
 #Preview("Light") {
     SearchResultsView()
         .previewEnvironment()
-        .frame(width: 300, height: 500)
+        .frame(width: 320, height: 500)
+        .background(Theme.base)
         .preferredColorScheme(.light)
 }
 
 #Preview("Dark") {
     SearchResultsView()
         .previewEnvironment()
-        .frame(width: 300, height: 500)
+        .frame(width: 320, height: 500)
+        .background(Theme.base)
         .preferredColorScheme(.dark)
 }

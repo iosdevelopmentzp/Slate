@@ -18,30 +18,33 @@ struct NoteListView: View {
         }
     }
 
+    @ViewBuilder
     private var notes: some View {
         let notes = store.visibleNotes
         let now = Date.now
-        return ListState(
-            failure: store.failure.map { .failure("Cannot read the notes", description: $0) { refresh() } },
-            isLoading: store.isLoading && notes.isEmpty,
-            loadingTitle: "Reading notes…",
-            empty: emptyMessage(isEmpty: notes.isEmpty),
-            noResultsFor: notes.isEmpty && store.filterText.isEmpty == false ? store.filterText : nil
-        ) {
+        if let failure = store.failure, notes.isEmpty {
+            EmptyStateView(systemImage: "exclamationmark.triangle", title: "Slate cannot read the notes. \(failure)", actionTitle: "Try again") {
+                Task { await store.refresh() }
+            }
+        } else if notes.isEmpty, store.isLoading == false {
+            EmptyStateView(systemImage: "square.and.pencil", title: "Nothing here yet.", actionTitle: "New note", shortcut: "⌘N") {
+                Task { await store.createNote() }
+            }
+        } else {
             ScrollView {
-                LazyVStack(spacing: 0) {
+                LazyVStack(spacing: Theme.cardGap) {
                     ForEach(notes) { summary in
-                        row(summary, now: now)
+                        card(summary, now: now)
                     }
                 }
-                .padding(8)
+                .padding(.horizontal, Theme.columnPadding)
+                .padding(.bottom, Theme.columnPadding)
             }
         }
-        .background(Theme.surface)
     }
 
-    private func row(_ summary: NoteSummary, now: Date) -> some View {
-        NoteRow(
+    private func card(_ summary: NoteSummary, now: Date) -> some View {
+        NoteCard(
             model: NoteRowMapper.model(for: summary, now: now),
             isSelected: summary.id == navigator.selectedNote,
             isConfirmingTrash: store.confirmingTrash == summary.id,
@@ -61,27 +64,20 @@ struct NoteListView: View {
             requestTrash: { store.requestTrash(summary.id) }
         )
     }
-
-    private func emptyMessage(isEmpty: Bool) -> ListMessage? {
-        guard isEmpty, store.filterText.isEmpty, store.isLoading == false else { return nil }
-        return ListMessage("No notes here yet.", systemImage: "note.text", description: "Press ⌘N to make one.")
-    }
-
-    private func refresh() {
-        Task { await store.refresh() }
-    }
 }
 
 #Preview("Light") {
     NoteListView()
         .previewEnvironment()
-        .frame(width: 300, height: 500)
+        .frame(width: 320, height: 500)
+        .background(Theme.base)
         .preferredColorScheme(.light)
 }
 
 #Preview("Dark") {
     NoteListView()
         .previewEnvironment()
-        .frame(width: 300, height: 500)
+        .frame(width: 320, height: 500)
+        .background(Theme.base)
         .preferredColorScheme(.dark)
 }

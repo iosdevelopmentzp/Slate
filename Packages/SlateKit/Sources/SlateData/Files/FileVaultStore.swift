@@ -4,10 +4,12 @@ import SlateDomain
 actor FileVaultStore: VaultFileStore {
     private let folder: VaultFolder
     private let ownWrites: OwnWrites
+    private let recycle: @Sendable (URL) throws -> Void
 
-    init(root: URL, ownWrites: OwnWrites) {
+    init(root: URL, ownWrites: OwnWrites, recycle: @escaping @Sendable (URL) throws -> Void = { try FileManager.default.trashItem(at: $0, resultingItemURL: nil) }) {
         folder = VaultFolder(root: root)
         self.ownWrites = ownWrites
+        self.recycle = recycle
     }
 
     func enumerate() throws -> [FileMeta] {
@@ -106,5 +108,23 @@ actor FileVaultStore: VaultFileStore {
         }
         guard folder.exists(to) == false else { throw VaultError.alreadyExists(target.rawValue) }
         try FileCoordination.moving(from: from, to: to)
+    }
+
+    func removeFolder(_ name: SpaceName) throws {
+        let url = folder.url(folder: name.rawValue)
+        guard folder.exists(url) else { return }
+        if Self.holdsVisibleFiles(url) {
+            try recycle(url)
+        } else {
+            try FileManager.default.removeItem(at: url)
+        }
+    }
+
+    private static func holdsVisibleFiles(_ url: URL) -> Bool {
+        guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: [.isRegularFileKey], options: [.skipsHiddenFiles]) else { return false }
+        for case let item as URL in enumerator where (try? item.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true {
+            return true
+        }
+        return false
     }
 }

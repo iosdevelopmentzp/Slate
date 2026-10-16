@@ -129,6 +129,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         let search = assembly.search
         let layout = layout
         let spaces = assembly.vault.spaces
+        let vault = assembly.vault
         let selectNeighbour: (Int) -> Void = { offset in
             noteList.selectNeighbour(offset, in: search.isActive ? search.results.map(\.summary) : nil)
         }
@@ -147,6 +148,10 @@ package final class AppWindows: NSObject, NSWindowDelegate {
             app: [Command(title: "Settings…", key: ",", modifiers: [.command]) { [weak self] in self?.openSettings() }],
             file: [
                 Command(title: "New Note", key: "n", modifiers: [.command]) { Task { await noteList.createNote() } },
+                Command(title: "New Folder", key: "n", modifiers: [.command, .shift]) {
+                    layout.showsSidebar = true
+                    vault.startNewFolder()
+                },
                 Command(title: "Quick Note", key: "", modifiers: []) { [weak self] in self?.showCapture() },
             ],
             note: [
@@ -497,11 +502,13 @@ package final class AppWindows: NSObject, NSWindowDelegate {
     private func makeWindow() -> NSWindow {
         let window = NSWindow(
             contentRect: NSRect(origin: .zero, size: layout.size),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
         window.title = "Slate"
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
         window.isReleasedWhenClosed = false
         window.contentMinSize = WindowLayout.minimumSize
         window.delegate = self

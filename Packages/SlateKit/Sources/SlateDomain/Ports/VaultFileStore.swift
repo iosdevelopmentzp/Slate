@@ -10,4 +10,5 @@ package protocol VaultFileStore: Sendable {
     func fileNames(inFolder folder: String) async throws -> [String]
     func createFolder(_ name: SpaceName) async throws
     func moveFolder(from: SpaceName, to: SpaceName) async throws
+    func removeFolder(_ name: SpaceName) async throws
 }

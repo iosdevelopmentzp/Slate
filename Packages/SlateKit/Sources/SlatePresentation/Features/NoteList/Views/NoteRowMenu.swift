@@ -10,7 +10,7 @@ struct NoteRowMenu: View {
         if actions.moveTargets.isEmpty == false {
             Menu("Move to", systemImage: "folder") {
                 ForEach(actions.moveTargets) { space in
-                    Button(space.folder.rawValue, systemImage: space.icon ?? "folder") {
+                    Button(space.folder.rawValue, systemImage: space.icon ?? "folder.fill") {
                         actions.move(space.folder)
                     }
                 }

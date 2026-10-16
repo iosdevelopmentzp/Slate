@@ -6,8 +6,12 @@ import SlateUI
 @MainActor
 @Observable
 final class WindowLayout {
-    static let minimumSize = CGSize(width: 760, height: 480)
-    static let defaultSize = CGSize(width: 980, height: 680)
+    static let minimumSize = CGSize(width: 820, height: 520)
+    static let defaultSize = CGSize(width: 1040, height: 680)
+    static let sidebarWidth: CGFloat = 200
+    static let listWidths: ClosedRange<CGFloat> = 260...420
+    static let defaultListWidth: CGFloat = 320
+    static let trafficLightsWidth: CGFloat = 80
     static let windowAutosaveName = "SlateMainWindow"
     static let screenInset: CGFloat = 12
 
@@ -28,8 +32,21 @@ final class WindowLayout {
         }
     }
 
+    var listWidth: CGFloat {
+        didSet {
+            guard listWidth != oldValue else { return }
+            store.set(Int(listWidth), forKey: Keys.listWidth)
+        }
+    }
+
+    var showsSidebar: Bool {
+        didSet {
+            guard showsSidebar != oldValue else { return }
+            store.set(showsSidebar ? "shown" : "hidden", forKey: Keys.sidebar)
+        }
+    }
+
     var openCount = 0
-    var showsSidebar = true
 
     @ObservationIgnored private let store: any KeyValueStore
 
@@ -41,6 +58,9 @@ final class WindowLayout {
         } else {
             size = Self.defaultSize
         }
+        let storedWidth = store.integer(forKey: Keys.listWidth)
+        listWidth = storedWidth > 0 ? Self.clampedListWidth(CGFloat(storedWidth)) : Self.defaultListWidth
+        showsSidebar = store.string(forKey: Keys.sidebar) != "hidden"
         let point = store.doubles(forKey: Keys.panelTopLeft)
         if let point, point.count == 2 {
             panelTopLeft = CGPoint(x: point[0], y: point[1])
@@ -86,6 +106,10 @@ final class WindowLayout {
         size = Self.defaultSize
     }
 
+    static func clampedListWidth(_ proposed: CGFloat) -> CGFloat {
+        min(max(proposed, listWidths.lowerBound), listWidths.upperBound).rounded()
+    }
+
     static func clamped(_ proposed: CGSize) -> CGSize {
         clamped(proposed, to: usableArea(of: NSScreen.main)?.size ?? CGSize(width: 1440, height: 900))
     }
@@ -108,5 +132,7 @@ final class WindowLayout {
     private enum Keys {
         static let size = "window.size"
         static let panelTopLeft = "window.panelTopLeft"
+        static let listWidth = "window.listWidth"
+        static let sidebar = "window.sidebar"
     }
 }

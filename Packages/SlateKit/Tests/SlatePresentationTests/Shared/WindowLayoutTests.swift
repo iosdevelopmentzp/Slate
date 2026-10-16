@@ -32,4 +32,24 @@ import Testing
         #expect(second.size == CGSize(width: 900, height: 600))
         #expect(second.panelTopLeft == CGPoint(x: 40, y: 800))
     }
+
+    @Test func listWidthAndSidebarAreRemembered() {
+        let store = InMemoryKeyValueStore()
+        let first = WindowLayout(store: store)
+        #expect(first.listWidth == WindowLayout.defaultListWidth)
+        #expect(first.showsSidebar)
+
+        first.listWidth = 380
+        first.showsSidebar = false
+        let second = WindowLayout(store: store)
+
+        #expect(second.listWidth == 380)
+        #expect(second.showsSidebar == false)
+    }
+
+    @Test func listWidthStaysInItsRange() {
+        #expect(WindowLayout.clampedListWidth(100) == 260)
+        #expect(WindowLayout.clampedListWidth(900) == 420)
+        #expect(WindowLayout.clampedListWidth(300.4) == 300)
+    }
 }

@@ -11,7 +11,7 @@ package struct CreateSpaceUseCase: Sendable {
             throw VaultError.alreadyExists(space.rawValue)
         }
         try await files.createFolder(space)
-        spaces.spaces.append(Space(folder: space, icon: "folder", defaultType: NoteType.defaultName))
+        spaces.spaces.append(Space(folder: space, icon: "folder.fill", defaultType: NoteType.defaultName))
         try await config.saveSpaces(spaces)
         return space
     }

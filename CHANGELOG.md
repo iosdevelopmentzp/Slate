@@ -6,7 +6,20 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 
 ## [Unreleased]
 
+### Added
+- Folders in the panel and the window: New folder at the bottom of the sidebar or `⇧⌘N` makes a folder and lets you name it at once. Double-click a folder to rename it. Right click for Rename, Colour, Icon, Move up, Move down and Delete folder.
+- Delete folder asks in the sidebar first: "Delete "Ideas"? Its 4 notes move to Notes. Yes · No". The notes move to the quick note folder and a toast offers Undo, which brings the folder and its notes back.
+- Folder colours: red, orange, yellow, green, teal, blue, purple or pink, saved as `color` in `.slate/spaces.json`.
+- Drag a note card onto a folder to move the note there.
+- The width of the list is draggable (260 to 420 points, double-click for the default) and remembered, and so is the sidebar (`⌘0` in the panel too).
+
 ### Changed
+- The panel and the window have the same three columns: folders, notes, the note. The header and the footer are gone; the sidebar has Settings and Open as window at the top, the list has the folder name, a round + button and a rounded search field.
+- A softer look: notes are rounded cards with a two-line preview, the selected folder and card have a soft tint, the window has no title bar line and the columns have no divider lines.
+- Friendly empty states: "Nothing here yet." with a New note button, "Pick a note or press ⌘N.", "No notes match." with Clear search, and "The Trash is empty."
+- The note title is larger, the text sits in a column up to 720 points wide, and a quiet "Saved" appears for a second after each save.
+- The Trash shows cards with Restore and Delete now on hover; Delete now asks "Yes · No" in the card.
+- The sort order is always "date changed", with pinned notes first.
 - Slate now shows only folders and notes. The menus, the panel, the window, the quick note field and Settings have no other kinds of notes any more.
 - A new notes folder starts with one folder, Notes, and the welcome note. Slate no longer writes `_templates/`, `.slate/types/`, `.slate/views.json` or `.slate/actions/`. Folders and files from older versions stay and keep working.
 - The quick note field has the folder menu and two keys: Enter saves, `⌘Enter` saves and opens the note. A text that starts with a ticket key is a plain note.

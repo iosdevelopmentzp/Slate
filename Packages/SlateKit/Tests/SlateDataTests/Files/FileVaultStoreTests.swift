@@ -131,4 +131,23 @@ import Testing
         #expect(names.contains("Reading") == false)
         #expect(try await store.meta(VaultPath(rawValue: "reading/A.md")) != nil)
     }
+
+    @Test func removeFolderDeletesAFolderWithoutFiles() async throws {
+        _ = try folder.write("", to: "Ideas/.DS_Store")
+        try FileManager.default.createDirectory(at: folder.url.appendingPathComponent("Ideas/Empty"), withIntermediateDirectories: true)
+
+        try await store.removeFolder(SpaceName(rawValue: "Ideas"))
+
+        #expect(FileManager.default.fileExists(atPath: folder.path("Ideas")) == false)
+    }
+
+    @Test func removeFolderWithOtherFilesRecyclesIt() async throws {
+        let recycled = CallbackRecorder<URL>()
+        let store = FileVaultStore(root: folder.url, ownWrites: ownWrites, recycle: { recycled.append($0) })
+        _ = try folder.write("pdf", to: "Ideas/Plan.pdf")
+
+        try await store.removeFolder(SpaceName(rawValue: "Ideas"))
+
+        #expect(recycled.values.map(\.lastPathComponent) == ["Ideas"])
+    }
 }

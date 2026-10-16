@@ -24,17 +24,16 @@ package struct ToastView: View {
         }
         .font(.callout)
         .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .background(.regularMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(Theme.border))
-        .shadow(color: Theme.shadow, radius: 6, y: 2)
+        .padding(.vertical, 10)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+        .shadow(color: Theme.softShadow, radius: 12, y: 4)
         .transition(.opacity)
     }
 }
 
 #Preview("Light") {
     VStack(spacing: 12) {
-        ToastView(text: "Branch copied")
+        ToastView(text: "Saved to Notes")
         ToastView(text: "Moved to the Trash", actionTitle: "Undo")
     }
     .padding()
@@ -43,7 +42,7 @@ package struct ToastView: View {
 
 #Preview("Dark") {
     VStack(spacing: 12) {
-        ToastView(text: "Branch copied")
+        ToastView(text: "Saved to Notes")
         ToastView(text: "Moved to the Trash", actionTitle: "Undo")
     }
     .padding()

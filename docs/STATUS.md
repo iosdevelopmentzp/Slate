@@ -4,7 +4,7 @@ Last updated: 2026-10-17
 
 ## Stage
 
-Phase 2 on branch `phase2-simple-v1`. **S1 Simplify is done.** Next: S2 Folders and the soft look. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
+Phase 2 on branch `phase2-simple-v1`. **S1 Simplify and S2 Folders and the soft look are done.** Next: S3 the rich text editor. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
 
 ## Removed in S1 (ADR 0007)
 
@@ -33,16 +33,17 @@ The Presentation code below was deleted. Domain and Data code and tests stay. To
 | Screen | State | Notes |
 |---|---|---|
 | First launch | real | "Where should Slate keep your notes?", the default path, Choose…, Start. A new folder gets `Notes/` with the welcome note, `_attachments/` and `.slate/spaces.json` only |
-| Panel | real (S1) | Header: folder menu (All notes, folders, Trash, Sort by), search (`⌘F`), New note button (`⌘N`), Open as window (`⌘⇧O`), Settings (`⌘,`). Footer: note count, "saved just now", Quit. The status item: left click toggles the panel, right click shows New Note, Quick Note, Open Window, Settings, Quit. S2 brings the three columns |
-| Window | real (S1) | The panel plus a sidebar: All notes, Folders with counts, New folder (+), Trash. Right click on a folder: Rename, Icon, Move up, Move down. `⌘0` hides the sidebar |
-| Quick note field | real (S1) | `⌃⌥Space` from any app: a 520 pt field, the folder menu, Enter saves, `⌘Enter` saves and opens, `⇧Enter` new line, Esc closes and keeps the draft |
-| Note list | real (S1) | Rows: title, relative date, pin, two-line preview. Hover and right click: Pin, Move to, Duplicate, Move to Trash (inline confirmation, toast with Undo) |
-| Trash | real | Trashed notes with their folder and age; Restore and Delete now; "Notes are removed from the Trash after 30 days." |
-| Editor | real (S1) | Title field and the versions button (clock). The M2 Markdown editor with visible marks until S3: code blocks, checkboxes, images under their line, paste rules, screenshots, `[[` completion. Autosave, journal with Restore and Discard, the "Changed on disk" banner with Keep mine, Take theirs and Open both |
+| Panel | real (S2) | Three columns like the window: sidebar (`⌘0` hides it, remembered), the list, the note. The status item: left click toggles the panel, right click shows New Note, Quick Note, Open Window, Settings, Quit. The resize grip sits in the bottom-right corner |
+| Window | real (S2) | The same three columns under a transparent title bar; the sidebar title sits next to the window buttons |
+| Sidebar | real (S2) | "Folders" with Open as window (panel) and Settings at the top. All notes, the folders (tinted icon, name, count, soft pill when selected), Trash, and "+ New folder" at the bottom (`⇧⌘N`). Double click renames inline. Right click: Rename, Colour (eight colours with dots), Icon (16 named icons), Move up, Move down, Delete folder. Delete asks in place ("Delete "Ideas"? Its 4 notes move to Notes. Yes · No", 5 s, Esc cancels) and shows a toast with Undo. A note card dropped on a folder moves there |
+| Quick note field | real (S1) | `⌃⌥Space` from any app: a 520 pt field, the folder menu, Enter saves, `⌘Enter` saves and opens, `⇧Enter` new line, Esc closes and keeps the draft. The soft look comes in S4 |
+| Note list | real (S2) | The folder name (`.title2`), a round + button, a rounded search field and a thin progress line. Cards: title, date, pin, two-line preview; 12 pt padding, 10 pt radius, 6 pt gap; soft tint when selected or hovered. A "…" button on hover and the right-click menu: Pin, Move to, Duplicate, Move to Trash ("Move to the Trash? Yes · No" in the card). Cards can be dragged onto a folder. Empty folder: "Nothing here yet." with New note and `⌘N` |
+| Trash | real (S2) | Cards with the folder and the age; Restore and Delete now on hover ("Delete now? Yes · No"); "Notes are removed from the Trash after 30 days." under the list; "The Trash is empty." |
+| Editor | real (S2) | Title field (24 pt bold, up to two lines, placeholder "Title") and the versions button (clock); the text column is at most 720 pt wide with 24 pt side padding; "Saved" fades in at the top-right for a second after a save, "Not saved" stays when a save fails. Empty: "Pick a note or press ⌘N." Banners are rounded strips. The M2 Markdown editor with visible marks until S3: code blocks, checkboxes, images under their line, paste rules, screenshots, `[[` completion. Autosave, journal with Restore and Discard, the "Changed on disk" banner with Keep mine, Take theirs and Open both |
 | Versions | real | The clock button lists the versions of the note with Restore. Snapshots run quietly with the stored settings |
-| Search | real | Titles and text in the current folder, "Search all notes" widens it. Rows show the matched text with the words in bold and the folder name. No filters are offered |
+| Search | real (S2) | Titles and text in the current folder, "Search all notes" widens it. Cards show the matched text with the words in bold and the folder name. "No notes match." with Clear search. No filters are offered |
 | Settings | real (S1) | Two pages. General: notes folder with Choose another folder…, Open at login, quick note folder, text size, appearance, Trash days, Check-up (checks, Check again, Activity, Rebuild search). Shortcuts: Open Slate, Quick note, New note |
-| Main menu | real (S1) | While the window is open: Slate, File (New Note, Quick Note), Edit, Format (M2 editor commands), Note (Pin, Move to Trash), Go (previous and next note and folder, All Notes, folders `⌘1`…`⌘9`), View (sidebar), Window |
+| Main menu | real (S2) | While the window is open: Slate, File (New Note, New Folder, Quick Note), Edit, Format (M2 editor commands), Note (Pin, Move to Trash), Go (previous and next note and folder, All Notes, folders `⌘1`…`⌘9`), View (sidebar), Window |
 | Extension points | real, no UI | `slate://` and the `slate` CLI (`new`, `open`, `append`, `search`, and the parked `today`), Services → Add to Slate (a plain note in the quick note folder) |
 
 States: planned, placeholder, mock, real, partial (say what is missing).
@@ -137,6 +138,17 @@ Numbered. What, then why. A later session must not undo these without a new numb
 71. The footer stays until S2 (note count, save state, Quit, resize grip). The Format menu keeps the M2 editor commands without Code, Paste as Code and Toggle Comment until S3 replaces the editor.
 72. `VaultConfigRepository.ensureDefaults` writes only `spaces.json`. The writers for the example actions and the type files were removed from Data; they are in commit `545e0d6`.
 
+73. S2 sidebar keeps an "All notes" row above the folders. `UX.md` section 2 draws only folders, but "Search all notes" and old navigator state need a place to land, and Apple Notes has the same row.
+74. Deleting a folder: the quick note folder (`captureSpace`) cannot be deleted (menu item off, `VaultError.defaultFolder`). Notes at any depth move to depth 1 of the quick note folder with unique names. The folder is then removed when it holds no visible files, otherwise it goes to the macOS Trash with the other files in it (`FileVaultStore.removeFolder`, Foundation `trashItem`, tests pass their own closure). An archive pointer to the deleted folder moves to the quick note folder.
+75. Undo of a folder delete (`RestoreSpaceUseCase`) makes the folder again at its old place with its icon and colour and moves back every note that is still where the delete put it, to its exact old path (sub-folders too).
+76. `Space.color` is a `SpaceColor` (the eight names of `STORAGE-FORMAT.md` 7.1, unknown or missing means blue). New folders and folders found on disk get `folder.fill`; an old `folder` icon shows as `folder.fill`.
+77. A new folder starts as "New folder" (then "New folder 2", …) in an inline field with the name selected. Enter or leaving the field makes it; Esc cancels. A name that cannot be used keeps the field open and the toast says why.
+78. `Theme.base` and `Theme.surface` are own dynamic colours (light 0.955 / 1.0 white, dark 0.135 / 0.19 white). The system window and control background colours are too close on macOS 26 for cards to show. Every other colour stays a system colour.
+79. Accent buttons use `AccentButtonStyle` (own capsule in the accent colour), because `.borderedProminent` looks grey in a panel that is not the key window.
+80. The sort order is fixed to "date changed" with pinned notes first; the stored `list.sort` is no longer read. `UX.md` has no sort control.
+81. The window uses `.fullSizeContentView` with a transparent title bar; the sidebar title and, with the sidebar hidden, the list title leave 80 pt for the window buttons.
+82. The agent checks the look by rendering views offscreen with `NSHostingView.cacheDisplay` from a throwaway test (not committed). This found the colour problem of decision 78.
+
 ## Next steps
 
 1. S2 Folders and the soft look.
@@ -145,18 +157,16 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 ## Known gaps
 
+- S2: a text file dropped on the list does not make a note yet (`UX.md` section 6). Folders reorder with Move up and Move down, not by drag.
 - `FSEventsVaultWatcherIntegrationTests.externalEditArrivesAsAPathChange` failed once in a full run before S1 started (timing under load) and passes alone. Watch it.
 - The agent did not run the manual checks. A scripted click opens the panel but does not make Slate the active app, so scripted keystrokes go to the frontmost app (a few of them went to the Terminal during this session). The borderless panel also hides its content from the Accessibility API.
 - No shortcut for Move to Trash: `⌘⌫` would take the key from the editor text. No `⌘⇧M` move picker. Both are in the row menu.
-- No drag of a row onto a folder (C8 part). Moving works from the row menu.
-- No way to delete a folder.
 - Esc does not close the panel yet (`UX.md` section 6). The search field clears on Esc.
 - Capture (M4): the field does not take pasted images or files yet (`SPEC.md` 3.4). The agent did not test that the source app keeps the focus; scripted key presses do not reach the panel (first gap above).
 - Link chips (M4) are coloured text on a tinted background, without the SF Symbol from `links.json`.
 - The status chip and the other header chips are not reachable with Tab yet (keyboard pass, M7).
 - Search (M3): no progress bar or "Indexing 3,120 of 10,000" line during the first full scan (`UX.md` section 5). The list fills as the scan runs.
 - Search (M3): typing `#` offers tags only after one letter, so `#` alone at the start of a line stays a heading.
-- The list column uses `HSplitView` (240 to 400 pt); its width is not saved.
 - History (M5): no diff view and no preview of a version before Restore (Appendix B). The first snapshot of a large folder runs at launch in the background and can take seconds.
 - Quit waits up to 3 s for the save and the last snapshot; a slow push is cut off and runs at the next snapshot.
 - `.claude/skills/add-feature`, `add-use-case`, `build-and-run` and `update-docs` and the example in `.claude/rules/presentation.md` still show DevHub features.

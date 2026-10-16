@@ -33,7 +33,10 @@ package final class PresentationAssembly {
             config: ports.config,
             createSpace: useCases.createSpace,
             renameSpace: useCases.renameSpace,
+            deleteSpace: useCases.deleteSpace,
+            restoreSpace: useCases.restoreSpace,
             navigator: navigator,
+            toaster: toaster,
             activity: activity,
             events: events
         )

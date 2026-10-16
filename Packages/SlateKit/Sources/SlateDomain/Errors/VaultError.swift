@@ -5,6 +5,7 @@ package enum VaultError: LocalizedError, Hashable, Sendable {
     case alreadyExists(String)
     case notText(VaultPath)
     case invalidName(String)
+    case defaultFolder(String)
 
     package var errorDescription: String? {
         switch self {
@@ -16,6 +17,8 @@ package enum VaultError: LocalizedError, Hashable, Sendable {
             "\(path.rawValue) is not a UTF-8 text file. Open it in another app."
         case .invalidName(let name):
             "\"\(name)\" cannot be a folder name. Use letters, numbers and spaces."
+        case .defaultFolder(let name):
+            "\(name) keeps new and quick notes, so it cannot be deleted. Choose another folder for quick notes first."
         }
     }
 }

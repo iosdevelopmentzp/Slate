@@ -54,6 +54,10 @@ actor MockVaultFileStore: VaultFileStore {
         folders.insert(name)
     }
 
+    func removeFolder(_ name: SpaceName) {
+        folders.remove(name)
+    }
+
     func moveFolder(from source: SpaceName, to target: SpaceName) {
         folders.remove(source)
         folders.insert(target)

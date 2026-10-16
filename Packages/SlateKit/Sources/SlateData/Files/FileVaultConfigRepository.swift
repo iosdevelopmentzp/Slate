@@ -38,7 +38,7 @@ struct FileVaultConfigRepository: VaultConfigRepository {
         let present = Set(folders)
         var spaces = configured.filter { present.contains($0.folder) }
         let listed = Set(spaces.map(\.folder))
-        spaces += folders.filter { listed.contains($0) == false }.map { Space(folder: $0, icon: "folder", defaultType: NoteType.defaultName) }
+        spaces += folders.filter { listed.contains($0) == false }.map { Space(folder: $0, icon: "folder.fill", defaultType: NoteType.defaultName) }
         return SpacesConfig(
             spaces: spaces,
             captureSpace: (stored?["captureSpace"] as? String).map(SpaceName.init(rawValue:)) ?? SpacesConfig.defaultSpace,
@@ -58,7 +58,8 @@ struct FileVaultConfigRepository: VaultConfigRepository {
         object["spaces"] = config.spaces.map { space -> [String: Any] in
             var entry = previous[space.folder.rawValue] ?? [:]
             entry["folder"] = space.folder.rawValue
-            entry["icon"] = space.icon ?? "folder"
+            entry["icon"] = space.icon ?? "folder.fill"
+            entry["color"] = space.color.rawValue
             entry["defaultType"] = space.defaultType ?? NoteType.defaultName
             return entry
         }
@@ -146,7 +147,8 @@ struct FileVaultConfigRepository: VaultConfigRepository {
 
     private static func space(from entry: [String: Any]) -> Space? {
         guard let folder = entry["folder"] as? String, folder.isEmpty == false else { return nil }
-        return Space(folder: SpaceName(rawValue: folder), icon: entry["icon"] as? String, defaultType: entry["defaultType"] as? String)
+        let color = (entry["color"] as? String).flatMap(SpaceColor.init(rawValue:)) ?? .blue
+        return Space(folder: SpaceName(rawValue: folder), icon: entry["icon"] as? String, color: color, defaultType: entry["defaultType"] as? String)
     }
 
     private static func type(from object: [String: Any]) -> NoteType? {

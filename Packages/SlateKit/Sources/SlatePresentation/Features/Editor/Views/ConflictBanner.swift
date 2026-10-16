@@ -18,9 +18,11 @@ struct ConflictBanner: View {
                 .help("Keeps your text as a new note and shows the version on disk")
         }
         .controlSize(.small)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Tint.orange.color.opacity(0.14))
+        .background(Tint.orange.color.opacity(0.14), in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
     }
 }
 

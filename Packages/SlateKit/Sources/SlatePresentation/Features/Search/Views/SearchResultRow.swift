@@ -12,7 +12,7 @@ struct SearchResultRow: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(model.title)
-                    .font(.body)
+                    .font(.body.weight(.semibold))
                     .lineLimit(1)
                     .truncationMode(.tail)
                 Spacer(minLength: 4)
@@ -30,33 +30,31 @@ struct SearchResultRow: View {
             if let folder = model.folder {
                 Label(folder, systemImage: "folder")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.tertiary)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(Theme.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(background, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-        .contentShape(Rectangle())
+        .softPill(isSelected: isSelected, isHovered: isHovered, radius: Theme.cardRadius, base: Theme.surface)
+        .contentShape(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
         .onHover { isHovered = $0 }
-    }
-
-    private var background: Color {
-        if isSelected { return Theme.selection.opacity(0.18) }
-        return isHovered ? Theme.hover : .clear
+        .draggable(NoteDragPayload.text(for: model.id))
+        .accessibilityElement(children: .combine)
     }
 }
 
 #Preview("Light") {
     SearchResultRow(model: .preview, isSelected: false)
         .frame(width: 320)
-        .padding(8)
+        .padding(12)
+        .background(Theme.base)
         .preferredColorScheme(.light)
 }
 
 #Preview("Dark") {
     SearchResultRow(model: .preview, isSelected: true)
         .frame(width: 320)
-        .padding(8)
+        .padding(12)
+        .background(Theme.base)
         .preferredColorScheme(.dark)
 }

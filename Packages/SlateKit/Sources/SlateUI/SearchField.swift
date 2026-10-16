@@ -26,16 +26,13 @@ package struct SearchField: View {
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Clear search")
             }
         }
-        .font(.callout)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 5)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .strokeBorder(Theme.border)
-        )
+        .font(.body)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.pillRadius, style: .continuous))
     }
 
     @ViewBuilder
