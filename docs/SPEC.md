@@ -17,6 +17,26 @@ Written for an AI coding agent and for the owner. The agent reads this file, `ST
 7. **Nothing project-specific.** The app and the repository stay anonymous: no real company, product, host, ticket prefix or person (principle 10, ADR 0006). Examples use `ABC-123` and `example.com` hosts.
 8. **UX rules.** `UX.md` is the rule book for every screen: native macOS look, three visible concepts, keyboard first, no modal dialogs. Read it before any view.
 
+## 0.9 Scope revision 1: v1 is notes in folders (2026-10-16)
+
+The owner tried the full build (M0 to M7) and asked for a simpler first version. ADR 0007 fixes the scope, ADR 0008 changes the editor, `UX.md` revision 2 changes the look. This section wins over the rest of this document until a later revision widens the scope again.
+
+| In v1 | Parked (code stays in Domain and Data, nothing visible) |
+|---|---|
+| Folders: create, rename, delete, reorder, colour, icon (C1 without kinds) | Note kinds, templates, Insert Template (C2, C11) |
+| Notes: new, edit, pin, move, duplicate, Trash with restore and 30-day purge (C5, C7, C8) | Tasks, tickets, branches, merge requests, status, `⌘⇧D` (C3, G1, G5, G7) |
+| Rich text editor with a format bar: styles, bold, italic, strikethrough, lists, checklist, quote, link, image, divider; images in the text (ADR 0008) | Markdown marks on screen, code highlighting, Paste as code bar (D1, D3 parts) |
+| Images and files by paste, drag and the Image button; screenshot `⌘⇧S` (B4, D4) | Tags, `#` completion, tag chips (C4) |
+| Search over titles and text in the current folder or all notes (E1 without filters) | Search filters, saved searches, Open TODOs, the palette (E2, C9, E3, A7) |
+| Quick note from the hotkey into the quick-note folder (B1) | Today, daily notes, `⌥Enter`, `⌘[` `⌘]` (B3, C10) |
+| Panel and window with the same three columns; `⌘0` sidebar (A2, A3) | Float on Top, note windows (A6) |
+| Autosave, journal, "Changed on disk" banner, versions with Restore (D6, F2, F5 quiet) | History page in Settings, push state in a footer, Activity in a footer (shown only from Check-up) |
+| Settings: General and Shortcuts only (H1 reduced, H4 as one "Back up to" field) | Links page, Jira token, link patterns and chips (H2, H5, G1) |
+| `slate` CLI, `slate://`, Services entry keep working without UI (G2, G3, B6) | Actions, export menu, Copy for Slack (G4, F6) |
+| Welcome note on first launch; one default folder `Notes` | Six default folders, `_templates/`, `.slate/types/`, `views.json`, `links.json`, `actions/` |
+
+Scenarios for v1: S2 without the chips, S5, S6 without filters, S11, S12. The others wait with their features.
+
 ---
 
 ## 1. What Slate is

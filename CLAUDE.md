@@ -54,7 +54,8 @@ Modules, one direction: `Composition → Presentation → Domain ← Data`; Pres
 ## Rules that apply from day one
 
 - The storage format in `docs/STORAGE-FORMAT.md` is a contract shared with other tools (Obsidian, the CLI, scripts). Change it only with a new ADR in `docs/adr/`.
-- Every screen follows `docs/UX.md`: native look, three visible concepts (Folders, Notes, Tags), keyboard first, no modal dialogs, plain words from its section 7.
+- Every screen follows `docs/UX.md` revision 2: native but soft, rounded, two visible concepts (Folders, Notes), keyboard first, no modal dialogs, plain words from its section 7.
+- v1 scope is `SPEC.md` section 0.9 (ADR 0007). A parked feature never appears in the UI. The editor is rich text with Markdown files (ADR 0008); no Markdown marks on screen.
 - No comments in code (`check-layers.sh` fails on a comment line; `// MARK` is allowed). Names and small functions carry the meaning.
 - Swift conventions as DevHub: `package` across modules, `guard` for early exit, `== false` instead of `!`, `[weak self]` closures start with `guard let self else { return }`, one type per file, block indentation for multi-line calls.
 - Plain English in documentation, UI text, commit messages and the changelog: short sentences, common words, no idioms.

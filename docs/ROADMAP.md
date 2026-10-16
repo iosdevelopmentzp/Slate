@@ -18,7 +18,7 @@ Feature IDs refer to `SPEC.md` section 4. P0 is M0 to M5. If time runs out, M0 t
 | M5 | **Safety and history** (done 2026-10-16, manual checks open) | F2 (conflict banner), F4 (purge), D6 (journal), F5, H4 | S11 and S12 pass; kill the app while typing and the text survives; a snapshot appears after an edit and a push reaches a test remote; no `.git` in the vault; `ConflictPolicyTests`, `FileTrashRepositoryTests`, `GitHistoryRepositoryIntegrationTests` pass |
 | M6 | **Extension points** (done 2026-10-16, manual checks open) | G2, G3, G4, B6, C9, E3, E4, A7, F6 | S10 passes; `open "slate://new?title=Hi"` creates and shows a note; Services → Add to Slate works from Safari; Open TODOs toggles an item in its file; `URLCommandParserTests`, CLI tests over a temporary vault pass |
 | M7 | **Polish** (done 2026-10-16, manual checks open) | A6, D8, D9, G5, H3, H5, Doctor details, dark mode pass, keyboard pass (every item of the keyboard map) | Every row of `SPEC.md` section 10 works; a floating note stays above Xcode; Jira details show when a token is set and the key only when offline |
-| M8 | **Ideas** | A8, B8, B9, C12, D10, D11, E5, F3, F7, G6, G7, G8 | Each one lands as its own decision in `docs/STATUS.md` |
+| M8 | **Ideas** (parked by ADR 0007) | A8, B8, B9, C12, D10, D11, E5, F3, F7, G6, G7, G8 | Each one lands as its own decision in `docs/STATUS.md` |
 
 ## Rules for the agent during the build
 
@@ -29,3 +29,14 @@ Feature IDs refer to `SPEC.md` section 4. P0 is M0 to M5. If time runs out, M0 t
 - A fixture vault lives in `SlateTestSupport/VaultFixture` and is written to a temporary folder by tests; the 5,000-line editor fixture is a resource of `SlateEditorTests`.
 - Every milestone updates `CLAUDE.md` when a new script, skill or rule appears.
 - Decisions that must not be undone go to `docs/STATUS.md` under "Decisions" with the ADR number when there is one.
+
+## Phase 2: the simple v1 (ADR 0007, ADR 0008, `UX.md` revision 2)
+
+Starts from the merged M0 to M7 code. Same rules: build and tests clean, changelog, status, a commit per finished feature, never a broken repository. Read `SPEC.md` section 0.9, ADR 0007, ADR 0008 and `UX.md` in full before S1.
+
+| # | Milestone | Scope | Done when |
+|---|---|---|---|
+| S1 | **Simplify** | Remove every parked feature from every surface (ADR 0007): menus, status item menu, capture field, sidebar, list rows, editor header, palette, Settings pages, first-launch bootstrap (one folder `Notes`, no templates, types, views, links, actions). Delete the Presentation code that served only parked features; keep Domain and Data and their tests. Hotkeys: Open Slate, Quick note, New note only | The app shows Folders, Notes, search, Trash, Settings with two pages; `git grep` finds no parked word in `SlatePresentation` (`ticket`, `task`, `daily`, `snippet`, `meeting`, `tag`, `template`, `action`, `palette`, `todo`); build and tests clean; `STATUS.md` lists what was removed and the commit that still has it |
+| S2 | **Folders and the soft look** | Folders in panel and window: create (`⇧⌘N`), inline rename, delete with inline confirm and notes moved to the default folder, reorder, colour and icon in `spaces.json`; three columns in both surfaces; cards, pills, rounded corners, spacing and empty states per `UX.md` sections 2 to 5; drag a card onto a folder | Every item of `UX.md` section 9 holds for the sidebar, the list and the empty states; a folder made in the app appears in Finder; a folder made in Finder appears in the sidebar; light and dark previews |
+| S3 | **Rich text editor** | `MarkdownRichText.read` and `write` with the subset of `STORAGE-FORMAT.md` section 11 and raw blocks; the format bar; every command and shortcut of `UX.md` section 8; list behaviour; images as blocks by paste, drag, the Image button and `⌘⇧S`; Quick Look; undo for every command; "Saved" indicator; the round-trip tests over a fixture set that includes files from Obsidian | Open a note, press `⇧⌘T`, type, press `⌘B`, add a checklist and an image, close: the file holds exactly the subset Markdown; reopen: it looks the same; a file with a table keeps its table after a save; typing on the 5,000-line fixture has no visible delay |
+| S4 | **Polish and the owner's pass** | The quick note field with the folder menu; Settings per `UX.md` section 2; Check-up; toasts with Undo for Trash and Move; keyboard pass over `UX.md` section 8; `README.md` with screenshots the owner takes; the manual checks of S1 to S3 written as a list in `STATUS.md` | The owner runs the list and every item passes or is a numbered gap in `STATUS.md` |

@@ -4,7 +4,9 @@ Last updated: 2026-10-16
 
 ## Stage
 
-M7 done (polish). Milestones M0 to M7 are built; the owner's manual checks of M1 to M7 are still open. M8 (ideas) is not started. On first launch Slate asks for the notes folder (default `~/Documents/Slate`) and prepares it: six folders, `_attachments/`, `_templates/`, `.slate/` with `spaces.json` and the five note types, and a welcome note. Notes are real Markdown files with the header of `STORAGE-FORMAT.md` section 2. The list is built by a full scan at launch and kept current by the FSEvents watcher. 222 tests in 57 suites pass. Next: the owner's manual checks (below), then merge `m7-polish` (it holds every milestone branch before it), then M8 ideas one by one.
+M0 to M7 built and merged into `main` (commit `aad80a0`). The owner tried the app and asked for a simpler, softer first version: **Phase 2, milestones S1 to S4 of `docs/ROADMAP.md`** (ADR 0007 scope, ADR 0008 rich text editor, `UX.md` revision 2). Next: S1.
+
+The Screens table below describes the M7 state and is the inventory for S1: everything not in `SPEC.md` section 0.9 leaves the UI.
 
 ## Screens
 
@@ -106,74 +108,17 @@ Numbered. What, then why. A later session must not undo these without a new numb
 29. The panel hides for a screenshot through `PanelVisibility` (two closures that `AppWindows` sets); the window stays. Quick Look runs through the `WorkspaceOpening` port with a `QLPreviewPanel` data source in `SlateData/System`.
 30. M2 is two commits: the editor module (D1, D2, D3, D5 styling), then attachments, paste and screenshots (D4, B4, B5), because the handlers for D4, B4 and B5 share one change to `EditorStore`.
 
+14. Phase 2 scope (owner, 2026-10-16): v1 shows Folders and Notes only. Parked features keep their Domain and Data code and tests; their Presentation code is removed. ADR 0007.
+15. The editor is rich text on TextKit 2; Markdown stays the file format through `MarkdownRichText.read` and `write` with raw blocks for anything outside the subset of `STORAGE-FORMAT.md` section 11. ADR 0008 replaces ADR 0005.
+16. The look follows `UX.md` revision 2: rounded cards and pills, no divider lines, tinted folder icons, a format bar, friendly empty states.
+17. First launch creates one folder, `Notes`, and no templates, types, views, links or actions. Existing vaults keep working.
+
 ## Next steps
 
-1. Owner: run the M1 manual checks (below). Merge the branch `m1-vault-and-notes` when they pass.
-2. Owner: run the M2 to M7 manual checks (below).
-3. M8 ideas (`ROADMAP.md`): each one lands as its own decision here.
-
-M7 manual checks for the owner:
-
-1. Open a checklist note, `…` → Float on Top, switch to Xcode: the note stays above it; check a box; `⌘W` closes it.
-2. Open the window: the menu bar shows Slate, File, Edit, Format, Note, Go, View, Window with the shortcuts. Try every row of `SPEC.md` section 10 once.
-3. In a note: `⌥↑`, `⌘D`, `⌘F` (find bar), the outline button; in a code block `⌘/`; type ```` ```swift ```` and Enter.
-4. Settings → Links: email and token, Test. A task with that ticket shows its title and status under the chips; with Wi-Fi off it shows the key only.
-5. Settings → General → Daily notes off: `⌥⌘T` shows "Daily notes are off".
-6. Dark mode: switch the system appearance and look at the panel, the window, the capture field, Settings and a note with code, quotes and checkboxes.
-
-M6 manual checks for the owner:
-
-1. Run `Scripts/install.sh`. In Terminal: `open "slate://new?title=Hi"`: the panel shows the new note.
-2. Open a task note in Slate, then run `slate append --ticket ABC-2324 --section Findings "The delegate is strong."`: the text appears in the open note within a second (S10).
-3. Select text in Safari, Services → Add to Slate: a note appears in Inbox. If the entry is missing, log out and in once.
-4. `⌘K`, type `open todos`, Enter: the list of open checkboxes; check one and open its note.
-5. In a task with a branch, the `…` menu → Copy the branch name. Copy for Slack turns `**bold**` into `*bold*`.
-
-M5 manual checks for the owner:
-
-1. Type in a note and run `pkill -9 Slate` within a second. Start Slate: the text is in the file, or the note offers "Unsaved text … was found" with Restore.
-2. Type in a note and change the same file in TextEdit. The banner offers Keep mine, Take theirs and Open both; Open both makes `<Title> (conflict …)` with your text (S11).
-3. Settings → History → Save a version now. The clock button next to the title lists the version; change the text, save another version, Restore the first one (S12). No `.git` folder appears in the notes folder.
-4. Set a remote (an empty private repository) and save a version: the footer says "pushed".
-5. Trash: Delete now asks inline and moves the file to the macOS Trash.
-
-M4 manual checks for the owner:
-
-1. In Xcode, press `⌃⌥Space`, type two lines, press Enter. Xcode keeps the focus; the note is in Inbox with the first line as its title (S5).
-2. `⌥⌘N` opens the panel. `⌘⇧T`, paste `ABC-2324 Profile screen leaks memory`, Enter: a task in Tasks with the ticket, the branch `feature/ABC-2324-profile-screen-leaks-memory` and the status To do (S1).
-3. Settings → Links: set a tracker address and save. `.slate/links.json` appears; `ABC-2324` in a note gets a tinted background and `⌘`-click opens the tracker. Edit `links.json` in another editor: the change applies without a restart.
-4. `⌘⇧D` in the task: the status chip says Done and the task moves to the folded Done group (S7).
-5. `⌥⌘T`: today's note opens; yesterday's open checkboxes are under "Carried over" (S4, Today part). `⌘[` goes to yesterday.
-6. Settings → Shortcuts: change the quick note shortcut and try it. Settings → General: Open at login, Doctor, Rebuild search.
-
-M3 manual checks for the owner:
-
-1. Run `Scripts/generate-vault.sh /tmp/slate-10k 10000`, then `SLATE_PERF_VAULT=/tmp/slate-10k swift test --package-path Packages/SlateKit --filter IndexPerformanceTests`. The line `index timing:` shows the full scan (budget 20 s) and the search (budget 50 ms).
-2. In the panel, type two words of an old note in the search field. Results show with the words in bold; Enter opens the note at the first match.
-3. Type `type:task status:active` and `tag:` with one of your tags.
-4. In a note, type `[[` and pick a note from the list; `⌘`-click the link. Type `[[A new name]]` and `⌘`-click it: the note is made.
-5. Rename a note that three other notes link to. The toast says three notes were updated; open them and check the links.
-6. Type `#` and a letter: the list offers your tags. In the window, the sidebar lists the tags with counts.
-
-M2 manual checks for the owner:
-
-1. Open a note and type `# Title`, `**bold**`, a list, `- [ ] task` and a code block with ```` ```swift ````. The marks stay visible in a lighter colour and the code is coloured.
-2. Click a checkbox. The file in Finder has `[x]`.
-3. Press `⌘⇧S`, drag over a region. The panel hides and returns; the image shows in the note and the file is in `_attachments/`. The first time, macOS asks for Screen Recording: allow Slate in System Settings → Privacy & Security → Screen Recording, restart Slate, try again. Note what happens after a rebuild in `docs/STATUS.md` (`PLAYBOOK.md` section 11).
-4. Copy a stack trace and press `⌘⇧V`: a code block. Paste it with `⌘V`: the bar asks; Enter makes a code block.
-5. Hover a code block and press Copy.
-6. Copy an image in Preview and paste it into a note.
-
-M1 manual checks for the owner:
-
-1. Run `Scripts/run.sh`. The first launch window appears. Press Start. `~/Documents/Slate` now has the six folders and `Inbox/Welcome to Slate.md`.
-2. Open the panel. Press `⌘N`, type a title, press Enter, type a line. Within one second the file is in Finder with a header (`id`, `title`, `type`, `created`, `updated`).
-3. Change the title in the title field and press Enter. The file in Finder has the new name.
-4. In Finder, make a new `.md` file in `Inbox`. It appears in the list. Edit it in TextEdit and save: the open note reloads.
-5. Type in a note, and at the same time change the same file in TextEdit. The "Changed on disk" banner appears; Keep mine and Take theirs both work.
-6. Pin, Move to, Duplicate, Archive and Move to Trash from the row menu; Undo in the toast; Restore from the Trash.
-7. In the window: New folder, Rename, Move up and Icon on a folder. Make a folder in Finder: it appears in the sidebar.
-8. Type, then quit with `⌘Q` within half a second: the text is in the file.
+1. S1 Simplify (`docs/ROADMAP.md`, Phase 2).
+2. S2 Folders and the soft look.
+3. S3 Rich text editor.
+4. S4 Polish and the owner's pass.
 
 ## Known gaps
 

@@ -21,14 +21,14 @@ One local Swift package `Packages/SlateKit`, tools 6.2, Swift 6 language mode. T
 | `SlateData` | Domain, GRDB, swift-markdown | nonisolated | live implementations of the ports, parsers, `ShellRunner`, `Ports.live(…)` |
 | `SlateMocks` | Domain | nonisolated | `Mock*` ports, `MockVault` sample data, `InMemoryKeyValueStore`, `Ports.mock()` |
 | `SlateUI` | nothing in the package | MainActor | shared SwiftUI blocks, `Theme`, `Tint`, formatters, hints |
-| `SlateEditor` | nothing in the package | MainActor | the Markdown text view on TextKit 2, highlighters, list commands, paste detection, image and checkbox rendering (section 6) |
+| `SlateEditor` | swift-markdown (under `Markdown/` only) | MainActor | the rich text view on TextKit 2, the Markdown reader and writer, format commands, list behaviour, image blocks (section 6, ADR 0008) |
 | `SlatePresentation` | Domain, UI, Editor, Mocks, KeyboardShortcuts | MainActor | stores, row models and mappers, views, events, `PresentationAssembly`, `AppWindows` |
 | `SlateComposition` | Domain, Data, Mocks, Presentation | MainActor | `AppContainer` (the only `public` type), URL scheme handling, Services provider, launch at login |
 | `SlateTestSupport` | Domain | nonisolated | `Spy<Port>` for every port, `TemporaryDirectory`, `waitUntil`, fixtures |
 | `slate` (executable, target `SlateCLI`) | Domain, Data, swift-argument-parser | nonisolated | the command line tool (section 9.3) |
 
 - `SlatePresentation` imports `SlateMocks` in one file only: `Shared/PresentationAssembly+Preview.swift`.
-- `SlateEditor` imports AppKit, SwiftUI, Foundation and Observation only. It knows nothing about notes, vaults or the index. This keeps the riskiest code replaceable.
+- `SlateEditor` imports AppKit, SwiftUI, Foundation, Observation and, only under `Markdown/`, the `Markdown` product of swift-markdown. It knows nothing about notes, vaults or the index. This keeps the riskiest code replaceable.
 - The app target `Slate` is `Slate/SlateApp.swift` plus `Assets.xcassets` and `Slate.entitlements` (empty). It links the product `SlateComposition`.
 
 ### 1.1 `Package.swift`
@@ -66,7 +66,7 @@ let package = Package(
         ], swiftSettings: shared),
         .target(name: "SlateMocks", dependencies: ["SlateDomain"], swiftSettings: shared),
         .target(name: "SlateUI", swiftSettings: mainActor),
-        .target(name: "SlateEditor", swiftSettings: mainActor),
+        .target(name: "SlateEditor", dependencies: [.product(name: "Markdown", package: "swift-markdown")], swiftSettings: mainActor),
         .target(name: "SlatePresentation", dependencies: [
             "SlateDomain", "SlateUI", "SlateEditor", "SlateMocks",
             .product(name: "KeyboardShortcuts", package: "KeyboardShortcuts"),
@@ -303,59 +303,55 @@ A one-step action (search, list, load) is not a use case: the store calls the po
 
 ---
 
-## 6. The editor module
+## 6. The editor module (revision 2, ADR 0008)
 
 ### 6.1 Contract
 
 ```swift
-package struct MarkdownEditorView: NSViewRepresentable {
+package struct RichTextEditorView: NSViewRepresentable {
     package init(
-        text: Binding<String>,
-        selection: Binding<NSRange>,
-        configuration: EditorConfiguration,
-        handlers: EditorHandlers
+        document: Binding<RichTextDocument>,     // wraps an NSAttributedString with the slate.* attributes
+        configuration: EditorConfiguration,      // fonts and sizes of the fixed styles, text size scale, colours
+        handlers: EditorHandlers,
+        commands: EditorCommandSink               // the host receives an EditorCommands object once the view exists
     )
 }
 
-package struct EditorConfiguration: Equatable {
-    package var proseFont: NSFont
-    package var codeFont: NSFont
-    package var lineHeightMultiple: CGFloat
-    package var colors: EditorColors          // plain NSColor values, filled by Presentation from Theme
-    package var linkPatterns: [EditorLinkPattern]   // id, regex string, label template, icon name
-    package var imageMaxHeight: CGFloat
+package enum MarkdownRichText {
+    package static func read(_ markdown: String, configuration: EditorConfiguration) -> RichTextDocument
+    package static func write(_ document: RichTextDocument) -> String
 }
 
 package struct EditorHandlers {
-    package var didEndEditing: () -> Void
-    package var resolveImage: (String) -> URL?               // relative link → file URL, nil hides the image
-    package var openLink: (EditorLink) -> Void               // url, wiki target, pattern id + match
-    package var attachment: (String, AttachmentAction) -> Void   // quickLook, open, reveal, copyImage
-    package var pasteImage: (Data, String) -> Void           // bytes, file extension; the host answers with an insertion
-    package var pasteFiles: ([URL]) -> Void
-    package var pasteURL: (String) -> String?                // nil → insert the plain URL
-    package var requestScreenshot: (ScreenshotKind) -> Void  // the host runs the use case and answers with an insertion
-    package var completions: (EditorCompletionKind, String) -> [String]   // note names after [[, tags after #
+    package var resolveImage: (String) -> URL?            // relative link → file URL
+    package var importImage: (Data, String) -> String?     // bytes, extension → relative link to insert
+    package var importFiles: ([URL]) -> [String]           // dropped files → relative links
+    package var openLink: (URL) -> Void
+    package var requestScreenshot: () -> Void              // host runs the use case, then calls commands.insertImage
+    package var didChange: () -> Void
 }
 
-package struct EditorInsertion: Equatable { let token: Int; let markdown: String }
+package final class EditorCommands {
+    package func apply(_ style: ParagraphStyleKind)      // title, heading, subheading, body, monospaced, quote
+    package func toggle(_ list: ListKind)                // bullet, numbered, checklist
+    package func toggle(_ inline: InlineStyle)           // bold, italic, strikethrough, code
+    package func insertLink(url: URL, text: String?)
+    package func insertImage(relativeLink: String)
+    package func insertDivider()
+    package func indent(_ delta: Int)
+    package var currentStyles: EditorStyleState { get }   // for the format bar: paragraph kind, list kind, inline flags
+}
 ```
-
-`MarkdownEditorView(text:configuration:focus:insertion:handlers:)`. The host answers an asynchronous request (a pasted image, a screenshot) by passing a new `EditorInsertion`; the editor inserts its Markdown on its own line once per token. `EditorFocusRequest` works the same way for the caret. Completions use the system completion list of `NSTextView`: the editor starts it after `[[` or `#` and a letter, `rangeForUserCompletion` covers the typed part, and a finished note name gets `]]`.
-
-The editor owns the `NSTextView`, the styling, the list commands, paste classification and the rendering of images, checkboxes and chips. It never touches a file, the index or the vault. `text` is the full source; the host (EditorStore) debounces and saves.
 
 ### 6.2 Rules
 
-- TextKit 2 only. Never read `textView.layoutManager`: that call switches the view to TextKit 1 for good (`PLAYBOOK.md` section 9).
-- Styling is display-only through `NSTextContentStorageDelegate.textContentStorage(_:textParagraphWith:)`: the source text keeps plain attributes; each paragraph gets its display attributes when it is laid out. Fence state (inside a code block or not, and its language) comes from `FenceTracker`, a line-state cache updated in `textStorage(_:didProcessEditing:range:changeInLength:)` for the edited lines and every line after a fence change.
-- Images and checkboxes draw in `NSTextLayoutFragment` subclasses supplied by `NSTextLayoutManagerDelegate.textLayoutManager(_:textLayoutFragmentFor:in:)`: an image line gets extra height and draws the image below the text; a checkbox line draws the glyph over the `[ ]` characters. Hit testing goes through `textLayoutManager.textLayoutFragment(for:)` and the fragment's own bounds. Apple's WWDC21 "Meet TextKit 2" sample has the shape of this code.
-- `CodeHighlighter` is a regex pass per language over one paragraph plus the fence language. No JavaScript, no external highlighter.
-- A keystroke restyles only the edited paragraphs and, after a fence change, the paragraphs below until the next fence state agrees with the cache. Measure with the 5,000-line fixture in `SlateEditorTests/Fixtures/`.
-- Paste: `PasteClassifier` is a pure function over the pasteboard content types and text; `PasteHandler` calls the matching host handler and inserts the returned Markdown. `⌘⇧V` forces code.
-- Previews: `MarkdownEditorView` has a `#Preview` with a long fixture; every rendering piece has one too.
-
----
+- TextKit 2 only; never read `textView.layoutManager`. Rich text mode (`isRichText = true`), no font panel, no automatic substitutions, undo on.
+- `MarkdownRichText` lives under `SlateEditor/Markdown/`: `MarkdownReader` (swift-markdown AST → attributed string with `slate.block`, `slate.inline`, `.link`, image attachments), `MarkdownWriter` (attributed string → the subset of `STORAGE-FORMAT.md` section 11), `RawBlock` for anything else. Both pure, both tested with a fixture set; `write(read(x)) == x` for files Slate wrote.
+- Commands act through `shouldChangeText(in:replacementString:)` / `didChangeText()` so undo works, and update typing attributes so the next character follows the style.
+- Paragraph styling: fonts, spacing and the list marker come from `slate.block` through the paragraph styler (`NSTextContentStorageDelegate`), so the attribute is the single truth and the Markdown writer reads it back.
+- List markers (bullet, number, checklist box) are drawn by a layout fragment subclass or as text attachments at the paragraph start; a click on a checklist box toggles the block's `done` flag.
+- Images: one paragraph per image, an `NSTextAttachment` with a cell that scales to the text width (max 360 pt high); the relative link lives in `slate.block = image(path)`.
+- Performance: style lazily per paragraph; an edit restyles the edited paragraphs only. The 5,000-line fixture must type without visible delay.
 
 ## 7. Presentation
 
@@ -502,7 +498,7 @@ Must exist by the end of the milestone that introduces the type (`ROADMAP.md`):
 
 - `SlateDomain` imports only `Foundation` (and `CryptoKit` for the hash).
 - `SlateData`: no `SwiftUI`; `AppKit` only under `System/`; `Process` only in `Shell/ShellRunner.swift`; `NSFileCoordinator` only under `Files/`; `UserDefaults` only in `Persistence/UserDefaultsKeyValueStore.swift`; `import GRDB` only under `Index/`; `import Markdown` only under `Index/` and `Export/`.
-- `SlateEditor`: no import of any package module; `NSPasteboard` only under `Paste/`; no `layoutManager` token anywhere.
+- `SlateEditor`: no import of any package module; `import Markdown` only under `Markdown/`; `NSPasteboard` only under `Paste/`; no `layoutManager` token anywhere.
 - `SlatePresentation`: no `GRDB`, no `FileManager` writes, no `Process`, no `NSPasteboard` outside `Shared/PasteboardWriter.swift`; `import SlateMocks` only in `PresentationAssembly+Preview.swift`.
 - Everywhere: no `.shared` except Apple singletons listed in `layer-exceptions.txt`, no comment lines (`//` not followed by `MARK`), one top-level type per file, no hex colours outside `Theme.swift`.
 

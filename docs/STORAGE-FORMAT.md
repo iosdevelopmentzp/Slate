@@ -264,18 +264,15 @@ All files are JSON with a top-level `"version": 1`. Unknown keys are ignored and
 {
   "version": 1,
   "spaces": [
-    { "folder": "Inbox",    "icon": "tray",            "defaultType": "note" },
-    { "folder": "Tasks",    "icon": "checkmark.circle", "defaultType": "task" },
-    { "folder": "Notes",    "icon": "note.text",        "defaultType": "note" },
-    { "folder": "Daily",    "icon": "calendar",         "defaultType": "daily" },
-    { "folder": "Snippets", "icon": "chevron.left.forwardslash.chevron.right", "defaultType": "snippet" },
-    { "folder": "Archive",  "icon": "archivebox",       "defaultType": "note" }
+    { "folder": "Notes", "icon": "folder.fill", "color": "blue", "defaultType": "note" }
   ],
-  "captureSpace": "Inbox",
-  "archiveSpace": "Archive",
+  "captureSpace": "Notes",
+  "archiveSpace": "Notes",
   "dailySpace": "Daily"
 }
 ```
+
+`color` is one of `red`, `orange`, `yellow`, `green`, `teal`, `blue`, `purple`, `pink`; missing means `blue`. A folder on disk that is missing from the list is appended with `folder.fill`, `blue`, `note`. Deleting a folder in the app moves its notes to `captureSpace` and removes the entry.
 
 ### 7.2 `links.json`
 
@@ -436,3 +433,28 @@ Rules:
 - Obsidian opens the vault as is. Wikilinks by stem, `_attachments/` relative links, YAML header, task lists all work there. Obsidian's own `.obsidian/` folder is ignored by Slate.
 - iA Writer, VS Code, `grep`, `rg` and Claude Code read and write the files directly; the watcher picks up the change.
 - Files written by other tools without an `id` get one on their first save in Slate. Until then they are identified by path in the index.
+
+---
+
+## 11. The editor's Markdown subset (ADR 0008)
+
+The rich text editor reads any Markdown but writes only this subset. A construct outside it is kept as a raw block and written back unchanged.
+
+| On screen | In the file |
+|---|---|
+| Title | `# text` |
+| Heading | `## text` |
+| Subheading | `### text` |
+| Body paragraph | the text; paragraphs separated by one blank line |
+| Monospaced block | a fenced block: ```` ``` ```` (the original language word kept when the file had one) |
+| Quote | `> ` before each line |
+| Bulleted list, levels 0 to 2 | `- item`, nested with two spaces per level |
+| Numbered list, levels 0 to 2 | `1. item`, renumbered on save |
+| Checklist | `- [ ] item`, `- [x] item` |
+| Image block | `![](../_attachments/<file>)` on its own line, alt text kept when present |
+| Divider | `---` |
+| Bold, italic, strikethrough, inline code | `**x**`, `*x*`, `~~x~~`, `` `x` `` |
+| Link | `[text](url)`; a wikilink `[[Name]]` in a file is shown as a link and written back as a wikilink |
+| Raw block | the source lines exactly as read |
+
+Rules: LF line endings, one trailing newline, no trailing spaces, the header untouched (section 2). A file written by Slate reads back to the same attributed text and writes back byte for byte; a test guards this over the fixture set.
