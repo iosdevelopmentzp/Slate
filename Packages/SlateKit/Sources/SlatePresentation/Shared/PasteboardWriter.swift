@@ -9,4 +9,10 @@ enum PasteboardWriter {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(value, forType: .string)
     }
+
+    static func writeImage(at url: URL) {
+        guard let image = NSImage(contentsOf: url) else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.writeObjects([image])
+    }
 }

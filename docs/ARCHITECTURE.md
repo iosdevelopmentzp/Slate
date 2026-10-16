@@ -219,12 +219,12 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 | `SearchIndex` | M1: `summaries(space:)`, `summary(id:)`, `fileStates() -> [VaultPath: IndexedFileState]`, `upsert(IndexedNote)`, `updateState(_:for:)`, `remove(path:)`. M3 adds `byTicket(_:)`, `byStem(_:)`, `search(SearchQuery, limit:)`, `linksTo(stem:)`, `todos(open:)`, `tags()`, `reset()` | M1: `MemorySearchIndex` (an actor, rebuilt by a full scan at launch). M3: `GRDBSearchIndex` |
 | `IndexedNoteBuilding` | `build(NoteDocument) -> IndexedNote` (the document carries its meta and hash; uses swift-markdown) | `IndexedNoteBuilder` |
 | `VaultWatching` | `changes() -> AsyncStream<VaultChange>` | `FSEventsVaultWatcher` |
-| `AttachmentStore` | `importData(Data, ext:, source:) -> Attachment`, `importFile(URL) -> Attachment`, `absoluteURL(for: relativeLink, from: VaultPath)`, `allFiles()`, `moveToTrash(file)` | `FileAttachmentStore` |
+| `AttachmentStore` | M2: `fileNames()`, `write(Data, named:)` and `copy(URL, named:)` (both fail when the name exists), `size(of:)`, `externalSize(URL)`, `url(for:)`. Naming and links are `AttachmentPolicy`; the use cases pick the name. M5 adds `moveToTrash(file)` | `FileAttachmentStore` |
 | `TrashRepository` | `trash(VaultPath, at: Date) -> TrashItem`, `restore(TrashItem) -> VaultPath`, `items()`; M5 adds `purge(olderThan:) -> Int` | `FileTrashRepository` |
 | `TemplateRepository` | `body(for: String) -> String` (type name; a missing file falls back to `BuiltInTemplates`), `ensureDefaults()` | `FileTemplateRepository` |
 | `VaultConfigRepository` | M1: `spaces() -> SpacesConfig` (folders on disk merged with `spaces.json`), `saveSpaces(SpacesConfig)`, `types() -> [NoteType]` (built-ins plus `.slate/types/`), `ensureDefaults()`. M4 adds `linkPatterns()`, `views()`, `actions()` and tracker settings for the defaults | `FileVaultConfigRepository` |
 | `JournalStore` | `save(id, text)`, `load(id) -> (text, date)?`, `clear(id)` | `FileJournalStore` |
-| `ScreenCapturing` | `captureRegion(to: URL) -> Bool`, `captureWindow(to: URL) -> Bool` | `ScreencaptureTool` |
+| `ScreenCapturing` | `capture(CaptureMode, to: URL)`; success is a file larger than zero bytes, checked by `AttachScreenshotUseCase` | `ScreencaptureTool` |
 | `HistoryRepository` | `ensureRepository()`, `snapshot(message:) -> Bool`, `history(of: VaultPath) -> [Snapshot]`, `contents(of:, at:) -> Data`, `push() -> Bool`, `isAvailable` | `GitHistoryRepository` |
 | `CloudStatusProviding` | `status(of: VaultPath) -> CloudStatus`, `startDownload(VaultPath)`, `conflictVersions(VaultPath) -> [ConflictVersion]`, `keep(version:, for:)`, `isCloudFolder(URL) -> Bool` | `UbiquityStatusProvider` |
 | `LinkTitleFetching` | `title(for: URL) -> String?` (2 s timeout) | `URLSessionLinkTitleFetcher` |
@@ -238,7 +238,7 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 
 `Ports` (Domain `Assembly/Ports.swift`) is a struct with one property per port. `Ports.live(root:keyValues:)` in Data (later milestones add the Application Support folder, the shell and the recorder), `Ports.mock()` in Mocks, `Ports.spies(keyValues:)` in TestSupport (the key-value store defaults to `SpyKeyValueStore`).
 
-Since M1 the code has nine ports: `keyValues`, `files`, `index`, `builder`, `watcher`, `trash`, `templates`, `config`, `clock`. The spies are in-memory fakes that also record their calls, so use case and store tests run without a disk.
+Since M2 the code has twelve ports: `keyValues`, `files`, `index`, `builder`, `watcher`, `trash`, `templates`, `config`, `clock`, `attachments`, `capture`, `workspace`. `Ports.live(root:keyValues:recorder:)` builds one `ShellRunner` with the recorder. The spies are in-memory fakes that also record their calls, so use case and store tests run without a disk.
 
 ### 4.4 Policies (pure, `enum XPolicy { static func … }`)
 
@@ -254,7 +254,7 @@ Since M1 the code has nine ports: `keyValues`, `files`, `index`, `builder`, `wat
 | `TemplateRenderer` | placeholders, `{{cursor}}` offset |
 | `SearchQueryParser` | text → `SearchQuery` |
 | `ConflictPolicy` | `decide(loadedHash, diskHash, isDirty, ownWrites) -> .ignore | .reload | .conflict` |
-| `PasteKindPolicy` | `classify(text) -> .plain | .code(language?) | .url(URL)` |
+| `AttachmentPolicy` | attachment file names, unique names, relative links, Markdown for an image or a file, link → vault path |
 | `LinkPatternPolicy` | `matches(body, patterns, excluding code ranges) -> [Link]`, `shortForm(for url, patterns)` |
 | `PreviewPolicy` | strip Markdown marks, first 200 characters |
 | `TrashRetentionPolicy` | which items are due for purge |
@@ -324,27 +324,20 @@ package struct EditorConfiguration: Equatable {
 }
 
 package struct EditorHandlers {
+    package var didEndEditing: () -> Void
     package var resolveImage: (String) -> URL?               // relative link → file URL, nil hides the image
-    package var pasteImage: (Data, String) -> String?        // bytes, file extension → Markdown to insert
-    package var pasteFiles: ([URL]) -> String?
-    package var pasteURL: (URL) -> String?                   // nil → insert the plain URL
     package var openLink: (EditorLink) -> Void               // url, wiki target, pattern id + match
-    package var wikilinkCompletions: (String) -> [String]
-    package var tagCompletions: (String) -> [String]
-    package var requestScreenshot: (ScreenshotKind) -> Void  // host runs the use case and inserts through `insert`
-    package var didChange: () -> Void
+    package var attachment: (String, AttachmentAction) -> Void   // quickLook, open, reveal, copyImage
+    package var pasteImage: (Data, String) -> Void           // bytes, file extension; the host answers with an insertion
+    package var pasteFiles: ([URL]) -> Void
+    package var pasteURL: (String) -> String?                // nil → insert the plain URL
+    package var requestScreenshot: (ScreenshotKind) -> Void  // the host runs the use case and answers with an insertion
 }
 
-package final class EditorCommands {        // handed back through handlers.ready(EditorCommands)
-    package func insert(_ markdown: String, at: InsertionPoint)
-    package func wrapSelection(prefix: String, suffix: String)
-    package func toggleCheckbox()
-    package func moveLine(up: Bool)
-    package func duplicateLine()
-    package func scroll(to range: NSRange)
-    package func focus()
-}
+package struct EditorInsertion: Equatable { let token: Int; let markdown: String }
 ```
+
+`MarkdownEditorView(text:configuration:focus:insertion:handlers:)`. The host answers an asynchronous request (a pasted image, a screenshot) by passing a new `EditorInsertion`; the editor inserts its Markdown on its own line once per token. `EditorFocusRequest` works the same way for the caret. M3 adds completions for wikilinks and tags.
 
 The editor owns the `NSTextView`, the styling, the list commands, paste classification and the rendering of images, checkboxes and chips. It never touches a file, the index or the vault. `text` is the full source; the host (EditorStore) debounces and saves.
 

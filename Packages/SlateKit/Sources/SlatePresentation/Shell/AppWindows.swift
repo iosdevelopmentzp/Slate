@@ -11,6 +11,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
     private var clickMonitor: Any?
     private var resignObserver: NSObjectProtocol?
     private var lastPanelTopLeft: CGPoint?
+    private var isCapturing = false
 
     private var layout: WindowLayout {
         assembly.layout
@@ -25,6 +26,14 @@ package final class AppWindows: NSObject, NSWindowDelegate {
 
     package func start() {
         lastPanelTopLeft = layout.panelTopLeft
+        assembly.panelVisibility.hideForCapture = { [weak self] in
+            guard let self else { return }
+            hidePanelForCapture()
+        }
+        assembly.panelVisibility.showAfterCapture = { [weak self] in
+            guard let self else { return }
+            showPanelAfterCapture()
+        }
         if let button = statusItem.button {
             let image = NSImage(systemSymbolName: "note.text", accessibilityDescription: "Slate")
             image?.isTemplate = true
@@ -83,6 +92,27 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         Task { await assembly.flush() }
     }
 
+    private func hidePanelForCapture() {
+        guard panel.isVisible else { return }
+        isCapturing = true
+        removeClickMonitor()
+        panel.orderOut(nil)
+    }
+
+    private func showPanelAfterCapture() {
+        guard isCapturing else { return }
+        isCapturing = false
+        NSApp.activate()
+        panel.makeKeyAndOrderFront(nil)
+        installClickMonitor()
+    }
+
+    private func removeClickMonitor() {
+        guard let clickMonitor else { return }
+        NSEvent.removeMonitor(clickMonitor)
+        self.clickMonitor = nil
+    }
+
     @objc private func statusItemClicked() {
         togglePanel()
     }
@@ -102,14 +132,11 @@ package final class AppWindows: NSObject, NSWindowDelegate {
     }
 
     private func closePanel() {
-        guard panel.isVisible else { return }
+        guard panel.isVisible, isCapturing == false else { return }
         Task { await assembly.flush() }
         panel.orderOut(nil)
         statusItem.button?.highlight(false)
-        if let clickMonitor {
-            NSEvent.removeMonitor(clickMonitor)
-            self.clickMonitor = nil
-        }
+        removeClickMonitor()
     }
 
     private func installClickMonitor() {

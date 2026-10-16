@@ -6,7 +6,7 @@ extension PresentationAssembly {
 
     static func preview() -> PresentationAssembly {
         let ports = Ports.mock()
-        let assembly = PresentationAssembly(ports: ports, useCases: UseCases(ports: ports), activity: ActivityLog())
+        let assembly = PresentationAssembly(ports: ports, useCases: UseCases(ports: ports), activity: ActivityLog(), vaultRoot: URL(fileURLWithPath: NSTemporaryDirectory()))
         assembly.vault.config = MockVault.config
         assembly.vault.types = NoteType.builtIn
         assembly.noteList.summaries = MockVault.notes

@@ -50,9 +50,9 @@ public final class AppContainer: NSObject {
             return
         }
         keyValues.set(vault.path, forKey: Keys.vaultPath)
-        let ports = Ports.live(root: vault, keyValues: keyValues)
+        let ports = Ports.live(root: vault, keyValues: keyValues, recorder: ActivityRecorder(log: activity))
         let useCases = UseCases(ports: ports)
-        let assembly = PresentationAssembly(ports: ports, useCases: useCases, activity: activity)
+        let assembly = PresentationAssembly(ports: ports, useCases: useCases, activity: activity, vaultRoot: vault)
         let windows = AppWindows(assembly: assembly)
         self.assembly = assembly
         self.windows = windows

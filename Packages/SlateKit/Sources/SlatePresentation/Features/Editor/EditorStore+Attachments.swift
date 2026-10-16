@@ -1,0 +1,112 @@
+import Foundation
+import SlateDomain
+
+extension EditorStore {
+    func resolveLink(_ link: String) -> URL? {
+        if let url = URL(string: link), url.isFileURL {
+            return url
+        }
+        guard let document, let path = AttachmentPolicy.vaultPath(ofLink: link, from: document.path) else { return nil }
+        return vaultRoot.appendingPathComponent(path, isDirectory: false)
+    }
+
+    func pasteImage(_ data: Data, fileExtension: String) async {
+        guard let path = document?.path else { return }
+        do {
+            let markdown = try await importAttachment.execute(data: data, fileExtension: fileExtension, for: path)
+            insert(markdown)
+        } catch {
+            report("Cannot add the image", error)
+        }
+    }
+
+    func pasteFiles(_ urls: [URL]) async {
+        guard let path = document?.path, urls.isEmpty == false else { return }
+        do {
+            let result = try await importAttachment.execute(files: urls, for: path)
+            insert(result.text)
+            if result.linkedInPlace.isEmpty == false {
+                toaster.show("Large files are linked, not copied")
+                activity.log("Linked large files in place", detail: result.linkedInPlace.joined(separator: ", "), outcome: .success)
+            }
+        } catch {
+            report("Cannot add the file", error)
+        }
+    }
+
+    func screenshot(_ mode: CaptureMode) async {
+        guard let path = document?.path, isCapturing == false else { return }
+        isCapturing = true
+        panel.hideForCapture()
+        defer {
+            panel.showAfterCapture()
+            isCapturing = false
+        }
+        do {
+            guard let markdown = try await attachScreenshot.execute(mode, for: path) else { return }
+            insert(markdown)
+        } catch {
+            toaster.show("Screenshot failed")
+            activity.log("Screenshot failed. Allow Slate in System Settings → Privacy & Security → Screen Recording.", detail: error.localizedDescription, outcome: .failure)
+        }
+    }
+
+    func openURL(_ target: String) async {
+        if let url = URL(string: target), let scheme = url.scheme?.lowercased(), scheme != "file" {
+            await workspace.open(url)
+            return
+        }
+        guard let document, let relative = AttachmentPolicy.vaultPath(ofLink: target, from: document.path) else { return }
+        let path = VaultPath(rawValue: relative)
+        if path.isNote, let summary = try? await index.summaries(space: nil).first(where: { $0.path == path }) {
+            navigator.select(summary.id)
+            return
+        }
+        await workspace.open(vaultRoot.appendingPathComponent(relative, isDirectory: false))
+    }
+
+    func openWikilink(_ target: String) async {
+        let name = target.split(separator: "#", maxSplits: 1).first.map(String.init) ?? target
+        guard let summaries = try? await index.summaries(space: nil) else { return }
+        let parts = name.split(separator: "/").map(String.init)
+        let matches = summaries.filter { summary in
+            if parts.count == 2 {
+                return summary.path.space?.rawValue.lowercased() == parts[0].lowercased() && StemPolicy.isSame(summary.path.stem, parts[1])
+            }
+            return StemPolicy.isSame(summary.path.stem, name)
+        }
+        let space = document?.path.space
+        guard let best = matches.max(by: { lhs, rhs in
+            (lhs.path.space == space ? 1 : 0, lhs.updated) < (rhs.path.space == space ? 1 : 0, rhs.updated)
+        }) else {
+            toaster.show("No note is called \(name)")
+            return
+        }
+        navigator.select(best.id)
+    }
+
+    func attachment(_ link: String, quickLook: Bool) async {
+        guard let url = resolveLink(link) else { return }
+        if quickLook {
+            await workspace.quickLook(url)
+        } else {
+            await workspace.open(url)
+        }
+    }
+
+    func reveal(_ link: String) async {
+        guard let url = resolveLink(link) else { return }
+        await workspace.reveal(url)
+    }
+
+    func insert(_ markdown: String) {
+        guard markdown.isEmpty == false else { return }
+        insertionCounter += 1
+        insertion = MarkdownInsertion(token: insertionCounter, markdown: markdown)
+    }
+
+    private func report(_ title: String, _ error: any Error) {
+        toaster.show(title)
+        activity.log(title, detail: error.localizedDescription, outcome: .failure)
+    }
+}

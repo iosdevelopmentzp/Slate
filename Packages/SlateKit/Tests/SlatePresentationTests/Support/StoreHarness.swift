@@ -50,8 +50,15 @@ final class StoreHarness {
         navigator: navigator,
         activity: activity,
         events: events,
-        clock: ports.clock
+        clock: ports.clock,
+        importAttachment: useCases.importAttachment,
+        attachScreenshot: useCases.attachScreenshot,
+        workspace: ports.workspace,
+        vaultRoot: URL(fileURLWithPath: "/vault", isDirectory: true),
+        panel: panelVisibility,
+        toaster: toaster
     )
+    lazy var panelVisibility = PanelVisibility()
     lazy var feed = VaultChangeFeed(watcher: ports.watcher, reindex: useCases.reindex, activity: activity, events: events)
 
     init() {

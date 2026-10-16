@@ -12,7 +12,10 @@ extension Ports {
             trash: MockTrashRepository(),
             templates: MockTemplateRepository(),
             config: MockVaultConfigRepository(),
-            clock: MockClock()
+            clock: MockClock(),
+            attachments: MockAttachmentStore(),
+            capture: MockScreenCapture(),
+            workspace: MockWorkspace()
         )
     }
 }

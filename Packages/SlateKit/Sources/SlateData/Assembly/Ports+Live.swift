@@ -2,8 +2,10 @@ import Foundation
 import SlateDomain
 
 extension Ports {
-    package static func live(root: URL, keyValues: any KeyValueStore) -> Ports {
+    @MainActor
+    package static func live(root: URL, keyValues: any KeyValueStore, recorder: any CommandRecording) -> Ports {
         let ownWrites = OwnWrites()
+        let shell = ShellRunner(recorder: recorder)
         return Ports(
             keyValues: keyValues,
             files: FileVaultStore(root: root, ownWrites: ownWrites),
@@ -13,7 +15,10 @@ extension Ports {
             trash: FileTrashRepository(root: root),
             templates: FileTemplateRepository(root: root),
             config: FileVaultConfigRepository(root: root),
-            clock: SystemClock()
+            clock: SystemClock(),
+            attachments: FileAttachmentStore(root: root),
+            capture: ScreencaptureTool(shell: shell),
+            workspace: WorkspaceOpener(quickLookSource: QuickLookSource())
         )
     }
 }

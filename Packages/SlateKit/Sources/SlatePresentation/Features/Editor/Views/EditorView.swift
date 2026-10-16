@@ -24,7 +24,8 @@ struct EditorView: View {
                     text: Bindable(editor).text,
                     configuration: .standard,
                     focus: editor.bodyFocus.map { EditorFocusRequest(token: $0.token, caret: $0.caret) },
-                    handlers: EditorHandlers(didEndEditing: { editor.bodyEditingEnded() })
+                    insertion: editor.insertion.map { EditorInsertion(token: $0.token, markdown: $0.markdown) },
+                    handlers: handlers
                 )
             }
             .animation(.easeInOut(duration: 0.15), value: editor.hasConflict)
@@ -63,6 +64,35 @@ struct EditorView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+
+    private var handlers: EditorHandlers {
+        let editor = editor
+        return EditorHandlers(
+            didEndEditing: { editor.bodyEditingEnded() },
+            resolveImage: { editor.resolveLink($0) },
+            openLink: { link in
+                Task {
+                    switch link {
+                    case .url(let target): await editor.openURL(target)
+                    case .wiki(let target): await editor.openWikilink(target)
+                    case .pattern: break
+                    }
+                }
+            },
+            attachment: { link, action in
+                switch action {
+                case .quickLook: Task { await editor.attachment(link, quickLook: true) }
+                case .open: Task { await editor.attachment(link, quickLook: false) }
+                case .reveal: Task { await editor.reveal(link) }
+                case .copyImage:
+                    if let url = editor.resolveLink(link) { PasteboardWriter.writeImage(at: url) }
+                }
+            },
+            pasteImage: { data, fileExtension in Task { await editor.pasteImage(data, fileExtension: fileExtension) } },
+            pasteFiles: { urls in Task { await editor.pasteFiles(urls) } },
+            requestScreenshot: { kind in Task { await editor.screenshot(kind == .region ? .region : .window) } }
+        )
     }
 
     private var titleBinding: Binding<String> {

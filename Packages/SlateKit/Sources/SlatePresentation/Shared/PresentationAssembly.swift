@@ -14,13 +14,15 @@ package final class PresentationAssembly {
     let vault: VaultStore
     let noteList: NoteListStore
     let editor: EditorStore
+    let panelVisibility: PanelVisibility
 
-    package init(ports: Ports, useCases: UseCases, activity: ActivityLog) {
+    package init(ports: Ports, useCases: UseCases, activity: ActivityLog, vaultRoot: URL) {
         events = AppEvents()
         navigator = Navigator(store: ports.keyValues)
         self.activity = activity
         toaster = Toaster(write: PasteboardWriter.write)
         hints = HintCenter()
+        panelVisibility = PanelVisibility()
         layout = WindowLayout(store: ports.keyValues)
         feed = VaultChangeFeed(watcher: ports.watcher, reindex: useCases.reindex, activity: activity, events: events)
         vault = VaultStore(
@@ -55,7 +57,13 @@ package final class PresentationAssembly {
             navigator: navigator,
             activity: activity,
             events: events,
-            clock: ports.clock
+            clock: ports.clock,
+            importAttachment: useCases.importAttachment,
+            attachScreenshot: useCases.attachScreenshot,
+            workspace: ports.workspace,
+            vaultRoot: vaultRoot,
+            panel: panelVisibility,
+            toaster: toaster
         )
     }
 

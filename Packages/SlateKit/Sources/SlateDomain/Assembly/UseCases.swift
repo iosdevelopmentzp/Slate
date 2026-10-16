@@ -13,6 +13,8 @@ package struct UseCases: Sendable {
     package let reindex: ReindexVaultUseCase
     package let createSpace: CreateSpaceUseCase
     package let renameSpace: RenameSpaceUseCase
+    package let importAttachment: ImportAttachmentUseCase
+    package let attachScreenshot: AttachScreenshotUseCase
 
     package init(ports: Ports) {
         create = CreateNoteUseCase(files: ports.files, index: ports.index, builder: ports.builder, templates: ports.templates, config: ports.config, clock: ports.clock)
@@ -27,5 +29,7 @@ package struct UseCases: Sendable {
         reindex = ReindexVaultUseCase(files: ports.files, index: ports.index, builder: ports.builder)
         createSpace = CreateSpaceUseCase(files: ports.files, config: ports.config)
         renameSpace = RenameSpaceUseCase(files: ports.files, config: ports.config, reindex: reindex)
+        importAttachment = ImportAttachmentUseCase(attachments: ports.attachments, clock: ports.clock)
+        attachScreenshot = AttachScreenshotUseCase(capture: ports.capture, attachments: ports.attachments, clock: ports.clock)
     }
 }

@@ -115,7 +115,7 @@ Copy `ShellRunner`, `ShellResult`, `LineBatcher`, `CommandFormatter` from `../De
 - Filters become `WHERE` clauses on `notes` (`type`, `status`, `space`, `ticket`, `pinned`, `in_conflict`, `has_*`), `EXISTS` on `tags` and `todos`. `-tag:x` is `NOT EXISTS`.
 - Check (M3): a query with `"`, `'`, `(`, `:` and `-` never throws; the 10,000-note vault answers under 50 ms (measure with `ContinuousClock`).
 
-## 11. Screenshots — verify first
+## 11. Screenshots — built in M2, the permission check is open
 
 - Region: `screencapture -i -x -t png "<path>"`. Window: `screencapture -i -W -o -x -t png "<path>"` (`-W` starts in window mode, `-o` no shadow, `-x` no sound). The path is the final attachment path from `FileAttachmentStore`.
 - Success is **"the file exists and is larger than zero bytes"**. Esc during the capture leaves no file; do not rely on the exit code.

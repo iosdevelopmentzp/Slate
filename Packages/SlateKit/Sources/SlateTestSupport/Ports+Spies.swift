@@ -12,7 +12,10 @@ package extension Ports {
             trash: spies.trash,
             templates: spies.templates,
             config: spies.config,
-            clock: spies.clock
+            clock: spies.clock,
+            attachments: spies.attachments,
+            capture: spies.capture,
+            workspace: spies.workspace
         )
         return (ports, spies)
     }

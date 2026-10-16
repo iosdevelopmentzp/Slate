@@ -9,8 +9,12 @@ package struct PortSpies: Sendable {
     package let templates = SpyTemplateRepository()
     package let config = SpyVaultConfigRepository()
     package let clock = SpyClock()
+    package let attachments = SpyAttachmentStore()
+    package let capture: SpyScreenCapture
+    package let workspace = SpyWorkspace()
 
     package init() {
         trash = SpyTrashRepository(files: files)
+        capture = SpyScreenCapture(attachments: attachments)
     }
 }

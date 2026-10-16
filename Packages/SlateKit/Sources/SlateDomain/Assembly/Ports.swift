@@ -10,6 +10,9 @@ package struct Ports: Sendable {
     package let templates: any TemplateRepository
     package let config: any VaultConfigRepository
     package let clock: any Clock
+    package let attachments: any AttachmentStore
+    package let capture: any ScreenCapturing
+    package let workspace: any WorkspaceOpening
 
     package init(
         keyValues: any KeyValueStore,
@@ -20,7 +23,10 @@ package struct Ports: Sendable {
         trash: any TrashRepository,
         templates: any TemplateRepository,
         config: any VaultConfigRepository,
-        clock: any Clock
+        clock: any Clock,
+        attachments: any AttachmentStore,
+        capture: any ScreenCapturing,
+        workspace: any WorkspaceOpening
     ) {
         self.keyValues = keyValues
         self.files = files
@@ -31,5 +37,8 @@ package struct Ports: Sendable {
         self.templates = templates
         self.config = config
         self.clock = clock
+        self.attachments = attachments
+        self.capture = capture
+        self.workspace = workspace
     }
 }

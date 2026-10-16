@@ -21,15 +21,24 @@ final class EditorStore {
     private(set) var followsBody = false
     private(set) var titleFocusToken = 0
     private(set) var bodyFocus: BodyFocus?
+    var insertion: MarkdownInsertion?
+    var isCapturing = false
 
     @ObservationIgnored private let files: any VaultFileStore
-    @ObservationIgnored private let index: any SearchIndex
+    @ObservationIgnored let index: any SearchIndex
     @ObservationIgnored private let save: SaveNoteUseCase
     @ObservationIgnored private let rename: RenameNoteUseCase
-    @ObservationIgnored private let navigator: Navigator
-    @ObservationIgnored private let activity: ActivityLog
+    @ObservationIgnored let navigator: Navigator
+    @ObservationIgnored let activity: ActivityLog
     @ObservationIgnored private let events: AppEvents
     @ObservationIgnored private let clock: any Clock
+    @ObservationIgnored let importAttachment: ImportAttachmentUseCase
+    @ObservationIgnored let attachScreenshot: AttachScreenshotUseCase
+    @ObservationIgnored let workspace: any WorkspaceOpening
+    @ObservationIgnored let vaultRoot: URL
+    @ObservationIgnored let panel: PanelVisibility
+    @ObservationIgnored let toaster: Toaster
+    @ObservationIgnored var insertionCounter = 0
     @ObservationIgnored private var subscription: SubscriptionToken?
     @ObservationIgnored private var isApplying = false
     @ObservationIgnored private var saveTask: Task<Void, Never>?
@@ -46,7 +55,13 @@ final class EditorStore {
         navigator: Navigator,
         activity: ActivityLog,
         events: AppEvents,
-        clock: any Clock
+        clock: any Clock,
+        importAttachment: ImportAttachmentUseCase,
+        attachScreenshot: AttachScreenshotUseCase,
+        workspace: any WorkspaceOpening,
+        vaultRoot: URL,
+        panel: PanelVisibility,
+        toaster: Toaster
     ) {
         self.files = files
         self.index = index
@@ -56,6 +71,12 @@ final class EditorStore {
         self.activity = activity
         self.events = events
         self.clock = clock
+        self.importAttachment = importAttachment
+        self.attachScreenshot = attachScreenshot
+        self.workspace = workspace
+        self.vaultRoot = vaultRoot
+        self.panel = panel
+        self.toaster = toaster
         subscription = events.subscribe { [weak self] event in
             guard let self else { return }
             handle(event)

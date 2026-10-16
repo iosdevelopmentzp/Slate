@@ -4,7 +4,7 @@ Last updated: 2026-10-16
 
 ## Stage
 
-M1.5 done (editor spike: own core chosen). M1 manual checks by the owner still open. On first launch Slate asks for the notes folder (default `~/Documents/Slate`) and prepares it: six folders, `_attachments/`, `_templates/`, `.slate/` with `spaces.json` and the five note types, and a welcome note. Notes are real Markdown files with the header of `STORAGE-FORMAT.md` section 2. The list is built by a full scan at launch and kept current by the FSEvents watcher. 222 tests in 57 suites pass. Next: milestone M2 (editor v1).
+M2 done (editor v1). Manual checks of M1 and M2 by the owner still open. On first launch Slate asks for the notes folder (default `~/Documents/Slate`) and prepares it: six folders, `_attachments/`, `_templates/`, `.slate/` with `spaces.json` and the five note types, and a welcome note. Notes are real Markdown files with the header of `STORAGE-FORMAT.md` section 2. The list is built by a full scan at launch and kept current by the FSEvents watcher. 222 tests in 57 suites pass. Next: milestone M3 (index and search).
 
 ## Screens
 
@@ -16,7 +16,7 @@ M1.5 done (editor spike: own core chosen). M1 manual checks by the owner still o
 | Capture field | planned | M4 |
 | Note list | real | Rows: status dot, kind icon for non-plain notes, title, relative date, pin, preview, badges (ticket, subfolder, images and files, open checkboxes). Hover and right click: Pin, Move to, Duplicate, Archive, Move to Trash (inline confirmation, toast with Undo). Badges come from the in-memory index |
 | Trash | partial | Lists trashed notes with their folder and age, Restore on hover. No "Delete now" and no auto-empty yet (F4, M5) |
-| Editor | partial | Title field (Enter, focus loss or 1.5 s renames the file), chips (kind, ticket, status, folder, subfolder, tags, read-only details), plain `MarkdownEditorView`, autosave after 500 ms, save on note switch, panel close, window close and quit. A new untitled note takes its title from the first line until the title is typed. A small "Changed on disk" banner with Keep mine and Take theirs. No styling (M2), no journal (M5) |
+| Editor | real | Title field, chips, autosave, the "Changed on disk" banner (M1). Markdown styling with visible marks, code blocks with highlighting and a Copy button, checkboxes, list editing, images under their line, paste rules with the "Paste as code" bar, screenshots, `⌘`-click links (M2). No link titles (P1), no hover preview of a link target, no wikilink completion yet (M3), no journal (M5) |
 | Search | partial | Filters the loaded list by title only. Full-text search is M3 |
 | Settings | planned | M4 (H1) |
 
@@ -58,11 +58,26 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 24. M1.5 editor spike: the own TextKit 2 core wins (open 71 ms, keystroke 2.2 ms on the 5,000-line fixture) over `MarkdownEngine` 0.9.0 (975 ms, 79 ms). No new dependency. ADR 0005 amendment has the numbers. The two spike branches `spike/own-core` and `spike/markdown-engine` stay local and are not merged; M2 takes the own-core files from `spike/own-core` as its start.
 25. Branches during the long build: one branch per milestone, each made from the one before (`m1.5-editor-spike`, `m2-editor`, `m3-index-and-search`, …). Merging the last one brings all of them.
+26. M2 editor details: a tag needs at least one letter (`#123` stays text, it is the issue pattern of `links.json`). Tab indents a list item by the width of its own marker plus one space (`- ` two spaces, `1. ` three). Remove Image deletes the line (Undo brings it back); the file stays in `_attachments/` until "Clean attachments" (M5). The "Paste as code" bar lives inside `SlateEditor`, so Enter and Esc reach it while the text has focus.
+27. The host gives text to the editor with `EditorInsertion(token:markdown:)`, like `EditorFocusRequest`; the editor inserts it on its own line once per token. `ARCHITECTURE.md` section 6.1 had an `EditorCommands` object; the token value replaced it, so no store holds an AppKit object.
+28. `PasteKindPolicy` of `ARCHITECTURE.md` section 4.4 is `PasteClassifier` inside `SlateEditor`; the CLI and the use cases do not need it. `ARCHITECTURE.md` now says so.
+29. The panel hides for a screenshot through `PanelVisibility` (two closures that `AppWindows` sets); the window stays. Quick Look runs through the `WorkspaceOpening` port with a `QLPreviewPanel` data source in `SlateData/System`.
+30. M2 is two commits: the editor module (D1, D2, D3, D5 styling), then attachments, paste and screenshots (D4, B4, B5), because the handlers for D4, B4 and B5 share one change to `EditorStore`.
 
 ## Next steps
 
 1. Owner: run the M1 manual checks (below). Merge the branch `m1-vault-and-notes` when they pass.
-2. M2: editor v1 on the own core (decision 24).
+2. Owner: run the M2 manual checks (below).
+3. M3: index and search. Read `PLAYBOOK.md` section 10 first.
+
+M2 manual checks for the owner:
+
+1. Open a note and type `# Title`, `**bold**`, a list, `- [ ] task` and a code block with ```` ```swift ````. The marks stay visible in a lighter colour and the code is coloured.
+2. Click a checkbox. The file in Finder has `[x]`.
+3. Press `⌘⇧S`, drag over a region. The panel hides and returns; the image shows in the note and the file is in `_attachments/`. The first time, macOS asks for Screen Recording: allow Slate in System Settings → Privacy & Security → Screen Recording, restart Slate, try again. Note what happens after a rebuild in `docs/STATUS.md` (`PLAYBOOK.md` section 11).
+4. Copy a stack trace and press `⌘⇧V`: a code block. Paste it with `⌘V`: the bar asks; Enter makes a code block.
+5. Hover a code block and press Copy.
+6. Copy an image in Preview and paste it into a note.
 
 M1 manual checks for the owner:
 
@@ -89,5 +104,7 @@ M1 manual checks for the owner:
 - The list column uses `HSplitView` (240 to 400 pt); its width is not saved.
 - `ActivityRecorder` and `ShellRunner` have no user yet (M5 git history).
 - `.claude/skills/add-feature`, `add-use-case`, `build-and-run` and `update-docs` and the example in `.claude/rules/presentation.md` still show DevHub features.
-- No `generate-vault.sh` yet (needed from M2).
+- No `generate-vault.sh` yet (needed from M3).
+- Editor (M2): no title fetch for a pasted URL (P1); no hover preview of a link target; file links show as coloured links, without an icon, and cannot be dragged out to Finder; the language of a code block shows on its fence line, not as a separate label; Remove Image does not ask first (Undo works).
+- Editor (M2): typing latency was measured by a test on the 5,000-line fixture (2.2 ms median), not with Instruments. The Screen Recording prompt of `PLAYBOOK.md` section 11 was not checked by the agent.
 - Previews in package files were not opened in Xcode yet.
