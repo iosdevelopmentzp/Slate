@@ -37,6 +37,7 @@ final class StoreHarness {
         duplicate: useCases.duplicate,
         trashNote: useCases.trash,
         restore: useCases.restore,
+        append: useCases.append,
         navigator: navigator,
         toaster: toaster,
         activity: activity,
@@ -60,7 +61,9 @@ final class StoreHarness {
         toaster: toaster,
         create: useCases.create,
         templates: ports.templates,
-        journal: ports.journal
+        journal: ports.journal,
+        runAction: useCases.runAction,
+        exporter: ports.exporter
     )
     lazy var settings = SettingsStore(
         store: keyValues,
@@ -84,6 +87,8 @@ final class StoreHarness {
         toaster: toaster,
         events: events
     )
+    lazy var palette = PaletteStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock)
+    lazy var todos = TodoStore(index: ports.index, toggleTodo: useCases.toggleTodo, notes: noteList, navigator: navigator, store: keyValues, activity: activity, events: events)
     lazy var daily = DailyStore(ensureDaily: useCases.ensureDaily, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
     lazy var search = SearchStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
     lazy var panelVisibility = PanelVisibility()

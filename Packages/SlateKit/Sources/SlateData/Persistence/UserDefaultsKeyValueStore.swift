@@ -12,6 +12,11 @@ package final class UserDefaultsKeyValueStore: KeyValueStore, @unchecked Sendabl
         self.init(defaults: .standard)
     }
 
+    package convenience init?(suite: String) {
+        guard let defaults = UserDefaults(suiteName: suite) else { return nil }
+        self.init(defaults: defaults)
+    }
+
     package func string(forKey key: String) -> String? {
         defaults.string(forKey: key)
     }

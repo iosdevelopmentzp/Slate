@@ -27,6 +27,7 @@ final class NoteListStore: NoteLookup {
     @ObservationIgnored private let duplicate: DuplicateNoteUseCase
     @ObservationIgnored private let trashNote: TrashNoteUseCase
     @ObservationIgnored private let restore: RestoreNoteUseCase
+    @ObservationIgnored private let appendUseCase: AppendToNoteUseCase
     @ObservationIgnored private let navigator: Navigator
     @ObservationIgnored private let toaster: Toaster
     @ObservationIgnored private let activity: ActivityLog
@@ -46,6 +47,7 @@ final class NoteListStore: NoteLookup {
         duplicate: DuplicateNoteUseCase,
         trashNote: TrashNoteUseCase,
         restore: RestoreNoteUseCase,
+        append: AppendToNoteUseCase,
         navigator: Navigator,
         toaster: Toaster,
         activity: ActivityLog,
@@ -61,6 +63,7 @@ final class NoteListStore: NoteLookup {
         self.duplicate = duplicate
         self.trashNote = trashNote
         self.restore = restore
+        appendUseCase = append
         self.navigator = navigator
         self.toaster = toaster
         self.activity = activity
@@ -82,7 +85,7 @@ final class NoteListStore: NoteLookup {
         switch source {
         case .all: inSource = summaries
         case .space(let space): inSource = summaries.filter { $0.space == space }
-        case .trash: inSource = []
+        case .trash, .todos: inSource = []
         }
         let query = filterText.trimmingCharacters(in: .whitespacesAndNewlines)
         let matching = query.isEmpty ? inSource : inSource.filter { $0.title.localizedCaseInsensitiveContains(query) }
@@ -155,6 +158,66 @@ final class NoteListStore: NoteLookup {
             activity.log("Cannot create the note", detail: error.localizedDescription, outcome: .failure)
             toaster.show("The note was not created. See Activity.")
         }
+    }
+
+    func create(_ draft: NoteDraft) async {
+        do {
+            let created = try await create.execute(draft)
+            await refresh()
+            events.post(.noteCreated(created.document.id, caret: created.caret))
+            if let space = created.document.path.space, source != .all, source != .space(space) {
+                navigator.show(.space(space))
+            }
+            navigator.select(created.document.id)
+        } catch {
+            activity.log("Cannot create the note", detail: error.localizedDescription, outcome: .failure)
+        }
+    }
+
+    func open(_ target: URLCommand.OpenTarget) async {
+        do {
+            switch target {
+            case .id(let id):
+                guard try await index.summary(id: id) != nil else {
+                    toaster.show("No note has this id")
+                    return
+                }
+                showContaining(id)
+            case .ticket(let ticket):
+                if let found = try await index.notes(withTicket: ticket).first {
+                    showContaining(found.id)
+                } else {
+                    await create(NoteDraft(title: ticket, type: NoteType.task.name, ticket: ticket))
+                }
+            case .title(let title):
+                let all = try await index.summaries(space: nil)
+                guard let found = all.first(where: { StemPolicy.isSame($0.title, title) }) ?? all.first(where: { StemPolicy.isSame($0.stem, StemPolicy.stem(forTitle: title)) }) else {
+                    toaster.show("No note is called \(title)")
+                    return
+                }
+                showContaining(found.id)
+            }
+        } catch {
+            activity.log("Cannot open the note", detail: error.localizedDescription, outcome: .failure)
+        }
+    }
+
+    func append(_ text: String, to target: AppendTarget, section: String?) async {
+        do {
+            let document = try await appendUseCase.execute(text, to: target, section: section)
+            events.post(.indexUpdated)
+            events.post(.vaultChanged([document.path]))
+            toaster.show("Added to \(document.title)")
+        } catch {
+            activity.log("Cannot add the text", detail: error.localizedDescription, outcome: .failure)
+        }
+    }
+
+    private func showContaining(_ id: NoteID) {
+        if source != .all, summaries.first(where: { $0.id == id })?.space.map({ source != .space($0) }) ?? true {
+            navigator.show(.all)
+        }
+        navigator.select(id)
     }
 
     func togglePin(_ summary: NoteSummary) async {

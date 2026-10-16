@@ -19,7 +19,9 @@ package extension Ports {
             loginItem: spies.loginItem,
             system: spies.system,
             history: spies.history,
-            journal: spies.journal
+            journal: spies.journal,
+            actions: spies.actions,
+            exporter: spies.exporter
         )
         return (ports, spies)
     }

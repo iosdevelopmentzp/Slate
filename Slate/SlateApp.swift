@@ -3,7 +3,7 @@ import SwiftUI
 
 @main
 struct SlateApp: App {
-    @State private var container = AppContainer.live()
+    @NSApplicationDelegateAdaptor(AppContainer.self) private var container
 
     var body: some Scene {
         Settings {

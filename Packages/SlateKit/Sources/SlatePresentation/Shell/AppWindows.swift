@@ -147,6 +147,37 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         onChangeVault(folder)
     }
 
+    package func handle(_ command: URLCommand) {
+        switch command {
+        case .capture:
+            showCapture()
+        case .search(let text):
+            showPanelIfHidden()
+            assembly.search.query = text
+        case .new(let draft):
+            showPanelIfHidden()
+            Task { await assembly.noteList.create(draft) }
+        case .open(let target):
+            showPanelIfHidden()
+            Task { await assembly.noteList.open(target) }
+        case .append(let text, let target, let section):
+            Task { await assembly.noteList.append(text, to: target, section: section) }
+        }
+    }
+
+    package func addFromService(_ text: String) {
+        Task { await assembly.capture.addFromService(text) }
+    }
+
+    private func showPanelIfHidden() {
+        if window?.isVisible == true {
+            NSApp.activate()
+            window?.makeKeyAndOrderFront(nil)
+        } else if panel.isVisible == false {
+            showPanel()
+        }
+    }
+
     func openSettings() {
         closePanel()
         let window = settingsWindow ?? makeSettingsWindow()

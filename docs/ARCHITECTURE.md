@@ -95,8 +95,8 @@ Pin each dependency to its latest release at bootstrap and write the versions in
 ```
 Slate.xcodeproj                  app target Slate, links SlateComposition
 Slate/
-  SlateApp.swift                 @main, Settings { EmptyView() }, NSApplicationDelegateAdaptor, keeps AppContainer.live() alive
-  AppDelegate.swift              application(_:open:) → container.handle(urls:); applicationWillTerminate → container.flush()
+  SlateApp.swift                 @main, Settings { EmptyView() }, @NSApplicationDelegateAdaptor(AppContainer.self)
+Config/Slate-Info.plist          CFBundleURLTypes (slate) and NSServices (Add to Slate); merged with the generated Info.plist
   Assets.xcassets
   Slate.entitlements             empty
 Packages/SlateKit/
@@ -169,7 +169,7 @@ docs/
 
 Same as DevHub:
 
-- `package` on every type and member another module uses, including `package init`, `package var body`, `package static let`. Internal for what one module uses alone. `public` only on `AppContainer` and `AppContainer.live()`; the CLI target is an executable and needs no `public`.
+- `package` on every type and member another module uses, including `package init`, `package var body`, `package static let`. Internal for what one module uses alone. `public` only on `AppContainer`, its `init()` and its `NSApplicationDelegate` methods; the CLI target is an executable and needs no `public`.
 - A struct built in another module gets an explicit `package init` in declaration order with the same defaults as its stored properties.
 - `MemberImportVisibility`: a file that uses a member from another module imports that module.
 - Domain, Data, Mocks, TestSupport and CLI never write `nonisolated` on a type. UI, Editor, Presentation and Composition are MainActor by module default.
@@ -232,13 +232,14 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 | `SecretStore` | `get(key)`, `set(key, value)`, `remove(key)` | `KeychainSecretStore` |
 | `KeyValueStore` | `string/bool/int/data(forKey:)`, setters | `UserDefaultsKeyValueStore` |
 | `Clock` | `now() -> Date`, `timeZone` | `SystemClock` |
-| `ActionRunning` | `run(ActionDefinition, environment:) -> ActionOutput` | `ShellActionRunner` |
+| `ActionRunning` | `run(command, environment:, workingDirectory:) -> ActionResult`; `/bin/zsh -c`, 60 s limit | `ShellActionRunner` |
+| `NoteExporting` | `html(title:body:)`, `pdf(title:body:)`, `saveToDownloads(_:fileName:)` | `NoteExporter` (System, AppKit for the PDF) over `HTMLExporter` (Export, swift-markdown) |
 | `WorkspaceOpening` | `open(URL)`, `reveal(URL)`, `quickLook(URL)` | `WorkspaceOpener` |
 | `CommandRecording` | `record(CommandRecord)` | `ActivityLog` conformance in Presentation |
 
 `Ports` (Domain `Assembly/Ports.swift`) is a struct with one property per port. `Ports.live(root:keyValues:)` in Data (later milestones add the Application Support folder, the shell and the recorder), `Ports.mock()` in Mocks, `Ports.spies(keyValues:)` in TestSupport (the key-value store defaults to `SpyKeyValueStore`).
 
-Since M5 the code has sixteen ports: `keyValues`, `files`, `index`, `builder`, `watcher`, `trash`, `templates`, `config`, `clock`, `attachments`, `capture`, `workspace`, `loginItem` (M4), `system` (M4, the Doctor checks), `history`, `journal` (M5). `Ports.live(root:support:keyValues:recorder:)` throws when the index cannot open, builds one `ShellRunner` with the recorder, and opens `index.sqlite` in the support folder (`VaultSupportFolder.url(for:)`, `~/Library/Application Support/Slate/<vault-id>/`). The spies are in-memory fakes that also record their calls, so use case and store tests run without a disk.
+Since M6 the code has eighteen ports (`actions`, `exporter` added in M6): `keyValues`, `files`, `index`, `builder`, `watcher`, `trash`, `templates`, `config`, `clock`, `attachments`, `capture`, `workspace`, `loginItem` (M4), `system` (M4, the Doctor checks), `history`, `journal` (M5). `Ports.live(root:support:keyValues:recorder:)` throws when the index cannot open, builds one `ShellRunner` with the recorder, and opens `index.sqlite` in the support folder (`VaultSupportFolder.url(for:)`, `~/Library/Application Support/Slate/<vault-id>/`). The spies are in-memory fakes that also record their calls, so use case and store tests run without a disk.
 
 ### 4.4 Policies (pure, `enum XPolicy { static func … }`)
 
@@ -406,11 +407,11 @@ As DevHub: `<Row>Model` is a plain struct with display strings, `Tint`, icon nam
 | `PresentationAssembly(ports:useCases:kv:…)` | Presentation | builds shared objects and stores in dependency order |
 | `PresentationAssembly.preview()` | Presentation | mocks for previews |
 | `AppWindows(assembly:)` | Presentation | windows and panels |
-| `AppContainer.live()` | Composition | M1: reads `vault.path` from `UserDefaults`; without it shows `FirstLaunchWindow` (default `~/Documents/Slate`, Choose…, Start). Then runs `VaultBootstrap`, builds `Ports.live`, `UseCases`, `PresentationAssembly`, `AppWindows`, writes the default config and templates, and starts the change feed. On `willTerminate` (a selector observer, so it runs on the main actor) it runs `pendingSave()` off the main actor and waits up to 3 s. Later: `ShellRunner`, hotkeys (`KeyboardShortcuts`), `ServicesProvider`, `LoginItem`, `handle(urls:)` |
-| `URLCommandParser` | Composition | `URL` → `URLCommand` enum (`new`, `open`, `append`, `capture`, `search`); rejects anything else |
-| `URLCommandHandler` | Composition | `URLCommand` → use case call and `AppActions` navigation |
-| `ServicesProvider` | Composition | `@objc addToSlate(_:userData:error:)` → `QuickCaptureUseCase` |
-| `CLIContainer` | SlateCLI | `Ports.live` with a `NoopRecorder`, the handful of use cases the commands need; opens the app through `open "slate://…"` when asked |
+| `AppContainer` (app delegate) | Composition | `applicationDidFinishLaunching` launches; `application(_:open:)` takes URLs (queued until the windows exist); `applicationWillTerminate` runs the quit job. M1: reads `vault.path` from `UserDefaults`; without it shows `FirstLaunchWindow` (default `~/Documents/Slate`, Choose…, Start). Then runs `VaultBootstrap`, builds `Ports.live`, `UseCases`, `PresentationAssembly`, `AppWindows`, writes the default config and templates, and starts the change feed. On `willTerminate` (a selector observer, so it runs on the main actor) it runs `pendingSave()` off the main actor and waits up to 3 s. Later: `ShellRunner`, hotkeys (`KeyboardShortcuts`), `ServicesProvider`, `LoginItem`, `handle(urls:)` |
+| `URLCommandParser` | Domain (M6: pure, shared with the CLI and tested in `SlateDomainTests`) | `URL` → `URLCommand` enum (`new`, `open`, `append`, `capture`, `search`); rejects anything else, and folder names with `/`, a leading `.` or `_` |
+| URL handling | Composition, Presentation | `AppContainer.application(_:open:)` parses and passes the command to `AppWindows.handle(_:)`, which shows the panel and calls `NoteListStore.create/open/append`, `SearchStore` or the capture panel |
+| `ServicesProvider` | Composition | `@objc addToSlate(_:userData:error:)` → `AppWindows.addFromService` → `CaptureStore.addFromService` → `QuickCaptureUseCase` |
+| `CLIContainer` | SlateCLI | `Ports.live` with a `NoopRecorder` and `UseCases`; the folder comes from `--vault`, `SLATE_VAULT` or the app's `vault.path` (`UserDefaultsKeyValueStore(suite:)`). Commands that read the index run an unchanged-files scan first. Opens the app through `open "slate://…"` |
 
 ---
 

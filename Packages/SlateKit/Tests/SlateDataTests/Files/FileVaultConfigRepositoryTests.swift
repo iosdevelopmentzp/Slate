@@ -74,4 +74,27 @@ import Testing
         let task = try String(contentsOf: folder.url.appendingPathComponent(".slate/types/task.json"), encoding: .utf8)
         #expect(task.contains(#""branchPattern" : "feature/{{ticket}}-{{slug}}""#))
     }
+
+    @Test func viewsAndExampleActionsAreWrittenOnce() async throws {
+        try makeFolders(["Inbox"])
+
+        try await repository.ensureDefaults()
+
+        #expect(try await repository.views().map(\.id) == ["open-todos", "active-tasks", "this-week", "untagged", "conflicts"])
+        let actions = try await repository.actions()
+        #expect(actions.map(\.id) == ["copy-branch", "list-folder", "open-folder-in-terminal"])
+        #expect(actions.first?.condition == .hasBranch)
+        #expect(actions.first?.output == .clipboard)
+    }
+
+    @Test func linkPatternsRoundTripAndKeepUnknownKeys() async throws {
+        try makeFolders(["Inbox"])
+        _ = try folder.write(#"{"version": 1, "patterns": [{"id": "jira", "regex": "x", "url": "u/$1", "label": "$1", "color": "blue"}]}"#, to: ".slate/links.json")
+
+        try await repository.saveLinkPatterns([LinkPattern(id: "jira", regex: "y", url: "v/$1", label: "$1")])
+
+        #expect(try await repository.linkPatterns() == [LinkPattern(id: "jira", regex: "y", url: "v/$1", label: "$1")])
+        let text = try String(contentsOf: folder.url.appendingPathComponent(".slate/links.json"), encoding: .utf8)
+        #expect(text.contains(#""color" : "blue""#))
+    }
 }

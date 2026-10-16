@@ -19,7 +19,9 @@ extension Ports {
             loginItem: MockLoginItem(),
             system: MockSystemChecks(),
             history: MockHistoryRepository(),
-            journal: MockJournalStore()
+            journal: MockJournalStore(),
+            actions: MockActionRunner(),
+            exporter: MockExporter()
         )
     }
 }

@@ -11,4 +11,5 @@ package enum Theme {
     package static let codeBackground = Color(nsColor: .quaternaryLabelColor).opacity(0.3)
     package static let hover = Color.primary.opacity(0.05)
     package static let shadow = Color.black.opacity(0.08)
+    package static let scrim = Color.black.opacity(0.12)
 }

@@ -61,6 +61,7 @@ let package = Package(
         .testTarget(name: "SlateDataTests", dependencies: ["SlateData", "SlateMocks", "SlateTestSupport"], swiftSettings: shared),
         .testTarget(name: "SlateEditorTests", dependencies: ["SlateEditor"], resources: [.copy("Fixtures")], swiftSettings: mainActor),
         .testTarget(name: "SlateUITests", dependencies: ["SlateUI"], swiftSettings: mainActor),
+        .testTarget(name: "SlateCLITests", dependencies: ["SlateCLI", "SlateData", "SlateTestSupport"], swiftSettings: shared),
         .testTarget(name: "SlatePresentationTests", dependencies: ["SlatePresentation", "SlateMocks", "SlateTestSupport"], swiftSettings: mainActor),
     ]
 )

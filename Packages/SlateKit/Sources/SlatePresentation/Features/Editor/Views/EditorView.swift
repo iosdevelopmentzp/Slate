@@ -75,6 +75,7 @@ struct EditorView: View {
                     HistoryView(path: document.path)
                 }
                 .accessibilityLabel("Versions")
+                NoteMenu(document: document)
             }
             let chips = NoteChipsMapper.noteChips(for: document, type: vault.type(named: document.type), ticketURL: document.header.ticket.flatMap(ticketURL))
             let tags = TagPolicy.merged(header: document.header.tags, lines: []) + (noteList.selected?.tags ?? []).filter { (document.header.tags ?? []).map(TagPolicy.normalized).contains($0) == false }

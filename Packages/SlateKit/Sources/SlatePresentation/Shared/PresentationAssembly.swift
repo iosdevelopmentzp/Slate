@@ -20,6 +20,8 @@ package final class PresentationAssembly {
     let capture: CaptureStore
     let daily: DailyStore
     let history: HistoryStore
+    let todos: TodoStore
+    let palette: PaletteStore
 
     package init(ports: Ports, useCases: UseCases, activity: ActivityLog, vaultRoot: URL) {
         events = AppEvents()
@@ -49,6 +51,7 @@ package final class PresentationAssembly {
             duplicate: useCases.duplicate,
             trashNote: useCases.trash,
             restore: useCases.restore,
+            append: useCases.append,
             navigator: navigator,
             toaster: toaster,
             activity: activity,
@@ -73,7 +76,9 @@ package final class PresentationAssembly {
             toaster: toaster,
             create: useCases.create,
             templates: ports.templates,
-            journal: ports.journal
+            journal: ports.journal,
+            runAction: useCases.runAction,
+            exporter: ports.exporter
         )
         settings = SettingsStore(
             store: ports.keyValues,
@@ -97,6 +102,8 @@ package final class PresentationAssembly {
             toaster: toaster,
             events: events
         )
+        palette = PaletteStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock)
+        todos = TodoStore(index: ports.index, toggleTodo: useCases.toggleTodo, notes: noteList, navigator: navigator, store: ports.keyValues, activity: activity, events: events)
         daily = DailyStore(ensureDaily: useCases.ensureDaily, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
     }
 

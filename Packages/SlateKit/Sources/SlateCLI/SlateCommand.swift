@@ -2,10 +2,10 @@ import ArgumentParser
 import Foundation
 
 @main
-struct SlateCommand: ParsableCommand {
+struct SlateCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "slate",
-        abstract: "Notes from the command line.",
-        subcommands: [VersionCommand.self]
+        abstract: "Notes from the command line. Works when Slate is not running.",
+        subcommands: [NewCommand.self, OpenCommand.self, AppendCommand.self, TodayCommand.self, SearchCommand.self, ListCommand.self, PathCommand.self, VersionCommand.self]
     )
 }

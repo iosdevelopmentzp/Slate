@@ -2,13 +2,14 @@
 
 Personal macOS menu bar notes app for an iOS developer. Markdown files in a local notes folder, a SQLite search index, task notes with ticket and branch, quick capture from a hotkey.
 
-Current stage: **M5 done** (safety and history). Notes are real Markdown files in the notes folder chosen on first launch. The panel and the window list, create, edit, rename, pin, move, archive, duplicate, trash and restore notes; the editor autosaves; external edits reload. The editor styles Markdown with visible marks, highlights code, renders checkboxes and images, and handles paste and screenshots. The SQLite index lives in Application Support; search covers titles, text, tags and filters; links to notes complete, follow, create missing notes and follow renames. A global quick note field, Today with carried checkboxes, task notes with ticket, branch and status, link patterns from `.slate/links.json`, global hotkeys and a Settings window with a Doctor exist. Unsaved text is kept in a journal, conflicts offer Open both, git snapshots outside the notes folder give per-note versions with Restore and an optional push, and the Trash empties itself. Next: milestone M6 (extension points) of `docs/ROADMAP.md`. `docs/STATUS.md` says what is real.
+Current stage: **M6 done** (extension points). Notes are real Markdown files in the notes folder chosen on first launch. The panel and the window list, create, edit, rename, pin, move, archive, duplicate, trash and restore notes; the editor autosaves; external edits reload. The editor styles Markdown with visible marks, highlights code, renders checkboxes and images, and handles paste and screenshots. The SQLite index lives in Application Support; search covers titles, text, tags and filters; links to notes complete, follow, create missing notes and follow renames. A global quick note field, Today with carried checkboxes, task notes with ticket, branch and status, link patterns from `.slate/links.json`, global hotkeys and a Settings window with a Doctor exist. Unsaved text is kept in a journal, conflicts offer Open both, git snapshots outside the notes folder give per-note versions with Restore and an optional push, and the Trash empties itself. The `slate://` URL scheme, the `slate` CLI, the Services menu entry, actions in `.slate/actions/`, saved searches, Open TODOs, the `⌘K` palette and export exist. Next: milestone M7 (polish) of `docs/ROADMAP.md`. `docs/STATUS.md` says what is real.
 
 Read first, in this order: this file, `docs/STATUS.md`, `docs/ROADMAP.md`, then the document for the milestone (`docs/SPEC.md`, `docs/STORAGE-FORMAT.md`, `docs/ARCHITECTURE.md`, `docs/UX.md`). `docs/PLAYBOOK.md` has verified solutions and traps per topic; read its section before touching that topic.
 
 ## Project
 
-- Xcode project `Slate.xcodeproj`, one app target `Slate`, macOS 26.4+, Swift 6 language mode, default actor isolation `MainActor`. The target holds only `Slate/SlateApp.swift` and `Assets.xcassets` and links the product `SlateComposition`.
+- Xcode project `Slate.xcodeproj`, one app target `Slate`, macOS 26.4+, Swift 6 language mode, default actor isolation `MainActor`. The target holds only `Slate/SlateApp.swift` and `Assets.xcassets` and links the product `SlateComposition`. `SlateApp` hands the app delegate to `AppContainer` through `@NSApplicationDelegateAdaptor`.
+- `Config/Slate-Info.plist` (`INFOPLIST_FILE`) holds the `slate://` URL scheme and the "Add to Slate" service; Xcode merges the generated keys into it (`GENERATE_INFOPLIST_FILE` stays on).
 - Local package `Packages/SlateKit` (tools 6.2, Swift 6). `project.pbxproj` holds the package reference.
 - No App Sandbox. Ad-hoc signing (`Sign to Run Locally`). No Apple Developer account. Keep it this way: the app shells out to `screencapture`, `git` and `open`.
 - `INFOPLIST_KEY_LSUIElement = YES`: no Dock icon, the app lives in the menu bar only.
@@ -32,17 +33,18 @@ Modules, one direction: `Composition → Presentation → Domain ← Data`; Pres
 
 | Path | Purpose |
 |---|---|
-| `Slate/` | App host: `SlateApp.swift` (`@main`, keeps `AppContainer.live()` alive) and `Assets.xcassets`. Nothing else |
+| `Slate/` | App host: `SlateApp.swift` (`@main`, `@NSApplicationDelegateAdaptor(AppContainer.self)`) and `Assets.xcassets`. Nothing else |
+| `Config/` | `Slate-Info.plist`: URL scheme and Services, merged with the generated Info.plist |
 | `Packages/SlateKit/Sources/SlateDomain/` | models, values, ports, policies, codec, use cases, `Ports`, `UseCases` |
 | `…/SlateData/` | live ports: `Files/`, `Index/` (GRDB and FTS5), `Watch/`, `Shell/`, `History/`, `Capture/`, `Secrets/`, `Persistence/`, `System/` (AppKit only here), `Assembly/Ports+Live.swift` |
 | `…/SlateMocks/` | mocks and `Ports.mock()` |
 | `…/SlateUI/` | shared SwiftUI blocks, `Theme`, `Tint`, formatters, hints |
 | `…/SlateEditor/` | the TextKit 2 Markdown editor; imports nothing from the package |
 | `…/SlatePresentation/` | `Shared/`, `Shell/` (`AppWindows`, `RootView`), `Features/<Name>/` |
-| `…/SlateComposition/` | `AppContainer`, the only `public` type |
+| `…/SlateComposition/` | `AppContainer` (the app delegate, the only `public` type), `ServicesProvider` |
 | `…/SlateTestSupport/` | spies and test helpers |
 | `…/SlateCLI/` | the `slate` command |
-| `Packages/SlateKit/Tests/` | five test targets, folders mirror `Sources/` |
+| `Packages/SlateKit/Tests/` | six test targets (`SlateCLITests` runs the commands over a temporary folder), folders mirror `Sources/` |
 | `Scripts/` | `build.sh`, `test.sh`, `check-layers.sh`, `layer-exceptions.txt`, `run.sh`, `install.sh`, `generate-vault.sh` |
 | `docs/` | `SPEC.md`, `STORAGE-FORMAT.md`, `ARCHITECTURE.md`, `UX.md`, `ROADMAP.md`, `PLAYBOOK.md`, `BOOTSTRAP.md`, `STATUS.md`, `adr/` |
 | `.claude/rules/` | `layers.md` (always), `domain.md`, `data.md`, `presentation.md`, `testing.md` (by path) |

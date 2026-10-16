@@ -13,6 +13,8 @@ package final class SpyVaultConfigRepository: VaultConfigRepository, @unchecked 
     private var _types = NoteType.builtIn
     private var _spacesError: TestError?
     private var _patterns: [LinkPattern] = []
+    private var _views = SmartView.defaults
+    private var _actions: [ActionDefinition] = []
 
     package init() {}
 
@@ -62,5 +64,18 @@ package final class SpyVaultConfigRepository: VaultConfigRepository, @unchecked 
 
     package func saveLinkPatterns(_ patterns: [LinkPattern]) async throws {
         lock.withLock { _patterns = patterns }
+    }
+
+    package var actionList: [ActionDefinition] {
+        get { lock.withLock { _actions } }
+        set { lock.withLock { _actions = newValue } }
+    }
+
+    package func views() async throws -> [SmartView] {
+        lock.withLock { _views }
+    }
+
+    package func actions() async throws -> [ActionDefinition] {
+        lock.withLock { _actions }
     }
 }

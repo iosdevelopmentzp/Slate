@@ -5,27 +5,47 @@ import SlateDomain
 import SlatePresentation
 
 @MainActor
-public final class AppContainer: NSObject {
+public final class AppContainer: NSObject, NSApplicationDelegate {
     private let keyValues: UserDefaultsKeyValueStore
     private let activity = ActivityLog()
     private let firstLaunch = FirstLaunchWindow()
     private var assembly: PresentationAssembly?
     private var windows: AppWindows?
-    private init(keyValues: UserDefaultsKeyValueStore) {
-        self.keyValues = keyValues
+    private var services: ServicesProvider?
+    private var pendingURLs: [URL] = []
+    override public init() {
+        keyValues = UserDefaultsKeyValueStore()
         super.init()
     }
 
-    public static func live() -> AppContainer {
-        let container = AppContainer(keyValues: UserDefaultsKeyValueStore())
-        Task { @MainActor in
-            container.launch()
+    public func applicationDidFinishLaunching(_ notification: Notification) {
+        launch()
+    }
+
+    public func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls {
+            handle(url)
         }
-        return container
+    }
+
+    public func applicationWillTerminate(_ notification: Notification) {
+        guard let job = assembly?.pendingSave() else { return }
+        let done = DispatchSemaphore(value: 0)
+        Task.detached {
+            await job()
+            done.signal()
+        }
+        _ = done.wait(timeout: .now() + .seconds(3))
     }
 
     private func launch() {
-        NotificationCenter.default.addObserver(self, selector: #selector(willTerminate), name: NSApplication.willTerminateNotification, object: nil)
+        let services = ServicesProvider { [weak self] text in
+            guard let self else { return }
+            windows?.addFromService(text)
+        }
+        self.services = services
+        NSApp.servicesProvider = services
+        NSUpdateDynamicServices()
         if let stored = keyValues.string(forKey: Keys.vaultPath), FileManager.default.fileExists(atPath: stored) {
             open(URL(fileURLWithPath: stored, isDirectory: true))
         } else {
@@ -67,6 +87,11 @@ public final class AppContainer: NSObject {
         self.assembly = assembly
         self.windows = windows
         windows.start()
+        let queued = pendingURLs
+        pendingURLs = []
+        for url in queued {
+            handle(url)
+        }
         Task {
             try? await ports.config.ensureDefaults()
             try? await ports.templates.ensureDefaults()
@@ -86,14 +111,13 @@ public final class AppContainer: NSObject {
         }
     }
 
-    @objc private func willTerminate(_ notification: Notification) {
-        guard let job = assembly?.pendingSave() else { return }
-        let done = DispatchSemaphore(value: 0)
-        Task.detached {
-            await job()
-            done.signal()
+    private func handle(_ url: URL) {
+        guard let windows else {
+            pendingURLs.append(url)
+            return
         }
-        _ = done.wait(timeout: .now() + .seconds(3))
+        guard let command = URLCommandParser.parse(url) else { return }
+        windows.handle(command)
     }
 
     private enum Keys {

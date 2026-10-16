@@ -17,6 +17,8 @@ extension View {
             .environment(assembly.capture)
             .environment(assembly.daily)
             .environment(assembly.history)
+            .environment(assembly.todos)
+            .environment(assembly.palette)
             .environment(\.hintCenter, assembly.hints)
             .environment(\.copyToPasteboard, { value, label in assembly.toaster.copy(value, label: label) })
     }

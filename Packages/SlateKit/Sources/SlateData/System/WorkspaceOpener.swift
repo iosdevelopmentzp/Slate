@@ -2,7 +2,7 @@ import AppKit
 import SlateDomain
 
 struct WorkspaceOpener: WorkspaceOpening {
-    let quickLookSource: QuickLookSource
+    let quickLook = QuickLookPresenter()
 
     func open(_ url: URL) async {
         await MainActor.run {
@@ -17,6 +17,6 @@ struct WorkspaceOpener: WorkspaceOpening {
     }
 
     func quickLook(_ url: URL) async {
-        await quickLookSource.present(url)
+        await quickLook.present(url)
     }
 }

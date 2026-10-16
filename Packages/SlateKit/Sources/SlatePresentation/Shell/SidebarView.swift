@@ -42,6 +42,16 @@ struct SidebarView: View {
                 if isCreating {
                     nameField { name in await vault.create(named: name) }
                 }
+                Text("Saved searches")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 8)
+                    .padding(.top, 10)
+                    .padding(.bottom, 2)
+                row("Open TODOs", systemImage: "checklist", source: .todos, count: nil)
+                ForEach(vault.views.filter { $0.query != "is:todo" }) { view in
+                    savedRow(view)
+                }
                 if search.tags.isEmpty == false {
                     Text("Tags")
                         .font(.caption.weight(.semibold))
@@ -113,6 +123,19 @@ struct SidebarView: View {
         editing = nil
         isCreating = false
         draft = ""
+    }
+
+    private func savedRow(_ view: SmartView) -> some View {
+        let isSelected = search.query == view.query
+        return Label(view.title, systemImage: view.icon)
+            .lineLimit(1)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(isSelected ? Theme.selection.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .contentShape(Rectangle())
+            .onTapGesture { search.showSaved(view) }
+            .accessibilityAddTraits(.isButton)
     }
 
     private func tagRow(_ tag: TagCount) -> some View {

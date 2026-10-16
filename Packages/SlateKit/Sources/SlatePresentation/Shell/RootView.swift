@@ -13,6 +13,7 @@ struct RootView: View {
     @Environment(\.openAsWindow) private var openAsWindow
     @Environment(\.openSettings) private var openSettings
     @Environment(DailyStore.self) private var daily
+    @Environment(PaletteStore.self) private var palette
 
     @State private var showsSidebar = true
 
@@ -47,6 +48,19 @@ struct RootView: View {
             FooterView()
         }
         .background(shortcuts)
+        .overlay(alignment: .top) {
+            if palette.isOpen {
+                ZStack(alignment: .top) {
+                    Theme.scrim
+                        .contentShape(Rectangle())
+                        .onTapGesture { palette.close() }
+                    PaletteView()
+                        .padding(.top, 60)
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.12), value: palette.isOpen)
         .overlay {
             if let hintCenter {
                 HintOverlay(center: hintCenter)
@@ -75,6 +89,7 @@ struct RootView: View {
             shortcut("[", modifiers: .command) { Task { await daily.openDay(-1) } }
             shortcut("]", modifiers: .command) { Task { await daily.openDay(1) } }
             shortcut(",", modifiers: .command) { openSettings() }
+            shortcut("k", modifiers: .command) { palette.isOpen ? palette.close() : palette.open() }
             if surface == .panel {
                 shortcut("o", modifiers: [.command, .shift]) { openAsWindow() }
             }

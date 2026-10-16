@@ -4,7 +4,7 @@ Last updated: 2026-10-16
 
 ## Stage
 
-M5 done (safety and history). Manual checks of M1 to M5 by the owner still open. On first launch Slate asks for the notes folder (default `~/Documents/Slate`) and prepares it: six folders, `_attachments/`, `_templates/`, `.slate/` with `spaces.json` and the five note types, and a welcome note. Notes are real Markdown files with the header of `STORAGE-FORMAT.md` section 2. The list is built by a full scan at launch and kept current by the FSEvents watcher. 222 tests in 57 suites pass. Next: milestone M6 (extension points).
+M6 done (extension points). Manual checks of M1 to M6 by the owner still open. On first launch Slate asks for the notes folder (default `~/Documents/Slate`) and prepares it: six folders, `_attachments/`, `_templates/`, `.slate/` with `spaces.json` and the five note types, and a welcome note. Notes are real Markdown files with the header of `STORAGE-FORMAT.md` section 2. The list is built by a full scan at launch and kept current by the FSEvents watcher. 222 tests in 57 suites pass. Next: milestone M7 (polish).
 
 ## Screens
 
@@ -21,6 +21,10 @@ M5 done (safety and history). Manual checks of M1 to M5 by the owner still open.
 | Editor | real | Title field, chips, autosave, the "Changed on disk" banner (M1). Markdown styling with visible marks, code blocks with highlighting and a Copy button, checkboxes, list editing, images under their line, paste rules with the "Paste as code" bar, screenshots, `⌘`-click links (M2). `[[` completes note names, `#` completes tags; a link to a missing note makes that note; tag chips under the title search the tag (M3). "Changed on disk" offers Keep mine, Take theirs and Open both; unsaved text is kept in a journal every second and offered with Restore and Discard when the note opens again (M5). No link titles (P1), no hover preview of a link target |
 | History | real | A clock button next to the title lists the versions of the note (git snapshots outside the notes folder) with Restore. The footer says "history 09:50", "pushed" or "push failed" (opens Activity) |
 | Activity | real | The footer button opens a list of what went wrong (and a few successes) with Clear and Copy |
+| Palette | real | `⌘K`: one field over the panel or the window. Empty: recent and often opened notes and the main commands. Typing: notes (titles at once, text from the index, filters work) and commands (new notes, Today, Open TODOs, folders, saved searches, templates, actions, export, versions, Rebuild search, Settings). Arrows, Enter, `⌘Enter` opens in the window, `⌘C` copies the note path, Esc closes |
+| Open TODOs | real | A list of every open checkbox, grouped by note or by ticket. A click on the box checks it in its file and the open editor reloads. Double click opens the note. In the folder menu, the sidebar and the palette |
+| Saved searches | real | From `.slate/views.json` (written on first launch with the five defaults of `STORAGE-FORMAT.md` 7.3): in the sidebar, the folder menu and the palette; a click runs the search over all notes |
+| Extension points | real | `slate://new`, `open`, `append`, `capture`, `search` (cold start too). The `slate` CLI: `new`, `open`, `append`, `today`, `search`, `list`, `path`, `version`, with `--vault` and `--json`. Services → Add to Slate makes a note from the selected text. Actions from `.slate/actions/*.json` (three examples written on first launch) in the note menu and the palette, with the output in Activity, the clipboard or the note. The note menu (`…`): Copy as Markdown, Copy for Slack, Save as HTML, Save as PDF (both into Downloads, then shown in Finder) |
 | Search | real | The header field searches titles, text, tags and tickets in the current folder ("Search all notes" widens it) with the filters of `SPEC.md` 6.1. Title matches show at once; the index answers within 80 ms plus the query. Rows show the snippet with the words in bold; Enter or a click opens the note with the caret on the first match. Esc clears. No palette yet (A7, M6) |
 | Settings | real | One window with General (Open at login, the quick note folder, text size, appearance, Trash days, Doctor with Rebuild search), Notes folder (Choose another folder…), Shortcuts (three recorders), Links (tracker and git host addresses, ticket pattern, labels; Save writes `.slate/links.json`), History (versions on or off, interval, remote, push on quit, Save a version now) |
 
@@ -79,6 +83,13 @@ Numbered. What, then why. A later session must not undo these without a new numb
 46. Delete now and the purge move files to the macOS Trash with `FileManager.trashItem` (Foundation), not `NSWorkspace.recycle`, so `FileTrashRepository` stays without AppKit. Tests pass their own `recycle` closure so nothing reaches the real Trash.
 47. `CommandRecord` has `toleratedExitCodes`, so an expected exit code (git's 1 and 128) is not a failure in Activity.
 48. M5 is one commit: the journal, the conflict copy, history, purge and Activity share the editor, the footer and the assembly.
+49. M6 URL scheme: `AppContainer` is the app delegate (`@NSApplicationDelegateAdaptor`) and gets URLs through `application(_:open:)`; `AppContainer.live()` is gone and `AppContainer` has a public `init()`. `URLCommandParser` is a Domain policy (shared with the CLI), not a Composition type as `ARCHITECTURE.md` section 8 had it.
+50. M6 Info.plist: `Config/Slate-Info.plist` with the URL type and the service, merged with the generated keys. It is outside `Slate/` so the synchronized folder does not copy it as a resource.
+51. M6 actions: `command` runs as `/bin/zsh -c "<command>"` with the note environment and the notes folder as the working folder, so an action can be a one-line shell command or a script path. Three example actions are written once when `.slate/actions/` is missing; they use only `SLATE_*` values (ADR 0006). A 60 s limit stops the action.
+52. M6 export: Save as HTML and Save as PDF write into Downloads and show the file in Finder instead of a save panel (`UX.md` principle 5). The PDF is the HTML page drawn by an `NSTextView`.
+53. M6 CLI: the notes folder comes from `--vault`, then `SLATE_VAULT`, then the app's `vault.path`. Commands that read the index (`append --ticket`, `search`, `list`, `path`) first run the scan for changed files, so they see edits made while the app was closed. The CLI writes the index too (WAL lets the app read at the same time).
+54. M6 palette: an overlay inside the panel or the window, not its own window. Recent notes are the last 20 opened (`navigator.recent`); "often" means opened more than twice.
+55. M6 is one commit: the URL scheme, the CLI, Services, actions, saved searches, Open TODOs, the palette and export share the Info.plist, the config port and the stores.
 25. Branches during the long build: one branch per milestone, each made from the one before (`m1.5-editor-spike`, `m2-editor`, `m3-index-and-search`, …). Merging the last one brings all of them.
 26. M2 editor details: a tag needs at least one letter (`#123` stays text, it is the issue pattern of `links.json`). Tab indents a list item by the width of its own marker plus one space (`- ` two spaces, `1. ` three). Remove Image deletes the line (Undo brings it back); the file stays in `_attachments/` until "Clean attachments" (M5). The "Paste as code" bar lives inside `SlateEditor`, so Enter and Esc reach it while the text has focus.
 27. The host gives text to the editor with `EditorInsertion(token:markdown:)`, like `EditorFocusRequest`; the editor inserts it on its own line once per token. `ARCHITECTURE.md` section 6.1 had an `EditorCommands` object; the token value replaced it, so no store holds an AppKit object.
@@ -89,8 +100,16 @@ Numbered. What, then why. A later session must not undo these without a new numb
 ## Next steps
 
 1. Owner: run the M1 manual checks (below). Merge the branch `m1-vault-and-notes` when they pass.
-2. Owner: run the M2 to M5 manual checks (below).
-3. M6: extension points.
+2. Owner: run the M2 to M6 manual checks (below).
+3. M7: polish.
+
+M6 manual checks for the owner:
+
+1. Run `Scripts/install.sh`. In Terminal: `open "slate://new?title=Hi"`: the panel shows the new note.
+2. Open a task note in Slate, then run `slate append --ticket ABC-2324 --section Findings "The delegate is strong."`: the text appears in the open note within a second (S10).
+3. Select text in Safari, Services → Add to Slate: a note appears in Inbox. If the entry is missing, log out and in once.
+4. `⌘K`, type `open todos`, Enter: the list of open checkboxes; check one and open its note.
+5. In a task with a branch, the `…` menu → Copy the branch name. Copy for Slack turns `**bold**` into `*bold*`.
 
 M5 manual checks for the owner:
 

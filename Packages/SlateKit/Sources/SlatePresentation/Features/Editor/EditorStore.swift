@@ -44,6 +44,8 @@ final class EditorStore {
     @ObservationIgnored let templates: any TemplateRepository
     @ObservationIgnored let journal: any JournalStore
     @ObservationIgnored var journalTask: Task<Void, Never>?
+    @ObservationIgnored let runAction: RunActionUseCase
+    @ObservationIgnored let exporter: any NoteExporting
     @ObservationIgnored var insertionCounter = 0
     @ObservationIgnored private var subscription: SubscriptionToken?
     @ObservationIgnored private var isApplying = false
@@ -71,7 +73,9 @@ final class EditorStore {
         toaster: Toaster,
         create: CreateNoteUseCase,
         templates: any TemplateRepository,
-        journal: any JournalStore
+        journal: any JournalStore,
+        runAction: RunActionUseCase,
+        exporter: any NoteExporting
     ) {
         self.files = files
         self.index = index
@@ -90,6 +94,8 @@ final class EditorStore {
         self.create = create
         self.templates = templates
         self.journal = journal
+        self.runAction = runAction
+        self.exporter = exporter
         subscription = events.subscribe { [weak self] event in
             guard let self else { return }
             handle(event)

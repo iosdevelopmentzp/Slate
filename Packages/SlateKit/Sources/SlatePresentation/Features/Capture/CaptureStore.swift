@@ -37,6 +37,18 @@ final class CaptureStore {
         text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false && isSaving == false
     }
 
+    func addFromService(_ selection: String) async {
+        let trimmed = selection.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else { return }
+        do {
+            guard let document = try await capture.execute(CaptureInput(text: trimmed)) else { return }
+            events.post(.indexUpdated)
+            toaster.show("Added to \(document.path.space?.rawValue ?? "Inbox")")
+        } catch {
+            activity.log("Cannot add the selected text", detail: error.localizedDescription, outcome: .failure)
+        }
+    }
+
     func prepare() {
         focusToken += 1
     }

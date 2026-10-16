@@ -12,7 +12,7 @@ package actor ShellRunner {
         self.recorder = recorder
     }
 
-    nonisolated func run(_ executable: String, _ arguments: [String], cwd: String?, environment: [String: String] = [:], tolerating tolerated: Set<Int32> = []) async throws -> ShellResult {
+    nonisolated package func run(_ executable: String, _ arguments: [String], cwd: String?, environment: [String: String] = [:], tolerating tolerated: Set<Int32> = []) async throws -> ShellResult {
         let command = CommandFormatter.displayCommand(executable, arguments)
         do {
             let result = try await withCheckedThrowingContinuation { continuation in
@@ -32,10 +32,11 @@ package actor ShellRunner {
         _ executable: String,
         _ arguments: [String],
         cwd: String?,
+        environment: [String: String] = [:],
         onLine: @escaping @Sendable (String) -> Void
     ) async throws -> Int32 {
         let command = CommandFormatter.displayCommand(executable, arguments)
-        let process = Self.makeProcess(executable, arguments, cwd: cwd, environment: [:])
+        let process = Self.makeProcess(executable, arguments, cwd: cwd, environment: environment)
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = pipe

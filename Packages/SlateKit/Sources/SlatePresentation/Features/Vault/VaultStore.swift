@@ -11,6 +11,8 @@ final class VaultStore {
     var types: [NoteType] = NoteType.builtIn
     var linkPatterns: [LinkPattern] = []
     var templateNames: [String] = []
+    var views: [SmartView] = SmartView.defaults
+    var actions: [ActionDefinition] = []
 
     @ObservationIgnored private let repository: any VaultConfigRepository
     @ObservationIgnored private let templates: any TemplateRepository
@@ -60,6 +62,10 @@ final class VaultStore {
                 if patterns != linkPatterns { linkPatterns = patterns }
                 let names = (try? await templates.names()) ?? []
                 if names != templateNames { templateNames = names }
+                let loadedViews = (try? await repository.views()) ?? SmartView.defaults
+                if loadedViews != views { views = loadedViews }
+                let loadedActions = (try? await repository.actions()) ?? []
+                if loadedActions != actions { actions = loadedActions }
             } catch {
                 activity.log("Cannot read the folders", detail: error.localizedDescription, outcome: .failure)
             }

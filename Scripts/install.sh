@@ -14,5 +14,6 @@ swift build --package-path "$ROOT/Packages/SlateKit" -c release --product slate 
 mkdir -p "$BIN"
 cp "$ROOT/Packages/SlateKit/.build/release/slate" "$BIN/slate"
 
+/System/Library/CoreServices/pbs -update || true
 open "$TARGET"
 echo "Installed $TARGET and $BIN/slate"

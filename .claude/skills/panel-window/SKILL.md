@@ -9,7 +9,7 @@ Matches the code since milestone M1. Hot keys, the capture panel and the login i
 
 ## Why not `MenuBarExtra`
 
-`MenuBarExtra(.window)` puts its panel back under the icon on every open and every resize, and the panel cannot be moved. Slate draws its own menu bar item and panel. The SwiftUI `App` body (`Slate/SlateApp.swift`) is `Settings { EmptyView() }`. `AppContainer.live()` (SlateComposition) builds the `PresentationAssembly` and `AppWindows(assembly:)` and calls `start()`. `AppWindows` owns the status item, the panel and the window and hosts `RootView().inject(assembly)`.
+`MenuBarExtra(.window)` puts its panel back under the icon on every open and every resize, and the panel cannot be moved. Slate draws its own menu bar item and panel. The SwiftUI `App` body (`Slate/SlateApp.swift`) is `Settings { EmptyView() }`. `AppContainer` (SlateComposition, the app delegate through `@NSApplicationDelegateAdaptor`) builds the `PresentationAssembly` and `AppWindows(assembly:)` and calls `start()`. `AppWindows` owns the status item, the panel and the window and hosts `RootView().inject(assembly)`.
 
 ## Pieces
 

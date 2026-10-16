@@ -1,9 +1,9 @@
 import Foundation
 
-struct ShellResult: Sendable {
-    let stdout: String
-    let stderr: String
-    let exitCode: Int32
+package struct ShellResult: Sendable {
+    package let stdout: String
+    package let stderr: String
+    package let exitCode: Int32
 
     var failureMessage: String {
         let error = stderr.trimmingCharacters(in: .whitespacesAndNewlines)

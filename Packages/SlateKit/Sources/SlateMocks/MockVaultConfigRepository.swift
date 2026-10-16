@@ -27,4 +27,12 @@ actor MockVaultConfigRepository: VaultConfigRepository {
     }
 
     func saveLinkPatterns(_ patterns: [LinkPattern]) {}
+
+    func views() -> [SmartView] {
+        SmartView.defaults
+    }
+
+    func actions() -> [ActionDefinition] {
+        [ActionDefinition(id: "copy-branch", title: "Copy the branch name", icon: "arrow.branch", command: "printf %s \"$SLATE_BRANCH\"", condition: .hasBranch, output: .clipboard)]
+    }
 }

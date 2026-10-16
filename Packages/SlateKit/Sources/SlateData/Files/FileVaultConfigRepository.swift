@@ -18,6 +18,14 @@ struct FileVaultConfigRepository: VaultConfigRepository {
         configFolder.appendingPathComponent("links.json")
     }
 
+    private var viewsURL: URL {
+        configFolder.appendingPathComponent("views.json")
+    }
+
+    private var actionsFolder: URL {
+        configFolder.appendingPathComponent("actions", isDirectory: true)
+    }
+
     private var typesFolder: URL {
         configFolder.appendingPathComponent("types", isDirectory: true)
     }
@@ -81,6 +89,14 @@ struct FileVaultConfigRepository: VaultConfigRepository {
         if FileManager.default.fileExists(atPath: spacesURL.path) == false {
             try await saveSpaces(try await spaces())
         }
+        if FileManager.default.fileExists(atPath: viewsURL.path) == false {
+            try JSONFile.write(["version": 1, "views": SmartView.defaults.map(Self.object)], to: viewsURL)
+        }
+        if FileManager.default.fileExists(atPath: actionsFolder.path) == false {
+            for (name, action) in Self.exampleActions {
+                try JSONFile.write(Self.object(for: action), to: actionsFolder.appendingPathComponent("\(name).json"))
+            }
+        }
         for type in NoteType.builtIn {
             let url = typesFolder.appendingPathComponent("\(type.name).json")
             guard FileManager.default.fileExists(atPath: url.path) == false else { continue }
@@ -109,6 +125,48 @@ struct FileVaultConfigRepository: VaultConfigRepository {
             return entry
         }
         try JSONFile.write(object, to: linksURL)
+    }
+
+    func views() async throws -> [SmartView] {
+        guard let object = try JSONFile.object(at: viewsURL) else { return SmartView.defaults }
+        return (object["views"] as? [[String: Any]] ?? []).compactMap { entry in
+            guard let id = entry["id"] as? String, let title = entry["title"] as? String, let query = entry["query"] as? String else { return nil }
+            return SmartView(id: id, title: title, icon: entry["icon"] as? String ?? "magnifyingglass", query: query)
+        }
+    }
+
+    func actions() async throws -> [ActionDefinition] {
+        guard FileManager.default.fileExists(atPath: actionsFolder.path) else { return [] }
+        let files = try FileManager.default.contentsOfDirectory(at: actionsFolder, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "json" }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+        return files.compactMap { file in
+            guard let object = try? JSONFile.object(at: file), let title = object["title"] as? String, let command = object["command"] as? String else { return nil }
+            return ActionDefinition(
+                id: file.deletingPathExtension().lastPathComponent,
+                title: title,
+                icon: object["icon"] as? String,
+                command: command,
+                condition: (object["when"] as? String).flatMap(ActionDefinition.Condition.init(rawValue:)) ?? .always,
+                output: (object["output"] as? String).flatMap(ActionDefinition.Output.init(rawValue:)) ?? .activity
+            )
+        }
+    }
+
+    static let exampleActions: [(String, ActionDefinition)] = [
+        ("open-folder-in-terminal", ActionDefinition(id: "open-folder-in-terminal", title: "Open the note's folder in Terminal", icon: "terminal", command: "open -a Terminal \"$(dirname \"$SLATE_NOTE_PATH\")\"")),
+        ("copy-branch", ActionDefinition(id: "copy-branch", title: "Copy the branch name", icon: "arrow.branch", command: "printf %s \"$SLATE_BRANCH\"", condition: .hasBranch, output: .clipboard)),
+        ("list-folder", ActionDefinition(id: "list-folder", title: "Add the list of files in the note's folder", icon: "list.bullet", command: "ls -1 \"$(dirname \"$SLATE_NOTE_PATH\")\"", output: .appendToNote)),
+    ]
+
+    private static func object(for view: SmartView) -> [String: Any] {
+        ["id": view.id, "title": view.title, "icon": view.icon, "query": view.query]
+    }
+
+    private static func object(for action: ActionDefinition) -> [String: Any] {
+        var object: [String: Any] = ["version": 1, "title": action.title, "command": action.command, "when": action.condition.rawValue, "output": action.output.rawValue]
+        object["icon"] = action.icon
+        return object
     }
 
     private static func pattern(from entry: [String: Any]) -> LinkPattern? {

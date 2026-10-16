@@ -7,6 +7,14 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- `⌘K` opens a palette: recent notes when empty, then notes and commands as you type. Enter runs, `⌘Enter` opens in the window, `⌘C` copies the note's path.
+- Open TODOs lists every open checkbox in every note, grouped by note or by ticket. Checking one writes the file.
+- Saved searches from `.slate/views.json`: Open TODOs, Active tasks, Changed this week, Untagged, Conflicts. Edit the file to add your own.
+- `slate://` links: `new`, `open`, `append`, `capture` and `search` work from Terminal, scripts and other apps, also when Slate is not running.
+- The `slate` command line tool: `slate new`, `open`, `append`, `today`, `search`, `list` and `path`. It works when Slate is closed.
+- Services → Add to Slate turns selected text in any app into a note in Inbox.
+- Actions: scripts in `.slate/actions/` run from the note menu or the palette with the note's path, ticket and branch, and put their output in Activity, the clipboard or the note.
+- The note menu (`…` next to the title): Copy as Markdown, Copy for Slack, Save as HTML and Save as PDF (into Downloads).
 - Versions: Slate saves a version of the notes folder every 10 minutes when something changed, at launch and on quit, with git in its own folder outside the notes folder. The clock button next to the title lists the versions of a note; Restore brings one back and keeps the current text as a version too. With a remote set in Settings → History every version is also pushed.
 - Unsaved text survives a crash: Slate keeps a copy every second and offers it with Restore and Discard when the note opens again.
 - "Changed on disk" also offers Open both: your text becomes a new note named "(conflict date time)" next to the version on disk.
@@ -54,6 +62,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ### Fixed
 
 ### Infrastructure
+- M6: `Config/Slate-Info.plist` (URL scheme, Services); `AppContainer` is the app delegate; URL command parser, Slack format, action environment policies; toggle todo and run action use cases; action runner and exporter ports; `TodoStore`, `PaletteStore`; a sixth test target, `SlateCLITests`.
 - M5: history and journal ports with `GitHistoryRepository` (real git integration tests, push to a bare remote) and `FileJournalStore`; trash retention, journal and conflict copy policies; snapshot, restore and purge use cases; `HistoryStore`; tolerated exit codes in `ShellRunner`.
 - M4: title, slug, daily, section append, link pattern and task group policies; create, daily, append and quick capture use cases; ports for the login item and the Doctor checks with live, mock and spy versions; `CaptureStore`, `DailyStore`, `SettingsStore`.
 - M3: SQLite index with full-text search (GRDB, FTS5) in Application Support, rebuilt when it belongs to another folder or schema. `Scripts/generate-vault.sh` writes sample notes; with 10,000 of them a full scan takes 11 s and a search 28 ms in a debug build. The full scan reads and parses 200 files at a time in parallel.

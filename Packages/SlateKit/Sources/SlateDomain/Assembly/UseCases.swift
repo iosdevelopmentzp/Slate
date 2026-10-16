@@ -21,6 +21,8 @@ package struct UseCases: Sendable {
     package let purgeTrash: PurgeTrashUseCase
     package let snapshot: SnapshotHistoryUseCase
     package let restoreVersion: RestoreVersionUseCase
+    package let toggleTodo: ToggleTodoUseCase
+    package let runAction: RunActionUseCase
 
     package init(ports: Ports) {
         create = CreateNoteUseCase(files: ports.files, index: ports.index, builder: ports.builder, templates: ports.templates, config: ports.config, keyValues: ports.keyValues, clock: ports.clock)
@@ -43,5 +45,7 @@ package struct UseCases: Sendable {
         purgeTrash = PurgeTrashUseCase(trash: ports.trash, keyValues: ports.keyValues, clock: ports.clock)
         snapshot = SnapshotHistoryUseCase(history: ports.history, keyValues: ports.keyValues)
         restoreVersion = RestoreVersionUseCase(history: ports.history, files: ports.files, save: save)
+        toggleTodo = ToggleTodoUseCase(files: ports.files, index: ports.index, save: save)
+        runAction = RunActionUseCase(runner: ports.actions, append: append)
     }
 }

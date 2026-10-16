@@ -2,7 +2,6 @@ import Foundation
 import SlateDomain
 
 extension Ports {
-    @MainActor
     package static func live(root: URL, support: URL, keyValues: any KeyValueStore, recorder: any CommandRecording) throws -> Ports {
         let ownWrites = OwnWrites()
         let shell = ShellRunner(recorder: recorder)
@@ -20,11 +19,13 @@ extension Ports {
             clock: SystemClock(),
             attachments: FileAttachmentStore(root: root),
             capture: ScreencaptureTool(shell: shell),
-            workspace: WorkspaceOpener(quickLookSource: QuickLookSource()),
+            workspace: WorkspaceOpener(),
             loginItem: LoginItemService(),
             system: SystemChecks(root: root, indexURL: indexURL, shell: shell),
             history: GitHistoryRepository(shell: shell, gitDirectory: support.appendingPathComponent("history.git", isDirectory: true), workTree: root),
-            journal: FileJournalStore(folder: support.appendingPathComponent("journal", isDirectory: true))
+            journal: FileJournalStore(folder: support.appendingPathComponent("journal", isDirectory: true)),
+            actions: ShellActionRunner(shell: shell),
+            exporter: NoteExporter()
         )
     }
 }

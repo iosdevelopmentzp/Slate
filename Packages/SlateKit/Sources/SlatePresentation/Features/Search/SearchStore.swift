@@ -65,9 +65,20 @@ final class SearchStore {
         query = "tag:\(tag)"
     }
 
+    func showSaved(_ view: SmartView) {
+        if navigator.source != .all {
+            navigator.show(.all)
+        }
+        query = view.query
+    }
+
     func searchAllNotes() {
         navigator.show(.all)
         run()
+    }
+
+    func revealMatch(_ id: NoteID, words: [String]) {
+        events.post(.searchOpened(id, words: words))
     }
 
     func open(_ hit: SearchHit) {

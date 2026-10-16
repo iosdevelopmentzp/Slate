@@ -12,6 +12,8 @@ struct NoteListView: View {
     var body: some View {
         if store.source == .trash {
             TrashListView()
+        } else if store.source == .todos {
+            TodoListView()
         } else if search.isActive {
             SearchResultsView()
         } else {
