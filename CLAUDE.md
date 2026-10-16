@@ -2,7 +2,7 @@
 
 Personal macOS menu bar notes app for an iOS developer. Markdown files in a local notes folder, a SQLite search index, task notes with ticket and branch, quick capture from a hotkey.
 
-Current stage: **M1 done**. Notes are real Markdown files in the notes folder chosen on first launch. The panel and the window list, create, edit, rename, pin, move, archive, duplicate, trash and restore notes; the editor autosaves; external edits reload. The index is in memory until M3; the editor is a plain text view until M2. Next: milestone M1.5 (editor spike) of `docs/ROADMAP.md`. `docs/STATUS.md` says what is real.
+Current stage: **M1.5 done** (editor spike: own TextKit 2 core). Notes are real Markdown files in the notes folder chosen on first launch. The panel and the window list, create, edit, rename, pin, move, archive, duplicate, trash and restore notes; the editor autosaves; external edits reload. The index is in memory until M3; the editor is a plain text view until M2. Next: milestone M2 (editor v1) of `docs/ROADMAP.md`. `docs/STATUS.md` says what is real.
 
 Read first, in this order: this file, `docs/STATUS.md`, `docs/ROADMAP.md`, then the document for the milestone (`docs/SPEC.md`, `docs/STORAGE-FORMAT.md`, `docs/ARCHITECTURE.md`, `docs/UX.md`). `docs/PLAYBOOK.md` has verified solutions and traps per topic; read its section before touching that topic.
 
