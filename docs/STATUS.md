@@ -4,7 +4,7 @@ Last updated: 2026-10-16
 
 ## Stage
 
-M4 done (capture and tasks). Manual checks of M1 to M4 by the owner still open. On first launch Slate asks for the notes folder (default `~/Documents/Slate`) and prepares it: six folders, `_attachments/`, `_templates/`, `.slate/` with `spaces.json` and the five note types, and a welcome note. Notes are real Markdown files with the header of `STORAGE-FORMAT.md` section 2. The list is built by a full scan at launch and kept current by the FSEvents watcher. 222 tests in 57 suites pass. Next: milestone M5 (safety and history).
+M5 done (safety and history). Manual checks of M1 to M5 by the owner still open. On first launch Slate asks for the notes folder (default `~/Documents/Slate`) and prepares it: six folders, `_attachments/`, `_templates/`, `.slate/` with `spaces.json` and the five note types, and a welcome note. Notes are real Markdown files with the header of `STORAGE-FORMAT.md` section 2. The list is built by a full scan at launch and kept current by the FSEvents watcher. 222 tests in 57 suites pass. Next: milestone M6 (extension points).
 
 ## Screens
 
@@ -17,10 +17,12 @@ M4 done (capture and tasks). Manual checks of M1 to M4 by the owner still open. 
 | Tasks | real | A folder whose default kind is Task groups its list into Active, To do and Done (Done is folded). The editor chips: the ticket opens the tracker (or copies when no tracker is set), the branch copies, the merge request opens, the status is a menu. `⌘⇧D` marks the task done. A new task takes the ticket from its title and gets the branch `feature/<ticket>-<slug>` |
 | Daily | real | `⌥⌘T` from any app, Today in the New menu and in the status menu: `Daily/YYYY-MM-DD.md` from the daily template, with the open checkboxes of the latest earlier daily note under "Carried over". `⌘[` and `⌘]` go to the day before and after |
 | Note list | real | Rows: status dot, kind icon for non-plain notes, title, relative date, pin, preview, badges (ticket, subfolder, images and files, open checkboxes). Hover and right click: Pin, Move to, Duplicate, Archive, Move to Trash (inline confirmation, toast with Undo). Badges come from the in-memory index |
-| Trash | partial | Lists trashed notes with their folder and age, Restore on hover. No "Delete now" and no auto-empty yet (F4, M5) |
-| Editor | real | Title field, chips, autosave, the "Changed on disk" banner (M1). Markdown styling with visible marks, code blocks with highlighting and a Copy button, checkboxes, list editing, images under their line, paste rules with the "Paste as code" bar, screenshots, `⌘`-click links (M2). `[[` completes note names, `#` completes tags; a link to a missing note makes that note; tag chips under the title search the tag (M3). No link titles (P1), no hover preview of a link target, no journal (M5) |
+| Trash | real | Lists trashed notes with their folder and age; Restore and Delete now on hover and right click (Delete now asks inline and moves the file to the macOS Trash). "Notes are removed from the Trash after 30 days." The purge runs at launch and once a day with the days from Settings |
+| Editor | real | Title field, chips, autosave, the "Changed on disk" banner (M1). Markdown styling with visible marks, code blocks with highlighting and a Copy button, checkboxes, list editing, images under their line, paste rules with the "Paste as code" bar, screenshots, `⌘`-click links (M2). `[[` completes note names, `#` completes tags; a link to a missing note makes that note; tag chips under the title search the tag (M3). "Changed on disk" offers Keep mine, Take theirs and Open both; unsaved text is kept in a journal every second and offered with Restore and Discard when the note opens again (M5). No link titles (P1), no hover preview of a link target |
+| History | real | A clock button next to the title lists the versions of the note (git snapshots outside the notes folder) with Restore. The footer says "history 09:50", "pushed" or "push failed" (opens Activity) |
+| Activity | real | The footer button opens a list of what went wrong (and a few successes) with Clear and Copy |
 | Search | real | The header field searches titles, text, tags and tickets in the current folder ("Search all notes" widens it) with the filters of `SPEC.md` 6.1. Title matches show at once; the index answers within 80 ms plus the query. Rows show the snippet with the words in bold; Enter or a click opens the note with the caret on the first match. Esc clears. No palette yet (A7, M6) |
-| Settings | real | One window with General (Open at login, the quick note folder, text size, appearance, Trash days, Doctor with Rebuild search), Notes folder (Choose another folder…), Shortcuts (three recorders), Links (tracker and git host addresses, ticket pattern, labels; Save writes `.slate/links.json`). No History page yet (M5) |
+| Settings | real | One window with General (Open at login, the quick note folder, text size, appearance, Trash days, Doctor with Rebuild search), Notes folder (Choose another folder…), Shortcuts (three recorders), Links (tracker and git host addresses, ticket pattern, labels; Save writes `.slate/links.json`), History (versions on or off, interval, remote, push on quit, Save a version now) |
 
 States: planned, placeholder, mock, real, partial (say what is missing).
 
@@ -71,6 +73,12 @@ Numbered. What, then why. A later session must not undo these without a new numb
 40. M4 settings: text size is the only editor font setting (the font itself stays the system font, `UX.md` section 1). Appearance sets the appearance of Slate's own windows, never `NSApp.appearance` (`PLAYBOOK.md` section 1). The Trash days setting is stored now and used by the auto-empty in M5. Changing the notes folder stops the windows and the change feed and opens the new folder; the old folder and its index stay.
 41. Section append (`STORAGE-FORMAT.md` section 4): an empty section gets one blank line after its heading before the first entry, and an append without a section is added as its own paragraph. No format change.
 42. M4 is one commit: the capture, daily and task features share the new use cases, the settings and the windows.
+43. M5 history: versions are snapshots of the whole notes folder in `~/Library/Application Support/Slate/<vault-id>/history.git`, every 10 minutes (Settings) when something changed, at launch and on quit. A push follows each snapshot when a remote is set; "Push when Slate quits" decides the push on quit. Restore takes a snapshot first, then writes the old body and details through the normal save; it keeps the current title and id, so no rename happens.
+44. M5 journal: one JSON file per note in `<support>/journal/`, written at most once a second while the text differs from the file, removed after a save. A journal that is newer than the file and differs from it shows "Unsaved text from … was found." with Restore and Discard. Nothing restores without the click.
+45. "Open both" (S11) writes my text as a new note `<Title> (conflict YYYY-MM-DD HHmm)` in the same folder and shows the version on disk. This is the naming of `SPEC.md` 7.2 for "Keep both".
+46. Delete now and the purge move files to the macOS Trash with `FileManager.trashItem` (Foundation), not `NSWorkspace.recycle`, so `FileTrashRepository` stays without AppKit. Tests pass their own `recycle` closure so nothing reaches the real Trash.
+47. `CommandRecord` has `toleratedExitCodes`, so an expected exit code (git's 1 and 128) is not a failure in Activity.
+48. M5 is one commit: the journal, the conflict copy, history, purge and Activity share the editor, the footer and the assembly.
 25. Branches during the long build: one branch per milestone, each made from the one before (`m1.5-editor-spike`, `m2-editor`, `m3-index-and-search`, …). Merging the last one brings all of them.
 26. M2 editor details: a tag needs at least one letter (`#123` stays text, it is the issue pattern of `links.json`). Tab indents a list item by the width of its own marker plus one space (`- ` two spaces, `1. ` three). Remove Image deletes the line (Undo brings it back); the file stays in `_attachments/` until "Clean attachments" (M5). The "Paste as code" bar lives inside `SlateEditor`, so Enter and Esc reach it while the text has focus.
 27. The host gives text to the editor with `EditorInsertion(token:markdown:)`, like `EditorFocusRequest`; the editor inserts it on its own line once per token. `ARCHITECTURE.md` section 6.1 had an `EditorCommands` object; the token value replaced it, so no store holds an AppKit object.
@@ -81,8 +89,16 @@ Numbered. What, then why. A later session must not undo these without a new numb
 ## Next steps
 
 1. Owner: run the M1 manual checks (below). Merge the branch `m1-vault-and-notes` when they pass.
-2. Owner: run the M2, M3 and M4 manual checks (below).
-3. M5: safety and history. Read `PLAYBOOK.md` sections 4, 5 and 8 first.
+2. Owner: run the M2 to M5 manual checks (below).
+3. M6: extension points.
+
+M5 manual checks for the owner:
+
+1. Type in a note and run `pkill -9 Slate` within a second. Start Slate: the text is in the file, or the note offers "Unsaved text … was found" with Restore.
+2. Type in a note and change the same file in TextEdit. The banner offers Keep mine, Take theirs and Open both; Open both makes `<Title> (conflict …)` with your text (S11).
+3. Settings → History → Save a version now. The clock button next to the title lists the version; change the text, save another version, Restore the first one (S12). No `.git` folder appears in the notes folder.
+4. Set a remote (an empty private repository) and save a version: the footer says "pushed".
+5. Trash: Delete now asks inline and moves the file to the macOS Trash.
 
 M4 manual checks for the owner:
 
@@ -134,9 +150,9 @@ M1 manual checks for the owner:
 - The status chip and the other header chips are not reachable with Tab yet (keyboard pass, M7).
 - Search (M3): no progress bar or "Indexing 3,120 of 10,000" line during the first full scan (`UX.md` section 5). The list fills as the scan runs.
 - Search (M3): typing `#` offers tags only after one letter, so `#` alone at the start of a line stays a heading.
-- Crash safety is the 500 ms autosave and the save on quit. The journal comes in M5.
 - The list column uses `HSplitView` (240 to 400 pt); its width is not saved.
-- `ActivityRecorder` and `ShellRunner` have no user yet (M5 git history).
+- History (M5): no diff view and no preview of a version before Restore (Appendix B). The first snapshot of a large folder runs at launch in the background and can take seconds.
+- Quit waits up to 3 s for the save and the last snapshot; a slow push is cut off and runs at the next snapshot.
 - `.claude/skills/add-feature`, `add-use-case`, `build-and-run` and `update-docs` and the example in `.claude/rules/presentation.md` still show DevHub features.
 - Editor (M2): no title fetch for a pasted URL (P1); no hover preview of a link target; file links show as coloured links, without an icon, and cannot be dragged out to Finder; the language of a code block shows on its fence line, not as a separate label; Remove Image does not ask first (Undo works).
 - Editor (M2): typing latency was measured by a test on the 5,000-line fixture (2.2 ms median), not with Instruments. The Screen Recording prompt of `PLAYBOOK.md` section 11 was not checked by the agent.

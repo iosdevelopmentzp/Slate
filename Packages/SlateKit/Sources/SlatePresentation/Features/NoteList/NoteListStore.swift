@@ -241,6 +241,16 @@ final class NoteListStore: NoteLookup {
         }
     }
 
+    func deleteNow(_ item: TrashItem) async {
+        do {
+            try await trashRepository.delete(item)
+            trashItems.removeAll { $0.path == item.path }
+            toaster.show("Moved to the macOS Trash")
+        } catch {
+            activity.log("Cannot delete the note", detail: error.localizedDescription, outcome: .failure)
+        }
+    }
+
     private func finishMove(_ summary: NoteSummary, to target: VaultPath, message: String) async {
         events.post(.noteMoved(from: summary.path, to: target))
         await refresh()

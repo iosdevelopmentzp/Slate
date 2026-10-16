@@ -76,7 +76,7 @@ Copy `ShellRunner`, `ShellResult`, `LineBatcher`, `CommandFormatter` from `../De
 - Every run is reported to `CommandRecording` (start, output, finish, duration, exit code) so it shows in the Activity view. Commands that could print a secret are classified `secret` and record no output (none in Slate v1; the Jira token travels in a header, never on a command line).
 - Cancellation: `withTaskCancellationHandler` whose `onCancel` calls `process.terminate()`.
 
-## 8. Git history outside the vault — verify first (standard git, check the env approach once)
+## 8. Git history outside the vault — verified (M5)
 
 - Repository location: `~/Library/Application Support/Slate/<vault-id>/history.git`. Every git command gets the environment `GIT_DIR=<that path>` and `GIT_WORK_TREE=<vault>` and runs with `cwd = vault`. The vault never gets a `.git` folder or file.
 - Create: `git init` with both variables set, then write `<GIT_DIR>/info/exclude` with `.DS_Store`, `*.icloud`, `*.slate-tmp`, `.trash/`, `.obsidian/`. Set `core.autocrlf=false`, `core.quotepath=false`, `gc.auto=0` (run `git gc` only from the Doctor, by hand).
@@ -85,7 +85,9 @@ Copy `ShellRunner`, `ShellResult`, `LineBatcher`, `CommandFormatter` from `../De
 - Per-file history: `git log --format=%H%x09%ct%x09%s --follow -- "<relative path>"`. Content at a version: `git show <hash>:"<relative path>"` (path relative to the work tree, forward slashes). Restore goes through `SaveNoteUseCase`, never through `git checkout`, so the index and the open editor update.
 - Push: `git push -q <remote> HEAD:refs/heads/main` only when Settings has a remote; a failure is one activity line and a retry at the next snapshot, not an alert.
 - Serialise: one git command at a time per repository (the actor does this). The first snapshot of a large vault can take seconds: background, with an activity line.
-- **Check (M5):** run `git status` with the two variables set against a temporary folder; confirm no `.git` appears in the work tree and `git log` works after a second commit.
+- Check (M5), done: `GitHistoryRepositoryIntegrationTests` makes a repository with `GIT_DIR` and `GIT_WORK_TREE`, takes two snapshots, reads the per-file log and an old version, and pushes to a bare remote. No `.git` appears in the work tree; a snapshot without changes makes no commit.
+- Trap (M5): `git diff --cached --quiet` exits 1 when there are changes, and `git log` exits 128 in a repository without commits. `ShellRunner.run(…, tolerating:)` marks these exit codes, so they do not show as failures in Activity.
+- `GitHistoryRepository` is an actor, so one git command runs at a time. `GIT_TERMINAL_PROMPT=0` keeps a push from waiting for a password.
 
 ## 9. TextKit 2 editor — verified in the M1.5 spike (ADR 0005 amendment)
 

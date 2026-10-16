@@ -4,6 +4,7 @@ import SlateUI
 
 struct TrashListView: View {
     @Environment(NoteListStore.self) private var store
+    @Environment(SettingsStore.self) private var settings
 
     var body: some View {
         let items = store.visibleTrash
@@ -17,12 +18,19 @@ struct TrashListView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     ForEach(items) { item in
-                        TrashRow(model: TrashRowMapper.model(for: item, now: .now)) {
-                            Task { await store.restoreItem(item) }
-                        }
+                        TrashRow(
+                            model: TrashRowMapper.model(for: item, now: .now),
+                            onRestore: { Task { await store.restoreItem(item) } },
+                            onDelete: { Task { await store.deleteNow(item) } }
+                        )
                     }
                 }
                 .padding(8)
+                Text("Notes are removed from the Trash after \(settings.trashRetentionDays) days.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 12)
             }
         }
         .background(Theme.surface)

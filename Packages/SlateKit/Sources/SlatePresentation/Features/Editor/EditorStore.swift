@@ -13,6 +13,7 @@ final class EditorStore {
         didSet {
             guard text != oldValue, isApplying == false, document != nil else { return }
             schedule(after: Self.autosaveDelay)
+            scheduleJournal()
         }
     }
     private(set) var title = ""
@@ -22,6 +23,7 @@ final class EditorStore {
     private(set) var titleFocusToken = 0
     private(set) var bodyFocus: BodyFocus?
     var insertion: MarkdownInsertion?
+    var recovered: JournalEntry?
     var isCapturing = false
 
     @ObservationIgnored private let files: any VaultFileStore
@@ -40,6 +42,8 @@ final class EditorStore {
     @ObservationIgnored let toaster: Toaster
     @ObservationIgnored let create: CreateNoteUseCase
     @ObservationIgnored let templates: any TemplateRepository
+    @ObservationIgnored let journal: any JournalStore
+    @ObservationIgnored var journalTask: Task<Void, Never>?
     @ObservationIgnored var insertionCounter = 0
     @ObservationIgnored private var subscription: SubscriptionToken?
     @ObservationIgnored private var isApplying = false
@@ -66,7 +70,8 @@ final class EditorStore {
         panel: PanelVisibility,
         toaster: Toaster,
         create: CreateNoteUseCase,
-        templates: any TemplateRepository
+        templates: any TemplateRepository,
+        journal: any JournalStore
     ) {
         self.files = files
         self.index = index
@@ -84,6 +89,7 @@ final class EditorStore {
         self.toaster = toaster
         self.create = create
         self.templates = templates
+        self.journal = journal
         subscription = events.subscribe { [weak self] event in
             guard let self else { return }
             handle(event)
@@ -136,6 +142,7 @@ final class EditorStore {
             let loaded = try NoteCodec.decode(try await files.read(summary.path))
             guard navigator.selectedNote == id else { return }
             show(loaded)
+            await checkJournal(for: loaded)
             if let match = pendingMatch, match.id == id {
                 pendingMatch = nil
                 revealMatch(of: match.words)
@@ -160,6 +167,7 @@ final class EditorStore {
         hasConflict = false
         followsBody = false
         bodyFocus = nil
+        recovered = nil
         saveState = .idle
     }
 
@@ -172,6 +180,8 @@ final class EditorStore {
         isApplying = false
         hasConflict = false
         followsBody = false
+        recovered = nil
+        journalTask?.cancel()
         saveState = .idle
     }
 
@@ -288,6 +298,9 @@ final class EditorStore {
                 isApplying = false
             }
             saveState = .saved(clock.now())
+            if isCurrent, isDirty == false {
+                clearJournal(saved.id)
+            }
             if saved.path != previous.path {
                 events.post(.noteMoved(from: previous.path, to: saved.path))
             }

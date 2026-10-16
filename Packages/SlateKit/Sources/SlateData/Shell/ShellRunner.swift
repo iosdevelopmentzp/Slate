@@ -12,7 +12,7 @@ package actor ShellRunner {
         self.recorder = recorder
     }
 
-    nonisolated func run(_ executable: String, _ arguments: [String], cwd: String?, environment: [String: String] = [:]) async throws -> ShellResult {
+    nonisolated func run(_ executable: String, _ arguments: [String], cwd: String?, environment: [String: String] = [:], tolerating tolerated: Set<Int32> = []) async throws -> ShellResult {
         let command = CommandFormatter.displayCommand(executable, arguments)
         do {
             let result = try await withCheckedThrowingContinuation { continuation in
@@ -20,7 +20,7 @@ package actor ShellRunner {
                     continuation.resume(with: Result { try Self.runBlocking(executable, arguments, cwd: cwd, environment: environment) })
                 }
             }
-            recorder.record(CommandRecord(command: command, cwd: cwd, exitCode: result.exitCode, error: nil, outputTail: Array(result.lines.suffix(Self.outputTailCount))))
+            recorder.record(CommandRecord(command: command, cwd: cwd, exitCode: result.exitCode, error: nil, outputTail: Array(result.lines.suffix(Self.outputTailCount)), toleratedExitCodes: tolerated))
             return result
         } catch {
             recorder.record(CommandRecord(command: command, cwd: cwd, exitCode: nil, error: error.localizedDescription, outputTail: []))

@@ -15,6 +15,8 @@ package struct Ports: Sendable {
     package let workspace: any WorkspaceOpening
     package let loginItem: any LaunchAtLogin
     package let system: any SystemChecking
+    package let history: any HistoryRepository
+    package let journal: any JournalStore
 
     package init(
         keyValues: any KeyValueStore,
@@ -30,7 +32,9 @@ package struct Ports: Sendable {
         capture: any ScreenCapturing,
         workspace: any WorkspaceOpening,
         loginItem: any LaunchAtLogin,
-        system: any SystemChecking
+        system: any SystemChecking,
+        history: any HistoryRepository,
+        journal: any JournalStore
     ) {
         self.keyValues = keyValues
         self.files = files
@@ -46,5 +50,7 @@ package struct Ports: Sendable {
         self.workspace = workspace
         self.loginItem = loginItem
         self.system = system
+        self.history = history
+        self.journal = journal
     }
 }

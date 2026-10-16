@@ -18,6 +18,9 @@ package struct UseCases: Sendable {
     package let ensureDaily: EnsureDailyNoteUseCase
     package let append: AppendToNoteUseCase
     package let capture: QuickCaptureUseCase
+    package let purgeTrash: PurgeTrashUseCase
+    package let snapshot: SnapshotHistoryUseCase
+    package let restoreVersion: RestoreVersionUseCase
 
     package init(ports: Ports) {
         create = CreateNoteUseCase(files: ports.files, index: ports.index, builder: ports.builder, templates: ports.templates, config: ports.config, keyValues: ports.keyValues, clock: ports.clock)
@@ -37,5 +40,8 @@ package struct UseCases: Sendable {
         ensureDaily = EnsureDailyNoteUseCase(files: ports.files, config: ports.config, create: create, clock: ports.clock)
         append = AppendToNoteUseCase(files: ports.files, index: ports.index, save: save, create: create, ensureDaily: ensureDaily, clock: ports.clock)
         capture = QuickCaptureUseCase(create: create, append: append, config: ports.config, keyValues: ports.keyValues)
+        purgeTrash = PurgeTrashUseCase(trash: ports.trash, keyValues: ports.keyValues, clock: ports.clock)
+        snapshot = SnapshotHistoryUseCase(history: ports.history, keyValues: ports.keyValues)
+        restoreVersion = RestoreVersionUseCase(history: ports.history, files: ports.files, save: save)
     }
 }

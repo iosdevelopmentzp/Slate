@@ -17,7 +17,9 @@ package extension Ports {
             capture: spies.capture,
             workspace: spies.workspace,
             loginItem: spies.loginItem,
-            system: spies.system
+            system: spies.system,
+            history: spies.history,
+            journal: spies.journal
         )
         return (ports, spies)
     }

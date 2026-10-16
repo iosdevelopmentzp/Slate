@@ -19,6 +19,7 @@ package final class PresentationAssembly {
     let settings: SettingsStore
     let capture: CaptureStore
     let daily: DailyStore
+    let history: HistoryStore
 
     package init(ports: Ports, useCases: UseCases, activity: ActivityLog, vaultRoot: URL) {
         events = AppEvents()
@@ -71,7 +72,8 @@ package final class PresentationAssembly {
             panel: panelVisibility,
             toaster: toaster,
             create: useCases.create,
-            templates: ports.templates
+            templates: ports.templates,
+            journal: ports.journal
         )
         settings = SettingsStore(
             store: ports.keyValues,
@@ -85,11 +87,22 @@ package final class PresentationAssembly {
             events: events
         )
         capture = CaptureStore(capture: useCases.capture, config: ports.config, store: ports.keyValues, navigator: navigator, toaster: toaster, activity: activity, events: events)
+        history = HistoryStore(
+            history: ports.history,
+            snapshot: useCases.snapshot,
+            restoreVersion: useCases.restoreVersion,
+            purgeTrash: useCases.purgeTrash,
+            store: ports.keyValues,
+            activity: activity,
+            toaster: toaster,
+            events: events
+        )
         daily = DailyStore(ensureDaily: useCases.ensureDaily, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
     }
 
     package func start() {
         feed.start()
+        history.start()
         Task {
             await vault.refresh()
             await search.refreshTags()
@@ -98,6 +111,7 @@ package final class PresentationAssembly {
 
     package func stop() {
         feed.stop()
+        history.stop()
     }
 
     package func flush() async {
@@ -105,6 +119,12 @@ package final class PresentationAssembly {
     }
 
     package func pendingSave() -> (@Sendable () async -> Void)? {
-        editor.pendingSave()
+        let save = editor.pendingSave()
+        let snapshot = history.quitJob()
+        guard save != nil || snapshot != nil else { return nil }
+        return {
+            await save?()
+            await snapshot?()
+        }
     }
 }

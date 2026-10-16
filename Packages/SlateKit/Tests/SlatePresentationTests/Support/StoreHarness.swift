@@ -59,7 +59,8 @@ final class StoreHarness {
         panel: panelVisibility,
         toaster: toaster,
         create: useCases.create,
-        templates: ports.templates
+        templates: ports.templates,
+        journal: ports.journal
     )
     lazy var settings = SettingsStore(
         store: keyValues,
@@ -73,6 +74,16 @@ final class StoreHarness {
         events: events
     )
     lazy var capture = CaptureStore(capture: useCases.capture, config: ports.config, store: keyValues, navigator: navigator, toaster: toaster, activity: activity, events: events)
+    lazy var history = HistoryStore(
+        history: ports.history,
+        snapshot: useCases.snapshot,
+        restoreVersion: useCases.restoreVersion,
+        purgeTrash: useCases.purgeTrash,
+        store: keyValues,
+        activity: activity,
+        toaster: toaster,
+        events: events
+    )
     lazy var daily = DailyStore(ensureDaily: useCases.ensureDaily, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
     lazy var search = SearchStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
     lazy var panelVisibility = PanelVisibility()

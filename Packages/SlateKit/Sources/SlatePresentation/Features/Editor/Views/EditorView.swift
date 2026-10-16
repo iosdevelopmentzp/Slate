@@ -10,6 +10,7 @@ struct EditorView: View {
     @Environment(NoteListStore.self) private var noteList
     @Environment(SettingsStore.self) private var settings
     @Environment(Toaster.self) private var toaster
+    @State private var showsHistory = false
     @FocusState private var isTitleFocused: Bool
 
     var body: some View {
@@ -18,7 +19,15 @@ struct EditorView: View {
                 if editor.hasConflict {
                     ConflictBanner(
                         onKeepMine: { Task { await editor.keepMine() } },
-                        onTakeTheirs: { Task { await editor.takeTheirs() } }
+                        onTakeTheirs: { Task { await editor.takeTheirs() } },
+                        onOpenBoth: { Task { await editor.openBoth() } }
+                    )
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                } else if let recovered = editor.recovered {
+                    RecoveryBanner(
+                        savedAt: recovered.savedAt.relativeDescription(to: .now),
+                        onRestore: { editor.restoreRecovered() },
+                        onDiscard: { editor.discardRecovered() }
                     )
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
@@ -33,6 +42,7 @@ struct EditorView: View {
                 )
             }
             .animation(.easeInOut(duration: 0.15), value: editor.hasConflict)
+            .animation(.easeInOut(duration: 0.15), value: editor.recovered)
             .background(Theme.surface)
             .onChange(of: editor.titleFocusToken) {
                 isTitleFocused = true
@@ -50,13 +60,22 @@ struct EditorView: View {
 
     private func header(for document: NoteDocument) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            TextField(StemPolicy.untitled, text: titleBinding)
-                .textFieldStyle(.plain)
-                .font(.title3.weight(.semibold))
-                .focused($isTitleFocused)
-                .onSubmit { editor.submitTitle() }
-                .disabled(document.isHeaderOpaque)
-                .accessibilityLabel("Title")
+            HStack(spacing: 6) {
+                TextField(StemPolicy.untitled, text: titleBinding)
+                    .textFieldStyle(.plain)
+                    .font(.title3.weight(.semibold))
+                    .focused($isTitleFocused)
+                    .onSubmit { editor.submitTitle() }
+                    .disabled(document.isHeaderOpaque)
+                    .accessibilityLabel("Title")
+                IconButton(systemImage: "clock.arrow.circlepath", help: "Versions of this note") {
+                    showsHistory.toggle()
+                }
+                .popover(isPresented: $showsHistory, arrowEdge: .bottom) {
+                    HistoryView(path: document.path)
+                }
+                .accessibilityLabel("Versions")
+            }
             let chips = NoteChipsMapper.noteChips(for: document, type: vault.type(named: document.type), ticketURL: document.header.ticket.flatMap(ticketURL))
             let tags = TagPolicy.merged(header: document.header.tags, lines: []) + (noteList.selected?.tags ?? []).filter { (document.header.tags ?? []).map(TagPolicy.normalized).contains($0) == false }
             if chips.isEmpty == false || tags.isEmpty == false {

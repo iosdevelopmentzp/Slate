@@ -5,6 +5,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
     case folder
     case shortcuts
     case links
+    case history
 
     var id: String {
         rawValue
@@ -16,6 +17,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
         case .folder: "Notes folder"
         case .shortcuts: "Shortcuts"
         case .links: "Links"
+        case .history: "History"
         }
     }
 
@@ -25,6 +27,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
         case .folder: "folder"
         case .shortcuts: "keyboard"
         case .links: "link"
+        case .history: "clock.arrow.circlepath"
         }
     }
 }

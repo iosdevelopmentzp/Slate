@@ -220,12 +220,12 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 | `IndexedNoteBuilding` | `build(NoteDocument) -> IndexedNote` (the document carries its meta and hash; uses swift-markdown) | `IndexedNoteBuilder` |
 | `VaultWatching` | `changes() -> AsyncStream<VaultChange>` | `FSEventsVaultWatcher` |
 | `AttachmentStore` | M2: `fileNames()`, `write(Data, named:)` and `copy(URL, named:)` (both fail when the name exists), `size(of:)`, `externalSize(URL)`, `url(for:)`. Naming and links are `AttachmentPolicy`; the use cases pick the name. M5 adds `moveToTrash(file)` | `FileAttachmentStore` |
-| `TrashRepository` | `trash(VaultPath, at: Date) -> TrashItem`, `restore(TrashItem) -> VaultPath`, `items()`; M5 adds `purge(olderThan:) -> Int` | `FileTrashRepository` |
+| `TrashRepository` | `trash(VaultPath, at: Date) -> TrashItem`, `restore(TrashItem) -> VaultPath`, `items()`, `delete(TrashItem)` (M5: to the macOS Trash with `FileManager.trashItem`; the use case picks the items) | `FileTrashRepository` |
 | `TemplateRepository` | `body(for: String) -> String` (type name; a missing file falls back to `BuiltInTemplates`), `ensureDefaults()` | `FileTemplateRepository` |
 | `VaultConfigRepository` | M1: `spaces() -> SpacesConfig` (folders on disk merged with `spaces.json`), `saveSpaces(SpacesConfig)`, `types() -> [NoteType]` (built-ins plus `.slate/types/`), `ensureDefaults()`. M4 adds `linkPatterns()`, `views()`, `actions()` and tracker settings for the defaults | `FileVaultConfigRepository` |
-| `JournalStore` | `save(id, text)`, `load(id) -> (text, date)?`, `clear(id)` | `FileJournalStore` |
+| `JournalStore` | `save(JournalEntry)`, `entry(for:)`, `clear(_:)`; one JSON file per note in `<support>/journal/` | `FileJournalStore` |
 | `ScreenCapturing` | `capture(CaptureMode, to: URL)`; success is a file larger than zero bytes, checked by `AttachScreenshotUseCase` | `ScreencaptureTool` |
-| `HistoryRepository` | `ensureRepository()`, `snapshot(message:) -> Bool`, `history(of: VaultPath) -> [Snapshot]`, `contents(of:, at:) -> Data`, `push() -> Bool`, `isAvailable` | `GitHistoryRepository` |
+| `HistoryRepository` | `isAvailable()`, `ensureRepository()`, `snapshot(message:) -> Bool`, `history(of:) -> [Snapshot]`, `contents(of:at:) -> Data`, `push(to:)`, `lastSnapshot()` | `GitHistoryRepository` (an actor, `<support>/history.git`) |
 | `CloudStatusProviding` | `status(of: VaultPath) -> CloudStatus`, `startDownload(VaultPath)`, `conflictVersions(VaultPath) -> [ConflictVersion]`, `keep(version:, for:)`, `isCloudFolder(URL) -> Bool` | `UbiquityStatusProvider` |
 | `LinkTitleFetching` | `title(for: URL) -> String?` (2 s timeout) | `URLSessionLinkTitleFetcher` |
 | `IssueTrackerClient` | `issue(TicketKey) -> IssueDetails` | `JiraIssueClient` |
@@ -238,7 +238,7 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 
 `Ports` (Domain `Assembly/Ports.swift`) is a struct with one property per port. `Ports.live(root:keyValues:)` in Data (later milestones add the Application Support folder, the shell and the recorder), `Ports.mock()` in Mocks, `Ports.spies(keyValues:)` in TestSupport (the key-value store defaults to `SpyKeyValueStore`).
 
-Since M2 the code has twelve ports: `keyValues`, `files`, `index`, `builder`, `watcher`, `trash`, `templates`, `config`, `clock`, `attachments`, `capture`, `workspace`. `Ports.live(root:support:keyValues:recorder:)` throws when the index cannot open, builds one `ShellRunner` with the recorder, and opens `index.sqlite` in the support folder (`VaultSupportFolder.url(for:)`, `~/Library/Application Support/Slate/<vault-id>/`). The spies are in-memory fakes that also record their calls, so use case and store tests run without a disk.
+Since M5 the code has sixteen ports: `keyValues`, `files`, `index`, `builder`, `watcher`, `trash`, `templates`, `config`, `clock`, `attachments`, `capture`, `workspace`, `loginItem` (M4), `system` (M4, the Doctor checks), `history`, `journal` (M5). `Ports.live(root:support:keyValues:recorder:)` throws when the index cannot open, builds one `ShellRunner` with the recorder, and opens `index.sqlite` in the support folder (`VaultSupportFolder.url(for:)`, `~/Library/Application Support/Slate/<vault-id>/`). The spies are in-memory fakes that also record their calls, so use case and store tests run without a disk.
 
 ### 4.4 Policies (pure, `enum XPolicy { static func … }`)
 
@@ -369,7 +369,8 @@ The editor owns the `NSTextView`, the styling, the list commands, paste classifi
 | `CaptureStore` | draft text, target space, type, saving | `QuickCaptureUseCase`, config, `AppEvents` |
 | `TodoStore` (P1) | open todos grouped | index, `ToggleTodoUseCase`, `AppEvents` |
 | `DailyStore` (P1) | today, previous and next | `EnsureDailyNoteUseCase`, index, `Clock` |
-| `HistoryStore` (P1) | snapshots of the open note, restore | history, `RestoreVersionUseCase` |
+| `HistoryStore` | M5: the history settings, the snapshot loop (every N minutes), the daily Trash purge, the versions of the open note, restore, the quit job, the last snapshot time and the push state for the footer | history, `SnapshotHistoryUseCase`, `RestoreVersionUseCase`, `PurgeTrashUseCase`, `KeyValueStore`, `ActivityLog`, `Toaster`, `AppEvents` |
+| `CaptureStore`, `DailyStore`, `SettingsStore` | M4: the quick note draft and its save; Today and the day before and after; preferences, tracker settings and `links.json`, the login item, the Doctor and Rebuild search | the capture, daily and reindex use cases, config, `KeyValueStore`, the login item and system ports |
 | `SettingsStore` | every preference, tracker settings, hotkeys names | `KeyValueStore`, `SecretStore`, config |
 
 Rules as DevHub: a store never holds another feature's concrete store (lookup protocols in `Shared/`), never imports SwiftUI, never reads `UserDefaults`, never runs a command. `RefreshTask` for refreshes (latest wins). Every failure goes to `ActivityLog`. One `EditorStore` per editor surface (panel, each window, each floating note); two surfaces on the same note stay consistent through `noteSaved` events and the own-writes filter. Until M7 adds a second window and floating notes, the panel and the one window share one `EditorStore` (only one of them is open at a time).

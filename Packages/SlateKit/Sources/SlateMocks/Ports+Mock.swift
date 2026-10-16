@@ -17,7 +17,9 @@ extension Ports {
             capture: MockScreenCapture(),
             workspace: MockWorkspace(),
             loginItem: MockLoginItem(),
-            system: MockSystemChecks()
+            system: MockSystemChecks(),
+            history: MockHistoryRepository(),
+            journal: MockJournalStore()
         )
     }
 }

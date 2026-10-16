@@ -5,6 +5,7 @@ package final class SpyTrashRepository: TrashRepository, @unchecked Sendable {
     package enum Call: Hashable {
         case trash(VaultPath)
         case restore(VaultPath)
+        case delete(VaultPath)
     }
 
     private let lock = NSLock()
@@ -38,6 +39,17 @@ package final class SpyTrashRepository: TrashRepository, @unchecked Sendable {
             _items.removeAll { $0.path == item.path }
         }
         return item.originalPath
+    }
+
+    package func delete(_ item: TrashItem) async throws {
+        lock.withLock {
+            _calls.append(.delete(item.path))
+            _items.removeAll { $0.path == item.path }
+        }
+    }
+
+    package func seed(_ item: TrashItem) {
+        lock.withLock { _items.append(item) }
     }
 
     package func items() async throws -> [TrashItem] {

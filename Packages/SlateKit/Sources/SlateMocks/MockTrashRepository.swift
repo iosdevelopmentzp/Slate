@@ -21,6 +21,10 @@ actor MockTrashRepository: TrashRepository {
         return item.originalPath
     }
 
+    func delete(_ item: TrashItem) {
+        trashed.removeAll { $0.path == item.path }
+    }
+
     func items() -> [TrashItem] {
         trashed
     }

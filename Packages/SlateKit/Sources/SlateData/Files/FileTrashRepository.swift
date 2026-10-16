@@ -8,8 +8,10 @@ actor FileTrashRepository: TrashRepository {
     private let folder: VaultFolder
     private let trashRoot: URL
     private let manifestURL: URL
+    private let recycle: @Sendable (URL) throws -> Void
 
-    init(root: URL) {
+    init(root: URL, recycle: @escaping @Sendable (URL) throws -> Void = { try FileManager.default.trashItem(at: $0, resultingItemURL: nil) }) {
+        self.recycle = recycle
         folder = VaultFolder(root: root)
         trashRoot = root.appendingPathComponent(Self.folderName, isDirectory: true)
         manifestURL = trashRoot.appendingPathComponent("manifest.json")
@@ -45,6 +47,14 @@ actor FileTrashRepository: TrashRepository {
         let known = Set(entries.map(\.path))
         let orphans = try orphanFiles().filter { known.contains($0.path) == false }
         return (entries + orphans).sorted { $0.trashedAt > $1.trashedAt }
+    }
+
+    func delete(_ item: TrashItem) throws {
+        let url = trashURL(item.path)
+        if folder.exists(url) {
+            try recycle(url)
+        }
+        try save(try manifestEntries().filter { $0.path != item.path })
     }
 
     private func trashURL(_ path: VaultPath) -> URL {

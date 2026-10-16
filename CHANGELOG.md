@@ -7,6 +7,11 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Versions: Slate saves a version of the notes folder every 10 minutes when something changed, at launch and on quit, with git in its own folder outside the notes folder. The clock button next to the title lists the versions of a note; Restore brings one back and keeps the current text as a version too. With a remote set in Settings → History every version is also pushed.
+- Unsaved text survives a crash: Slate keeps a copy every second and offers it with Restore and Discard when the note opens again.
+- "Changed on disk" also offers Open both: your text becomes a new note named "(conflict date time)" next to the version on disk.
+- The Trash empties itself after the days set in Settings; Delete now removes one note at once. Both move the file to the macOS Trash.
+- The footer shows the time of the last version and the push state, and an Activity button lists recent problems.
 - Quick note: `⌃⌥Space` in any app opens a small field. Enter saves the note in Inbox and the app you were in keeps the focus. `⌘Enter` saves and opens the note, `⌥Enter` adds a timed line to Today, Esc closes and keeps the text for next time. A text that starts with a ticket key becomes a task.
 - Today: `⌥⌘T` opens today's note, made from the daily template. Open checkboxes from the last daily note come along under "Carried over". `⌘[` and `⌘]` go to the day before and after.
 - Tasks: a new task takes the ticket from its title, gets a suggested branch and the status To do. The ticket chip opens the tracker, the branch chip copies the branch, the status chip changes the status, `⌘⇧D` marks the task done. The Tasks folder groups its list into Active, To do and Done.
@@ -49,6 +54,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ### Fixed
 
 ### Infrastructure
+- M5: history and journal ports with `GitHistoryRepository` (real git integration tests, push to a bare remote) and `FileJournalStore`; trash retention, journal and conflict copy policies; snapshot, restore and purge use cases; `HistoryStore`; tolerated exit codes in `ShellRunner`.
 - M4: title, slug, daily, section append, link pattern and task group policies; create, daily, append and quick capture use cases; ports for the login item and the Doctor checks with live, mock and spy versions; `CaptureStore`, `DailyStore`, `SettingsStore`.
 - M3: SQLite index with full-text search (GRDB, FTS5) in Application Support, rebuilt when it belongs to another folder or schema. `Scripts/generate-vault.sh` writes sample notes; with 10,000 of them a full scan takes 11 s and a search 28 ms in a debug build. The full scan reads and parses 200 files at a time in parallel.
 - M2: `AttachmentPolicy`, `ImportAttachmentUseCase`, `AttachScreenshotUseCase`, three new ports (attachments, screen capture, workspace) with live, mock and spy versions. `Ports.live` takes the command recorder and builds one `ShellRunner`.

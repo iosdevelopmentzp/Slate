@@ -12,7 +12,7 @@ import Testing
 
     init() throws {
         folder = try TemporaryDirectory()
-        repository = FileTrashRepository(root: folder.url)
+        repository = FileTrashRepository(root: folder.url, recycle: { try FileManager.default.removeItem(at: $0) })
     }
 
     @Test func trashMovesTheFileAndWritesTheManifest() async throws {
@@ -57,5 +57,15 @@ import Testing
         let items = try await repository.items()
 
         #expect(items.map(\.originalPath) == [VaultPath(rawValue: "Inbox/Loose.md")])
+    }
+
+    @Test func deleteRemovesTheFileAndTheEntry() async throws {
+        _ = try folder.write("x", to: path.rawValue)
+        let item = try await repository.trash(path, at: date)
+
+        try await repository.delete(item)
+
+        #expect(FileManager.default.fileExists(atPath: folder.path(".trash/Tasks/Old.md")) == false)
+        #expect(try await repository.items().isEmpty)
     }
 }

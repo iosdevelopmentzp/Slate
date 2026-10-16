@@ -17,6 +17,7 @@ struct SettingsView: View {
             case .folder: FolderSettingsView()
             case .shortcuts: ShortcutSettingsView()
             case .links: LinkSettingsView()
+            case .history: HistorySettingsView()
             }
         }
         .frame(minWidth: 640, minHeight: 440)
