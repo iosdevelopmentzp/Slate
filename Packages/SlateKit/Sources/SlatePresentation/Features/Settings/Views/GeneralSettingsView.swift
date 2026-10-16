@@ -5,7 +5,9 @@ import SlateUI
 struct GeneralSettingsView: View {
     @Environment(SettingsStore.self) private var settings
     @Environment(VaultStore.self) private var vault
+    @Environment(HistoryStore.self) private var history
     @State private var showsActivity = false
+    @State private var remote = ""
 
     var body: some View {
         @Bindable var settings = settings
@@ -39,15 +41,34 @@ struct GeneralSettingsView: View {
                 }
             }
             Section {
+                Picker("Appearance", selection: $settings.appearance) {
+                    ForEach(AppAppearance.allCases) { appearance in
+                        Text(appearance.title).tag(appearance)
+                    }
+                }
                 Picker("Text size", selection: $settings.editorFontSize) {
                     ForEach(SettingsStore.fontSizes, id: \.self) { size in
                         Text("\(size) pt").tag(size)
                     }
                 }
-                Picker("Appearance", selection: $settings.appearance) {
-                    ForEach(AppAppearance.allCases) { appearance in
-                        Text(appearance.title).tag(appearance)
+            }
+            Section {
+                TextField("Back up to", text: $remote, prompt: Text("git@example.com:me/notes.git"))
+                    .onSubmit { history.setRemote(remote) }
+                    .accessibilityLabel("Back up to")
+                HStack {
+                    Text("Slate keeps versions of your notes. With a git address it also sends them there.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    if history.isSnapshotting {
+                        ProgressView().controlSize(.small)
                     }
+                    Button("Back up now") {
+                        history.setRemote(remote)
+                        Task { await history.backUpNow() }
+                    }
+                    .disabled(history.isSnapshotting || remote.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
                 Picker("Keep notes in the Trash for", selection: $settings.trashRetentionDays) {
                     ForEach(SettingsStore.retentionChoices, id: \.self) { days in
@@ -89,6 +110,8 @@ struct GeneralSettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .onAppear { remote = history.settings.remote }
+        .onDisappear { history.setRemote(remote) }
         .task {
             await settings.refreshLoginStatus()
             await settings.runDoctor()

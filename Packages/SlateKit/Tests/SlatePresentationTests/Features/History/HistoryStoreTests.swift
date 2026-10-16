@@ -64,4 +64,38 @@ import Testing
 
         #expect(harness.history.quitJob() == nil)
     }
+
+    @Test func theBackupAddressIsTrimmedAndSaved() {
+        harness.history.setRemote("  git@example.com:notes.git \n")
+        harness.history.stop()
+
+        #expect(harness.history.settings.remote == "git@example.com:notes.git")
+        #expect(HistorySettings.load(from: harness.keyValues).remote == "git@example.com:notes.git")
+    }
+
+    @Test func backUpNowPushesAndSaysSo() async {
+        harness.history.setRemote("git@example.com:notes.git")
+        harness.history.stop()
+
+        await harness.history.backUpNow()
+
+        #expect(harness.history.push == .pushed)
+        #expect(harness.toaster.text == "Backed up")
+    }
+
+    @Test func backUpNowWithoutAnAddressAsksForOne() async {
+        await harness.history.backUpNow()
+
+        #expect(harness.toaster.text == "Add a git address to back up to.")
+    }
+
+    @Test func aFailedBackupPointsToActivity() async {
+        harness.history.setRemote("git@example.com:notes.git")
+        harness.history.stop()
+        harness.spies.history.pushError = .scripted("offline")
+
+        await harness.history.backUpNow()
+
+        #expect(harness.toaster.text == "The backup failed. See Activity in Settings.")
+    }
 }

@@ -7,6 +7,9 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Settings → General has "Back up to" for a git address and a "Back up now" button. Slate says "Backed up", or that the backup failed and where to look.
+- Moving a note to another folder shows a toast with Undo, which moves it back.
+- Esc in the note text closes the panel, like Esc anywhere else in the panel.
 - The editor shows formatted text without Markdown marks: titles, headings, bold, italic, strikethrough, code, links, round checkboxes, bullets, numbers, quotes, code blocks, dividers and images in the text. The file stays plain Markdown.
 - A format bar above the text: the paragraph style menu (Title, Heading, Subheading, Body, Monospaced), Bold, Italic, Strikethrough, Checklist, Bulleted list, Numbered list, Quote, Link and Image, and a "…" menu with Divider and Screenshot. Active styles are tinted, and every button shows its shortcut.
 - Shortcuts and a Format menu: `⇧⌘T` `⇧⌘H` `⇧⌘J` `⇧⌘B` `⇧⌘M` for the paragraph styles, `⇧⌘L` `⇧⌘7` `⇧⌘9` for lists, `⌘'` quote, `⌘B` `⌘I` `⇧⌘X`, `⌘K` link, `⇧⌘I` image, `⇧⌘S` screenshot, `⌘]` and `⌘[` to indent a list item, `⌥⌘F` find in the note.
@@ -21,6 +24,9 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - The width of the list is draggable (260 to 420 points, double-click for the default) and remembered, and so is the sidebar (`⌘0` in the panel too).
 
 ### Changed
+- The quick note field has the soft look: a rounded white card, the folder as a tinted chip on the left and "⏎ Save" on the right.
+- Settings → General follows the order of the design: notes folder, login and the quick note folder, appearance and text size, backup and Trash days, Check-up.
+- `⌘↑` and `⌘↓` move to the previous and next note when the note text is not being edited, also from the main menu. In the text they go to the start and the end.
 - The panel and the window have the same three columns: folders, notes, the note. The header and the footer are gone; the sidebar has Settings and Open as window at the top, the list has the folder name, a round + button and a rounded search field.
 - A softer look: notes are rounded cards with a two-line preview, the selected folder and card have a soft tint, the window has no title bar line and the columns have no divider lines.
 - Friendly empty states: "Nothing here yet." with a New note button, "Pick a note or press ⌘N.", "No notes match." with Clear search, and "The Trash is empty."

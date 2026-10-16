@@ -135,8 +135,12 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         }
         typealias Command = MainMenuBuilder.Command
         var go: [Command] = [
-            Command(title: "Previous Note", key: String(UnicodeScalar(NSUpArrowFunctionKey)!), modifiers: [.command, .option]) { selectNeighbour(-1) },
-            Command(title: "Next Note", key: String(UnicodeScalar(NSDownArrowFunctionKey)!), modifiers: [.command, .option]) { selectNeighbour(1) },
+            Command(title: "Previous Note", key: String(UnicodeScalar(NSUpArrowFunctionKey)!), modifiers: [.command]) {
+                if TextFocus.isEditingText { TextFocus.send(#selector(NSResponder.moveToBeginningOfDocument(_:))) } else { selectNeighbour(-1) }
+            },
+            Command(title: "Next Note", key: String(UnicodeScalar(NSDownArrowFunctionKey)!), modifiers: [.command]) {
+                if TextFocus.isEditingText { TextFocus.send(#selector(NSResponder.moveToEndOfDocument(_:))) } else { selectNeighbour(1) }
+            },
             Command(title: "Previous Folder", key: "[", modifiers: [.command, .shift]) { noteList.show(ListSource.cycle(from: noteList.source, spaces: spaces.map(\.folder), by: -1)) },
             Command(title: "Next Folder", key: "]", modifiers: [.command, .shift]) { noteList.show(ListSource.cycle(from: noteList.source, spaces: spaces.map(\.folder), by: 1)) },
             Command(title: "All Notes", key: "", modifiers: []) { noteList.show(.all) },

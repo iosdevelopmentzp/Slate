@@ -218,9 +218,28 @@ final class NoteListStore: NoteLookup {
     func moveNote(_ summary: NoteSummary, to space: SpaceName) async {
         do {
             let target = try await move.execute(summary.path, to: space)
-            await finishMove(summary, to: target, message: "Moved to \(space.rawValue)")
+            await finishMove(summary, to: target)
+            guard let origin = summary.space else {
+                toaster.show("Moved to \(space.rawValue)")
+                return
+            }
+            toaster.show("Moved to \(space.rawValue)", action: ToastAction(title: "Undo") { [weak self] in
+                guard let self else { return }
+                Task { await self.moveBack(id: summary.id, from: target, to: origin) }
+            })
         } catch {
             activity.log("Cannot move the note", detail: error.localizedDescription, outcome: .failure)
+        }
+    }
+
+    private func moveBack(id: NoteID, from path: VaultPath, to space: SpaceName) async {
+        do {
+            let target = try await move.execute(path, to: space)
+            events.post(.noteMoved(from: path, to: target))
+            await refresh()
+            navigator.select(id)
+        } catch {
+            activity.log("Cannot move the note back", detail: error.localizedDescription, outcome: .failure)
         }
     }
 
@@ -309,13 +328,12 @@ final class NoteListStore: NoteLookup {
         }
     }
 
-    private func finishMove(_ summary: NoteSummary, to target: VaultPath, message: String) async {
+    private func finishMove(_ summary: NoteSummary, to target: VaultPath) async {
         events.post(.noteMoved(from: summary.path, to: target))
         await refresh()
         if let space = source.space, target.space != space, navigator.selectedNote == summary.id {
             navigator.select(visibleNotes.first?.id)
         }
-        toaster.show(message)
     }
 
     private func run(_ failureTitle: String, path: VaultPath, work: () async throws -> Void) async {

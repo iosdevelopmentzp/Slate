@@ -16,6 +16,9 @@ extension RichTextController {
             return indentLists(by: -1)
         case #selector(NSResponder.deleteBackward(_:)):
             return handleBackspace()
+        case #selector(NSResponder.cancelOperation(_:)):
+            textView.window?.cancelOperation(nil)
+            return true
         default:
             return false
         }

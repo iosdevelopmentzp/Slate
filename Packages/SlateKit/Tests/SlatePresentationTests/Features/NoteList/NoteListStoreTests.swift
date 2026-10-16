@@ -124,6 +124,19 @@ import Testing
         #expect(harness.spies.files.paths == [target])
         #expect(harness.posted.contains(.noteMoved(from: path, to: target)))
         #expect(harness.toaster.text == "Moved to Notes")
+        #expect(harness.toaster.actionTitle == "Undo")
+    }
+
+    @Test func undoMovesTheNoteBack() async throws {
+        let path = harness.seed("Inbox/A.md", id: "a")
+        try await harness.index()
+        await store.refresh()
+        await store.moveNote(try #require(store.summaries.first), to: SpaceName(rawValue: "Notes"))
+
+        harness.toaster.performAction()
+
+        try await waitUntil { harness.spies.files.paths == [path] }
+        #expect(harness.posted.contains(.noteMoved(from: VaultPath(rawValue: "Notes/A.md"), to: path)))
     }
 
     @Test func dropMovesTheNoteByItsID() async throws {

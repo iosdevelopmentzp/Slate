@@ -74,6 +74,26 @@ final class HistoryStore {
         restartLoop()
     }
 
+    func setRemote(_ value: String) {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed != settings.remote else { return }
+        settings.remote = trimmed
+        saveSettings()
+    }
+
+    func backUpNow() async {
+        guard settings.hasRemote else {
+            toaster.show("Add a git address to back up to.")
+            return
+        }
+        await snapshotNow(push: true)
+        switch push {
+        case .pushed: toaster.show("Backed up")
+        case .failed: toaster.show("The backup failed. See Activity in Settings.")
+        case .notConfigured: break
+        }
+    }
+
     func snapshotNow(push: Bool = true) async {
         guard settings.isEnabled, isSnapshotting == false else { return }
         isSnapshotting = true

@@ -24,49 +24,63 @@ struct CaptureView: View {
                 }
                 CaptureTextView(text: $capture.text, focusToken: capture.focusToken, onSave: onSave, onOpen: onOpen, onCancel: onCancel)
             }
-            .frame(minHeight: 64, maxHeight: 120)
-            .padding(.horizontal, 10)
-            .padding(.top, 10)
+            .frame(minHeight: 64, maxHeight: 140)
+            .padding(.horizontal, 12)
+            .padding(.top, 12)
             HStack(spacing: 8) {
-                spaceMenu
+                folderMenu
                 Spacer()
-                hint("⌘⏎", "Open")
-                hint("⏎", "Save")
+                Button(action: onSave) {
+                    HStack(spacing: 4) {
+                        Text("⏎").foregroundStyle(.secondary)
+                        Text("Save")
+                    }
+                    .font(.system(size: 12, weight: .medium))
+                    .padding(.horizontal, 10)
+                    .frame(height: 24)
+                    .background(Theme.hover, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .disabled(capture.canSave == false)
+                .hint("Enter saves. ⌘Enter saves and opens the note.")
             }
-            .font(.caption)
-            .padding(.horizontal, 14)
-            .frame(height: 28)
-            .padding(.bottom, 4)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
         }
         .frame(width: 520)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.border))
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.quickNoteRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.quickNoteRadius, style: .continuous).strokeBorder(Theme.border.opacity(0.5)))
     }
 
-    private var spaceName: String {
-        (capture.space ?? vault.config.captureSpace).rawValue
+    private var folder: Space? {
+        vault.config.space(capture.space ?? vault.config.captureSpace)
     }
 
-    private var spaceMenu: some View {
+    private var folderMenu: some View {
         Menu {
             ForEach(vault.spaces) { space in
-                Button(space.folder.rawValue, systemImage: space.icon ?? "folder") {
+                Button(space.folder.rawValue, systemImage: FolderRowMapper.icon(for: space)) {
                     capture.space = space.folder
                 }
             }
         } label: {
-            Label(spaceName, systemImage: "folder")
+            HStack(spacing: 6) {
+                Image(systemName: folder.map(FolderRowMapper.icon(for:)) ?? "folder.fill")
+                    .foregroundStyle(FolderTint.tint(folder?.color ?? .blue).color)
+                Text((capture.space ?? vault.config.captureSpace).rawValue)
+                    .foregroundStyle(.primary)
+            }
+            .font(.system(size: 12, weight: .medium))
+            .padding(.horizontal, 10)
+            .frame(height: 24)
+            .background(Theme.hover, in: Capsule())
         }
-        .menuStyle(.borderlessButton)
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
         .fixedSize()
-        .help("Folder for the note")
-    }
-
-    private func hint(_ keys: String, _ title: String) -> some View {
-        HStack(spacing: 3) {
-            Text(keys).foregroundStyle(.secondary)
-            Text(title).foregroundStyle(.tertiary)
-        }
+        .hint("Folder for the note")
+        .accessibilityLabel("Folder for the note")
     }
 }
 

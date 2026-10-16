@@ -242,4 +242,22 @@ import Testing
         #expect(reopened.text == String(harness.text.dropLast()))
         #expect(reopened.markdown == expected)
     }
+
+    @Test func escapeGoesToTheWindow() {
+        let harness = EditorHarness(markdown: "a\n")
+        let window = EscapeWindow()
+        window.contentView = harness.controller.scrollView
+
+        harness.command(#selector(NSResponder.cancelOperation(_:)))
+
+        #expect(window.cancelCount == 1)
+    }
+}
+
+private final class EscapeWindow: NSWindow {
+    var cancelCount = 0
+
+    override func cancelOperation(_ sender: Any?) {
+        cancelCount += 1
+    }
 }

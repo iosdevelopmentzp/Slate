@@ -17,7 +17,7 @@ enum FolderRowMapper {
         )
     }
 
-    private static func icon(for space: Space) -> String {
+    static func icon(for space: Space) -> String {
         guard let icon = space.icon, icon.isEmpty == false, icon != "folder" else { return "folder.fill" }
         return icon
     }
