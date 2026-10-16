@@ -1,0 +1,72 @@
+# Slate
+
+Personal macOS menu bar notes app for an iOS developer. Markdown files in a local notes folder, a SQLite search index, task notes with ticket and branch, quick capture from a hotkey.
+
+Current stage: **M0 done**. The menu bar icon opens the panel with mock notes in two folders; the window adds a sidebar. The shared UI blocks, windows and Shared objects are copied from DevHub. Notes are mock data, the editor is a plain text view that saves nothing. Next: milestone M1 of `docs/ROADMAP.md`. `docs/STATUS.md` says what is real.
+
+Read first, in this order: this file, `docs/STATUS.md`, `docs/ROADMAP.md`, then the document for the milestone (`docs/SPEC.md`, `docs/STORAGE-FORMAT.md`, `docs/ARCHITECTURE.md`, `docs/UX.md`). `docs/PLAYBOOK.md` has verified solutions and traps per topic; read its section before touching that topic.
+
+## Project
+
+- Xcode project `Slate.xcodeproj`, one app target `Slate`, macOS 26.4+, Swift 6 language mode, default actor isolation `MainActor`. The target holds only `Slate/SlateApp.swift` and `Assets.xcassets` and links the product `SlateComposition`.
+- Local package `Packages/SlateKit` (tools 6.2, Swift 6). `project.pbxproj` holds the package reference.
+- No App Sandbox. Ad-hoc signing (`Sign to Run Locally`). No Apple Developer account. Keep it this way: the app shells out to `screencapture`, `git` and `open`.
+- `INFOPLIST_KEY_LSUIElement = YES`: no Dock icon, the app lives in the menu bar only.
+- `Slate/` is an Xcode synchronized folder. Edit `project.pbxproj` only for build settings, never for file lists. New code goes into the package, not into `Slate/`.
+
+## Build & Run
+
+| Command | What it does |
+|---|---|
+| `Scripts/build.sh [Debug\|Release]` | Runs `Scripts/check-layers.sh`, then builds with `xcodebuild -quiet` into `DerivedData/` and prints the `.app` path. `SKIP_LAYER_CHECK=1` skips the check |
+| `Scripts/test.sh [args]` | Runs `swift test -q` on the package and prints one summary line. `--skip integration` skips the process suites, `--filter <Suite>` runs one suite |
+| `Scripts/run.sh` | Builds Debug, quits a running Slate, opens the new build |
+| `Scripts/install.sh` | Builds Release, copies to `/Applications/Slate.app`, installs the `slate` CLI to `~/.local/bin` |
+
+Run `Scripts/build.sh` and `Scripts/test.sh` after every change. `build.sh` prints `layers: ok` and the app path; anything else is a layer violation, an error or a warning. `test.sh` prints one `Test run with … passed` line. A failing test, or a missing test for new logic, counts as a failure.
+
+## Layout
+
+Modules, one direction: `Composition → Presentation → Domain ← Data`; Presentation also uses UI and Editor; the CLI uses Domain and Data. The compiler enforces the direction. Full contract in `docs/ARCHITECTURE.md`, short rules in `.claude/rules/`, extra checks in `Scripts/check-layers.sh`.
+
+| Path | Purpose |
+|---|---|
+| `Slate/` | App host: `SlateApp.swift` (`@main`, keeps `AppContainer.live()` alive) and `Assets.xcassets`. Nothing else |
+| `Packages/SlateKit/Sources/SlateDomain/` | models, values, ports, policies, codec, use cases, `Ports`, `UseCases` |
+| `…/SlateData/` | live ports: `Files/`, `Index/` (GRDB), `Watch/`, `Shell/`, `History/`, `Capture/`, `Secrets/`, `Persistence/`, `System/` (AppKit only here), `Assembly/Ports+Live.swift` |
+| `…/SlateMocks/` | mocks and `Ports.mock()` |
+| `…/SlateUI/` | shared SwiftUI blocks, `Theme`, `Tint`, formatters, hints |
+| `…/SlateEditor/` | the TextKit 2 Markdown editor; imports nothing from the package |
+| `…/SlatePresentation/` | `Shared/`, `Shell/` (`AppWindows`, `RootView`), `Features/<Name>/` |
+| `…/SlateComposition/` | `AppContainer`, the only `public` type |
+| `…/SlateTestSupport/` | spies and test helpers |
+| `…/SlateCLI/` | the `slate` command |
+| `Packages/SlateKit/Tests/` | five test targets, folders mirror `Sources/` |
+| `Scripts/` | `build.sh`, `test.sh`, `check-layers.sh`, `layer-exceptions.txt`, `run.sh`, `install.sh` |
+| `docs/` | `SPEC.md`, `STORAGE-FORMAT.md`, `ARCHITECTURE.md`, `UX.md`, `ROADMAP.md`, `PLAYBOOK.md`, `BOOTSTRAP.md`, `STATUS.md`, `adr/` |
+| `.claude/rules/` | `layers.md` (always), `domain.md`, `data.md`, `presentation.md`, `testing.md` (by path) |
+| `.claude/skills/` | `add-feature`, `add-use-case`, `build-and-run`, `panel-window`, `testing`, `ui-components`, `update-docs` (copied from DevHub; examples still name DevHub features) |
+| `.claude/hooks/` | session brief on start, changelog check on stop |
+
+## Rules that apply from day one
+
+- The storage format in `docs/STORAGE-FORMAT.md` is a contract shared with other tools (Obsidian, the CLI, scripts). Change it only with a new ADR in `docs/adr/`.
+- Every screen follows `docs/UX.md`: native look, three visible concepts (Folders, Notes, Tags), keyboard first, no modal dialogs, plain words from its section 7.
+- No comments in code (`check-layers.sh` fails on a comment line; `// MARK` is allowed). Names and small functions carry the meaning.
+- Swift conventions as DevHub: `package` across modules, `guard` for early exit, `== false` instead of `!`, `[weak self]` closures start with `guard let self else { return }`, one type per file, block indentation for multi-line calls.
+- Plain English in documentation, UI text, commit messages and the changelog: short sentences, common words, no idioms.
+- Every change to code updates `CHANGELOG.md` under `[Unreleased]` and, when the stage moves, `docs/STATUS.md`. The Stop hook blocks a session that changed `Slate/`, `Packages/`, `Scripts/` or `.claude/` without touching the changelog.
+
+## The app is anonymous
+
+No company, product, host, ticket prefix, branch pattern or person name appears in Swift, resources, defaults, tests, fixtures, docs or commit messages (ADR 0006). Examples use `ABC-123`, `example.atlassian.net`, `gitlab.example.com`. Project facts come only from Settings and `.slate/` files in the user's notes folder. Xcode's generated file headers carry the owner's name: remove them.
+
+## Working rules for the build agent
+
+- One feature ID at a time (`docs/SPEC.md` section 4). Finish it end to end: Domain, Data, Presentation, tests, a manual check, `CHANGELOG.md`. Then commit.
+- Read `docs/PLAYBOOK.md` before touching a topic it covers. Do not rediscover those problems.
+- Run `Scripts/build.sh` and `Scripts/test.sh` after every change. Both clean before a commit.
+- A step that fails twice in a row: stop, write what failed and what was tried into `docs/STATUS.md` under "Known gaps", and continue with the next item. Do not loop.
+- Never widen the task: no refactor of untouched code, no new abstraction without a second user, no new package without an ADR.
+- When a doc and the code disagree, fix one of them in the same session and say which.
+- The skills under `.claude/skills/` were copied from DevHub. Treat their examples as patterns, take the Slate types from `docs/ARCHITECTURE.md`, and update a skill the first time its topic is touched.

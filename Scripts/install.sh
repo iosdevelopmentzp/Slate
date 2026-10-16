@@ -1,0 +1,18 @@
+#!/bin/zsh
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+APP="$("$ROOT/Scripts/build.sh" Release | tail -1)"
+TARGET="/Applications/Slate.app"
+BIN="$HOME/.local/bin"
+
+pkill -x Slate || true
+rm -rf "$TARGET"
+cp -R "$APP" "$TARGET"
+
+swift build --package-path "$ROOT/Packages/SlateKit" -c release --product slate -q
+mkdir -p "$BIN"
+cp "$ROOT/Packages/SlateKit/.build/release/slate" "$BIN/slate"
+
+open "$TARGET"
+echo "Installed $TARGET and $BIN/slate"

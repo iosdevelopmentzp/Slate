@@ -1,0 +1,7 @@
+xcuserdata/
+*.xcuserstate
+DerivedData/
+.DS_Store
+.claude/worktrees/
+Packages/SlateKit/.build/
+.swiftpm/
