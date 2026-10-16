@@ -34,7 +34,11 @@ let package = Package(
         ),
         .target(name: "SlateMocks", dependencies: ["SlateDomain"], swiftSettings: shared),
         .target(name: "SlateUI", swiftSettings: mainActor),
-        .target(name: "SlateEditor", swiftSettings: mainActor),
+        .target(
+            name: "SlateEditor",
+            dependencies: [.product(name: "Markdown", package: "swift-markdown")],
+            swiftSettings: mainActor
+        ),
         .target(
             name: "SlatePresentation",
             dependencies: [
@@ -59,7 +63,12 @@ let package = Package(
         ),
         .testTarget(name: "SlateDomainTests", dependencies: ["SlateDomain", "SlateTestSupport"], swiftSettings: shared),
         .testTarget(name: "SlateDataTests", dependencies: ["SlateData", "SlateMocks", "SlateTestSupport"], swiftSettings: shared),
-        .testTarget(name: "SlateEditorTests", dependencies: ["SlateEditor"], resources: [.copy("Fixtures")], swiftSettings: mainActor),
+        .testTarget(
+            name: "SlateEditorTests",
+            dependencies: ["SlateEditor", .product(name: "Markdown", package: "swift-markdown")],
+            resources: [.copy("Fixtures")],
+            swiftSettings: mainActor
+        ),
         .testTarget(name: "SlateUITests", dependencies: ["SlateUI"], swiftSettings: mainActor),
         .testTarget(name: "SlateCLITests", dependencies: ["SlateCLI", "SlateData", "SlateTestSupport"], swiftSettings: shared),
         .testTarget(name: "SlatePresentationTests", dependencies: ["SlatePresentation", "SlateMocks", "SlateTestSupport"], swiftSettings: mainActor),

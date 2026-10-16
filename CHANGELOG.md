@@ -94,6 +94,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ### Fixed
 
 ### Infrastructure
+- `SlateEditor` reads Markdown into formatted text and writes it back (`MarkdownReader`, `MarkdownWriter`, swift-markdown under `SlateEditor/Markdown/`). Files Slate wrote come back byte for byte; files from other tools keep the same Markdown tree; anything outside the subset stays as a raw block. Tests: a fixture set and 300 random documents.
 - M7: secret store and issue tracker ports (Keychain, Jira REST), `IssueStore`, per-window editor stores, `MainMenuBuilder`, line commands, fence completion and outline in the editor module. CLI tests use their own support folder.
 - M6: `Config/Slate-Info.plist` (URL scheme, Services); `AppContainer` is the app delegate; URL command parser, Slack format, action environment policies; toggle todo and run action use cases; action runner and exporter ports; `TodoStore`, `PaletteStore`; a sixth test target, `SlateCLITests`.
 - M5: history and journal ports with `GitHistoryRepository` (real git integration tests, push to a bare remote) and `FileJournalStore`; trash retention, journal and conflict copy policies; snapshot, restore and purge use cases; `HistoryStore`; tolerated exit codes in `ShellRunner`.
