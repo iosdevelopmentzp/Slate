@@ -1,12 +1,56 @@
 # Slate
 
-Notes for an iOS developer on macOS. Working name; rename by replacing `Slate`, `slate` and `SLATE_` in this folder.
+Notes in folders, in the macOS menu bar. Working name; rename by replacing `Slate`, `slate` and `SLATE_` in this folder.
 
-Apple Notes is fast and simple. It misses what a developer needs every day: Markdown and code blocks, a note tied to a ticket and a branch, a screenshot in one keystroke, search that finds a line inside a code block, plain files you own, and a way to add features without writing a new app. Slate keeps the speed of Notes and adds those things.
+Slate is a small notes app. You keep notes in folders. You write in formatted text, with a format bar and shortcuts, and you put images in the text. Each note is a plain Markdown file in a folder you choose, so other apps (Obsidian, a text editor, scripts) can read and change it too.
 
-Status: **milestone M1**. On first launch Slate asks for the notes folder (default `~/Documents/Slate`). Each note is a Markdown file with a header. The panel and the window list, create, edit, rename, move and trash notes, and save as you type. A file you change in another editor shows up in Slate. The documents in `docs/` describe what to build, how the data is stored, how the code is organised and in which order to build it. Next: milestone M1.5 of `docs/ROADMAP.md`.
+Status: **phase 2, S1 to S4 built** on branch `phase2-simple-v1`. The owner's manual checks are open; the list is in `docs/STATUS.md`.
 
-## Run
+## Screenshots
+
+The owner takes these on a real screen and puts them in `docs/screenshots/`.
+
+| File | What it shows |
+|---|---|
+| `docs/screenshots/window.png` | The window: folders, note cards and a note with the format bar |
+| `docs/screenshots/editor.png` | A note with a title, a checklist, a list, a quote, an image and a code block |
+| `docs/screenshots/quick-note.png` | The quick note field over another app |
+| `docs/screenshots/settings.png` | Settings → General |
+
+## What it does
+
+1. **Folders.** Make a folder with "+ New folder" or `⇧⌘N`. Double-click a folder to rename it. Right-click it to change the colour or the icon, to move it, or to delete it. When you delete a folder, its notes move to the quick note folder, and a toast offers Undo.
+2. **Notes.** `⌘N` makes a note in the current folder. A note card shows the title, the date and two lines of text. Drag a card onto a folder to move the note. Pin, Move to, Duplicate and Move to Trash are in the "…" button and the right-click menu.
+3. **Formatted text.** The format bar and the Format menu set the style: Title, Heading, Subheading, Body, Monospaced, bold, italic, strikethrough, checklist, bulleted and numbered lists, quote, link and image. You see the result, not Markdown marks.
+4. **Images in the text.** Paste an image, drag one in, use the Image button, or press `⇧⌘S` for a screenshot. Double-click an image to see it large.
+5. **Quick note.** `⌃⌥Space` opens a small field from any app. Enter saves the note, `⌘Enter` saves and opens it.
+6. **Search.** `⌘F` searches the titles and the text of the current folder. "Search all notes" searches every folder.
+7. **Safe by default.** Slate saves as you type. It keeps versions of each note (the clock button next to the title) and can back them up to a git address. Deleted notes stay in the Trash for 30 days.
+
+## Keys
+
+| Keys | Action |
+|---|---|
+| `⌥⌘N` (from any app) | Open Slate |
+| `⌃⌥Space` (from any app) | Quick note |
+| `⌘N`, `⇧⌘N` | New note, new folder |
+| `⌘F` | Search |
+| `⌘0` | Show or hide the folders |
+| `⇧⌘O` | Open the panel as a window |
+| `⌘1` … `⌘9` | Folder by position |
+| `⌘↑`, `⌘↓` | Previous and next note |
+| `⇧⌘P` | Pin or unpin |
+| `⌘⌫` | Move the note to the Trash (asks first) |
+| `⇧⌘T`, `⇧⌘H`, `⇧⌘J`, `⇧⌘B`, `⇧⌘M` | Title, Heading, Subheading, Body, Monospaced |
+| `⇧⌘L`, `⇧⌘7`, `⇧⌘9` | Checklist, bulleted list, numbered list |
+| `⌘'` | Quote |
+| `⌘B`, `⌘I`, `⇧⌘X` | Bold, italic, strikethrough |
+| `⌘K` | Link |
+| `⇧⌘I`, `⇧⌘S` | Image, screenshot |
+| `⌘,` | Settings |
+| `Esc` | Back, and closes the panel |
+
+## Build and run
 
 ```sh
 Scripts/build.sh      # layer check, then xcodebuild; prints the .app path
@@ -15,21 +59,18 @@ Scripts/run.sh        # build, quit the running app, open the new one
 Scripts/install.sh    # Release build to /Applications and the slate CLI to ~/.local/bin
 ```
 
-Needs Xcode with the macOS 26.4 SDK. No developer account: the app is signed to run locally. After `Scripts/run.sh` a note icon appears in the menu bar. Click it to open the panel. Click outside the panel to close it. `⌘N` makes a note in the current folder, `⌘⇧T` makes a task, `⌘⇧P` pins the selected note, `⌘F` searches note titles, `⌘⇧O` opens the window, `⌘Q` quits. In the window, `⌘0` shows or hides the sidebar. To start again with the first launch window, run `defaults delete local.slate.app vault.path`.
+You need Xcode with the macOS 26.4 SDK. You do not need a developer account: the app is signed to run on this Mac only. After `Scripts/run.sh` a note icon appears in the menu bar. Click it to open the panel. Click outside the panel to close it. To see the first launch window again, run `defaults delete local.slate.app vault.path`.
 
 ## Read in this order
 
 | File | What it answers |
 |---|---|
-| `docs/SPEC.md` | What Slate is, principles, daily scenarios, every feature with a priority, the shell and the editor, search, sync, integrations, settings, keyboard map, budgets, risks, open questions |
-| `docs/STORAGE-FORMAT.md` | The vault on disk: folders, Markdown with a YAML header, links, attachments, trash, templates, config files, the search index |
-| `docs/ARCHITECTURE.md` | Modules and layers, ports, use cases, stores, the editor module, concurrency, tests, scripts, dependencies, extension points |
-| `docs/UX.md` | The UI rule book: native look, three visible concepts, layouts, components, states, UI words, keyboard |
-| `docs/PLAYBOOK.md` | Verified solutions and traps per topic; read the section before writing code for it |
-| `docs/ROADMAP.md` | Milestones with a "done when" check for each |
-| `docs/BOOTSTRAP.md` | How to start the repository: Xcode settings, what to copy from DevHub and Verba, external packages, the first prompt for the agent |
-| `docs/adr/` | Decisions and their reasons |
-
-## Summary in one paragraph
-
-A menu bar app. One global hotkey opens a panel with a note list and an editor. A second hotkey opens a small capture field. Notes are Markdown files with a YAML header, in a local folder you choose. A git repository stored outside the folder keeps the history and pushes to a private remote when you set one. A SQLite full-text index makes search instant and can be rebuilt from the files at any time. A task note carries a ticket, a branch and a merge request. A CLI and a URL scheme let scripts, DevHub and Claude Code create and append notes.
+| `CLAUDE.md` | The rules for working in this repository |
+| `docs/STATUS.md` | What is real, the decisions, the known gaps, the manual checks |
+| `docs/ROADMAP.md` | Milestones with a "done when" check for each; phase 2 is S1 to S4 |
+| `docs/SPEC.md` | What Slate is; section 0.9 is the v1 scope |
+| `docs/UX.md` | The UI rule book (revision 2): layouts, components, words, keys |
+| `docs/STORAGE-FORMAT.md` | The notes folder on disk: folders, Markdown with a header, links, images, Trash, config files; section 11 is the Markdown that the editor writes |
+| `docs/ARCHITECTURE.md` | Modules and layers, ports, use cases, stores, the editor module |
+| `docs/PLAYBOOK.md` | Solutions that work and traps, per topic |
+| `docs/adr/` | Decisions and their reasons; 0007 is the v1 scope, 0008 the rich text editor |

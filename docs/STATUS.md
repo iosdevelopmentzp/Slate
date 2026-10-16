@@ -4,7 +4,7 @@ Last updated: 2026-10-17
 
 ## Stage
 
-Phase 2 on branch `phase2-simple-v1`. **S1 Simplify, S2 Folders and the soft look, and S3 the rich text editor are done.** Next: S4 polish and the owner's pass. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
+Phase 2 on branch `phase2-simple-v1`. **S1 Simplify, S2 Folders and the soft look, S3 the rich text editor and S4 Polish are built.** Next: the owner runs the manual checks below; every item passes or becomes a numbered gap. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
 
 ## Removed in S1 (ADR 0007)
 
@@ -36,13 +36,13 @@ The Presentation code below was deleted. Domain and Data code and tests stay. To
 | Panel | real (S2) | Three columns like the window: sidebar (`⌘0` hides it, remembered), the list, the note. The status item: left click toggles the panel, right click shows New Note, Quick Note, Open Window, Settings, Quit. The resize grip sits in the bottom-right corner |
 | Window | real (S2) | The same three columns under a transparent title bar; the sidebar title sits next to the window buttons |
 | Sidebar | real (S2) | "Folders" with Open as window (panel) and Settings at the top. All notes, the folders (tinted icon, name, count, soft pill when selected), Trash, and "+ New folder" at the bottom (`⇧⌘N`). Double click renames inline. Right click: Rename, Colour (eight colours with dots), Icon (16 named icons), Move up, Move down, Delete folder. Delete asks in place ("Delete "Ideas"? Its 4 notes move to Notes. Yes · No", 5 s, Esc cancels) and shows a toast with Undo. A note card dropped on a folder moves there |
-| Quick note field | real (S1) | `⌃⌥Space` from any app: a 520 pt field, the folder menu, Enter saves, `⌘Enter` saves and opens, `⇧Enter` new line, Esc closes and keeps the draft. The soft look comes in S4 |
+| Quick note field | real (S4) | `⌃⌥Space` from any app: a 520 pt rounded card (radius 14, surface colour, the system shadow), "Type a note…", the folder as a tinted chip on the left, "⏎ Save" on the right. Enter saves, `⌘Enter` saves and opens, `⇧Enter` new line, Esc closes and keeps the draft |
 | Note list | real (S2) | The folder name (`.title2`), a round + button, a rounded search field and a thin progress line. Cards: title, date, pin, two-line preview; 12 pt padding, 10 pt radius, 6 pt gap; soft tint when selected or hovered. A "…" button on hover and the right-click menu: Pin, Move to, Duplicate, Move to Trash ("Move to the Trash? Yes · No" in the card). Cards can be dragged onto a folder. Empty folder: "Nothing here yet." with New note and `⌘N` |
 | Trash | real (S2) | Cards with the folder and the age; Restore and Delete now on hover ("Delete now? Yes · No"); "Notes are removed from the Trash after 30 days." under the list; "The Trash is empty." |
 | Editor | real (S3) | Title field (24 pt bold, up to two lines, placeholder "Title") and the versions button (clock); the format bar (36 pt, radius 10): style menu, Bold, Italic, Strikethrough, Checklist, Bulleted, Numbered, Quote, Link, Image, "…" with Divider and Screenshot. Rich text without marks: title 24, heading 18, subheading 15 semibold, body 15, monospaced 13; round checkboxes, bullets, numbers, quote bar, code and raw blocks on a tint, images as rounded blocks (max 360 pt high), dividers. List keys, typing shortcuts ("- ", "1. ", "[] ", "# ", "> "), `⌘K` link popover, `⌘`-click opens links, double-click on an image opens Quick Look. The text column is at most 720 pt wide; "Saved" fades in for a second after a save. Empty: "Pick a note or press ⌘N." Autosave, journal with Restore and Discard, the "Changed on disk" banner |
 | Versions | real | The clock button lists the versions of the note with Restore. Snapshots run quietly with the stored settings |
 | Search | real (S2) | Titles and text in the current folder, "Search all notes" widens it. Cards show the matched text with the words in bold and the folder name. "No notes match." with Clear search. No filters are offered |
-| Settings | real (S1) | Two pages. General: notes folder with Choose another folder…, Open at login, quick note folder, text size, appearance, Trash days, Check-up (checks, Check again, Activity, Rebuild search). Shortcuts: Open Slate, Quick note, New note |
+| Settings | real (S4) | Two pages. General: notes folder with Choose another folder…, Open at login, quick note folder, appearance, text size, "Back up to" (a git address) with "Back up now", Trash days, Check-up (checks, Check again, Activity, Rebuild search). Shortcuts: Open Slate, Quick note, New note |
 | Main menu | real (S3) | While the window is open: Slate, File (New Note, New Folder, Quick Note), Edit (with Find in Note `⌥⌘F`), Format (the five styles, the three lists, Quote, Indent, Outdent, Bold, Italic, Strikethrough, Link, Image, Divider, Screenshot), Note (Pin, Move to Trash), Go (previous and next note and folder, All Notes, folders `⌘1`…`⌘9`), View (sidebar), Window |
 | Extension points | real, no UI | `slate://` and the `slate` CLI (`new`, `open`, `append`, `search`, and the parked `today`), Services → Add to Slate (a plain note in the quick note folder) |
 
@@ -159,18 +159,77 @@ Numbered. What, then why. A later session must not undo these without a new numb
 90. Inline code has no button and no shortcut (`UX.md` section 4 has none); code from a file is shown and kept, and paste from Slate keeps it.
 91. The default text size is 15 (`UX.md` section 3). The Text size setting scales every style.
 
+92. Undo of a move puts the note back into its old folder at depth 1 with the same file name when it is free (`MoveNoteUseCase`). A note that came from a sub-folder does not go back into the sub-folder.
+93. "Back up to" is saved when you press Enter, when you press "Back up now" and when Settings closes. An empty address turns the push off; versions are still kept.
+94. The Settings General page keeps the quick note folder picker, which `UX.md` section 2 does not list: without it the quick note folder could only change in `spaces.json`.
+95. `⌘↑` and `⌘↓` pick the previous and next note only while the note text is not being edited; in the text they keep their usual meaning (start and end of the text). `⌘⌥↑` and `⌘⌥↓` pick the note from anywhere. `⌘⌫` works the same way.
+96. `⌘F` (Search) has no main menu item, because a menu item would take the key before the search field's own shortcut. Every other key of `UX.md` section 8 is in the main menu.
+97. The README has a table of the four screenshots the owner takes; the files do not exist yet.
+
 ## Next steps
 
-1. S4 Polish and the owner's pass.
-2. The owner's manual checks of S1 to S4.
+1. The owner runs the manual checks below and takes the README screenshots.
+2. Fix what the checks find, one numbered gap at a time.
+3. Then M8 ideas (`docs/ROADMAP.md`), each only with a new ADR if it changes the v1 scope of ADR 0007.
+
+## Manual checks (owner)
+
+Run these on the Release build (`Scripts/install.sh`), in light and dark mode. Mark each item as passed, or add a numbered gap under Known gaps.
+
+### S1 Simplify
+
+1. A new notes folder (Settings → Choose another folder…, an empty folder) gets only `Notes/` with the welcome note, `_attachments/` and `.slate/spaces.json`.
+2. No menu, panel, window, card or Settings page shows tasks, tickets, branches, status, Today, tags, saved searches, the palette, actions, export, Float on Top or the outline.
+3. The status item: left click opens the panel; right click shows New Note, Quick Note, Open Window, Settings, Quit.
+4. Settings has two pages, General and Shortcuts. The New note shortcut has no keys until you set them.
+5. `slate://open?title=Welcome%20to%20Slate` opens the welcome note; a title that does not exist says "Slate found no such note".
+
+### S2 Folders and the soft look
+
+6. "+ New folder" and `⇧⌘N` make "New folder" with the name selected; Enter keeps the name, Esc cancels.
+7. Double-click a folder and rename it; the notes stay in it, links to them still work.
+8. Right-click a folder: Colour changes the icon tint; Icon changes the symbol; Move up and Move down change the order. All of it is still there after a restart.
+9. Delete a folder with notes: the row asks "Delete …? Its N notes move to Notes. Yes · No"; Yes moves the notes and shows a toast; Undo brings the folder and the notes back.
+10. The quick note folder has no Delete in its menu.
+11. Drag a note card onto another folder: the note moves there.
+12. Drag the edge between the list and the note: the list width stays after a restart. `⌘0` hides the folders in the panel and in the window.
+13. The cards, the selection, the empty folder ("Nothing here yet."), "Pick a note or press ⌘N." and the Trash look soft and rounded, with no lines between the columns.
+
+### S3 Rich text editor
+
+14. Open a note, press `⇧⌘T`, type a title, press Enter, type text, press `⌘B`, type a word, press `⌘B` again, add a checklist with `⇧⌘L`, add an image with `⇧⌘I`. Close the note. The file in Finder holds only the subset Markdown (`# `, `**`, `- [ ] `, `![](…)`).
+15. Open the same note again: it looks the same.
+16. A note with a table (write `| a | b |` lines in another editor) keeps the table, byte for byte, after you edit other text in Slate.
+17. Every format bar button works and shows its hint with the shortcut; the active style is tinted; the style menu names the current style.
+18. Every key of the Format menu works in the text.
+19. Lists: Enter makes the next item; Enter on an empty item ends the list; Tab and `⇧Tab` indent and outdent; Backspace at the start of an item makes plain text. Typing "- ", "1. ", "[] ", "# " or "> " at the start of a line starts that style.
+20. Click a round checkbox: it ticks, and the file has `- [x]`.
+21. Images: paste a screenshot, drag a PNG from Finder, use the Image button and `⇧⌘S`. Each image is its own block with rounded corners. Double-click opens Quick Look. Right click has Quick Look, Open, Show in Finder, Copy Image.
+22. `⌘K` on selected text asks for an address; `⌘`-click opens it. `⌘`-click on a note link opens that note.
+23. `⌘Z` undoes every command above, one step at a time.
+24. Copy formatted text from Slate into Slate and into TextEdit; paste a part of a web page. The styles come along; the Markdown file stays clean.
+25. Type fast in the 5,000-line note (`Packages/SlateKit/Tests/SlateEditorTests/Fixtures/LongNote.md` copied into the notes folder): no visible delay. Switch to another note right after typing: the last words are saved.
+26. Type accents (`⌥E` then `e`) and with a Japanese input method: the text is correct.
+27. "Saved" fades in at the top-right a moment after you stop typing.
+28. Change a note in another editor while it is open in Slate: the text reloads; with unsaved changes the "Changed on disk" banner appears.
+
+### S4 Polish
+
+29. `⌃⌥Space` from Xcode: the rounded field appears and Xcode keeps the focus after Esc. Pick a folder in the chip; Enter saves there and the toast says "Saved to …".
+30. Settings → General: enter a git address in "Back up to" and press "Back up now". With a reachable remote the toast says "Backed up"; with a wrong address it says the backup failed, and Activity has the reason.
+31. Move a note with the card menu: the toast offers Undo, and Undo moves it back. Move to Trash: the toast offers Undo, and Undo restores it.
+32. Every key of `UX.md` section 8 works in the window and in the panel, and appears in the main menu of the window (except `⌘F`, decision 96).
+33. Esc in the note text of the panel closes the panel.
+34. Tab moves from the folders to the list, to the title, to the text, and the focus is visible.
+35. Take the four README screenshots.
 
 ## Known gaps
 
 - S2: a text file dropped on the list does not make a note yet (`UX.md` section 6). Folders reorder with Move up and Move down, not by drag.
 - `FSEventsVaultWatcherIntegrationTests.externalEditArrivesAsAPathChange` failed once in a full run before S1 started (timing under load) and passes alone. Watch it.
 - The agent did not run the manual checks. A scripted click opens the panel but does not make Slate the active app, so scripted keystrokes go to the frontmost app (a few of them went to the Terminal during this session). The borderless panel also hides its content from the Accessibility API.
-- No shortcut for Move to Trash: `⌘⌫` would take the key from the editor text. No `⌘⇧M` move picker. Both are in the row menu.
-- Esc does not close the panel yet (`UX.md` section 6). The search field clears on Esc.
+- No `⌘⇧M` move picker. Move to is in the card menu, and cards can be dragged onto a folder.
+- Esc closes the panel from the list and from the note text (S4); the search field clears on Esc first. The agent tested the editor part only in a test window.
 - Capture (M4): the field does not take pasted images or files yet (`SPEC.md` 3.4). The agent did not test that the source app keeps the focus; scripted key presses do not reach the panel (first gap above).
 - Search (M3): no progress bar or "Indexing 3,120 of 10,000" line during the first full scan (`UX.md` section 5). The list fills as the scan runs.
 - History (M5): no diff view and no preview of a version before Restore (Appendix B). The first snapshot of a large folder runs at launch in the background and can take seconds.

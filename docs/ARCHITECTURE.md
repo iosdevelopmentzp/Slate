@@ -369,7 +369,7 @@ package struct EditorHandlers {
 | `CaptureStore` | draft text, target space, type, saving | `QuickCaptureUseCase`, config, `AppEvents` |
 | `TodoStore` (P1) | open todos grouped | index, `ToggleTodoUseCase`, `AppEvents` |
 | `DailyStore` (P1) | today, previous and next | `EnsureDailyNoteUseCase`, index, `Clock` |
-| `HistoryStore` | M5: the history settings, the snapshot loop (every N minutes), the daily Trash purge, the versions of the open note, restore, the quit job, the last snapshot time and the push state for the footer | history, `SnapshotHistoryUseCase`, `RestoreVersionUseCase`, `PurgeTrashUseCase`, `KeyValueStore`, `ActivityLog`, `Toaster`, `AppEvents` |
+| `HistoryStore` | M5: the history settings, the snapshot loop (every N minutes), the daily Trash purge, the versions of the open note, restore, the quit job, the last snapshot time and the push state; S4: the "Back up to" address (`setRemote`) and "Back up now" (`backUpNow`) | history, `SnapshotHistoryUseCase`, `RestoreVersionUseCase`, `PurgeTrashUseCase`, `KeyValueStore`, `ActivityLog`, `Toaster`, `AppEvents` |
 | `CaptureStore`, `DailyStore`, `SettingsStore` | M4: the quick note draft and its save; Today and the day before and after; preferences, tracker settings and `links.json`, the login item, the Doctor and Rebuild search | the capture, daily and reindex use cases, config, `KeyValueStore`, the login item and system ports |
 | `SettingsStore` | every preference, tracker settings, hotkeys names | `KeyValueStore`, `SecretStore`, config |
 
