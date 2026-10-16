@@ -56,8 +56,10 @@ final class StoreHarness {
         workspace: ports.workspace,
         vaultRoot: URL(fileURLWithPath: "/vault", isDirectory: true),
         panel: panelVisibility,
-        toaster: toaster
+        toaster: toaster,
+        create: useCases.create
     )
+    lazy var search = SearchStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
     lazy var panelVisibility = PanelVisibility()
     lazy var feed = VaultChangeFeed(watcher: ports.watcher, reindex: useCases.reindex, activity: activity, events: events)
 

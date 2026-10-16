@@ -67,6 +67,15 @@ final class MarkdownTextView: NSTextView {
         return super.performKeyEquivalent(with: event)
     }
 
+    override var rangeForUserCompletion: NSRange {
+        controller?.completionContext()?.range ?? super.rangeForUserCompletion
+    }
+
+    override func insertCompletion(_ word: String, forPartialWordRange charRange: NSRange, movement: Int, isFinal flag: Bool) {
+        let completed = controller?.completionText(word, range: charRange, movement: movement, isFinal: flag) ?? word
+        super.insertCompletion(completed, forPartialWordRange: charRange, movement: movement, isFinal: flag)
+    }
+
     func apply(_ edit: TextEdit) {
         guard shouldChangeText(in: edit.range, replacementString: edit.replacement) else { return }
         textStorage?.replaceCharacters(in: edit.range, with: edit.replacement)

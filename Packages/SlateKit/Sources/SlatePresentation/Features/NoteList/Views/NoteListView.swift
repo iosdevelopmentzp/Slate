@@ -6,10 +6,13 @@ struct NoteListView: View {
     @Environment(NoteListStore.self) private var store
     @Environment(VaultStore.self) private var vault
     @Environment(Navigator.self) private var navigator
+    @Environment(SearchStore.self) private var search
 
     var body: some View {
         if store.source == .trash {
             TrashListView()
+        } else if search.isActive {
+            SearchResultsView()
         } else {
             notes
         }

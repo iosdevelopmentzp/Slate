@@ -58,4 +58,38 @@ import Testing
         #expect(result.document?.path == daily)
         #expect(result.document?.title == "Friday")
     }
+
+    @Test func renameRewritesTheLinksInOtherNotes() async throws {
+        spies.files.seed(path, NoteText.make(id: "a", title: "Old", body: "Body"))
+        let linking = (1...3).map { VaultPath(rawValue: "Notes/Link \($0).md") }
+        spies.files.seed(linking[0], NoteText.make(id: "l1", title: "Link 1", body: "See [[Old]]."))
+        spies.files.seed(linking[1], NoteText.make(id: "l2", title: "Link 2", body: "See [[old|the old one]] and [[Old#Plan]]."))
+        spies.files.seed(linking[2], NoteText.make(id: "l3", title: "Link 3", body: "See [[Inbox/Old]]."))
+        let unrelated = VaultPath(rawValue: "Notes/Unrelated.md")
+        spies.files.seed(unrelated, NoteText.make(id: "u", title: "Unrelated", body: "See [[Older]]."))
+        _ = try await UseCases(ports: ports).reindex.execute(.all)
+
+        let report = try await UseCases(ports: ports).rename.execute(try await load(path), title: "New", body: "Body")
+
+        #expect(Set(report.rewritten) == Set(linking))
+        #expect(report.failed.isEmpty)
+        #expect(try await load(linking[0]).body == "See [[New]].")
+        #expect(try await load(linking[1]).body == "See [[New|the old one]] and [[New#Plan]].")
+        #expect(try await load(linking[2]).body == "See [[Inbox/New]].")
+        #expect(try await load(unrelated).body == "See [[Older]].")
+    }
+
+    @Test func linksToANoteWithTheSameNameElsewhereStay() async throws {
+        spies.files.seed(path, NoteText.make(id: "a", title: "Old", body: "Body"))
+        let other = VaultPath(rawValue: "Notes/Old.md")
+        spies.files.seed(other, NoteText.make(id: "o", title: "Old", body: "Other"))
+        let neighbour = VaultPath(rawValue: "Notes/Neighbour.md")
+        spies.files.seed(neighbour, NoteText.make(id: "n", title: "Neighbour", body: "See [[Old]]."))
+        _ = try await UseCases(ports: ports).reindex.execute(.all)
+
+        let report = try await UseCases(ports: ports).rename.execute(try await load(path), title: "New", body: "Body")
+
+        #expect(report.rewritten.isEmpty)
+        #expect(try await load(neighbour).body == "See [[Old]].")
+    }
 }

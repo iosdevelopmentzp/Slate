@@ -10,4 +10,5 @@ package enum AppEvent: Equatable, Sendable {
     case noteSaved(NoteID)
     case noteMoved(from: VaultPath, to: VaultPath)
     case noteTrashed(VaultPath)
+    case searchOpened(NoteID, words: [String])
 }

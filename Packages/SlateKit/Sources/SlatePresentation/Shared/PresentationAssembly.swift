@@ -15,6 +15,7 @@ package final class PresentationAssembly {
     let noteList: NoteListStore
     let editor: EditorStore
     let panelVisibility: PanelVisibility
+    let search: SearchStore
 
     package init(ports: Ports, useCases: UseCases, activity: ActivityLog, vaultRoot: URL) {
         events = AppEvents()
@@ -49,6 +50,7 @@ package final class PresentationAssembly {
             events: events,
             store: ports.keyValues
         )
+        search = SearchStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
         editor = EditorStore(
             files: ports.files,
             index: ports.index,
@@ -63,7 +65,8 @@ package final class PresentationAssembly {
             workspace: ports.workspace,
             vaultRoot: vaultRoot,
             panel: panelVisibility,
-            toaster: toaster
+            toaster: toaster,
+            create: useCases.create
         )
     }
 
@@ -71,6 +74,7 @@ package final class PresentationAssembly {
         feed.start()
         Task {
             await vault.refresh()
+            await search.refreshTags()
         }
     }
 

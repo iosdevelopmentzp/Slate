@@ -12,6 +12,6 @@ package struct IndexedFileState: Hashable, Sendable {
     }
 
     package func matches(_ meta: FileMeta) -> Bool {
-        modified == meta.modified && size == meta.size
+        abs(modified.timeIntervalSince(meta.modified)) < 0.001 && size == meta.size
     }
 }

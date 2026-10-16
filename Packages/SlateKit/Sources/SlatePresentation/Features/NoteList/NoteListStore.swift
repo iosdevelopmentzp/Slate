@@ -4,7 +4,7 @@ import SlateDomain
 
 @MainActor
 @Observable
-final class NoteListStore {
+final class NoteListStore: NoteLookup {
     var summaries: [NoteSummary] = []
     var trashItems: [TrashItem] = []
     var filterText = ""

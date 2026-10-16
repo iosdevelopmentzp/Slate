@@ -27,20 +27,22 @@ package enum PreviewPolicy {
 
     static func plainText(of line: String) -> String {
         var text = line
-        text = replace(#"^#{1,6}\s+"#, in: text, with: "")
-        text = replace(#"^>\s?"#, in: text, with: "")
-        text = replace(#"^(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s*)?"#, in: text, with: "")
-        text = replace(#"!\[[^\]]*\]\([^)]*\)"#, in: text, with: "")
-        text = replace(#"\[\[([^\]|#]*)(?:#[^\]|]*)?\|([^\]]*)\]\]"#, in: text, with: "$2")
-        text = replace(#"\[\[([^\]|#]*)(?:#[^\]]*)?\]\]"#, in: text, with: "$1")
-        text = replace(#"\[([^\]]*)\]\([^)]*\)"#, in: text, with: "$1")
-        text = replace(#"(\*\*|__|~~|`)"#, in: text, with: "")
-        text = replace(#"(?<![\w*])[*_](?=\S)|(?<=\S)[*_](?![\w*])"#, in: text, with: "")
-        text = replace(#"^(?:-{3,}|\*{3,}|_{3,})$"#, in: text, with: "")
+        for (regex, template) in rules where regex.firstMatch(in: text, range: NSRange(location: 0, length: (text as NSString).length)) != nil {
+            text = regex.stringByReplacingMatches(in: text, range: NSRange(location: 0, length: (text as NSString).length), withTemplate: template)
+        }
         return text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     }
 
-    private static func replace(_ pattern: String, in text: String, with template: String) -> String {
-        text.replacingOccurrences(of: pattern, with: template, options: .regularExpression)
-    }
+    private static let rules: [(NSRegularExpression, String)] = [
+        (#"^#{1,6}\s+"#, ""),
+        (#"^>\s?"#, ""),
+        (#"^(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s*)?"#, ""),
+        (#"!\[[^\]]*\]\([^)]*\)"#, ""),
+        (#"\[\[([^\]|#]*)(?:#[^\]|]*)?\|([^\]]*)\]\]"#, "$2"),
+        (#"\[\[([^\]|#]*)(?:#[^\]]*)?\]\]"#, "$1"),
+        (#"\[([^\]]*)\]\([^)]*\)"#, "$1"),
+        (#"(\*\*|__|~~|`)"#, ""),
+        (#"(?<![\w*])[*_](?=\S)|(?<=\S)[*_](?![\w*])"#, ""),
+        (#"^(?:-{3,}|\*{3,}|_{3,})$"#, ""),
+    ].map { (try! NSRegularExpression(pattern: $0.0), $0.1) }
 }

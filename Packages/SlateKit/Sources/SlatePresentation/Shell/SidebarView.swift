@@ -5,6 +5,7 @@ import SlateUI
 struct SidebarView: View {
     @Environment(NoteListStore.self) private var store
     @Environment(VaultStore.self) private var vault
+    @Environment(SearchStore.self) private var search
 
     @State private var editing: SpaceName?
     @State private var isCreating = false
@@ -40,6 +41,17 @@ struct SidebarView: View {
                 }
                 if isCreating {
                     nameField { name in await vault.create(named: name) }
+                }
+                if search.tags.isEmpty == false {
+                    Text("Tags")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(.leading, 8)
+                        .padding(.top, 10)
+                        .padding(.bottom, 2)
+                    ForEach(search.tags, id: \.tag) { tag in
+                        tagRow(tag)
+                    }
                 }
                 Divider()
                     .padding(.vertical, 6)
@@ -103,6 +115,25 @@ struct SidebarView: View {
         draft = ""
     }
 
+    private func tagRow(_ tag: TagCount) -> some View {
+        let isSelected = search.query == "tag:\(tag.tag)"
+        return HStack(spacing: 8) {
+            Label("#\(tag.tag)", systemImage: "number")
+                .lineLimit(1)
+            Spacer(minLength: 4)
+            Text("\(tag.count)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(isSelected ? Theme.selection.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .contentShape(Rectangle())
+        .onTapGesture { search.showTag(tag.tag) }
+        .accessibilityAddTraits(.isButton)
+    }
+
     private func row(_ title: String, systemImage: String, source: ListSource, count: Int?) -> some View {
         let isSelected = store.source == source
         return HStack(spacing: 8) {
@@ -120,7 +151,10 @@ struct SidebarView: View {
         .padding(.vertical, 4)
         .background(isSelected ? Theme.selection.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
         .contentShape(Rectangle())
-        .onTapGesture { store.show(source) }
+        .onTapGesture {
+            search.clear()
+            store.show(source)
+        }
     }
 }
 

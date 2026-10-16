@@ -113,7 +113,7 @@ Packages/SlateKit/
       Assembly/                  Ports, UseCases(ports:)
     SlateData/
       Files/                     FileVaultStore, FileCoordination (coordinated read, write, move, atomic replace), OwnWrites, VaultFolder, JSONFile, FileAttachmentStore, FileTrashRepository, FileTemplateRepository, FileVaultConfigRepository, FileJournalStore, VaultBootstrap
-      Index/                     MemorySearchIndex (M1 to M3), GRDBSearchIndex, IndexSchema, IndexedNoteBuilder (swift-markdown), FTSMatchBuilder
+      Index/                     GRDBSearchIndex, IndexSchema, SearchSQL, IndexedNoteBuilder (swift-markdown), FTSMatchBuilder
       Watch/                     FSEventsVaultWatcher, ChangeCoalescer
       Shell/                     ShellRunner, ShellResult, CommandFormatter
       History/                   GitHistoryRepository, GitLogParser
@@ -216,7 +216,7 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 | Port | Methods | Live implementation |
 |---|---|---|
 | `VaultFileStore` | `enumerate() -> [FileMeta]`, `read(VaultPath) -> FileContents` (bytes, hash, meta), `meta(VaultPath) -> FileMeta?`, `write(VaultPath, data:, expected: ContentHash?) -> WriteResult` (`.written(hash)`, `.conflict(diskHash:)`), `create(VaultPath, data:) -> ContentHash` (fails when the file exists), `move(from:to:)`, `fileNames(inFolder:)`, `createFolder(SpaceName)`, `moveFolder(from:to:)` | `FileVaultStore` (an actor) |
-| `SearchIndex` | M1: `summaries(space:)`, `summary(id:)`, `fileStates() -> [VaultPath: IndexedFileState]`, `upsert(IndexedNote)`, `updateState(_:for:)`, `remove(path:)`. M3 adds `byTicket(_:)`, `byStem(_:)`, `search(SearchQuery, limit:)`, `linksTo(stem:)`, `todos(open:)`, `tags()`, `reset()` | M1: `MemorySearchIndex` (an actor, rebuilt by a full scan at launch). M3: `GRDBSearchIndex` |
+| `SearchIndex` | `summaries(space:)`, `summary(id:)`, `fileStates() -> [VaultPath: IndexedFileState]`, `upsert(IndexedNote)`, `upsert(contentsOf:)`, `updateState(_:for:)`, `remove(path:)`, `search(SearchQuery, limit:) -> [SearchHit]`, `notes(named:)`, `notes(withTicket:)`, `notesLinking(to:)`, `tags() -> [TagCount]`, `todos(isDone:)`, `reset()` | `GRDBSearchIndex` (M3; `MemorySearchIndex` was removed). The spy and the mock answer `search` with `SearchMatchPolicy` |
 | `IndexedNoteBuilding` | `build(NoteDocument) -> IndexedNote` (the document carries its meta and hash; uses swift-markdown) | `IndexedNoteBuilder` |
 | `VaultWatching` | `changes() -> AsyncStream<VaultChange>` | `FSEventsVaultWatcher` |
 | `AttachmentStore` | M2: `fileNames()`, `write(Data, named:)` and `copy(URL, named:)` (both fail when the name exists), `size(of:)`, `externalSize(URL)`, `url(for:)`. Naming and links are `AttachmentPolicy`; the use cases pick the name. M5 adds `moveToTrash(file)` | `FileAttachmentStore` |
@@ -238,7 +238,7 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 
 `Ports` (Domain `Assembly/Ports.swift`) is a struct with one property per port. `Ports.live(root:keyValues:)` in Data (later milestones add the Application Support folder, the shell and the recorder), `Ports.mock()` in Mocks, `Ports.spies(keyValues:)` in TestSupport (the key-value store defaults to `SpyKeyValueStore`).
 
-Since M2 the code has twelve ports: `keyValues`, `files`, `index`, `builder`, `watcher`, `trash`, `templates`, `config`, `clock`, `attachments`, `capture`, `workspace`. `Ports.live(root:keyValues:recorder:)` builds one `ShellRunner` with the recorder. The spies are in-memory fakes that also record their calls, so use case and store tests run without a disk.
+Since M2 the code has twelve ports: `keyValues`, `files`, `index`, `builder`, `watcher`, `trash`, `templates`, `config`, `clock`, `attachments`, `capture`, `workspace`. `Ports.live(root:support:keyValues:recorder:)` throws when the index cannot open, builds one `ShellRunner` with the recorder, and opens `index.sqlite` in the support folder (`VaultSupportFolder.url(for:)`, `~/Library/Application Support/Slate/<vault-id>/`). The spies are in-memory fakes that also record their calls, so use case and store tests run without a disk.
 
 ### 4.4 Policies (pure, `enum XPolicy { static func … }`)
 
@@ -247,7 +247,9 @@ Since M2 the code has twelve ports: `keyValues`, `files`, `index`, `builder`, `w
 | `StemPolicy` | `stem(forTitle:)`, `unique(_, among:)` per `STORAGE-FORMAT.md` 3.1 |
 | `SlugPolicy` | branch slug, `renderBranch(pattern:, ticket:, title:)` |
 | `TitlePolicy` | `titlePattern` rendering, split `ABC-123 Title` into ticket and title using the tracker regex |
-| `WikilinkPolicy` | `extract(body) -> [Link]`, `rewrite(body, old:, new:) -> String`, `resolve(target, candidates:, from:) -> NoteSummary?` |
+| `WikilinkPolicy` | `targets(in:)`, `parse(_:)`, `rewrite(_:from:to:)`, `resolve(_:candidates:from:)` |
+| `MarkdownText` | prose lines of a body (fences skipped, line numbers kept, inline code ranges) for the line-based policies |
+| `TagPolicy`, `CompletionPolicy`, `SearchMatchPolicy`, `SearchHighlightPolicy`, `IndexFactsPolicy`, `VaultIdentityPolicy` | inline and merged tags; note name and tag completion; in-memory matching and ranking for the spy, the mock and the CLI fallback; match ranges and the title score; the index facts of a note without swift-markdown; the vault id |
 | `TodoLinePolicy` | `parse(line) -> TodoItem?`, `toggle(line) -> String`, `cycle(line) -> String` |
 | `SectionAppendPolicy` | `append(text, toSection:, in body:) -> String` per `STORAGE-FORMAT.md` 4 |
 | `DailyPolicy` | `stem(for date)`, `logLine(time, text)`, `carryOver(from previousBody) -> [String]` |
@@ -269,7 +271,7 @@ Every policy has a test file with fixtures.
 |---|---|---|
 | `CreateNoteUseCase` | config, templates, files, index, builder, clock | type defaults, title and ticket split, unique stem, template render, write, index, returns the document and the caret offset |
 | `SaveNoteUseCase` | files, index, builder, journal, clock | encode, `updated` only when changed, coordinated write with expected hash, index upsert, journal clear; returns `.saved(hash)` or `.conflict(diskHash)` |
-| `RenameNoteUseCase` | files, index, builder | per `STORAGE-FORMAT.md` 3.3, returns `RenameReport` (new path, rewritten files, failures) |
+| `RenameNoteUseCase` | files, index, builder, save | per `STORAGE-FORMAT.md` 3.3, returns `RenameReport` (the save result, rewritten files, failures). A link is rewritten only when it resolves to the renamed note (`WikilinkPolicy.resolve`) |
 | `MoveNoteUseCase` | files, index | move to depth 1 of the space, unique stem, index update |
 | `TrashNoteUseCase`, `RestoreNoteUseCase`, `PurgeTrashUseCase` | trash, index, clock | |
 | `QuickCaptureUseCase` | create, append (as nested use cases) | capture input → new note or Today line |
@@ -332,12 +334,13 @@ package struct EditorHandlers {
     package var pasteFiles: ([URL]) -> Void
     package var pasteURL: (String) -> String?                // nil → insert the plain URL
     package var requestScreenshot: (ScreenshotKind) -> Void  // the host runs the use case and answers with an insertion
+    package var completions: (EditorCompletionKind, String) -> [String]   // note names after [[, tags after #
 }
 
 package struct EditorInsertion: Equatable { let token: Int; let markdown: String }
 ```
 
-`MarkdownEditorView(text:configuration:focus:insertion:handlers:)`. The host answers an asynchronous request (a pasted image, a screenshot) by passing a new `EditorInsertion`; the editor inserts its Markdown on its own line once per token. `EditorFocusRequest` works the same way for the caret. M3 adds completions for wikilinks and tags.
+`MarkdownEditorView(text:configuration:focus:insertion:handlers:)`. The host answers an asynchronous request (a pasted image, a screenshot) by passing a new `EditorInsertion`; the editor inserts its Markdown on its own line once per token. `EditorFocusRequest` works the same way for the caret. Completions use the system completion list of `NSTextView`: the editor starts it after `[[` or `#` and a letter, `rangeForUserCompletion` covers the typed part, and a finished note name gets `]]`.
 
 The editor owns the `NSTextView`, the styling, the list commands, paste classification and the rendering of images, checkboxes and chips. It never touches a file, the index or the vault. `text` is the full source; the host (EditorStore) debounces and saves.
 
@@ -362,7 +365,7 @@ The editor owns the `NSTextView`, the styling, the list commands, paste classifi
 | `VaultStore` | M1: spaces config and note types; create, rename, reorder a folder and set its icon. Later: index progress, cloud summary, doctor results | M1: config, `CreateSpaceUseCase`, `RenameSpaceUseCase`, `Navigator`, `ActivityLog`, `AppEvents` |
 | `NoteListStore` | summaries, trash items, sort, filter text, the trash confirmation; create, pin, move, archive, duplicate, trash with Undo, restore. The list source (all, a space, the Trash) and the selection live in `Navigator` | index, trash, use cases (create, updateHeader, move, archive, duplicate, trash, restore), `Navigator`, `Toaster`, `ActivityLog`, `AppEvents`, `KeyValueStore` |
 | `EditorStore` | open document, `text`, `title`, dirty flag, autosave (500 ms) and title commit (Enter, focus loss, 1.5 s), the title that follows the first body line for a new untitled note, focus requests, conflict state with Keep mine and Take theirs, `pendingSave()` for quit. M2 and later: selection, attachment import, link resolution, journal | files, index, use cases (save, rename), `Navigator`, `Clock`, `AppEvents`, `ActivityLog` |
-| `SearchStore` | query text, parsed query, results, highlighted ranges, palette mode | index, `SearchQueryParser`, config (views), `AppEvents` |
+| `SearchStore` | M3: query text, parsed query, results (title matches at once, the index after 80 ms), the folder scope, tags with counts. Palette mode in M6 | index, `NoteLookup` (the `NoteListStore`), `Navigator`, `Clock`, `ActivityLog`, `AppEvents` |
 | `CaptureStore` | draft text, target space, type, saving | `QuickCaptureUseCase`, config, `AppEvents` |
 | `TodoStore` (P1) | open todos grouped | index, `ToggleTodoUseCase`, `AppEvents` |
 | `DailyStore` (P1) | today, previous and next | `EnsureDailyNoteUseCase`, index, `Clock` |
@@ -373,7 +376,7 @@ Rules as DevHub: a store never holds another feature's concrete store (lookup pr
 
 ### 7.2 Events
 
-`AppEvent` since M1: `indexUpdated`, `spacesChanged`, `vaultChanged(Set<VaultPath>)` (an external edit, or a header edit from the list), `vaultRescanned`, `noteCreated(NoteID, caret:)`, `noteSaved(NoteID)`, `noteMoved(from:to:)` (move and rename), `noteTrashed(VaultPath)`. Planned: `configChanged(ConfigKind)`, `settingsChanged`, `captureSaved(NoteID)`, `snapshotTaken`. Subscribe in `init`, keep the `SubscriptionToken`. A store ignores the echo of its own post. Add a case only when a second store needs to react.
+`AppEvent` since M1: `indexUpdated`, `spacesChanged`, `vaultChanged(Set<VaultPath>)` (an external edit, a header edit from the list, or links rewritten by a rename), `vaultRescanned`, `noteCreated(NoteID, caret:)`, `noteSaved(NoteID)`, `noteMoved(from:to:)` (move and rename), `noteTrashed(VaultPath)`. M3: `searchOpened(NoteID, words:)` (the editor puts the caret on the first match). Planned: `configChanged(ConfigKind)`, `settingsChanged`, `captureSaved(NoteID)`, `snapshotTaken`. Subscribe in `init`, keep the `SubscriptionToken`. A store ignores the echo of its own post. Add a case only when a second store needs to react.
 
 `VaultChangeFeed` (Shared) is the one consumer of `VaultWatching.changes()`: it runs a full scan when it starts, then the incremental reindex through `ReindexVaultUseCase` for each change, and posts `vaultChanged` and `indexUpdated` (for `.rescan`: `indexUpdated`, `spacesChanged`, `vaultRescanned`). `EditorStore` answers `vaultChanged` and `vaultRescanned` with `ConflictPolicy.decide`: ignore, reload, adopt a header-only change, or conflict. On a rescan a missing file is looked up again by its id, so a rename in Finder keeps the note open.
 

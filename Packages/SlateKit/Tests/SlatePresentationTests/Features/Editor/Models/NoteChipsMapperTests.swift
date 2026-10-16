@@ -15,7 +15,7 @@ import Testing
 
         let chips = NoteChipsMapper.chips(for: document(header: header), type: .task)
 
-        #expect(chips.map(\.text) == ["Task", "ABC-1", "In progress", "Tasks", "#audio"])
+        #expect(chips.map(\.text) == ["Task", "ABC-1", "In progress", "Tasks"])
         #expect(chips[2].tint == .blue)
     }
 

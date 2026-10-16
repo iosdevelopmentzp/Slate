@@ -6,6 +6,8 @@ import SlateUI
 struct EditorView: View {
     @Environment(EditorStore.self) private var editor
     @Environment(VaultStore.self) private var vault
+    @Environment(SearchStore.self) private var search
+    @Environment(NoteListStore.self) private var noteList
     @FocusState private var isTitleFocused: Bool
 
     var body: some View {
@@ -54,10 +56,21 @@ struct EditorView: View {
                 .disabled(document.isHeaderOpaque)
                 .accessibilityLabel("Title")
             let chips = NoteChipsMapper.chips(for: document, type: vault.type(named: document.type))
-            if chips.isEmpty == false {
+            let tags = TagPolicy.merged(header: document.header.tags, lines: []) + (noteList.selected?.tags ?? []).filter { (document.header.tags ?? []).map(TagPolicy.normalized).contains($0) == false }
+            if chips.isEmpty == false || tags.isEmpty == false {
                 FlowLayout(spacing: 6) {
                     ForEach(chips, id: \.self) { chip in
                         ModelTag(model: chip)
+                    }
+                    ForEach(tags, id: \.self) { tag in
+                        Button {
+                            search.showTag(tag)
+                        } label: {
+                            ModelTag(model: TagModel("#\(tag)", tint: .secondary))
+                        }
+                        .buttonStyle(.plain)
+                        .hint("Show notes with #\(tag)")
+                        .accessibilityLabel("Show notes with the tag \(tag)")
                     }
                 }
             }
@@ -68,6 +81,8 @@ struct EditorView: View {
 
     private var handlers: EditorHandlers {
         let editor = editor
+        let noteList = noteList
+        let search = search
         return EditorHandlers(
             didEndEditing: { editor.bodyEditingEnded() },
             resolveImage: { editor.resolveLink($0) },
@@ -91,7 +106,13 @@ struct EditorView: View {
             },
             pasteImage: { data, fileExtension in Task { await editor.pasteImage(data, fileExtension: fileExtension) } },
             pasteFiles: { urls in Task { await editor.pasteFiles(urls) } },
-            requestScreenshot: { kind in Task { await editor.screenshot(kind == .region ? .region : .window) } }
+            requestScreenshot: { kind in Task { await editor.screenshot(kind == .region ? .region : .window) } },
+            completions: { kind, prefix in
+                switch kind {
+                case .note: CompletionPolicy.noteNames(matching: prefix, in: noteList.summaries)
+                case .tag: CompletionPolicy.tags(matching: prefix, in: search.tags)
+                }
+            }
         )
     }
 

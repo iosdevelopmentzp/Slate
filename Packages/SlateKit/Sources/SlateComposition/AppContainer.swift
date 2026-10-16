@@ -49,8 +49,14 @@ public final class AppContainer: NSObject {
             showFirstLaunch(problem: "Slate cannot use this folder. \(error.localizedDescription) Choose another folder.")
             return
         }
+        let ports: Ports
+        do {
+            ports = try Ports.live(root: vault, support: VaultSupportFolder.url(for: vault), keyValues: keyValues, recorder: ActivityRecorder(log: activity))
+        } catch {
+            showFirstLaunch(problem: "Slate cannot prepare its search data for this folder. \(error.localizedDescription)")
+            return
+        }
         keyValues.set(vault.path, forKey: Keys.vaultPath)
-        let ports = Ports.live(root: vault, keyValues: keyValues, recorder: ActivityRecorder(log: activity))
         let useCases = UseCases(ports: ports)
         let assembly = PresentationAssembly(ports: ports, useCases: useCases, activity: activity, vaultRoot: vault)
         let windows = AppWindows(assembly: assembly)

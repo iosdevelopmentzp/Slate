@@ -2,7 +2,7 @@
 
 Personal macOS menu bar notes app for an iOS developer. Markdown files in a local notes folder, a SQLite search index, task notes with ticket and branch, quick capture from a hotkey.
 
-Current stage: **M2 done** (editor v1). Notes are real Markdown files in the notes folder chosen on first launch. The panel and the window list, create, edit, rename, pin, move, archive, duplicate, trash and restore notes; the editor autosaves; external edits reload. The editor styles Markdown with visible marks, highlights code, renders checkboxes and images, and handles paste and screenshots. The index is in memory until M3. Next: milestone M3 (index and search) of `docs/ROADMAP.md`. `docs/STATUS.md` says what is real.
+Current stage: **M3 done** (index and search). Notes are real Markdown files in the notes folder chosen on first launch. The panel and the window list, create, edit, rename, pin, move, archive, duplicate, trash and restore notes; the editor autosaves; external edits reload. The editor styles Markdown with visible marks, highlights code, renders checkboxes and images, and handles paste and screenshots. The SQLite index lives in Application Support; search covers titles, text, tags and filters; links to notes complete, follow, create missing notes and follow renames. Next: milestone M4 (capture and tasks) of `docs/ROADMAP.md`. `docs/STATUS.md` says what is real.
 
 Read first, in this order: this file, `docs/STATUS.md`, `docs/ROADMAP.md`, then the document for the milestone (`docs/SPEC.md`, `docs/STORAGE-FORMAT.md`, `docs/ARCHITECTURE.md`, `docs/UX.md`). `docs/PLAYBOOK.md` has verified solutions and traps per topic; read its section before touching that topic.
 
@@ -22,6 +22,7 @@ Read first, in this order: this file, `docs/STATUS.md`, `docs/ROADMAP.md`, then 
 | `Scripts/test.sh [args]` | Runs `swift test -q` on the package and prints one summary line. `--skip integration` skips the process suites, `--filter <Suite>` runs one suite |
 | `Scripts/run.sh` | Builds Debug, quits a running Slate, opens the new build |
 | `Scripts/install.sh` | Builds Release, copies to `/Applications/Slate.app`, installs the `slate` CLI to `~/.local/bin` |
+| `Scripts/generate-vault.sh <folder> <count>` | Writes sample notes for performance checks. `SLATE_PERF_VAULT=<folder> swift test --filter IndexPerformanceTests` times a full scan and a search over it |
 
 Run `Scripts/build.sh` and `Scripts/test.sh` after every change. `build.sh` prints `layers: ok` and the app path; anything else is a layer violation, an error or a warning. `test.sh` prints one `Test run with … passed` line. A failing test, or a missing test for new logic, counts as a failure.
 
@@ -33,7 +34,7 @@ Modules, one direction: `Composition → Presentation → Domain ← Data`; Pres
 |---|---|
 | `Slate/` | App host: `SlateApp.swift` (`@main`, keeps `AppContainer.live()` alive) and `Assets.xcassets`. Nothing else |
 | `Packages/SlateKit/Sources/SlateDomain/` | models, values, ports, policies, codec, use cases, `Ports`, `UseCases` |
-| `…/SlateData/` | live ports: `Files/`, `Index/` (in memory until M3, then GRDB), `Watch/`, `Shell/`, `History/`, `Capture/`, `Secrets/`, `Persistence/`, `System/` (AppKit only here), `Assembly/Ports+Live.swift` |
+| `…/SlateData/` | live ports: `Files/`, `Index/` (GRDB and FTS5), `Watch/`, `Shell/`, `History/`, `Capture/`, `Secrets/`, `Persistence/`, `System/` (AppKit only here), `Assembly/Ports+Live.swift` |
 | `…/SlateMocks/` | mocks and `Ports.mock()` |
 | `…/SlateUI/` | shared SwiftUI blocks, `Theme`, `Tint`, formatters, hints |
 | `…/SlateEditor/` | the TextKit 2 Markdown editor; imports nothing from the package |
@@ -42,7 +43,7 @@ Modules, one direction: `Composition → Presentation → Domain ← Data`; Pres
 | `…/SlateTestSupport/` | spies and test helpers |
 | `…/SlateCLI/` | the `slate` command |
 | `Packages/SlateKit/Tests/` | five test targets, folders mirror `Sources/` |
-| `Scripts/` | `build.sh`, `test.sh`, `check-layers.sh`, `layer-exceptions.txt`, `run.sh`, `install.sh` |
+| `Scripts/` | `build.sh`, `test.sh`, `check-layers.sh`, `layer-exceptions.txt`, `run.sh`, `install.sh`, `generate-vault.sh` |
 | `docs/` | `SPEC.md`, `STORAGE-FORMAT.md`, `ARCHITECTURE.md`, `UX.md`, `ROADMAP.md`, `PLAYBOOK.md`, `BOOTSTRAP.md`, `STATUS.md`, `adr/` |
 | `.claude/rules/` | `layers.md` (always), `domain.md`, `data.md`, `presentation.md`, `testing.md` (by path) |
 | `.claude/skills/` | `add-feature`, `add-use-case`, `build-and-run`, `panel-window`, `testing`, `ui-components`, `update-docs` (copied from DevHub; examples still name DevHub features) |

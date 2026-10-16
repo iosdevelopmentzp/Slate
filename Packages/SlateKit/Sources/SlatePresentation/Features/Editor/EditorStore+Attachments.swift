@@ -66,23 +66,24 @@ extension EditorStore {
     }
 
     func openWikilink(_ target: String) async {
-        let name = target.split(separator: "#", maxSplits: 1).first.map(String.init) ?? target
-        guard let summaries = try? await index.summaries(space: nil) else { return }
-        let parts = name.split(separator: "/").map(String.init)
-        let matches = summaries.filter { summary in
-            if parts.count == 2 {
-                return summary.path.space?.rawValue.lowercased() == parts[0].lowercased() && StemPolicy.isSame(summary.path.stem, parts[1])
+        let parsed = WikilinkPolicy.parse(target)
+        guard parsed.stem.isEmpty == false else { return }
+        do {
+            let candidates = try await index.notes(named: parsed.stem)
+            let name = parsed.space.map { "\($0)/\(parsed.stem)" } ?? parsed.stem
+            if let found = WikilinkPolicy.resolve(name, candidates: candidates, from: document?.path) {
+                navigator.select(found.id)
+                return
             }
-            return StemPolicy.isSame(summary.path.stem, name)
+            let space = parsed.space.map(SpaceName.init(rawValue:)) ?? document?.path.space
+            let created = try await create.execute(NoteDraft(title: parsed.stem, space: space))
+            events.post(.indexUpdated)
+            events.post(.noteCreated(created.document.id, caret: created.caret))
+            navigator.select(created.document.id)
+            toaster.show("Made the note \(created.document.title)")
+        } catch {
+            report("Cannot open the linked note", error)
         }
-        let space = document?.path.space
-        guard let best = matches.max(by: { lhs, rhs in
-            (lhs.path.space == space ? 1 : 0, lhs.updated) < (rhs.path.space == space ? 1 : 0, rhs.updated)
-        }) else {
-            toaster.show("No note is called \(name)")
-            return
-        }
-        navigator.select(best.id)
     }
 
     func attachment(_ link: String, quickLook: Bool) async {

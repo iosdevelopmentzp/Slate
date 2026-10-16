@@ -30,7 +30,7 @@ actor FileVaultStore: VaultFileStore {
         return metas
     }
 
-    func read(_ path: VaultPath) throws -> FileContents {
+    nonisolated func read(_ path: VaultPath) throws -> FileContents {
         let url = folder.url(path)
         guard folder.exists(url) else { throw VaultError.notFound(path) }
         let data = try FileCoordination.readCoordinated(url)

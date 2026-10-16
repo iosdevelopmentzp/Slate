@@ -30,7 +30,7 @@ final class EditorStore {
     @ObservationIgnored private let rename: RenameNoteUseCase
     @ObservationIgnored let navigator: Navigator
     @ObservationIgnored let activity: ActivityLog
-    @ObservationIgnored private let events: AppEvents
+    @ObservationIgnored let events: AppEvents
     @ObservationIgnored private let clock: any Clock
     @ObservationIgnored let importAttachment: ImportAttachmentUseCase
     @ObservationIgnored let attachScreenshot: AttachScreenshotUseCase
@@ -38,12 +38,14 @@ final class EditorStore {
     @ObservationIgnored let vaultRoot: URL
     @ObservationIgnored let panel: PanelVisibility
     @ObservationIgnored let toaster: Toaster
+    @ObservationIgnored let create: CreateNoteUseCase
     @ObservationIgnored var insertionCounter = 0
     @ObservationIgnored private var subscription: SubscriptionToken?
     @ObservationIgnored private var isApplying = false
     @ObservationIgnored private var saveTask: Task<Void, Never>?
     @ObservationIgnored private var inFlight: Task<Void, Never>?
     @ObservationIgnored private var pendingCreation: (id: NoteID, caret: Int)?
+    @ObservationIgnored private var pendingMatch: (id: NoteID, words: [String])?
     @ObservationIgnored private var bodyCaret: Int?
     @ObservationIgnored private var focusCounter = 0
 
@@ -61,7 +63,8 @@ final class EditorStore {
         workspace: any WorkspaceOpening,
         vaultRoot: URL,
         panel: PanelVisibility,
-        toaster: Toaster
+        toaster: Toaster,
+        create: CreateNoteUseCase
     ) {
         self.files = files
         self.index = index
@@ -77,6 +80,7 @@ final class EditorStore {
         self.vaultRoot = vaultRoot
         self.panel = panel
         self.toaster = toaster
+        self.create = create
         subscription = events.subscribe { [weak self] event in
             guard let self else { return }
             handle(event)
@@ -129,6 +133,10 @@ final class EditorStore {
             let loaded = try NoteCodec.decode(try await files.read(summary.path))
             guard navigator.selectedNote == id else { return }
             show(loaded)
+            if let match = pendingMatch, match.id == id {
+                pendingMatch = nil
+                revealMatch(of: match.words)
+            }
             if let creation = pendingCreation, creation.id == id {
                 pendingCreation = nil
                 followsBody = loaded.title == StemPolicy.untitled
@@ -238,10 +246,13 @@ final class EditorStore {
         let body = text
         let wanted = wantedTitle(for: original)
         do {
-            let result = wanted != original.title
-                ? try await rename.execute(original, title: wanted, body: body)
-                : try await save.execute(original, header: original.header, body: body)
-            apply(result, previous: original)
+            if wanted != original.title {
+                let report = try await rename.execute(original, title: wanted, body: body)
+                apply(report.result, previous: original)
+                announce(report)
+            } else {
+                apply(try await save.execute(original, header: original.header, body: body), previous: original)
+            }
         } catch {
             saveState = .failed(error.localizedDescription)
             activity.log("Cannot save the note", detail: error.localizedDescription, outcome: .failure)
@@ -277,12 +288,28 @@ final class EditorStore {
         }
     }
 
+    private func announce(_ report: RenameReport) {
+        if report.rewritten.isEmpty == false {
+            events.post(.vaultChanged(Set(report.rewritten)))
+            let count = report.rewritten.count
+            toaster.show(count == 1 ? "Updated the link in 1 note" : "Updated the links in \(count) notes")
+        }
+        if report.failed.isEmpty == false {
+            activity.log("Cannot update links in some notes", detail: report.failed.map(\.rawValue).joined(separator: "\n"), outcome: .failure)
+        }
+    }
+
     private func wantedTitle(for document: NoteDocument) -> String {
         if followsBody {
             return TitlePolicy.title(fromBody: text) ?? document.title
         }
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? StemPolicy.untitled : title
+    }
+
+    private func revealMatch(of words: [String]) {
+        guard let first = SearchHighlightPolicy.ranges(of: words, in: text).first else { return }
+        requestBodyFocus(caret: first.location)
     }
 
     private func requestBodyFocus(caret: Int?) {
@@ -294,6 +321,12 @@ final class EditorStore {
         switch event {
         case .noteCreated(let id, let caret):
             pendingCreation = (id, caret)
+        case .searchOpened(let id, let words):
+            if document?.id == id {
+                revealMatch(of: words)
+            } else {
+                pendingMatch = (id, words)
+            }
         case .vaultChanged(let paths):
             guard let path = document?.path, paths.contains(path) else { return }
             Task { await checkDisk(relocate: false) }

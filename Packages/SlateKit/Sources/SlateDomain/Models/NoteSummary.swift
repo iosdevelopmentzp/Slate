@@ -14,9 +14,14 @@ package struct NoteSummary: Identifiable, Hashable, Sendable {
     package var openTodos: Int
     package var attachmentCount: Int
     package var headerOpaque: Bool
+    package var tags: [String]
 
     package var space: SpaceName? {
         path.space
+    }
+
+    package var stem: String {
+        path.stem
     }
 
     package init(
@@ -32,7 +37,8 @@ package struct NoteSummary: Identifiable, Hashable, Sendable {
         preview: String,
         openTodos: Int = 0,
         attachmentCount: Int = 0,
-        headerOpaque: Bool = false
+        headerOpaque: Bool = false,
+        tags: [String] = []
     ) {
         self.id = id
         self.path = path
@@ -47,5 +53,6 @@ package struct NoteSummary: Identifiable, Hashable, Sendable {
         self.openTodos = openTodos
         self.attachmentCount = attachmentCount
         self.headerOpaque = headerOpaque
+        self.tags = tags
     }
 }

@@ -21,9 +21,6 @@ enum NoteChipsMapper {
         if let subfolder = document.path.subfolder {
             chips.append(TagModel(subfolder, systemImage: "folder"))
         }
-        for tag in document.header.tags ?? [] {
-            chips.append(TagModel("#\(tag)", tint: .secondary))
-        }
         if document.isHeaderOpaque {
             chips.append(TagModel("Details read-only", tint: .orange, systemImage: "lock", hint: "The details at the top of the file use YAML the app does not edit."))
         }

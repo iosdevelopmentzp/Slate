@@ -104,7 +104,7 @@ Copy `ShellRunner`, `ShellResult`, `LineBatcher`, `CommandFormatter` from `../De
 - Performance: style only in the delegate (lazy, per paragraph as the viewport needs it). Never apply attributes to the whole storage after an edit. Measure with the 5,000-line fixture: an edit must restyle under 16 ms.
 - The open-source `MarkdownEngine` package (`swift-markdown-engine`, Apache 2.0, pre-1.0) was measured in the M1.5 spike and rejected: 79 ms per keystroke on the 5,000-line fixture against 2.2 ms for the own core, a wikilink storage form that conflicts with `[[Stem|alias]]`, and a highlighter that runs JavaScript (ADR 0005 amendment).
 
-## 10. GRDB and FTS5 — verify API names first (GRDB documentation, "Full-Text Search")
+## 10. GRDB and FTS5 — verified (M3)
 
 - `DatabasePool(path:configuration:)` with `configuration.busyMode = .timeout(2)` and WAL (the pool's default). One pool per vault, owned by `GRDBSearchIndex`.
 - Schema through `DatabaseMigrator` with a migration `v1` that creates the tables of `STORAGE-FORMAT.md` section 9. The FTS table: `try db.create(virtualTable: "notes_fts", using: FTS5()) { t in t.tokenizer = .unicode61(diacritics: .remove, tokenchars: ["_", "-"]); t.column("note_id").notIndexed(); t.column("title"); t.column("body"); t.column("tags"); t.column("ticket") }`. The system SQLite on macOS has FTS5.
@@ -113,7 +113,11 @@ Copy `ShellRunner`, `ShellResult`, `LineBatcher`, `CommandFormatter` from `../De
 - **Never pass user text to `MATCH` directly.** `FTSMatchBuilder` turns each word into `"word"*` (prefix match, inner quotes doubled) and each quoted phrase into `"phrase"`, joined with spaces. A word that is only punctuation is dropped. An empty result string means "no FTS part": use the filters only.
 - `ABC-123` stays one token because `-` is a token character; `ABC` alone matches by prefix.
 - Filters become `WHERE` clauses on `notes` (`type`, `status`, `space`, `ticket`, `pinned`, `in_conflict`, `has_*`), `EXISTS` on `tags` and `todos`. `-tag:x` is `NOT EXISTS`.
-- Check (M3): a query with `"`, `'`, `(`, `:` and `-` never throws; the 10,000-note vault answers under 50 ms (measure with `ContinuousClock`).
+- Check (M3), done: `GRDBSearchIndexTests.hostileInputNeverThrows` covers `"`, `'`, `(`, `:`, `-`, `*`, `NEAR(` and `AND OR NOT`. `IndexPerformanceTests` over `Scripts/generate-vault.sh` with 10,000 notes (debug build): full scan 11 s, unchanged scan 0.4 s, a two-word search 28 ms median. The generated notes use about 50 words, so every two-word query matches almost every note; that is the worst case for ranking.
+- Verified (M3): the schema is raw SQL in migration `v1`, so the tokenizer string is exactly the one of `STORAGE-FORMAT.md` section 9. The FTS row uses the `rowid` of the `notes` row; joins and deletes go through `rowid`. The weights are set once as the table's `rank` (`INSERT INTO notes_fts(notes_fts, rank) VALUES('rank', 'bm25(0.0, 10.0, 1.0, 4.0, 8.0)')`) and the query uses `ORDER BY rank`.
+- Trap (M3): `String.replacingOccurrences(of:options: .regularExpression)` compiles the pattern on every call. `PreviewPolicy` did that ten times per line and took most of the scan time. Keep compiled `NSRegularExpression` values in `static let` and check a cheap `contains` first.
+- Trap (M3): a full scan that reads and parses one file after the other took 27 s. `ReindexVaultUseCase` now reads and builds 200 files at a time in a task group; `FileVaultStore.read` is `nonisolated` so the reads run in parallel.
+- Trap (M3): a stored `mtime` as unix seconds in a `REAL` does not round-trip a `Date` exactly. `IndexedFileState.matches` allows 1 ms.
 
 ## 11. Screenshots — built in M2, the permission check is open
 

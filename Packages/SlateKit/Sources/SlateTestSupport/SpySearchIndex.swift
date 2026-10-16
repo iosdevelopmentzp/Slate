@@ -7,6 +7,8 @@ package final class SpySearchIndex: SearchIndex, @unchecked Sendable {
         case upsert(VaultPath)
         case updateState(VaultPath)
         case remove(VaultPath)
+        case search(SearchQuery)
+        case reset
     }
 
     private let lock = NSLock()
@@ -71,6 +73,53 @@ package final class SpySearchIndex: SearchIndex, @unchecked Sendable {
         lock.withLock {
             _calls.append(.remove(path))
             notes[path] = nil
+        }
+    }
+
+    package func upsert(contentsOf notes: [IndexedNote]) async throws {
+        for note in notes {
+            try await upsert(note)
+        }
+    }
+
+    package func search(_ query: SearchQuery, limit: Int) async throws -> [SearchHit] {
+        lock.withLock {
+            _calls.append(.search(query))
+            return SearchMatchPolicy.hits(in: Array(notes.values), query: query, limit: limit)
+        }
+    }
+
+    package func notes(named stem: String) async throws -> [NoteSummary] {
+        lock.withLock { notes.values.map(\.summary).filter { StemPolicy.isSame($0.stem, stem) } }
+    }
+
+    package func notes(withTicket ticket: String) async throws -> [NoteSummary] {
+        lock.withLock { notes.values.map(\.summary).filter { $0.ticket.map { StemPolicy.isSame($0, ticket) } ?? false } }
+    }
+
+    package func notesLinking(to stem: String) async throws -> [NoteSummary] {
+        lock.withLock {
+            notes.values.filter { note in
+                note.links.contains { $0.kind == .wiki && StemPolicy.isSame(WikilinkPolicy.parse($0.target).stem, stem) }
+            }.map(\.summary)
+        }
+    }
+
+    package func tags() async throws -> [TagCount] {
+        lock.withLock {
+            let all = notes.values.flatMap(\.summary.tags)
+            return Dictionary(grouping: all, by: { $0 }).map { TagCount(tag: $0.key, count: $0.value.count) }.sorted { $0.tag < $1.tag }
+        }
+    }
+
+    package func todos(isDone: Bool) async throws -> [TodoItem] {
+        lock.withLock { notes.values.flatMap(\.todos).filter { $0.isDone == isDone }.sorted { ($0.noteID.rawValue, $0.line) < ($1.noteID.rawValue, $1.line) } }
+    }
+
+    package func reset() async throws {
+        lock.withLock {
+            _calls.append(.reset)
+            notes.removeAll()
         }
     }
 }

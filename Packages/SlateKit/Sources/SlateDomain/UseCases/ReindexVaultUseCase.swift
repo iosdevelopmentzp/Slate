@@ -5,6 +5,14 @@ package struct ReindexVaultUseCase: Sendable {
     let index: any SearchIndex
     let builder: any IndexedNoteBuilding
 
+    static let batchSize = 200
+
+    private enum Outcome: Sendable {
+        case indexed(IndexedNote)
+        case touched(IndexedFileState, VaultPath)
+        case failed(VaultPath)
+    }
+
     @concurrent
     package func execute(_ scope: ReindexScope) async throws -> ReindexReport {
         let states = try await index.fileStates()
@@ -28,24 +36,56 @@ package struct ReindexVaultUseCase: Sendable {
                 }
             }
         }
-        for meta in metas {
+        let changed = metas.filter { meta in states[meta.path].map { $0.matches(meta) == false } ?? true }
+        var start = 0
+        while start < changed.count {
             try Task.checkCancellation()
-            let known = states[meta.path]
-            if let known, known.matches(meta) { continue }
-            do {
-                let contents = try await files.read(meta.path)
-                if let known, known.hash == contents.hash {
-                    try await index.updateState(IndexedFileState(modified: contents.meta.modified, size: contents.meta.size, hash: contents.hash), for: meta.path)
-                    continue
+            let chunk = Array(changed[start..<min(start + Self.batchSize, changed.count)])
+            start += Self.batchSize
+            var batch: [IndexedNote] = []
+            for outcome in try await process(chunk, states: states) {
+                switch outcome {
+                case .indexed(let note):
+                    batch.append(note)
+                    report.indexed.append(note.summary.path)
+                case .touched(let state, let path):
+                    try await index.updateState(state, for: path)
+                case .failed(let path):
+                    report.failed.append(path)
                 }
-                try await index.upsert(builder.build(try NoteCodec.decode(contents)))
-                report.indexed.append(meta.path)
-            } catch is CancellationError {
-                throw CancellationError()
-            } catch {
-                report.failed.append(meta.path)
+            }
+            if batch.isEmpty == false {
+                try await index.upsert(contentsOf: batch)
             }
         }
         return report
+    }
+
+    private func process(_ chunk: [FileMeta], states: [VaultPath: IndexedFileState]) async throws -> [Outcome] {
+        let files = files
+        let builder = builder
+        return try await withThrowingTaskGroup(of: (Int, Outcome).self) { group in
+            for (position, meta) in chunk.enumerated() {
+                let known = states[meta.path]
+                group.addTask {
+                    do {
+                        let contents = try await files.read(meta.path)
+                        if let known, known.hash == contents.hash {
+                            return (position, .touched(IndexedFileState(modified: contents.meta.modified, size: contents.meta.size, hash: contents.hash), meta.path))
+                        }
+                        return (position, .indexed(builder.build(try NoteCodec.decode(contents))))
+                    } catch is CancellationError {
+                        throw CancellationError()
+                    } catch {
+                        return (position, .failed(meta.path))
+                    }
+                }
+            }
+            var outcomes: [(Int, Outcome)] = []
+            for try await outcome in group {
+                outcomes.append(outcome)
+            }
+            return outcomes.sorted { $0.0 < $1.0 }.map(\.1)
+        }
     }
 }

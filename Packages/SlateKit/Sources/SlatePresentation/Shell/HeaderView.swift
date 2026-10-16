@@ -4,17 +4,20 @@ import SlateUI
 
 struct HeaderView: View {
     @Environment(NoteListStore.self) private var store
+    @Environment(SearchStore.self) private var search
     @Environment(\.surface) private var surface
     @Environment(\.openAsWindow) private var openAsWindow
     @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         @Bindable var store = store
+        @Bindable var search = search
         HStack(spacing: 8) {
             SpacePicker()
-            SearchField(prompt: "Search", text: $store.filterText, focus: $isSearchFocused)
+            SearchField(prompt: store.source == .trash ? "Search the Trash" : "Search", text: store.source == .trash ? $store.filterText : $search.query, focus: $isSearchFocused)
                 .frame(maxWidth: .infinity)
-                .hint("Search note titles (⌘F). Esc clears.")
+                .onSubmit { search.openFirst() }
+                .hint("Search notes (⌘F). Try tag:, type: or is:todo. Enter opens the first result, Esc clears.")
                 .background(
                     Button("") { isSearchFocused = true }
                         .keyboardShortcut("f", modifiers: .command)

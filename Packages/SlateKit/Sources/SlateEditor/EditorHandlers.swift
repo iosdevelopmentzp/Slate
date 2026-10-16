@@ -9,6 +9,7 @@ package struct EditorHandlers {
     package var pasteFiles: ([URL]) -> Void
     package var pasteURL: (String) -> String?
     package var requestScreenshot: (ScreenshotKind) -> Void
+    package var completions: (EditorCompletionKind, String) -> [String]
 
     package init(
         didEndEditing: @escaping () -> Void = {},
@@ -18,7 +19,8 @@ package struct EditorHandlers {
         pasteImage: @escaping (Data, String) -> Void = { _, _ in },
         pasteFiles: @escaping ([URL]) -> Void = { _ in },
         pasteURL: @escaping (String) -> String? = { _ in nil },
-        requestScreenshot: @escaping (ScreenshotKind) -> Void = { _ in }
+        requestScreenshot: @escaping (ScreenshotKind) -> Void = { _ in },
+        completions: @escaping (EditorCompletionKind, String) -> [String] = { _, _ in [] }
     ) {
         self.didEndEditing = didEndEditing
         self.resolveImage = resolveImage
@@ -28,5 +30,6 @@ package struct EditorHandlers {
         self.pasteFiles = pasteFiles
         self.pasteURL = pasteURL
         self.requestScreenshot = requestScreenshot
+        self.completions = completions
     }
 }

@@ -72,12 +72,24 @@ import Testing
         #expect(harness.navigator.selectedNote == NoteID(rawValue: "b"))
     }
 
-    @Test func wikilinkToAMissingNoteShowsAToast() async throws {
+    @Test func wikilinkToAMissingNoteMakesItInTheSameFolder() async throws {
         try await open("Tasks/A.md")
 
-        await editor.openWikilink("Nothing")
+        await editor.openWikilink("Brand new")
 
-        #expect(harness.toaster.text == "No note is called Nothing")
+        let created = try #require(harness.spies.index.indexed[VaultPath(rawValue: "Tasks/Brand new.md")])
+        #expect(created.title == "Brand new")
+        #expect(harness.navigator.selectedNote == created.id)
+    }
+
+    @Test func wikilinkWithAFolderPrefersThatFolder() async throws {
+        harness.seed("Notes/Plan.md", id: "n", title: "Plan")
+        harness.seed("Tasks/Plan.md", id: "t", title: "Plan")
+        try await open("Inbox/A.md")
+
+        await editor.openWikilink("Notes/Plan")
+
+        #expect(harness.navigator.selectedNote == NoteID(rawValue: "n"))
     }
 
     @Test func quickLookOpensTheResolvedFile() async throws {

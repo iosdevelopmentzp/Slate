@@ -210,6 +210,13 @@ extension EditorController: NSTextViewDelegate {
     func textDidChange(_ notification: Notification) {
         flushRestyle()
         onTextChange(textView.string)
+        startCompletionIfNeeded()
+    }
+
+    func textView(_ textView: NSTextView, completions words: [String], forPartialWordRange charRange: NSRange, indexOfSelectedItem index: UnsafeMutablePointer<Int>?) -> [String] {
+        guard let context = completionContext() else { return words }
+        index?.pointee = -1
+        return handlers.completions(context.kind, nsText.substring(with: context.range))
     }
 
     func undoManager(for view: NSTextView) -> UndoManager? {

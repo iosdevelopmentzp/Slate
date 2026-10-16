@@ -8,23 +8,13 @@ struct IndexedNoteBuilder: IndexedNoteBuilding {
     func build(_ document: NoteDocument) -> IndexedNote {
         var walker = BodyFacts()
         walker.visit(Document(parsing: document.body))
-        let header = document.header
-        let summary = NoteSummary(
-            id: document.id,
-            path: document.path,
-            title: document.title,
-            type: document.type,
-            status: header.status.flatMap(NoteStatus.init(rawValue:)),
-            ticket: header.ticket,
-            pinned: header.pinned ?? false,
-            created: header.created ?? document.meta.created,
-            updated: header.updated ?? document.meta.modified,
-            preview: PreviewPolicy.preview(of: document.body),
-            openTodos: walker.openTodos,
-            attachmentCount: walker.attachments.count,
-            headerOpaque: document.isHeaderOpaque
-        )
-        return IndexedNote(summary: summary, state: IndexedFileState(modified: document.meta.modified, size: document.meta.size, hash: document.hash))
+        var note = IndexFactsPolicy.note(for: document, attachmentCount: walker.attachments.count)
+        note.links += walker.urls.sorted().map { IndexedLink(kind: .url, target: $0) }
+        note.attachments = walker.attachments.sorted()
+        note.hasCode = walker.hasCode
+        note.hasImage = walker.hasImage
+        note.hasLink = note.hasLink || walker.urls.isEmpty == false
+        return note
     }
 
     func headingCount(in body: String) -> Int {
@@ -36,28 +26,31 @@ struct IndexedNoteBuilder: IndexedNoteBuilding {
 
 private struct BodyFacts: MarkupWalker {
     var headings = 0
-    var openTodos = 0
     var attachments: Set<String> = []
+    var urls: Set<String> = []
+    var hasCode = false
+    var hasImage = false
 
     mutating func visitHeading(_ heading: Heading) {
         headings += 1
         descendInto(heading)
     }
 
-    mutating func visitListItem(_ listItem: ListItem) {
-        if listItem.checkbox == .unchecked {
-            openTodos += 1
-        }
-        descendInto(listItem)
+    mutating func visitCodeBlock(_ codeBlock: CodeBlock) {
+        hasCode = true
     }
 
     mutating func visitImage(_ image: Image) {
+        hasImage = true
         record(image.source)
         descendInto(image)
     }
 
     mutating func visitLink(_ link: Link) {
         record(link.destination)
+        if let destination = link.destination, destination.contains("://") {
+            urls.insert(destination)
+        }
         descendInto(link)
     }
 
