@@ -6,6 +6,12 @@ Last updated: 2026-10-17
 
 Phase 2 is built and merged into `main` (S1 Simplify, S2 Folders and the soft look, S3 the rich text editor, S4 Polish, then sub-folders, ADR 0011). **Phase 3 is built: S5 Agents and the notes folder (ADR 0010), S6 Tables level 1 and S7 images in table cells (ADR 0009).** Next: the owner's manual checks 40 to 48. The owner runs the manual checks below; every item passes or becomes a numbered gap. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
 
+Phase 3 run (2026-10-17), what is done and what is left:
+
+1. Done: S5 (`1f625d3`), S6 (`92d6c4e`), S7 (`7e4b5c7`). Every item of the three scopes is built; `Scripts/build.sh` prints `layers: ok` and `Scripts/test.sh` passes 604 tests.
+2. Left for the owner: manual checks 40 to 48 below, among them a real run of Claude Code against `slate mcp`, typing in tables in the running app, and a real drop of an image on a cell.
+3. Left in code: the gaps marked S5, S6 and S7 under Known gaps (for example a card dropped into the note text, keyboard entry into a table, accessibility of table cells, manual column widths).
+
 ## Removed in S1 (ADR 0007)
 
 The Presentation code below was deleted. Domain and Data code and tests stay. To bring a feature back, start from commit `545e0d6`.
