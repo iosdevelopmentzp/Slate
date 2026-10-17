@@ -65,6 +65,33 @@ final class TableCellEditor: NSTextView {
     @objc func slateCode(_ sender: Any?) { toggle(.code) }
     @objc func slateLink(_ sender: Any?) { editLink() }
 
+    override func paste(_ sender: Any?) {
+        guard let table, let host = table.host else {
+            super.paste(sender)
+            return
+        }
+        host.pasteIntoCell(table)
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        if event.clickCount == 2, let path = imagePath(at: convert(event.locationInWindow, from: nil)) {
+            table?.host?.quickLook(path)
+            return
+        }
+        super.mouseDown(with: event)
+    }
+
+    func imagePath(at point: CGPoint) -> String? {
+        guard let storage = textStorage, storage.length > 0 else { return nil }
+        let index = characterIndexForInsertion(at: point)
+        for candidate in [index, index - 1] where candidate >= 0 && candidate < storage.length {
+            if let path = storage.attribute(.slateImagePath, at: candidate, effectiveRange: nil) as? String {
+                return path
+            }
+        }
+        return nil
+    }
+
     @objc func undo(_ sender: Any?) {
         if cellUndo.canUndo {
             cellUndo.undo()

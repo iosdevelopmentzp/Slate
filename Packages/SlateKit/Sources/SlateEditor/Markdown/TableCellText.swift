@@ -7,8 +7,8 @@ enum TableCellText {
         guard trimmed.isEmpty == false else { return NSAttributedString() }
         let document = Document(parsing: trimmed, options: [.disableSmartOpts])
         let children = Array(document.children)
-        guard children.count == 1, let paragraph = children.first as? Paragraph, MarkdownReader.isPlainParagraph(paragraph) else { return nil }
-        return InlineReader.read(paragraph.children, source: SourceLines(lines: [trimmed]))
+        guard children.count == 1, let paragraph = children.first as? Paragraph else { return nil }
+        return InlineReader.read(paragraph.children, source: SourceLines(lines: [trimmed]), allowsImages: true)
     }
 
     static func markdown(of text: NSAttributedString) -> String {

@@ -19,6 +19,7 @@ final class RichTextController: NSObject {
     var activeLinkPopover: LinkPopover?
     var pendingInline: InlineStyle?
     weak var activeTable: TableBlockView?
+    var imageTarget: TableImageTarget?
 
     private let undo = UndoManager()
     private var publishTask: Task<Void, Never>?
@@ -90,6 +91,7 @@ final class RichTextController: NSObject {
     func setMarkdown(_ value: String) {
         guard value != markdown || storage.length == 0 && value.isEmpty == false else { return }
         activeTable?.endEditing(commit: false)
+        imageTarget = nil
         publishTask?.cancel()
         publishTask = nil
         let text = MarkdownReader.read(value)
@@ -116,6 +118,9 @@ final class RichTextController: NSObject {
     func reloadImages() {
         styler.forgetImages()
         restyleAll()
+        storage.enumerateAttribute(.attachment, in: NSRange(location: 0, length: storage.length)) { value, _, _ in
+            (value as? TableAttachment)?.reloadPictures()
+        }
     }
 
     func restyleAll() {
@@ -131,6 +136,11 @@ final class RichTextController: NSObject {
     func apply(insertion: EditorInsertion?) {
         guard let insertion, insertion.token != insertionToken else { return }
         insertionToken = insertion.token
+        if let target = imageTarget {
+            imageTarget = nil
+            insertIntoCell(insertion.markdown, target: target)
+            return
+        }
         insertMarkdownBlocks(insertion.markdown)
     }
 

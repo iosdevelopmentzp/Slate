@@ -8,14 +8,17 @@ nonisolated final class TableAttachment: NSTextAttachment {
     private var texts: [[NSAttributedString]] = []
     private var cachedLayout: (width: CGFloat, layout: TableLayout)?
     nonisolated(unsafe) weak var host: (any TableHost)?
+    nonisolated(unsafe) var loadImage: (String) -> NSImage? = { _ in nil }
+    nonisolated(unsafe) private var pictures: [String: NSImage?] = [:]
     nonisolated(unsafe) private var cachedView: TableBlockView?
     static let fileType = UTType.tabSeparatedText.identifier
     private static let registered: Void = NSTextAttachment.registerViewProviderClass(TableViewProvider.self, forFileType: fileType)
 
     @MainActor
-    init(block: TableBlock, style: TableStyle) {
+    init(block: TableBlock, style: TableStyle, loadImage: @escaping (String) -> NSImage? = { _ in nil }) {
         self.block = block
         self.style = style
+        self.loadImage = loadImage
         model = block.model
         _ = Self.registered
         super.init(data: Data([0x09]), ofType: Self.fileType)
@@ -29,6 +32,7 @@ nonisolated final class TableAttachment: NSTextAttachment {
 
     @MainActor
     func update(block: TableBlock, style: TableStyle) {
+        if style != self.style { pictures.removeAll() }
         guard block != self.block || style != self.style else { return }
         self.block = block
         self.style = style
@@ -67,7 +71,7 @@ nonisolated final class TableAttachment: NSTextAttachment {
             cells.enumerated().map { column, cell in
                 let alignment = column < model.columns.count ? model.columns[column].alignment : .none
                 let inline = TableCellText.inline(cell.markdown) ?? NSAttributedString(string: cell.markdown)
-                return style.styled(inline, header: row == 0, alignment: alignment)
+                return display(inline, header: row == 0, alignment: alignment)
             }
         }
     }
@@ -81,6 +85,31 @@ nonisolated final class TableAttachment: NSTextAttachment {
 
     override func image(for bounds: CGRect, attributes: [NSAttributedString.Key: Any], location: any NSTextLocation, textContainer: NSTextContainer?) -> NSImage? {
         NSImage(size: bounds.size)
+    }
+
+    @MainActor
+    func display(_ inline: NSAttributedString, header: Bool, alignment: TableAlignment) -> NSAttributedString {
+        let styled = NSMutableAttributedString(attributedString: style.styled(inline, header: header, alignment: alignment))
+        styled.enumerateAttribute(.slateImagePath, in: NSRange(location: 0, length: styled.length)) { value, range, _ in
+            guard let path = value as? String else { return }
+            styled.addAttribute(.attachment, value: CellImageAttachment(path: path, picture: picture(path), borderColor: style.colors.imageBorder), range: range)
+        }
+        return styled
+    }
+
+    @MainActor
+    func reloadPictures() {
+        pictures.removeAll()
+        rebuildTexts()
+        cachedView?.modelChanged()
+    }
+
+    @MainActor
+    private func picture(_ path: String) -> NSImage? {
+        if let cached = pictures[path] { return cached }
+        let loaded = loadImage(path)
+        pictures[path] = loaded
+        return loaded
     }
 
     @MainActor

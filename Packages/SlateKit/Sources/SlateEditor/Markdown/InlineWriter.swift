@@ -105,6 +105,10 @@ enum InlineWriter {
                 output += codeSpan(run.map { String($0.character) }.joined())
             } else {
                 for (position, cell) in run.enumerated() {
+                    if let path = cell.imagePath {
+                        output += "![\(escapeLabel(cell.imageAlt ?? ""))](\(destination(path)))"
+                        continue
+                    }
                     output += escape(cell.character, at: offset + index + position, in: context, inLabel: inLabel)
                 }
             }

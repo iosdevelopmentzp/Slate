@@ -12,6 +12,17 @@ extension RichTextController {
             case .link:
                 activeTable.cellEditor.slateLink(nil)
                 return
+            case .image, .screenshot:
+                if let target = activeTable.imageTarget {
+                    imageTarget = target
+                    if command == .image {
+                        chooseImage()
+                    } else {
+                        handlers.requestScreenshot(.region)
+                    }
+                    return
+                }
+                activeTable.endEditing()
             default:
                 activeTable.endEditing()
             }

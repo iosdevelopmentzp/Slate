@@ -49,8 +49,19 @@ import Testing
         #expect(MarkdownWriter.write(text) == source)
     }
 
-    @Test func aTableWithAnImageInACellStaysRawInLevelOne() {
-        let source = "| a | b |\n|---|---|\n| ![](../_attachments/x.png) | 2 |\n"
+    @Test func anImageInACellIsReadAndWrittenBack() throws {
+        let harness = EditorHarness(markdown: "| a | b |\n|---|---|\n| ![](../_attachments/x.png) | 2 |\n")
+        let table = try #require(harness.table())
+
+        var model = table.model
+        model.setCell(TableCellIndex(row: 1, column: 1), markdown: "3")
+        harness.controller.tableDidChange(table, model: model, before: table.model)
+
+        #expect(harness.markdown == "| a | b |\n| --- | --- |\n| ![](../_attachments/x.png) | 3 |\n")
+    }
+
+    @Test func aCellWithABlockStaysRaw() {
+        let source = "| a | b |\n|---|---|\n| # not inline | 2 |\n"
 
         #expect(BlockAttributes(MarkdownReader.read(source).attributes(at: 0, effectiveRange: nil)).kind == .raw)
     }

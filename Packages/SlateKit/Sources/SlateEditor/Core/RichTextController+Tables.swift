@@ -97,4 +97,21 @@ extension RichTextController: TableHost {
             undoEdit()
         }
     }
+
+    func insertIntoCell(_ markdown: String, target: TableImageTarget) {
+        guard let attachment = target.attachment else { return }
+        let inline = markdown.components(separatedBy: .newlines).filter { $0.isEmpty == false }.joined(separator: " ")
+        if let view = attachment.loadedView, view.editing == target.cell {
+            view.insertInline(inline)
+            return
+        }
+        var model = attachment.model
+        let current = model.cell(target.cell).markdown
+        model.setCell(target.cell, markdown: current.isEmpty ? inline : current + " " + inline)
+        tableDidChange(attachment, model: model, before: attachment.block.model)
+    }
+
+    func quickLook(_ path: String) {
+        handlers.attachment(path, .quickLook)
+    }
 }

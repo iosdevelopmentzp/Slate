@@ -19,6 +19,7 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         super.init(frame: .zero)
         editor.table = self
         editor.delegate = self
+        registerForDraggedTypes(RichTextController.cellDropTypes)
         setAccessibilityRole(.table)
         setAccessibilityElement(true)
         updateAccessibility()
@@ -469,5 +470,44 @@ final class TableBlockView: NSView, NSTextViewDelegate {
 
     var cellEditor: TableCellEditor {
         editor
+    }
+
+    var imageTarget: TableImageTarget? {
+        guard let editing else { return nil }
+        return TableImageTarget(attachment: attachment, cell: editing)
+    }
+
+    func insertInline(_ markdown: String) {
+        guard let attachment, let editing else { return }
+        let alignment = editing.column < model.columns.count ? model.columns[editing.column].alignment : .none
+        let range = editor.selectedRange()
+        let before = range.location > 0 ? (editor.string as NSString).substring(with: NSRange(location: range.location - 1, length: 1)) : " "
+        let inline = TableCellText.inline(markdown) ?? NSAttributedString(string: markdown)
+        let text = NSMutableAttributedString()
+        if before.allSatisfy(\.isWhitespace) == false {
+            text.append(NSAttributedString(string: " ", attributes: editor.typingAttributes))
+        }
+        text.append(attachment.display(inline, header: editing.row == 0, alignment: alignment))
+        guard editor.shouldChangeText(in: range, replacementString: text.string) else { return }
+        editor.textStorage?.replaceCharacters(in: range, with: text)
+        editor.didChangeText()
+        editor.setSelectedRange(NSRange(location: range.location + text.length, length: 0))
+        finishCell()
+    }
+
+    // MARK: Drop
+
+    override func draggingEntered(_ sender: any NSDraggingInfo) -> NSDragOperation {
+        currentLayout.cell(at: convert(sender.draggingLocation, from: nil)) == nil ? [] : .copy
+    }
+
+    override func draggingUpdated(_ sender: any NSDraggingInfo) -> NSDragOperation {
+        draggingEntered(sender)
+    }
+
+    override func performDragOperation(_ sender: any NSDraggingInfo) -> Bool {
+        guard let index = currentLayout.cell(at: convert(sender.draggingLocation, from: nil)) else { return false }
+        beginEditing(index, caretAtEnd: true)
+        return host?.dropIntoCell(sender, target: TableImageTarget(attachment: attachment, cell: index)) ?? false
     }
 }

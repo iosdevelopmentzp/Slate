@@ -4,7 +4,7 @@ Last updated: 2026-10-17
 
 ## Stage
 
-Phase 2 is built and merged into `main` (S1 Simplify, S2 Folders and the soft look, S3 the rich text editor, S4 Polish, then sub-folders, ADR 0011). **Phase 3: S5 Agents and the notes folder and S6 Tables level 1 are built (ADR 0010, ADR 0009).** Next: S7 images in table cells. The owner runs the manual checks below; every item passes or becomes a numbered gap. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
+Phase 2 is built and merged into `main` (S1 Simplify, S2 Folders and the soft look, S3 the rich text editor, S4 Polish, then sub-folders, ADR 0011). **Phase 3 is built: S5 Agents and the notes folder (ADR 0010), S6 Tables level 1 and S7 images in table cells (ADR 0009).** Next: the owner's manual checks 40 to 48. The owner runs the manual checks below; every item passes or becomes a numbered gap. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
 
 ## Removed in S1 (ADR 0007)
 
@@ -196,12 +196,16 @@ Numbered. What, then why. A later session must not undo these without a new numb
 122. Enter and Tab at the end of the table add a row and stay in the table; ↑ in the header row and ↓ in the last row leave it. Return in a cell never makes a new line; a pasted new line becomes a space.
 123. Deleting a table from the menu asks "Delete this table? Yes · No" inline when more than one cell has text (5 s, then it goes away). Backspace after a table removes it at once, like an image; Undo brings it back.
 124. While a cell is edited, the format bar shows the state of the main text, not of the cell. Bold, italic, strikethrough and link from the bar and the menu act on the cell; other format commands leave the table first.
+125. S7 started without the owner's check of S6, because the task asked for S5 to S7 in one run once S6 and its tests pass. `ROADMAP.md` says S7 waits for the owner; the owner can still reject S6 and S7 together.
+126. A cell image is one U+FFFC with `slate.imagePath` and `slate.imageAlt` inside the cell text, and `![alt](path)` in the file. Only cells read inline images; a body paragraph with an inline image stays a raw block as before.
+127. An image for a cell goes through the same import as the main text (`EditorHandlers.pasteFiles`, `pasteImage`, `requestScreenshot`). The controller remembers the cell (`imageTarget`); the next insertion from the store lands in that cell. When the cell is no longer being edited, the image is added at the end of its text. A space separates the image from text before it.
+128. Thumbnails are 80 pt high with the image's shape and a 4 pt radius; a missing image shows as an empty 80 × 80 square. Wide images make the column wide; the column then shrinks like any other.
+129. Pasting text into a cell pastes it as plain text on one line; Markdown copied from Slate keeps bold, italic, links and images.
 
 ## Next steps
 
-1. S7 images in table cells (ADR 0009 level 2).
-2. The owner runs the manual checks below in parallel and reports gaps; fixes come one numbered gap at a time.
-3. M8 ideas only with a new ADR when they widen the v1 scope of ADR 0007.
+1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
+2. M8 ideas only with a new ADR when they widen the v1 scope of ADR 0007.
 
 ## Manual checks (owner)
 
@@ -275,6 +279,10 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 46. Right click a cell: add and delete rows and columns, align a column. Delete Table on a filled table asks first. Arrow keys and Esc leave the table; long text wraps in a cell. Check light and dark mode.
 47. Copy a table and paste it into a plain text editor: you get the Markdown table. Copy rows in Numbers, then Edit → Paste as Table.
 
+### S7 Images in table cells
+
+48. Drop an image from Finder on a cell, paste a screenshot into another cell, and use the Image button while a cell is active. Each shows a thumbnail; double-click opens Quick Look; select a thumbnail and press Delete. The file holds `![](../_attachments/…)` in the cells. Move the note into a sub-folder: the thumbnails still show.
+
 ## Known gaps
 
 - S2: a text file dropped on the list does not make a note yet (`UX.md` section 6). Folders reorder with Move up and Move down, not by drag.
@@ -301,6 +309,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - S5: the MCP server answers requests in parallel. Two writes to the same note at the same moment are safe (the save checks the hash), but the second may fail with "The note changed since you read it".
 - S6: the agent checked tables with editor tests, a throwaway XCTest in a window (the view is hosted by TextKit, the focus stays while a row grows) and offscreen pictures, not by typing in the running app.
 - S6: the caret in the main text moves past a table with the arrow keys; only a click starts editing a cell. Accessibility shows the table as one element with a label ("Table, 3 rows, 2 columns"); rows and cells are not exposed yet.
+- S7: drop, paste and Quick Look in a cell were tested through the controller, not with a real drag or a real double-click. Thumbnails cannot be resized, and a thumbnail is not selected by a single click (use Shift-arrow in the cell).
 - S6: no manual column resize (ADR 0009 level 1). Very wide tables shrink every column to 60 pt and then stick out to the right.
 - S6: the full test run once more saw the known `FSEventsVaultWatcherIntegrationTests.externalEditArrivesAsAPathChange` failure (during the S5 commit); it passed alone and in the next full run.
 - Sub-folders (ADR 0011): no drag of a folder into another folder, no colour, icon or manual order per sub-folder, no `⌘1`…`⌘9` for sub-folders. Esc does not go up to the parent folder yet; the back chevron does.

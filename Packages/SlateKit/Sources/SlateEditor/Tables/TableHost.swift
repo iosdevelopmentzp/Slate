@@ -8,4 +8,7 @@ protocol TableHost: AnyObject {
     func tableBeganEditing(_ view: TableBlockView)
     func tableEndedEditing(_ view: TableBlockView)
     func undoInDocument(redo: Bool)
+    func pasteIntoCell(_ view: TableBlockView)
+    func dropIntoCell(_ dragging: any NSDraggingInfo, target: TableImageTarget) -> Bool
+    func quickLook(_ path: String)
 }

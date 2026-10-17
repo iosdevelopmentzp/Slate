@@ -182,7 +182,7 @@ final class RichTextStyler {
                 existing.update(block: table, style: style)
                 return existing
             }
-            let created = TableAttachment(block: table, style: style)
+            let created = TableAttachment(block: table, style: style, loadImage: loadImage)
             created.host = tableHost
             return created
         }

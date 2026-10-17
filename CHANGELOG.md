@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Images in table cells (ADR 0009 level 2, S7). Drop an image on a cell, paste one into a cell, or press the Image button or ⇧⌘S while you type in a cell. The cell shows a thumbnail next to its text; double-click it for Quick Look, and Delete removes it. In the file the cell keeps `![](../_attachments/…)`, and the image links still work when the note moves to another folder depth.
 - Tables (ADR 0009, S6). The Table button in the format bar, Format → Table and `⌥⌘T` insert a table with a header and one row. Click a cell to type; bold, italic, strikethrough and links work in a cell. Enter goes down, Tab and Shift-Tab go right and left, and Tab on the last cell or Enter on the last row adds a row. The arrow keys and Esc leave the table. On hover a "+" strip adds a column or a row; the right-click menu adds, aligns and deletes rows and columns, and deletes the table. Column widths follow the text, and long text wraps in the cell. Every cell edit and every change of rows or columns is one step of Undo.
 - In the file a table is a GitHub pipe table. A table from another app keeps its exact text until you change it. A table that Slate cannot show (uneven rows, an image in a cell) stays as plain text, as before.
 - Copy of a table gives the Markdown table. Pasting a Markdown table makes a table. Edit → Paste as Table turns rows copied from a spreadsheet (tab-separated) into a table.
