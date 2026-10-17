@@ -34,8 +34,16 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
         imageMenu(at: charIndex) ?? menu
     }
 
+    func textStorage(_ textStorage: NSTextStorage, willProcessEditing editedMask: NSTextStorageEditActions, range editedRange: NSRange, changeInLength delta: Int) {
+        guard editedMask.contains(.editedCharacters) else { return }
+        finder.noteClientStringWillChange()
+    }
+
     func textStorage(_ textStorage: NSTextStorage, didProcessEditing editedMask: NSTextStorageEditActions, range editedRange: NSRange, changeInLength delta: Int) {
         imageButton.hide()
+        if editedMask.contains(.editedCharacters) {
+            findClient.storageChanged()
+        }
         storageEdited(editedMask, range: editedRange, delta: delta)
     }
 

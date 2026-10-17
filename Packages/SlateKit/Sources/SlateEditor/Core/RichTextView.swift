@@ -45,6 +45,9 @@ final class RichTextView: NSTextView {
             return controller?.undoManager.canUndo == true
         case #selector(redo(_:)):
             return controller?.undoManager.canRedo == true
+        case #selector(performTextFinderAction(_:)), #selector(performFindPanelAction(_:)):
+            guard let controller, let action = Self.finderAction(item) else { return false }
+            return controller.finder.validateAction(action)
         default:
             return super.validateUserInterfaceItem(item)
         }
@@ -108,9 +111,23 @@ final class RichTextView: NSTextView {
     @objc func slatePasteTable(_ sender: Any?) { controller?.pasteAsTable(from: PasteboardBridge.general) }
 
     @objc func slateFind(_ sender: Any?) {
-        let item = NSMenuItem()
-        item.tag = Int(NSFindPanelAction.showFindPanel.rawValue)
-        performFindPanelAction(item)
+        controller?.findClient.refresh()
+        controller?.finder.performAction(.showFindInterface)
+    }
+
+    override func performTextFinderAction(_ sender: Any?) {
+        guard let controller, let action = Self.finderAction(sender) else { return }
+        controller.findClient.refresh()
+        controller.finder.performAction(action)
+    }
+
+    override func performFindPanelAction(_ sender: Any?) {
+        performTextFinderAction(sender)
+    }
+
+    private static func finderAction(_ sender: Any?) -> NSTextFinder.Action? {
+        guard let tag = (sender as? NSValidatedUserInterfaceItem)?.tag else { return nil }
+        return NSTextFinder.Action(rawValue: tag)
     }
 
     @objc func slateImageAction(_ sender: NSMenuItem) {

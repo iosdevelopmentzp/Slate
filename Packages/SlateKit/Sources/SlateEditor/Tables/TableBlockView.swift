@@ -244,6 +244,14 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         needsDisplay = true
     }
 
+    func select(_ range: NSRange, in index: TableCellIndex) {
+        beginEditing(index)
+        guard editing == index else { return }
+        let length = (editor.string as NSString).length
+        let location = min(range.location, length)
+        editor.setSelectedRange(NSRange(location: location, length: min(range.length, length - location)))
+    }
+
     func endEditing(commit: Bool = true) {
         commitTask?.cancel()
         commitTask = nil

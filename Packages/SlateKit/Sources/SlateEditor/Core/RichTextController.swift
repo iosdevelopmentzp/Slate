@@ -21,6 +21,14 @@ final class RichTextController: NSObject {
     weak var activeTable: TableBlockView?
     var imageTarget: TableImageTarget?
     let imageButton = ImageSaveButton()
+    lazy var findClient = NoteFindClient(controller: self)
+    lazy var finder: NSTextFinder = {
+        let finder = NSTextFinder()
+        finder.client = findClient
+        finder.findBarContainer = scrollView
+        finder.isIncrementalSearchingEnabled = true
+        return finder
+    }()
 
     private let undo = UndoManager()
     private var publishTask: Task<Void, Never>?
@@ -78,7 +86,7 @@ final class RichTextController: NSObject {
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
         textView.textContainer?.widthTracksTextView = true
-        textView.usesFindBar = true
+        textView.usesFindBar = false
         textView.isIncrementalSearchingEnabled = true
         textView.delegate = self
         textView.textStorage?.delegate = self
