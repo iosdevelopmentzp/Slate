@@ -96,6 +96,7 @@ final class NoteFindClient: NSObject, NSTextFinderClient {
             controller.textView.scrollRangeToVisible(NSRange(location: table, length: 1))
             controller.textView.textLayoutManager?.textViewportLayoutController.layoutViewport()
             guard let view = tableView(at: table) else { return }
+            view.reveal(index)
             view.scrollToVisible(view.currentLayout.cellRect(index))
         }
     }

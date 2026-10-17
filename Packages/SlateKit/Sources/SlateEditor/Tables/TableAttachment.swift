@@ -80,7 +80,7 @@ nonisolated final class TableAttachment: NSTextAttachment {
         let padding = textContainer?.lineFragmentPadding ?? 5
         let available = (textContainer?.size.width ?? proposed.width) - padding * 2
         let size = layout(width: available).size
-        return CGRect(x: 0, y: 0, width: size.width + TableLayout.handle, height: size.height + TableLayout.handle)
+        return CGRect(x: 0, y: 0, width: min(size.width + TableLayout.handle, max(available, TableLayout.minimumColumn)), height: size.height + TableLayout.handle)
     }
 
     override func image(for bounds: CGRect, attributes: [NSAttributedString.Key: Any], location: any NSTextLocation, textContainer: NSTextContainer?) -> NSImage? {

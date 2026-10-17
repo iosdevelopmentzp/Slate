@@ -215,6 +215,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 135. Find in Note searches table cells. Slate runs its own `NSTextFinder` with a client that joins the text and the cells; a match never crosses a cell edge. `NSTextFinder` reads the text on a background queue, so the client keeps a copy under a lock and rebuilds it on the main actor. With incremental search the finder moves between matches without changing the selection; when the bar closes on a match in a cell, that cell starts editing with the match selected. Replace in a cell rewrites the cell through `TableCellText`, so its formatting stays.
 136. Copy Table as Markdown puts the GFM table on the clipboard (the source when the table is unchanged). Copy Table as Text puts tab-separated text, one row per line, for Numbers, Excel and chat apps: no formatting, a line break in a cell becomes a space, images are left out. Both also put the Markdown under Slate's own clipboard type, so a paste into Slate gives the table back.
 137. Text to table uses the Table command: with a selection it converts the selected paragraphs, without one it inserts an empty table. The column separator is a tab when any line has one, `|` when every line has one (a GFM delimiter line is dropped), otherwise there is one column. Blank lines are skipped, the first line becomes the header, and a single line gets an empty row. Inline formatting stays; headings, lists and quotes become plain cells. A selection with an image or a table in the middle is not converted. Convert to Text gives one body paragraph per row with tabs between the cells; the writer drops a tab at the end of a line, and cell images become image paragraphs under their row. Each direction is one undo step.
+138. A wide table scrolls sideways inside its block. Columns shrink to fit the text width but not below 120 pt or their own text width; past that the view is as wide as the text and moves its bounds origin to show the rest. A swipe that is more sideways than up or down scrolls the table, any other scroll goes to the note. The cell being edited and a find match are scrolled into view. The bar under the table only shows the position.
 
 ## Next steps
 
@@ -312,6 +313,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 53. Write a note with "milk" in the text and in a table cell. Press ⌥⌘F and type milk: both are highlighted. Press Enter to go between them, then Esc on the cell match: the cell is being edited with milk selected. Replace milk with bread in the find bar: the cell changes and keeps its bold.
 54. Right click a table cell, choose Copy Table as Text and paste into Numbers: each cell lands in its own cell. Copy Table as Markdown and paste into a plain text editor: the `| … |` lines.
 55. Type three lines with a tab between two words, select them and press the Table button: a table with a header. Right click it, Convert to Text: the lines come back with tabs. ⌘Z after each step goes back one step.
+56. Make a table with eight columns of long text: it stays inside the note and the right edge is cut. Swipe sideways on it: the columns move, and the thin bar under it moves too. Tab through the cells: the cell being edited is always visible.
 
 ## Known gaps
 
@@ -340,7 +342,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - S6: the agent checked tables with editor tests, a throwaway XCTest in a window (the view is hosted by TextKit, the focus stays while a row grows) and offscreen pictures, not by typing in the running app.
 - S6: accessibility shows the table as one element with a label ("Table, 3 rows, 2 columns"); rows and cells are not exposed yet.
 - S7: drop, paste and Quick Look in a cell were tested through the controller, not with a real drag or a real double-click. Thumbnails cannot be resized, and a thumbnail is not selected by a single click (use Shift-arrow in the cell).
-- S6: no manual column resize (ADR 0009 level 1). Very wide tables shrink every column to 60 pt and then stick out to the right.
+- S6: no manual column resize (ADR 0009 level 1). A wide table scrolls sideways (decision 138), but there is no drag on the scroll bar: it only shows the position.
 - S6: the full test run once more saw the known `FSEventsVaultWatcherIntegrationTests.externalEditArrivesAsAPathChange` failure (during the S5 commit); it passed alone and in the next full run.
 - `FSEventsVaultWatcherIntegrationTests` failed in three of four runs alone on 2026-10-17, with and without the ADR 0012 change (checked with `git stash`); the full run passed. The suite waits on FSEvents timing; it may be the Slate app that runs at the same time. Look at it on its own.
 - Sub-folders (ADR 0011): no drag of a folder into another folder, no colour, icon or manual order per sub-folder, no `⌘1`…`⌘9` for sub-folders. Esc does not go up to the parent folder yet; the back chevron does.

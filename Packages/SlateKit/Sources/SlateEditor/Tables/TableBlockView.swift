@@ -6,6 +6,7 @@ final class TableBlockView: NSView, NSTextViewDelegate {
     private(set) var before: TableModel?
     private let editor = TableCellEditor.make()
     private var isHovered = false
+    var scrollOffset: CGFloat = 0
     private var isCommitting = false
     private var confirmation: NSView?
     private var tracking: NSTrackingArea?
@@ -73,6 +74,7 @@ final class TableBlockView: NSView, NSTextViewDelegate {
     private func positionEditor() {
         guard let editing else { return }
         editor.frame = currentLayout.textRect(editing)
+        reveal(editing)
     }
 
     // MARK: Drawing
@@ -112,6 +114,10 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         }
         if isHovered {
             drawHandles(layout: layout, colors: colors)
+        }
+        if isHovered, let scroller = scrollerRect(layout: layout) {
+            colors.secondaryText.withAlphaComponent(0.35).setFill()
+            NSBezierPath(roundedRect: scroller, xRadius: 1.5, yRadius: 1.5).fill()
         }
     }
 

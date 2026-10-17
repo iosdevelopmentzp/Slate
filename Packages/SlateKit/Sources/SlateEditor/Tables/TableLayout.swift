@@ -3,6 +3,7 @@ import AppKit
 nonisolated struct TableLayout: Equatable {
     static let padding = CGSize(width: 8, height: 6)
     static let minimumColumn: CGFloat = 60
+    static let readableColumn: CGFloat = 120
     static let radius: CGFloat = 8
     static let handle: CGFloat = 20
 
@@ -21,9 +22,10 @@ nonisolated struct TableLayout: Equatable {
         }
         let total = widths.reduce(0, +)
         if total > available {
-            let reducible = widths.map { $0 - minimumColumn }
+            let floors = widths.map { min($0, readableColumn) }
+            let reducible = zip(widths, floors).map { $0 - $1 }
             let room = reducible.reduce(0, +)
-            let excess = total - max(available, minimumColumn * CGFloat(columns))
+            let excess = min(total - available, room)
             if room > 0, excess > 0 {
                 widths = zip(widths, reducible).map { width, spare in (width - excess * spare / room).rounded(.down) }
             }
