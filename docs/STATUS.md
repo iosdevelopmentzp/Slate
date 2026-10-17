@@ -166,6 +166,9 @@ Numbered. What, then why. A later session must not undo these without a new numb
 96. `⌘F` (Search) has no main menu item, because a menu item would take the key before the search field's own shortcut. Every other key of `UX.md` section 8 is in the main menu.
 97. The README has a table of the four screenshots the owner takes; the files do not exist yet.
 
+98. The main menu is set when Slate starts and again each time the panel opens, not only with the window. Slate has no Dock icon, so the menu is not visible in the panel, but its keys (`⌘Z`, `⇧⌘Z`, `⌘C`, `⌘V`, the Format keys) work there.
+99. The editor keeps its own `UndoManager`. `RichTextView` answers `undo:` and `redo:` itself, so the Undo and Redo commands use the editor history and not the window's. After an undo the editor writes the Markdown again.
+
 ## Next steps
 
 1. The owner runs the manual checks below and takes the README screenshots.
@@ -206,7 +209,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 20. Click a round checkbox: it ticks, and the file has `- [x]`.
 21. Images: paste a screenshot, drag a PNG from Finder, use the Image button and `⇧⌘S`. Each image is its own block with rounded corners. Double-click opens Quick Look. Right click has Quick Look, Open, Show in Finder, Copy Image.
 22. `⌘K` on selected text asks for an address; `⌘`-click opens it. `⌘`-click on a note link opens that note.
-23. `⌘Z` undoes every command above, one step at a time.
+23. `⌘Z` undoes every command above, one step at a time, in the panel and in the window; `⇧⌘Z` redoes it. `⌘Z` in the title field undoes the title.
 24. Copy formatted text from Slate into Slate and into TextEdit; paste a part of a web page. The styles come along; the Markdown file stays clean.
 25. Type fast in the 5,000-line note (`Packages/SlateKit/Tests/SlateEditorTests/Fixtures/LongNote.md` copied into the notes folder): no visible delay. Switch to another note right after typing: the last words are saved.
 26. Type accents (`⌥E` then `e`) and with a Japanese input method: the text is correct.
