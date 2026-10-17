@@ -89,6 +89,44 @@ extension RichTextController: TableHost {
         return nil
     }
 
+    func moveIntoTable(_ selector: Selector) -> Bool {
+        guard textView.selectedRange().length == 0 else { return false }
+        let caretX = caretRect().midX
+        textView.perform(selector, with: nil)
+        let caret = textView.selectedRange().location
+        guard let (attachment, location) = tableAround(caret) else { return true }
+        let forward = selector == #selector(NSResponder.moveDown(_:)) || selector == #selector(NSResponder.moveRight(_:))
+        let vertical = selector == #selector(NSResponder.moveUp(_:)) || selector == #selector(NSResponder.moveDown(_:))
+        textView.scrollRangeToVisible(NSRange(location: location, length: 1))
+        textView.textLayoutManager?.textViewportLayoutController.layoutViewport()
+        let view = attachment.view()
+        let model = attachment.model
+        let column: Int
+        if vertical {
+            column = view.window == nil ? 0 : view.currentLayout.column(atX: view.convert(CGPoint(x: caretX, y: 0), from: textView).x)
+        } else {
+            column = forward ? 0 : model.columnCount - 1
+        }
+        let row = forward ? 0 : model.rowCount - 1
+        view.beginEditing(TableCellIndex(row: row, column: column), caretAtEnd: vertical == false && forward == false)
+        return true
+    }
+
+    private func tableAround(_ caret: Int) -> (TableAttachment, Int)? {
+        for index in [caret, caret - 1] where index >= 0 && index < storage.length {
+            if let table = storage.attribute(.attachment, at: index, effectiveRange: nil) as? TableAttachment {
+                return (table, index)
+            }
+        }
+        return nil
+    }
+
+    private func caretRect() -> CGRect {
+        guard let window = textView.window else { return .zero }
+        let screen = textView.firstRect(forCharacterRange: textView.selectedRange(), actualRange: nil)
+        return textView.convert(window.convertFromScreen(screen), from: nil)
+    }
+
     func undoInDocument(redo: Bool) {
         textView.window?.makeFirstResponder(textView)
         if redo {

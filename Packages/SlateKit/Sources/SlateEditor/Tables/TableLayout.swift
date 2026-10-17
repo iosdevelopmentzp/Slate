@@ -71,4 +71,13 @@ nonisolated struct TableLayout: Equatable {
         guard let row, let column else { return nil }
         return TableCellIndex(row: row, column: column)
     }
+
+    func column(atX x: CGFloat) -> Int {
+        var edge: CGFloat = 0
+        for (index, width) in columnWidths.enumerated() {
+            edge += width
+            if x < edge { return index }
+        }
+        return max(columnWidths.count - 1, 0)
+    }
 }

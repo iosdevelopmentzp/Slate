@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- The arrow keys enter a table. ↓ from the line above goes to the header row, in the column under the caret; ↑ from the line below goes to the last row; → and ← at the edge of the next line go to the first or the last cell. Before, only a click started editing a cell.
 - Save an image to Downloads with one click. Point at an image in the text and press the round button at its top right corner, or right click an image in the text or in a table cell and choose Save to Downloads. The toast says where the copy went; a name that is taken gets a number.
 - Several lines of text in one table cell (ADR 0012). Press ⇧Enter in a cell to start a new line; Enter still goes to the cell below. Pasted text keeps its lines. In the file a new line in a cell is `<br>`, which GitHub and Obsidian show the same way, and tables from other apps with `<br>` now open as tables.
 - Images in table cells (ADR 0009 level 2, S7). Drop an image on a cell, paste one into a cell, or press the Image button or ⇧⌘S while you type in a cell. The cell shows a thumbnail next to its text; double-click it for Quick Look, and Delete removes it. In the file the cell keeps `![](../_attachments/…)`, and the image links still work when the note moves to another folder depth.

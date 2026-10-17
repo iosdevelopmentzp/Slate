@@ -211,6 +211,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 131. Several lines in a table cell follow ADR 0012: `<br>` in the file, U+2028 in the editor. `⇧Enter`, `⌥Enter` and `⌃Enter` add a line; Enter keeps moving down (ADR 0009). ↑ and ↓ stay in the cell while there is a line above or below the caret; a long line that only wraps on screen does not count. This replaces decision 122 for pasted text: lines stay lines.
 132. The Quick Look panel opens one level above the highest visible Slate window. The menu bar panel sits at `.statusBar` level and the Quick Look panel at a lower level, so the preview opened under the panel and looked empty. A detached window was not affected.
 133. Save to Downloads copies the image file through `NoteExporting.copyToDownloads`, the same place as the HTML and PDF export, and keeps the file name ("photo 2.png" when the name is taken). It does not open Finder, unlike decision 52: a toast is enough for one image. The hover button is only on images in the note text; a cell thumbnail is 80 pt high, so a cell image has the item in its right-click menu instead. A right click on a cell starts editing that cell, the same as a left click.
+134. The arrow keys enter a table from the text around it. The editor lets the text view move the caret first; when the caret lands on the table paragraph, the table starts editing a cell instead. ↓ and → enter the header row, ↑ and ← the last row. ↑ and ↓ pick the column under the caret, → takes the first cell and ← the last cell with the caret at its end. Shift with an arrow still selects across the table.
 
 ## Next steps
 
@@ -302,6 +303,10 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 50. In the menu bar panel double-click an image in the text and an image in a table cell: Quick Look shows the picture above the panel.
 51. Point at an image in the text: a round button appears at its top right corner. Press it: the toast says "Saved … to Downloads" and the file is in Downloads. Press it again: the second copy gets " 2". Right click a cell thumbnail and choose Save to Downloads: the same.
 
+### Tables, second round
+
+52. Put the caret on the line above a table and press ↓: the header cell under the caret is being edited. Press ↓ until you leave the table, then ↑: you are in the last row. → at the end of the line before and ← at the start of the line after enter the first and the last cell.
+
 ## Known gaps
 
 - S2: a text file dropped on the list does not make a note yet (`UX.md` section 6). Folders reorder with Move up and Move down, not by drag.
@@ -327,7 +332,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - S5: the Activity line of an agent change can come late when the watcher reports the file before `slate mcp` wrote its change line; it then shows with the next change. `⌥`-click on the title was not tried on screen: a text field may take the click first.
 - S5: the MCP server answers requests in parallel. Two writes to the same note at the same moment are safe (the save checks the hash), but the second may fail with "The note changed since you read it".
 - S6: the agent checked tables with editor tests, a throwaway XCTest in a window (the view is hosted by TextKit, the focus stays while a row grows) and offscreen pictures, not by typing in the running app.
-- S6: the caret in the main text moves past a table with the arrow keys; only a click starts editing a cell. Accessibility shows the table as one element with a label ("Table, 3 rows, 2 columns"); rows and cells are not exposed yet.
+- S6: accessibility shows the table as one element with a label ("Table, 3 rows, 2 columns"); rows and cells are not exposed yet.
 - S7: drop, paste and Quick Look in a cell were tested through the controller, not with a real drag or a real double-click. Thumbnails cannot be resized, and a thumbnail is not selected by a single click (use Shift-arrow in the cell).
 - S6: no manual column resize (ADR 0009 level 1). Very wide tables shrink every column to 60 pt and then stick out to the right.
 - S6: the full test run once more saw the known `FSEventsVaultWatcherIntegrationTests.externalEditArrivesAsAPathChange` failure (during the S5 commit); it passed alone and in the next full run.
