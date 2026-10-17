@@ -92,8 +92,8 @@ func delete(id: Worktree.ID, deleteDerivedData: Bool, deleteBranch: Bool) {
 Pass the use case to the store in `SlatePresentation/Shared/PresentationAssembly.swift`
 (`removeWorktree: useCases.removeWorktree`) and in the tests' `StoreHarness`.
 
-The store keeps the busy state, the activity line, the refresh and the event. For a busy-title sequence use
-`ActionRunner.run(title, detail:, onFailure:, completion:, work:)`; it sets `busyTitle` before the task starts.
+The store keeps the busy state, the activity line, the refresh and the event. It calls the use case in a
+`do`/`catch`, logs a failure with `activity.log(_:detail:outcome:)` and shows a toast when the user must know.
 
 ## Data from another feature: a lookup protocol
 

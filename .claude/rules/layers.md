@@ -11,7 +11,7 @@ enforces the direction `Composition → Presentation → Domain ← Data`, Prese
 | `SlateData` | Domain, GRDB, swift-markdown | nonisolated | live ports (files, index, watcher, git, screencapture, keychain), parsers, `ShellRunner`, `Ports.live()` |
 | `SlateMocks` | Domain | nonisolated | `Mock*` ports, `MockVault`, `InMemoryKeyValueStore`, `Ports.mock()` |
 | `SlateUI` | nothing | MainActor | shared SwiftUI blocks, `Theme`, `Tint`, formatters, hints |
-| `SlateEditor` | nothing | MainActor | the TextKit 2 Markdown editor; knows nothing about notes or files |
+| `SlateEditor` | nothing (swift-markdown) | MainActor | the TextKit 2 rich text editor, Markdown reader and writer; knows nothing about notes or files |
 | `SlatePresentation` | Domain, UI, Editor, Mocks, KeyboardShortcuts | MainActor | stores, row models, mappers, views, events, `PresentationAssembly`, `AppWindows` |
 | `SlateComposition` | Domain, Data, Mocks, Presentation | MainActor | `AppContainer`, URL scheme, Services, login item |
 | `SlateTestSupport` | Domain | nonisolated | spies and test helpers |

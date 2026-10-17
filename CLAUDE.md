@@ -39,7 +39,7 @@ Modules, one direction: `Composition → Presentation → Domain ← Data`; Pres
 | `…/SlateData/` | live ports: `Files/`, `Index/` (GRDB and FTS5), `Watch/`, `Shell/`, `History/`, `Capture/`, `Secrets/`, `Persistence/`, `System/` (AppKit only here), `Assembly/Ports+Live.swift` |
 | `…/SlateMocks/` | mocks and `Ports.mock()` |
 | `…/SlateUI/` | shared SwiftUI blocks, `Theme`, `Tint`, formatters, hints |
-| `…/SlateEditor/` | the TextKit 2 Markdown editor; imports nothing from the package |
+| `…/SlateEditor/` | the TextKit 2 rich text editor that reads and writes Markdown (ADR 0008); imports nothing from the package |
 | `…/SlatePresentation/` | `Shared/`, `Shell/` (`AppWindows`, `RootView`), `Features/<Name>/` |
 | `…/SlateComposition/` | `AppContainer` (the app delegate, the only `public` type), `ServicesProvider` |
 | `…/SlateTestSupport/` | spies and test helpers |

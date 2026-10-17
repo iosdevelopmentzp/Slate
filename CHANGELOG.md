@@ -110,6 +110,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ### Fixed
 
 ### Infrastructure
+- Docs match the phase 2 code: the module tree, the store table and the test list in `docs/ARCHITECTURE.md`, the editor line in `CLAUDE.md` and `.claude/rules/layers.md`, the `panel-window` skill (three columns, sizes, column resizer) and the store rules without `ActionRunner`.
 - `README.md` describes v1: what Slate does, the keys, the build scripts and a table of the screenshots the owner takes. `docs/STATUS.md` has the manual checks of S1 to S4 as a numbered list.
 - `SlateEditor` is a new TextKit 2 rich text editor (`RichTextEditorView`, `RichTextController`, `RichTextStyler`, `RichLayoutFragment`, `EditorCommands`). The M2 Markdown editor, its highlighter and the `[[` completion are removed. Tests drive the editor in a window: commands, list keys, undo, images, copy and the 5,000-line note (about 1.3 ms per key).
 - `SlateEditor` reads Markdown into formatted text and writes it back (`MarkdownReader`, `MarkdownWriter`, swift-markdown under `SlateEditor/Markdown/`). Files Slate wrote come back byte for byte; files from other tools keep the same Markdown tree; anything outside the subset stays as a raw block. Tests: a fixture set and 300 random documents.

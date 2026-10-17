@@ -145,7 +145,7 @@ Rules:
   protocols in `init`; never another feature's concrete store, never `UserDefaults` (take a `KeyValueStore`),
   never a static service, never `import SwiftUI`.
 - Something other features show changed: post an `AppEvent`. Something other features changed that this one
-  shows: subscribe. A busy-title sequence uses `ActionRunner`; a refresh uses `RefreshTask`.
+  shows: subscribe. A refresh uses `RefreshTask`; an action catches its error and logs it.
 - Anything the user would want to see later calls `activity.log(_:detail:outcome:)`.
 - The store stays internal (no `package`): only SlatePresentation and its tests use it.
 - Wire it in `SlatePresentation/Shared/PresentationAssembly.swift`: `let devices: DevicesStore`, one line in `init`

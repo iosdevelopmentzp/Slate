@@ -127,30 +127,30 @@ Packages/SlateKit/
       Export/                    SlackFormatExporter, HTMLExporter (swift-markdown allowed)
       Assembly/                  Ports+Live.swift
     SlateMocks/                  Mock<Port> one per file, MockVault (sample notes), InMemoryKeyValueStore, Ports+Mock.swift
-    SlateUI/                     RowContainer, ListState, Tag, IconButton, OverflowMenu, InlineConfirmation, SearchField, Chip, Theme, Tint, Tint+Color, Formatters/, Hint/, CopyOnClick
+    SlateUI/                     Theme, Tint, Tint+Color, SoftPill, RoundButton, ColorDot, AccentButtonStyle, EmptyStateView, ToastView, SearchField, IconButton, RowContainer, ListState, InlineConfirmation, OverflowMenu, Tag, Formatters/, Hint/, CopyOnClick
     SlateEditor/
-      MarkdownEditorView.swift   NSViewRepresentable, the only package-visible entry point
-      EditorConfiguration.swift  fonts, sizes, colours as plain values
+      RichTextEditorView.swift   NSViewRepresentable, the entry point for the host
+      EditorConfiguration.swift  text size, colours, image height limit as plain values
       EditorHandlers.swift       closures the host supplies (section 6.1)
-      Core/                      MarkdownTextView (NSTextView subclass), EditorTextStorageDelegate, ParagraphStyler (NSTextContentStorageDelegate)
-      Highlighting/              MarkdownLineScanner, LineState, FenceTracker, CodeHighlighter, languages/ (one file per language)
-      Commands/                  ListEditing, CheckboxToggle, WrapSelection, MoveLine, DuplicateLine
-      Paste/                     PasteClassifier, PasteHandler (NSPasteboard allowed here)
-      Rendering/                 ImageLayoutFragment, CheckboxGlyph, CodeBlockBackground, LinkChipAttributes, CopyButtonOverlay
-      Find/                      FindBar (P1)
+      EditorCommands.swift       observable command sink and style state for the format bar (EditorCommand, EditorStyleState)
+      EditorMenuActions.swift    selectors of the Format menu
+      Model/                     BlockKind, BlockAttributes, InlineStyle, RichText, NSAttributedString+RichText (the slate.* keys)
+      Markdown/                  MarkdownReader, MarkdownWriter, ListReader, ListWriter, InlineReader, InlineWriter, WikilinkScanner, SourceLines (swift-markdown allowed here only)
+      Core/                      RichTextController (+Editing, +Commands, +Delegates, +Link, +Mouse), RichTextView (NSTextView subclass), LinkPopover
+      Commands/                  KeyboardMap
+      Styling/                   RichTextStyler, RichLayoutFragment, ParagraphDecoration, ImageAttachment, DividerAttachment
+      Paste/                     PasteboardReader, HTMLImport, RichTextController+Paste (NSPasteboard allowed here)
     SlatePresentation/
-      Shared/                    Surface, ListSource, Navigator, ActivityLog, ActivityRecorder (CommandRecording → ActivityLog), Toaster (+ ToastAction for Undo), PasteboardWriter, SettingsStore, WindowLayout, AppActions, ActionRunner, RefreshTask, VaultChangeFeed, lookup protocols, PresentationAssembly (+Preview), View+Inject, View+PreviewEnvironment
+      Shared/                    Surface, ListSource, Navigator, ActivityLog, ActivityRecorder (CommandRecording → ActivityLog), Toaster (+ ToastAction for Undo), PasteboardWriter, WindowLayout, TextFocus, NoteDragPayload, RefreshTask, VaultChangeFeed, NoteLookup, PresentationAssembly (+Preview), View+Inject, View+PreviewEnvironment
       Shared/Events/             AppEvent, AppEvents, SubscriptionToken
-      Shell/                     AppWindows (status item, panel, windows, capture panel, floating notes), FirstLaunchWindow, FirstLaunchView, RootView, HeaderView, NewNoteMenu, FooterView, SidebarView, SpacePicker, drag and resize
-      Features/Vault/            VaultStore, Models/, Views/
-      Features/NoteList/         NoteListStore, Models/ (NoteRowModel, NoteRowMapper, NoteRowActions, NoteStatusText, TrashRowModel, TrashRowMapper), Views/ (NoteListView, NoteRow, NoteRowMenu, TrashListView, TrashRow)
-      Features/Editor/           EditorStore, Models/ (SaveState, SaveStatusText, BodyFocus, NoteChipsMapper), Views/ (EditorView, ConflictBanner), later NoteHeaderView, PasteAsCodeBar
-      Features/Search/           SearchStore, SearchQueryModel, Views/ (palette, results)
-      Features/Capture/          CaptureStore, Views/
-      Features/Todos/            TodoStore, Models/, Views/           (P1)
-      Features/Daily/            DailyStore, Views/                    (P1)
-      Features/History/          HistoryStore, Views/                  (P1)
-      Features/Settings/         SettingsView, Doctor
+      Shell/                     AppWindows (status item, panel, window, capture panel), MenuBarPanel, CapturePanel, MainMenuBuilder, MenuTarget, FirstLaunchWindow, FirstLaunchView, RootView, SidebarView, ColumnResizer, drag and resize
+      Features/Vault/            VaultStore, Models/ (FolderRowModel, FolderRowMapper, FolderEdit, FolderIcon, FolderTint), Views/ (FolderRow, FolderNameField, FolderMenu, FolderDeleteConfirmation)
+      Features/NoteList/         NoteListStore, Models/ (NoteRowModel, NoteRowMapper, NoteRowActions, TrashRowModel, TrashRowMapper), Views/ (NoteListColumn, NoteListView, NoteCard, NoteRowMenu, TrashListView, TrashRow)
+      Features/Editor/           EditorStore (+Attachments, +Journal), Models/ (SaveState, BodyFocus, MarkdownInsertion, FormatBarMapper, FormatButtonModel, FormatStyleModel), Views/ (EditorView, FormatBar, FormatButton, ConflictBanner, RecoveryBanner)
+      Features/Search/           SearchStore, Models/ (SearchResultRowModel, SearchResultMapper), Views/ (SearchResultsView, SearchResultRow)
+      Features/Capture/          CaptureStore, Views/ (CaptureView, CaptureTextView)
+      Features/History/          HistoryStore, Views/
+      Features/Settings/         SettingsStore, Views/ (SettingsView, GeneralSettingsView with Check-up, ShortcutSettingsView)
       Features/Activity/         ActivityView
     SlateComposition/            AppContainer, URLCommandParser, URLCommandHandler, ServicesProvider, LoginItem
     SlateTestSupport/            Spy<Port> per port, PortSpies, Ports+Spies, TemporaryDirectory, WaitUntil, TestError, VaultFixture (writes a sample vault into a temporary folder)
@@ -363,17 +363,14 @@ package struct EditorHandlers {
 | Store | Owns | Gets in `init` |
 |---|---|---|
 | `VaultStore` | The folders: create, inline rename, delete with inline confirmation and Undo, reorder, colour and icon (S2). Holds the editing and confirmation state of the sidebar | config, `CreateSpaceUseCase`, `RenameSpaceUseCase`, `DeleteSpaceUseCase`, `RestoreSpaceUseCase`, `Navigator`, `Toaster`, `ActivityLog`, `AppEvents` |
-| `NoteListStore` | summaries, trash items, sort, filter text, the trash confirmation; create, pin, move, archive, duplicate, trash with Undo, restore. The list source (all, a space, the Trash) and the selection live in `Navigator` | index, trash, use cases (create, updateHeader, move, archive, duplicate, trash, restore), `Navigator`, `Toaster`, `ActivityLog`, `AppEvents`, `KeyValueStore` |
+| `NoteListStore` | summaries, trash items, filter text, the trash confirmation; create, pin, move with Undo, duplicate, trash with Undo, restore. The list source (all, a space, the Trash) and the selection live in `Navigator` | index, trash, use cases (create, updateHeader, move, archive, duplicate, trash, restore), `Navigator`, `Toaster`, `ActivityLog`, `AppEvents`, `KeyValueStore` |
 | `EditorStore` | open document, `text`, `title`, dirty flag, autosave (500 ms) and title commit (Enter, focus loss, 1.5 s), the title that follows the first body line for a new untitled note, focus requests, conflict state with Keep mine and Take theirs, `pendingSave()` for quit. M2 and later: selection, attachment import, link resolution, journal | files, index, use cases (save, rename), `Navigator`, `Clock`, `AppEvents`, `ActivityLog` |
-| `SearchStore` | M3: query text, parsed query, results (title matches at once, the index after 80 ms), the folder scope, tags with counts. Palette mode in M6 | index, `NoteLookup` (the `NoteListStore`), `Navigator`, `Clock`, `ActivityLog`, `AppEvents` |
-| `CaptureStore` | draft text, target space, type, saving | `QuickCaptureUseCase`, config, `AppEvents` |
-| `TodoStore` (P1) | open todos grouped | index, `ToggleTodoUseCase`, `AppEvents` |
-| `DailyStore` (P1) | today, previous and next | `EnsureDailyNoteUseCase`, index, `Clock` |
+| `SearchStore` | M3: query text, parsed query, results (title matches at once, the index after 80 ms), the folder scope | index, `NoteLookup` (the `NoteListStore`), `Navigator`, `Clock`, `ActivityLog`, `AppEvents` |
+| `CaptureStore` | draft text, target folder, saving; Services → Add to Slate | `QuickCaptureUseCase`, `Navigator`, `Toaster`, `ActivityLog`, `AppEvents` |
 | `HistoryStore` | M5: the history settings, the snapshot loop (every N minutes), the daily Trash purge, the versions of the open note, restore, the quit job, the last snapshot time and the push state; S4: the "Back up to" address (`setRemote`) and "Back up now" (`backUpNow`) | history, `SnapshotHistoryUseCase`, `RestoreVersionUseCase`, `PurgeTrashUseCase`, `KeyValueStore`, `ActivityLog`, `Toaster`, `AppEvents` |
-| `CaptureStore`, `DailyStore`, `SettingsStore` | M4: the quick note draft and its save; Today and the day before and after; preferences, tracker settings and `links.json`, the login item, the Doctor and Rebuild search | the capture, daily and reindex use cases, config, `KeyValueStore`, the login item and system ports |
-| `SettingsStore` | every preference, tracker settings, hotkeys names | `KeyValueStore`, `SecretStore`, config |
+| `SettingsStore` | text size, appearance, Trash days, the login item, the Check-up and Rebuild search | `KeyValueStore`, config, the login item and system ports, index, `ReindexVaultUseCase`, history |
 
-Rules as DevHub: a store never holds another feature's concrete store (lookup protocols in `Shared/`), never imports SwiftUI, never reads `UserDefaults`, never runs a command. `RefreshTask` for refreshes (latest wins). Every failure goes to `ActivityLog`. One `EditorStore` per editor surface (panel, each window, each floating note); two surfaces on the same note stay consistent through `noteSaved` events and the own-writes filter. Until M7 adds a second window and floating notes, the panel and the one window share one `EditorStore` (only one of them is open at a time).
+Rules as DevHub: a store never holds another feature's concrete store (lookup protocols in `Shared/`), never imports SwiftUI, never reads `UserDefaults`, never runs a command. `RefreshTask` for refreshes (latest wins). Every failure goes to `ActivityLog`. One `EditorStore` per editor surface (panel, each window, each floating note); two surfaces on the same note stay consistent through `noteSaved` events and the own-writes filter. In v1 the panel and the window share one `EditorStore` (only one of them is open at a time); note windows left with ADR 0007.
 
 ### 7.2 Events
 
@@ -480,8 +477,8 @@ Must exist by the end of the milestone that introduces the type (`ROADMAP.md`):
 
 - Domain: `FrontmatterParserTests` (round trip, unknown keys kept, opaque header, quoting rules), `NoteCodecTests`, `StemPolicyTests`, `SlugPolicyTests`, `TitlePolicyTests`, `WikilinkPolicyTests`, `TodoLinePolicyTests`, `SectionAppendPolicyTests`, `DailyPolicyTests`, `TemplateRendererTests`, `SearchQueryParserTests`, `ConflictPolicyTests`, `PasteKindPolicyTests`, `LinkPatternPolicyTests`, `PreviewPolicyTests`, `SlackFormatPolicyTests`, one test per use case over spies.
 - Data: `FileVaultStoreTests` (temp folder; atomic write, expected hash conflict, move), `GRDBSearchIndexTests` (in-memory database; upsert, search, filters, rank, snippet), `FTSMatchBuilderTests` (quotes, dashes, colons never reach FTS raw), `IndexedNoteBuilderTests`, `FileTrashRepositoryTests`, `FileTemplateRepositoryTests`, `FileVaultConfigRepositoryTests`, `ChangeCoalescerTests`, `GitLogParserTests`, `GitHistoryRepositoryIntegrationTests` (real `git`, tagged `.integration`), `ScreencaptureToolTests` (argument building only).
-- Editor: `MarkdownLineScannerTests`, `FenceTrackerTests` (fence open, close, nested backticks, edit above a fence), `CodeHighlighterTests` per language, `ListEditingTests`, `CheckboxToggleTests`, `PasteClassifierTests`, a performance test that restyles after an edit in the 5,000-line fixture under 16 ms.
-- Presentation: mapper tests, store tests over spies (`NoteListStore`, `EditorStore` autosave and conflict paths, `SearchStore` merge, `CaptureStore`), `URLCommandParserTests` lives in a Composition test file inside `SlatePresentationTests` only if Composition gets no own target; prefer a sixth target `SlateCompositionTests` when it has more than two suites.
+- Editor: `MarkdownRoundTripTests` (fixtures in `Fixtures/RoundTrip` and `Fixtures/Foreign`, random documents), `MarkdownWriterTests`, `RichTextControllerTests` (commands, list keys, undo, images, copy, over `EditorHarness` in a window), `KeyboardMapTests`, `RichTextPerformanceTests` (the 5,000-line fixture types under 16 ms per key).
+- Presentation: mapper tests (`FolderRowMapper`, `NoteRowMapper`, `FormatBarMapper`, …), store tests over spies (`VaultStore`, `NoteListStore`, `EditorStore` autosave and conflict paths, `SearchStore` merge, `CaptureStore`, `HistoryStore`), `URLCommandParserTests` lives in a Composition test file inside `SlatePresentationTests` only if Composition gets no own target; prefer a sixth target `SlateCompositionTests` when it has more than two suites.
 - Conventions: `@Suite struct <Type>Tests`, folders mirror `Sources/`, `@testable import`, fixtures in `Fixtures/`, files only through `TemporaryDirectory`, no `Task.sleep`, `waitUntil` for background work, never assert on locale or clock text.
 
 ---

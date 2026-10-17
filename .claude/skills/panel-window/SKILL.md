@@ -1,11 +1,11 @@
 ---
 name: panel-window
-description: "How Slate's menu bar item, panel and window work: NSStatusItem plus an own NSPanel instead of MenuBarExtra, open and close rules, saved position and size, drag and resize, screen clamping, system appearance, the Surface environment value, hints overlay, global hot keys and login item. Load before changing anything in SlatePresentation/Shell (AppWindows, RootView, HeaderView, FooterView, SidebarView, drag and resize), WindowLayout, hints or the status item."
+description: "How Slate's menu bar item, panel and window work: NSStatusItem plus an own NSPanel instead of MenuBarExtra, open and close rules, saved position and size, drag and resize, screen clamping, system appearance, the Surface environment value, hints overlay, global hot keys and login item. Load before changing anything in SlatePresentation/Shell (AppWindows, RootView, SidebarView, ColumnResizer, MainMenuBuilder, drag and resize), WindowLayout, hints or the status item."
 ---
 
 # Panel and window
 
-Matches the code since milestone M1. Hot keys, the capture panel and the login item come later (`docs/PLAYBOOK.md` sections 1 to 3); their notes below are the plan, not code yet.
+Matches the code of phase 2 (S2 to S4). Hot keys, the capture panel and the login item follow `docs/PLAYBOOK.md` sections 1 to 3.
 
 ## Why not `MenuBarExtra`
 
@@ -16,12 +16,13 @@ Matches the code since milestone M1. Hot keys, the capture panel and the login i
 | Type | Role |
 |---|---|
 | `AppWindows` (Presentation/Shell) | status item button (a click toggles the panel), panel, window, click monitor, resign observer, layout observation; `package` members: `init(assembly:)`, `start()`, `showWindowOrPanel()` |
-| `MenuBarPanel: NSPanel` | borderless, `canBecomeKey` true, `isFloatingPanel`, `level = .statusBar`, `hidesOnDeactivate = false`, `isReleasedWhenClosed = false`, `collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]`, `animationBehavior = .none`, `isMovable = false`, clear background; `RootView` clips itself with a 10 pt rounded rectangle |
-| `Surface` (Presentation/Shared) | `.panel` or `.window`, in the environment as `\.surface`. The window adds the sidebar (`⌘0` hides it); the panel adds the "Open as window" button and the resize grip |
-| `WindowLayout` (Presentation/Shared, `@Observable`) | `size` (default 980 × 680, minimum 760 × 480), `panelTopLeft`, `openCount`; `panelFrame(anchor:anchorScreen:)`, `fit(window)`, `resize(to:in:)`, `reset()`; persisted through `KeyValueStore` (`window.size`, `window.panelTopLeft`) |
+| `MenuBarPanel: NSPanel` | borderless, `canBecomeKey` true, `isFloatingPanel`, `level = .statusBar`, `hidesOnDeactivate = false`, `isReleasedWhenClosed = false`, `collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]`, `animationBehavior = .none`, `isMovable = false`, clear background; `RootView` clips itself with a 12 pt rounded rectangle (`Theme.panelRadius`) |
+| `Surface` (Presentation/Shared) | `.panel` or `.window`, in the environment as `\.surface`. Both show the same three columns: sidebar (`⌘0` hides it, remembered), list, note. The panel adds the "Open as window" button and the resize grip; the window has a transparent title bar and the main menu |
+| `WindowLayout` (Presentation/Shared, `@Observable`) | `size` (default 1040 × 680, minimum 820 × 520), `listWidth` (260 to 420, default 320), `showsSidebar`, `panelTopLeft`, `openCount`; `panelFrame(anchor:anchorScreen:)`, `fit(window)`, `resize(to:in:)`, `reset()`; persisted through `KeyValueStore` (`window.size`, `window.panelTopLeft`) |
 | `WindowDragArea` (Shell, `NSViewRepresentable`) | moves the window in `mouseDragged` (`mouseDownCanMoveWindow` false), clamps to the usable area, reports the new top-left on mouse up |
-| `PanelDragArea` (Shell) | `WindowDragArea` under the header and the footer; saves `panelTopLeft`; a double-click puts the panel back under the icon. Does nothing in the window |
+| `PanelDragArea` (Shell) | `WindowDragArea` behind the sidebar title and the list title; saves `panelTopLeft`; a double-click puts the panel back under the icon. Does nothing in the window |
 | `ResizeGrip` (Shell) | drag changes `layout.size`; double-click resets to the default size |
+| `ColumnResizer` (Shell) | the drag edge between the list and the note; sets `layout.listWidth`; a double-click resets it |
 | `WindowFrame` (Shell, modifier) | panel: fixed `frame(width:height:)` from `layout.size`; window: `frame(minWidth:idealWidth:maxWidth:…)` |
 | `HostWindowReader` (SlateUI) | gives a view its `NSWindow` |
 

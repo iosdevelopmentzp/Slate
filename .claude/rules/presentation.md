@@ -79,7 +79,7 @@ final class WorktreesStore: WorktreeLookup {
   `IdentityLookup`, `CheckoutContext` in `Shared/`). Change through a use case, refresh through an event.
 - Never raw command arguments, never `UserDefaults`, never a static service, never `import SwiftUI`.
 - Every store action and refresh has a test in `Tests/SlatePresentationTests/Stores/` over spies.
-- `ActionRunner` for busy-title command sequences, `RefreshTask` for refreshes. No `guard isLoading == false`.
+- `RefreshTask` for refreshes. An action catches its error and logs it to `ActivityLog`. No `guard isLoading == false`.
 - Post an event only when data changed. Do not react to the echo of your own post.
 
 ## Row model and mapper
