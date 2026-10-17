@@ -216,8 +216,51 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         }
         let menu = TableMenu.menu(for: index, model: model, target: self)
         beginEditing(index)
-        guard editing == index, editor.window != nil, let path = editor.imagePath(at: editor.convert(event.locationInWindow, from: nil)) else { return menu }
-        return ImageMenu.prepend(path: path, target: self, action: #selector(cellImageAction(_:)), to: menu)
+        let local = editor.convert(event.locationInWindow, from: nil)
+        guard editing == index, editor.window != nil, let path = editor.imagePath(at: local) else { return menu }
+        return ImageMenu.prepend(path: path, target: self, action: #selector(cellImageAction(_:)), size: cellImageSizeItem(at: local), to: menu)
+    }
+
+    func cellImageSizeItem(at point: CGPoint) -> NSMenuItem? {
+        guard let editing, let location = editor.imageLocation(at: point) else { return nil }
+        let ordinal = editor.imageOrdinal(of: location)
+        let current = ImageSize.width(in: editor.textStorage?.attribute(.slateImageAlt, at: location, effectiveRange: nil) as? String)
+        return ImageMenu.sizeItem(ImageMenu.cellSizes, current: current, target: self, action: #selector(cellImageSize(_:))) { ImageSizeChoice(location: ordinal, cell: editing, width: $0) }
+    }
+
+    @objc func cellImageSize(_ sender: NSMenuItem) {
+        guard let choice = sender.representedObject as? ImageSizeChoice, let cell = choice.cell else { return }
+        setImageWidth(choice.width, ordinal: choice.location, in: cell)
+    }
+
+    func setImageWidth(_ width: Int?, ordinal: Int, in cell: TableCellIndex) {
+        guard let attachment else { return }
+        if editing != nil {
+            finishCell()
+        }
+        let text = NSMutableAttributedString(attributedString: TableCellText.inline(attachment.model.cell(cell).markdown) ?? NSAttributedString())
+        var seen = 0
+        var target: NSRange?
+        text.enumerateAttribute(.slateImagePath, in: NSRange(location: 0, length: text.length)) { value, range, stop in
+            guard value != nil else { return }
+            for location in range.location..<NSMaxRange(range) {
+                if seen == ordinal {
+                    target = NSRange(location: location, length: 1)
+                    stop.pointee = true
+                    return
+                }
+                seen += 1
+            }
+        }
+        guard let target else { return }
+        let alt = ImageSize.alt(text.attribute(.slateImageAlt, at: target.location, effectiveRange: nil) as? String, width: width)
+        if let alt {
+            text.addAttribute(.slateImageAlt, value: alt, range: target)
+        } else {
+            text.removeAttribute(.slateImageAlt, range: target)
+        }
+        let markdown = TableCellText.markdown(of: text)
+        change({ $0.setCell(cell, markdown: markdown) }, focus: editing == nil ? nil : cell)
     }
 
     @objc func cellImageAction(_ sender: NSMenuItem) {

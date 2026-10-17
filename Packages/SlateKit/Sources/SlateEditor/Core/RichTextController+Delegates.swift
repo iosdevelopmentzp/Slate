@@ -41,6 +41,7 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
 
     func textStorage(_ textStorage: NSTextStorage, didProcessEditing editedMask: NSTextStorageEditActions, range editedRange: NSRange, changeInLength delta: Int) {
         imageButton.hide()
+        imageHandle.hide()
         if editedMask.contains(.editedCharacters) {
             findClient.storageChanged()
         }

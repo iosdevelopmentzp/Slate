@@ -7,11 +7,11 @@ nonisolated final class CellImageAttachment: NSTextAttachment {
 
     let path: String
 
-    init(path: String, picture: NSImage?, borderColor: NSColor) {
+    init(path: String, picture: NSImage?, borderColor: NSColor, width: CGFloat? = nil) {
         self.path = path
         super.init(data: nil, ofType: nil)
         allowsTextAttachmentView = false
-        let size = Self.size(of: picture)
+        let size = Self.size(of: picture, width: width)
         bounds = CGRect(x: 0, y: -4, width: size.width, height: size.height)
         image = Self.rendered(picture, size: size, borderColor: borderColor)
     }
@@ -20,8 +20,12 @@ nonisolated final class CellImageAttachment: NSTextAttachment {
         nil
     }
 
-    static func size(of picture: NSImage?) -> CGSize {
-        guard let picture, picture.size.width > 0, picture.size.height > 0 else { return CGSize(width: missingWidth, height: height) }
+    static func size(of picture: NSImage?, width: CGFloat? = nil) -> CGSize {
+        guard let picture, picture.size.width > 0, picture.size.height > 0 else { return CGSize(width: width ?? missingWidth, height: height) }
+        if let width {
+            let chosen = max(width, ImageAttachment.smallestWidth)
+            return CGSize(width: chosen.rounded(), height: (chosen * picture.size.height / picture.size.width).rounded())
+        }
         return CGSize(width: (height * picture.size.width / picture.size.height).rounded(), height: height)
     }
 

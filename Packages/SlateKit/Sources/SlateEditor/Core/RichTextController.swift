@@ -21,6 +21,7 @@ final class RichTextController: NSObject {
     weak var activeTable: TableBlockView?
     var imageTarget: TableImageTarget?
     let imageButton = ImageSaveButton()
+    let imageHandle = ImageResizeHandle()
     lazy var findClient = NoteFindClient(controller: self)
     lazy var finder: NSTextFinder = {
         let finder = NSTextFinder()
@@ -54,6 +55,14 @@ final class RichTextController: NSObject {
         imageButton.onSave = { [weak self] path in
             guard let self else { return }
             handlers.attachment(path, .saveToDownloads)
+        }
+        imageHandle.onResize = { [weak self] location, width in
+            guard let self else { return }
+            previewImageWidth(at: location, width: width)
+        }
+        imageHandle.onFinish = { [weak self] location, width in
+            guard let self else { return }
+            setImageWidth(at: location, width: Int(width))
         }
     }
 

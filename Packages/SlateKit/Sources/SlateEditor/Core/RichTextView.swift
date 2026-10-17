@@ -130,6 +130,11 @@ final class RichTextView: NSTextView {
         return NSTextFinder.Action(rawValue: tag)
     }
 
+    @objc func slateImageSize(_ sender: NSMenuItem) {
+        guard let choice = sender.representedObject as? ImageSizeChoice else { return }
+        controller?.setImageWidth(at: choice.location, width: choice.width)
+    }
+
     @objc func slateImageAction(_ sender: NSMenuItem) {
         guard let choice = sender.representedObject as? ImageMenuChoice else { return }
         controller?.handlers.attachment(choice.path, choice.action)

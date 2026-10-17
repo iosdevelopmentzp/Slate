@@ -92,7 +92,8 @@ nonisolated final class TableAttachment: NSTextAttachment {
         let styled = NSMutableAttributedString(attributedString: style.styled(inline, header: header, alignment: alignment))
         styled.enumerateAttribute(.slateImagePath, in: NSRange(location: 0, length: styled.length)) { value, range, _ in
             guard let path = value as? String else { return }
-            styled.addAttribute(.attachment, value: CellImageAttachment(path: path, picture: picture(path), borderColor: style.colors.imageBorder), range: range)
+            let width = ImageSize.width(in: styled.attribute(.slateImageAlt, at: range.location, effectiveRange: nil) as? String)
+            styled.addAttribute(.attachment, value: CellImageAttachment(path: path, picture: picture(path), borderColor: style.colors.imageBorder, width: width), range: range)
         }
         return styled
     }

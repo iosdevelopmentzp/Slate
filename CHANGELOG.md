@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Change the size of an image (ADR 0013). Drag the grip at the bottom right corner of an image in the text, or right click an image or a cell thumbnail and choose Size. The width is stored the Obsidian way, `![photo|300](…)`, so Obsidian shows the same size.
 - Select several table cells: Shift-click, drag across cells, Shift with an arrow at the edge of a cell, or ⌘A twice. Copy, cut, paste a block of cells, clear them with Delete, or make them bold or italic in one step. Align, Delete Rows and Delete Columns in the menu act on the whole selection.
 - Wide tables scroll sideways inside the note instead of sticking out on the right. Columns stay at least 120 pt wide, so the text stays readable; swipe sideways on the table or use Shift with the mouse wheel.
 - Turn text into a table and back. Select lines and press the Table button or `⌥⌘T`: tabs or `|` split the columns and the first line is the header. Convert to Text in the table's right-click menu gives the lines back, with tabs between the cells.

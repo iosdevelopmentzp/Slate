@@ -34,14 +34,44 @@ extension RichTextController {
         return textView.convert(window.convertFromScreen(rect), from: nil)
     }
 
+    func setImageWidth(at location: Int, width: Int?) {
+        guard location < storage.length, imagePath(at: location) != nil else { return }
+        var block = BlockAttributes(storage.attributes(at: location, effectiveRange: nil))
+        block.imageAlt = ImageSize.alt(block.imageAlt, width: width)
+        let range = NSRange(location: location, length: 1)
+        let text = NSMutableAttributedString(attributedString: retagged(storage.attributedSubstring(from: range), as: block))
+        text.removeAttribute(.slateImageAlt, range: NSRange(location: 0, length: text.length))
+        if let alt = block.imageAlt { text.addAttribute(.slateImageAlt, value: alt, range: NSRange(location: 0, length: text.length)) }
+        restyle(text, range: NSRange(location: 0, length: text.length))
+        replace(range, with: text, selection: textView.selectedRange())
+    }
+
     func hoverImage(at point: CGPoint?) {
+        guard imageHandle.isDragging == false else { return }
         guard let point, let index = characterIndex(at: point), let path = imagePath(at: index),
               (storage.attribute(.attachment, at: index, effectiveRange: nil) as? ImageAttachment)?.picture != nil,
               let rect = characterRect(index) else {
             imageButton.hide()
+            imageHandle.hide()
             return
         }
         imageButton.show(path: path, over: rect, in: textView)
+        imageHandle.show(location: index, over: rect, in: textView)
+    }
+
+    func previewImageWidth(at location: Int, width: CGFloat) {
+        guard location < storage.length, let image = storage.attribute(.attachment, at: location, effectiveRange: nil) as? ImageAttachment,
+              let textLayout = textView.textLayoutManager, let content = textLayout.textContentManager,
+              let start = content.location(content.documentRange.location, offsetBy: location),
+              let end = content.location(start, offsetBy: 1),
+              let range = NSTextRange(location: start, end: end)
+        else { return }
+        image.width = width
+        textLayout.invalidateLayout(for: range)
+        textLayout.textViewportLayoutController.layoutViewport()
+        guard let rect = characterRect(location) else { return }
+        imageButton.show(path: image.path, over: rect, in: textView)
+        imageHandle.place(over: rect, in: textView)
     }
 
     func imagePath(at index: Int) -> String? {
@@ -62,9 +92,11 @@ extension RichTextController {
 
     func imageMenu(at index: Int) -> NSMenu? {
         let candidates = [index, index - 1].filter { $0 >= 0 }
-        guard let path = candidates.lazy.compactMap({ self.imagePath(at: $0) }).first else { return nil }
+        guard let location = candidates.first(where: { self.imagePath(at: $0) != nil }), let path = imagePath(at: location) else { return nil }
         let menu = NSMenu()
         ImageMenu.items(path: path, target: textView, action: #selector(RichTextView.slateImageAction(_:))).forEach(menu.addItem)
+        let current = ImageSize.width(in: BlockAttributes(storage.attributes(at: location, effectiveRange: nil)).imageAlt)
+        menu.addItem(ImageMenu.sizeItem(ImageMenu.textSizes, current: current, target: textView, action: #selector(RichTextView.slateImageSize(_:))) { ImageSizeChoice(location: location, width: $0) })
         return menu
     }
 }

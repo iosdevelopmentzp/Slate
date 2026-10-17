@@ -465,7 +465,7 @@ The rich text editor reads any Markdown but writes only this subset. A construct
 | Bulleted list, levels 0 to 2 | `- item`, nested with two spaces per level |
 | Numbered list, levels 0 to 2 | `1. item`, renumbered on save |
 | Checklist | `- [ ] item`, `- [x] item` |
-| Image block | `![](../_attachments/<file>)` on its own line, alt text kept when present |
+| Image block | `![](../_attachments/<file>)` on its own line, alt text kept when present. A `\|<width>` or `\|<width>x<height>` at the end of the alt text is the shown width in points, as in Obsidian: `![photo\|300](…)` (ADR 0013). Slate writes `\|<width>` only when the size is changed in Slate; in a table cell the pipe is `\|` |
 | Divider | `---` |
 | Bold, italic, strikethrough, inline code | `**x**`, `*x*`, `~~x~~`, `` `x` `` |
 | Link | `[text](url)`; a wikilink `[[Name]]` in a file is shown as a link and written back as a wikilink |

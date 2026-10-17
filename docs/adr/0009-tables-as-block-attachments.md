@@ -1,6 +1,6 @@
 # ADR 0009: Tables as block attachments, GFM pipe tables in the file
 
-Status: accepted, 2026-10-17. Level 1 built in milestone S6 and level 2 (images in cells) in S7, both on 2026-10-17; see `docs/STATUS.md` decisions 116 to 129.
+Status: accepted, 2026-10-17. ADR 0013 adds a width for images, also in cells (`![photo\|120](…)`). Level 1 built in milestone S6 and level 2 (images in cells) in S7, both on 2026-10-17; see `docs/STATUS.md` decisions 116 to 129.
 
 ## Context
 

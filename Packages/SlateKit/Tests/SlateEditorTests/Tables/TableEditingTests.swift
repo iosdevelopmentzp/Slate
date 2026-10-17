@@ -268,7 +268,35 @@ import Testing
         view.cellImageAction(save)
 
         #expect(menu.items.prefix(5).map(\.title) == ImageMenu.entries.map(\.0))
+        #expect(menu.items[5].title == "Size")
         #expect(menu.items.contains { $0.title == "Delete Row" })
         #expect(actions == [.saveToDownloads])
+    }
+
+    @Test func theCellSizeMenuWritesAnEscapedWidth() throws {
+        let picture = try TestPicture(size: CGSize(width: 40, height: 20))
+        let url = picture.url
+        let harness = EditorHarness(markdown: "| a | b |\n|---|---|\n| ![shelf](../_attachments/a.png) | 2 |\n", resolveImage: { _ in url })
+        let view = try #require(harness.table()?.view())
+
+        view.setImageWidth(120, ordinal: 0, in: TableCellIndex(row: 1, column: 0))
+
+        #expect(harness.markdown == "| a | b |\n| --- | --- |\n| ![shelf\\|120](../_attachments/a.png) | 2 |\n")
+        let text = try #require(harness.table()?.text(TableCellIndex(row: 1, column: 0)))
+        let thumbnail = try #require(text.attribute(.attachment, at: 0, effectiveRange: nil) as? CellImageAttachment)
+        #expect(thumbnail.bounds.size == CGSize(width: 120, height: 60))
+    }
+
+    @Test func aCellImageWithAWidthOpensAtThatWidth() throws {
+        let picture = try TestPicture(size: CGSize(width: 40, height: 20))
+        let url = picture.url
+        let source = "| a | b |\n|---|---|\n| ![shelf\\|60](../_attachments/a.png) | 2 |\n"
+        let harness = EditorHarness(markdown: source, resolveImage: { _ in url })
+
+        let text = try #require(harness.table()?.text(TableCellIndex(row: 1, column: 0)))
+        let thumbnail = try #require(text.attribute(.attachment, at: 0, effectiveRange: nil) as? CellImageAttachment)
+
+        #expect(thumbnail.bounds.size == CGSize(width: 60, height: 30))
+        #expect(harness.markdown == source)
     }
 }

@@ -3,17 +3,20 @@ import AppKit
 nonisolated final class ImageAttachment: NSTextAttachment {
     static let cornerRadius: CGFloat = 8
     static let missingSize = CGSize(width: 220, height: 64)
+    static let smallestWidth: CGFloat = 40
 
     let path: String
     let picture: NSImage?
     let maxHeight: CGFloat
     let borderColor: NSColor
+    var width: CGFloat?
 
-    init(path: String, picture: NSImage?, maxHeight: CGFloat, borderColor: NSColor) {
+    init(path: String, picture: NSImage?, maxHeight: CGFloat, borderColor: NSColor, width: CGFloat? = nil) {
         self.path = path
         self.picture = picture
         self.maxHeight = maxHeight
         self.borderColor = borderColor
+        self.width = width
         super.init(data: nil, ofType: nil)
         allowsTextAttachmentView = false
         image = rendered(size: picture?.size ?? Self.missingSize)
@@ -25,7 +28,11 @@ nonisolated final class ImageAttachment: NSTextAttachment {
 
     func displaySize(width available: CGFloat) -> CGSize {
         guard let picture, picture.size.width > 0, picture.size.height > 0 else { return Self.missingSize }
-        let width = max(min(available, picture.size.width), 40)
+        if let chosen = self.width {
+            let width = max(min(available, chosen), Self.smallestWidth)
+            return CGSize(width: width.rounded(), height: (width * picture.size.height / picture.size.width).rounded())
+        }
+        let width = max(min(available, picture.size.width), Self.smallestWidth)
         var size = CGSize(width: width, height: width * picture.size.height / picture.size.width)
         if size.height > maxHeight {
             size = CGSize(width: maxHeight * picture.size.width / picture.size.height, height: maxHeight)

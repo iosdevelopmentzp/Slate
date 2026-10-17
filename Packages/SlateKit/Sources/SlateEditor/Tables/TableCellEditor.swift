@@ -84,7 +84,7 @@ final class TableCellEditor: NSTextView {
     override func menu(for event: NSEvent) -> NSMenu? {
         let menu = super.menu(for: event) ?? NSMenu()
         guard let table, let path = imagePath(at: convert(event.locationInWindow, from: nil)) else { return menu }
-        return ImageMenu.prepend(path: path, target: table, action: #selector(TableBlockView.cellImageAction(_:)), to: menu)
+        return ImageMenu.prepend(path: path, target: table, action: #selector(TableBlockView.cellImageAction(_:)), size: table.cellImageSizeItem(at: convert(event.locationInWindow, from: nil)), to: menu)
     }
 
     override func selectAll(_ sender: Any?) {
@@ -97,14 +97,23 @@ final class TableCellEditor: NSTextView {
     }
 
     func imagePath(at point: CGPoint) -> String? {
+        guard let storage = textStorage, let location = imageLocation(at: point) else { return nil }
+        return storage.attribute(.slateImagePath, at: location, effectiveRange: nil) as? String
+    }
+
+    func imageLocation(at point: CGPoint) -> Int? {
         guard let storage = textStorage, storage.length > 0 else { return nil }
         let index = characterIndexForInsertion(at: point)
-        for candidate in [index, index - 1] where candidate >= 0 && candidate < storage.length {
-            if let path = storage.attribute(.slateImagePath, at: candidate, effectiveRange: nil) as? String {
-                return path
-            }
+        return [index, index - 1].first { $0 >= 0 && $0 < storage.length && storage.attribute(.slateImagePath, at: $0, effectiveRange: nil) != nil }
+    }
+
+    func imageOrdinal(of location: Int) -> Int {
+        guard let storage = textStorage else { return 0 }
+        var count = 0
+        storage.enumerateAttribute(.slateImagePath, in: NSRange(location: 0, length: min(location, storage.length))) { value, range, _ in
+            if value != nil { count += range.length }
         }
-        return nil
+        return count
     }
 
     @objc func undo(_ sender: Any?) {

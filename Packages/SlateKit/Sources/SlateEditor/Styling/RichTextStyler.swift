@@ -191,10 +191,12 @@ final class RichTextStyler {
             return DividerAttachment(color: configuration.colors.divider)
         }
         let path = block.imagePath ?? ""
-        if let image = existing as? ImageAttachment, image.path == path, image.maxHeight == configuration.imageMaxHeight { return image }
-        if let cached = attachments[path], cached.maxHeight == configuration.imageMaxHeight { return cached }
-        let created = ImageAttachment(path: path, picture: loadImage(path), maxHeight: configuration.imageMaxHeight, borderColor: configuration.colors.imageBorder)
-        attachments[path] = created
+        let width = ImageSize.width(in: block.imageAlt)
+        if let image = existing as? ImageAttachment, image.path == path, image.maxHeight == configuration.imageMaxHeight, image.width == width { return image }
+        let key = width.map { "\(path)|\(Int($0))" } ?? path
+        if let cached = attachments[key], cached.maxHeight == configuration.imageMaxHeight, cached.width == width { return cached }
+        let created = ImageAttachment(path: path, picture: loadImage(path), maxHeight: configuration.imageMaxHeight, borderColor: configuration.colors.imageBorder, width: width)
+        attachments[key] = created
         return created
     }
 }
