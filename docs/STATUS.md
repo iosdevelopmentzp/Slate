@@ -207,6 +207,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 127. An image for a cell goes through the same import as the main text (`EditorHandlers.pasteFiles`, `pasteImage`, `requestScreenshot`). The controller remembers the cell (`imageTarget`); the next insertion from the store lands in that cell. When the cell is no longer being edited, the image is added at the end of its text. A space separates the image from text before it.
 128. Thumbnails are 80 pt high with the image's shape and a 4 pt radius; a missing image shows as an empty 80 × 80 square. Wide images make the column wide; the column then shrinks like any other.
 129. Pasting text into a cell pastes it as plain text on one line; Markdown copied from Slate keeps bold, italic, links and images.
+130. A click on a table cell does not pass the mouse event to the cell's text view: forwarding it made `NSTextView` start its mouse tracking loop inside the table's `mouseDown`, and Slate hung at about 60 % CPU (the owner saw it on the first try). The table now puts the caret at the click point itself. Clicks inside the cell that is already being edited still go to the text view directly.
 
 ## Next steps
 

@@ -172,7 +172,14 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         }
         guard let index = layout.cell(at: point) else { return }
         beginEditing(index)
-        editor.mouseDown(with: event)
+        guard editing == index, editor.window != nil else { return }
+        let local = editor.convert(event.locationInWindow, from: nil)
+        if event.clickCount > 1, let path = editor.imagePath(at: local) {
+            host?.quickLook(path)
+            return
+        }
+        let caret = min(editor.characterIndexForInsertion(at: local), (editor.string as NSString).length)
+        editor.setSelectedRange(NSRange(location: caret, length: 0))
     }
 
     override func menu(for event: NSEvent) -> NSMenu? {

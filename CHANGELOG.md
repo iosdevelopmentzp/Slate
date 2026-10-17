@@ -120,6 +120,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ### Changed
 
 ### Fixed
+- A click on a table cell no longer freezes Slate. The table passed the click on to the cell's text view, which then waited for the mouse forever; now the table puts the caret itself.
 - `⌘Z` (Undo) and `⇧⌘Z` (Redo) work in the note text, in the panel and in the window. Before, the editor kept its own undo history but the Undo command did not reach it, and the panel had no Edit keys until the window was opened once.
 
 ### Infrastructure

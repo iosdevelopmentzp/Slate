@@ -217,4 +217,19 @@ import Testing
         #expect(thumbnail.bounds.size == CGSize(width: 160, height: 80))
         #expect(thumbnail.path == "../_attachments/a.png")
     }
+
+    @Test func aClickOnAnotherCellMovesTheEditorThere() throws {
+        let (harness, view) = start()
+        type("Item", in: view)
+        let rect = view.currentLayout.textRect(TableCellIndex(row: 1, column: 1))
+        let point = view.convert(CGPoint(x: rect.minX + 1, y: rect.midY), to: nil)
+        let event = try #require(NSEvent.mouseEvent(with: .leftMouseDown, location: point, modifierFlags: [], timestamp: 0, windowNumber: harness.window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 1))
+
+        view.mouseDown(with: event)
+
+        #expect(view.editing == TableCellIndex(row: 1, column: 1))
+        #expect(harness.window.firstResponder === view.cellEditor)
+        #expect(view.cellEditor.selectedRange() == NSRange(location: 0, length: 0))
+        #expect(harness.markdown == "Intro\n\n| Item | |\n| --- | --- |\n| | |\n")
+    }
 }

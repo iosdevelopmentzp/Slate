@@ -121,6 +121,7 @@ Copy `ShellRunner`, `ShellResult`, `LineBatcher`, `CommandFormatter` from `../De
 - Trap (S6): an attachment subclass that overrides `attachmentBounds(for:…)` gets no view either. The size comes from the provider: set `tracksTextAttachmentViewBounds = true` in its `init` and override the provider's `attachmentBounds`.
 - Trap (S6): with a file type the attachment draws the file icon under the view. Override `image(for:attributes:location:textContainer:)` and return an empty image.
 - Trap (S6): TextKit 2 loads the view later on the main queue. A Swift Testing test on the main actor never sees it; the editor tests add the view to the text view by hand (`EditorHarness.layout()`), and `TableBlockView` waits for `viewDidMoveToWindow` before it takes the focus. The agent checked the real hosting once with a throwaway XCTest that runs `RunLoop.main`; Swift Testing is the rule for committed tests.
+- Trap (S6): never call `mouseDown(with:)` of a text view from the `mouseDown` of another view. `NSTextView` runs its own mouse tracking loop and does not return in that case; the app hangs. Set the selection with `characterIndexForInsertion(at:)` instead.
 - When the row height changes, `invalidateLayout(for:)` on the attachment range resizes the view; the focus of the cell editor stays (checked with an XCTest in a window). `viewWillMove(toWindow:)` keeps the selection in case TextKit moves the view.
 
 ## 10. GRDB and FTS5 — verified (M3)
