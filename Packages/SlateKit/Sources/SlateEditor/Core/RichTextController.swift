@@ -371,6 +371,18 @@ final class RichTextController: NSObject {
         undo
     }
 
+    func undoEdit() {
+        guard undo.canUndo else { return }
+        undo.undo()
+        textChanged()
+    }
+
+    func redoEdit() {
+        guard undo.canRedo else { return }
+        undo.redo()
+        textChanged()
+    }
+
     func handleInsertion(token: Int) {
         insertionToken = token
     }

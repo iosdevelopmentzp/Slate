@@ -80,7 +80,7 @@ struct MainMenuBuilder {
             standard("Zoom", #selector(NSWindow.performZoom(_:))),
         ])
         main.addItem(window)
-        NSApp.windowsMenu = window.submenu
+        NSApplication.shared.windowsMenu = window.submenu
         return main
     }
 

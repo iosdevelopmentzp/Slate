@@ -52,6 +52,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         observeLayout()
         observeAppearance()
         registerHotkeys()
+        NSApp.mainMenu = mainMenu()
         assembly.settings.extraChecks = {
             let names: [(KeyboardShortcuts.Name, String)] = [(.togglePanel, "Open Slate"), (.capture, "Quick note"), (.newNote, "New note")]
             return names.map { name, title in
@@ -492,6 +493,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         }
         panel.setFrame(layout.panelFrame(anchor: iconAnchor(), anchorScreen: statusItem.button?.window?.screen), display: false)
         applyAppearance()
+        NSApp.mainMenu = mainMenu()
         NSApp.activate()
         panel.makeKeyAndOrderFront(nil)
         panel.invalidateShadow()

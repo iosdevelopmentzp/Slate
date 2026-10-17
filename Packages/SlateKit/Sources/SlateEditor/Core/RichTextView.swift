@@ -11,6 +11,25 @@ final class RichTextView: NSTextView {
         return true
     }
 
+    @objc func undo(_ sender: Any?) {
+        controller?.undoEdit()
+    }
+
+    @objc func redo(_ sender: Any?) {
+        controller?.redoEdit()
+    }
+
+    override func validateUserInterfaceItem(_ item: any NSValidatedUserInterfaceItem) -> Bool {
+        switch item.action {
+        case #selector(undo(_:)):
+            return controller?.undoManager.canUndo == true
+        case #selector(redo(_:)):
+            return controller?.undoManager.canRedo == true
+        default:
+            return super.validateUserInterfaceItem(item)
+        }
+    }
+
     override func mouseDown(with event: NSEvent) {
         if controller?.handleMouseDown(event) == true { return }
         super.mouseDown(with: event)

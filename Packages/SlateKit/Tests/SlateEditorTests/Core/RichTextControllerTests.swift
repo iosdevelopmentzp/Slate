@@ -80,9 +80,11 @@ import Testing
         harness.undoStep { harness.controller.perform(.inline(.bold)) }
         #expect(harness.markdown == "a word here\n")
 
-        harness.controller.undoManager.undo()
-        harness.controller.textChanged()
+        harness.textView.undo(nil)
         #expect(harness.markdown == "a **word** here\n")
+
+        harness.textView.redo(nil)
+        #expect(harness.markdown == "a word here\n")
     }
 
     @Test func boldWithoutASelectionAppliesToTheNextTyping() {
@@ -251,6 +253,35 @@ import Testing
         harness.command(#selector(NSResponder.cancelOperation(_:)))
 
         #expect(window.cancelCount == 1)
+    }
+
+    @Test func theUndoMenuItemsFollowTheEditorHistory() {
+        let harness = EditorHarness(markdown: "a\n")
+        harness.select(1)
+        let undo = NSMenuItem(title: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        let redo = NSMenuItem(title: "Redo", action: Selector(("redo:")), keyEquivalent: "Z")
+        #expect(harness.textView.validateUserInterfaceItem(undo) == false)
+
+        harness.undoStep { harness.type("b") }
+        #expect(harness.textView.validateUserInterfaceItem(undo))
+
+        harness.textView.undo(nil)
+        #expect(harness.markdown == "a\n")
+        #expect(harness.textView.validateUserInterfaceItem(redo))
+
+        harness.textView.redo(nil)
+        #expect(harness.markdown == "ab\n")
+    }
+
+    @Test func undoGoesThroughTheResponderChainToTheEditor() {
+        let harness = EditorHarness(markdown: "a\n")
+        harness.select(1)
+        harness.undoStep { harness.type("b") }
+
+        let handled = harness.textView.tryToPerform(Selector(("undo:")), with: nil)
+
+        #expect(handled)
+        #expect(harness.markdown == "a\n")
     }
 }
 
