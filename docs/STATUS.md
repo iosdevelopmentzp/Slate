@@ -209,6 +209,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 129. Pasting text into a cell pastes it as plain text on one line; Markdown copied from Slate keeps bold, italic, links and images.
 130. A click on a table cell does not pass the mouse event to the cell's text view: forwarding it made `NSTextView` start its mouse tracking loop inside the table's `mouseDown`, and Slate hung at about 60 % CPU (the owner saw it on the first try). The table now puts the caret at the click point itself. Clicks inside the cell that is already being edited still go to the text view directly.
 131. Several lines in a table cell follow ADR 0012: `<br>` in the file, U+2028 in the editor. `⇧Enter`, `⌥Enter` and `⌃Enter` add a line; Enter keeps moving down (ADR 0009). ↑ and ↓ stay in the cell while there is a line above or below the caret; a long line that only wraps on screen does not count. This replaces decision 122 for pasted text: lines stay lines.
+132. The Quick Look panel opens one level above the highest visible Slate window. The menu bar panel sits at `.statusBar` level and the Quick Look panel at a lower level, so the preview opened under the panel and looked empty. A detached window was not affected.
 
 ## Next steps
 

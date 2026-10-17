@@ -60,6 +60,9 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - Editor: the Markdown marks on screen, code colours, `[[` completion, moving and duplicating lines (`⌥↑` `⌥↓` `⌘D`), commenting code (`⌘/`) and Find and Replace in the menu (the find bar still has Replace).
 - Note kinds and the New menu, tasks, ticket and branch chips, status, `⌘⇧D`, Today and daily notes (`⌥⌘T`, `⌘[`, `⌘]`), snippets, meetings, tags and tag chips, Insert Template, saved searches, Open TODOs, the palette (`⌘K`), actions, Copy for Slack, Copy as Markdown, Save as HTML and PDF, Float on Top and note windows, the outline, ticket details, the Links and History pages of Settings, the history and push state and the Activity button in the footer. The files and the command line keep working; the code for them is in commit `545e0d6`.
 
+### Fixed
+- Quick Look shows the image again when you open it from the panel. The preview opened under the panel, so it looked empty; now it opens above every Slate window.
+
 ### Added
 - Float on Top keeps a note in a small window above other apps, for a checklist next to Xcode. Open in New Window (`⌘⇧N`) opens a note in its own window.
 - While the window is open, Slate has a menu bar with every command and its shortcut.
