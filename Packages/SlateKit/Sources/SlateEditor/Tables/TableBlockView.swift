@@ -7,6 +7,8 @@ final class TableBlockView: NSView, NSTextViewDelegate {
     private let editor = TableCellEditor.make()
     private var isHovered = false
     var scrollOffset: CGFloat = 0
+    var cellSelection: TableCellRange?
+    private var dragStart: TableCellIndex?
     private var isCommitting = false
     private var confirmation: NSView?
     private var tracking: NSTrackingArea?
@@ -58,6 +60,7 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         if let editing, model.contains(editing) == false {
             endEditing(commit: false)
         }
+        cellSelection = cellSelection?.clamped(to: model)
         positionEditor()
         needsDisplay = true
     }
@@ -112,6 +115,7 @@ final class TableBlockView: NSView, NSTextViewDelegate {
                 attachment.text(index).draw(with: layout.textRect(index), options: [.usesLineFragmentOrigin, .usesFontLeading])
             }
         }
+        drawSelection(layout: layout)
         if isHovered {
             drawHandles(layout: layout, colors: colors)
         }
@@ -177,6 +181,11 @@ final class TableBlockView: NSView, NSTextViewDelegate {
             return
         }
         guard let index = layout.cell(at: point) else { return }
+        if event.modifierFlags.contains(.shift), let anchor = cellSelection?.anchor ?? editing, anchor != index {
+            extendSelection(from: anchor, to: index)
+            return
+        }
+        dragStart = index
         beginEditing(index)
         guard editing == index, editor.window != nil else { return }
         let local = editor.convert(event.locationInWindow, from: nil)
@@ -188,9 +197,23 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         editor.setSelectedRange(NSRange(location: caret, length: 0))
     }
 
+    override func mouseDragged(with event: NSEvent) {
+        guard let start = dragStart, let index = currentLayout.cell(at: convert(event.locationInWindow, from: nil)) else { return }
+        guard index != start || cellSelection != nil else { return }
+        extendSelection(from: start, to: index)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        dragStart = nil
+        super.mouseUp(with: event)
+    }
+
     override func menu(for event: NSEvent) -> NSMenu? {
         let point = convert(event.locationInWindow, from: nil)
         guard let index = currentLayout.cell(at: point) else { return nil }
+        if let cellSelection, cellSelection.contains(index) {
+            return TableMenu.menu(for: index, model: model, target: self, selection: cellSelection)
+        }
         let menu = TableMenu.menu(for: index, model: model, target: self)
         beginEditing(index)
         guard editing == index, editor.window != nil, let path = editor.imagePath(at: editor.convert(event.locationInWindow, from: nil)) else { return menu }
@@ -237,6 +260,7 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         if before == nil {
             before = attachment.block.model
         }
+        cellSelection = nil
         editing = index
         let alignment = index.column < model.columns.count ? model.columns[index.column].alignment : .none
         editor.load(attachment.text(index), style: attachment.style, header: index.row == 0, alignment: alignment)
@@ -370,6 +394,14 @@ final class TableBlockView: NSView, NSTextViewDelegate {
             leave(after: true)
         case #selector(NSResponder.cancelOperation(_:)):
             leave(after: true)
+        case #selector(NSResponder.moveLeftAndModifySelection(_:)), #selector(NSResponder.moveUpAndModifySelection(_:)):
+            let up = selector == #selector(NSResponder.moveUpAndModifySelection(_:))
+            guard selection.location == 0, let target = neighbor(of: editing, rows: up ? -1 : 0, columns: up ? 0 : -1) else { return false }
+            extendSelection(from: editing, to: target)
+        case #selector(NSResponder.moveRightAndModifySelection(_:)), #selector(NSResponder.moveDownAndModifySelection(_:)):
+            let down = selector == #selector(NSResponder.moveDownAndModifySelection(_:))
+            guard NSMaxRange(selection) == length, let target = neighbor(of: editing, rows: down ? 1 : 0, columns: down ? 0 : 1) else { return false }
+            extendSelection(from: editing, to: target)
         default:
             return false
         }
@@ -511,14 +543,20 @@ final class TableBlockView: NSView, NSTextViewDelegate {
     @objc func tableMenuAction(_ sender: NSMenuItem) {
         guard let choice = sender.representedObject as? TableMenu.Choice else { return }
         let index = choice.index
+        let selection = cellSelection.flatMap { $0.contains(index) ? $0 : nil }
         switch choice.action {
         case .rowAbove: change({ $0.insertRow(at: max(index.row, 1)) }, focus: nil)
         case .rowBelow: change({ $0.insertRow(at: index.row + 1) }, focus: nil)
         case .columnLeft: change({ $0.insertColumn(at: index.column) }, focus: nil)
         case .columnRight: change({ $0.insertColumn(at: index.column + 1) }, focus: nil)
-        case .align(let alignment): change({ $0.setAlignment(alignment, column: index.column) }, focus: nil)
-        case .deleteRow: change({ $0.deleteRow(index.row) }, focus: nil)
-        case .deleteColumn: change({ $0.deleteColumn(index.column) }, focus: nil)
+        case .align(let alignment): change({ $0.setAlignment(alignment, columns: selection?.columns ?? index.column...index.column) }, focus: nil)
+        case .deleteRow:
+            clearCellSelection()
+            change({ $0.deleteRows(selection?.rows ?? index.row...index.row) }, focus: nil)
+        case .deleteColumn:
+            clearCellSelection()
+            change({ $0.deleteColumns(selection?.columns ?? index.column...index.column) }, focus: nil)
+        case .clearCells: clearSelectedCells()
         case .copyMarkdown, .copyText:
             guard let attachment else { return }
             host?.copyTable(attachment, asText: choice.action == .copyText)

@@ -10,6 +10,7 @@ enum TableMenu {
         case copyMarkdown
         case copyText
         case convertToText
+        case clearCells
         case deleteRow
         case deleteColumn
         case deleteTable
@@ -25,10 +26,18 @@ enum TableMenu {
         }
     }
 
-    static func menu(for index: TableCellIndex, model: TableModel, target: AnyObject) -> NSMenu {
+    static func menu(for index: TableCellIndex, model: TableModel, target: AnyObject, selection: TableCellRange? = nil) -> NSMenu {
         let menu = NSMenu()
-        let alignment = index.column < model.columns.count ? model.columns[index.column].alignment : .none
-        let entries: [(String, Action, Bool, Bool)] = [
+        let columns = selection?.columns ?? index.column...index.column
+        let rows = selection?.rows ?? index.row...index.row
+        let alignments = Set(columns.map { $0 < model.columns.count ? model.columns[$0].alignment : .none })
+        let alignment = alignments.count == 1 ? alignments.first ?? .none : nil
+        let hasBodyRow = rows.contains { $0 > 0 }
+        var entries: [(String, Action, Bool, Bool)] = []
+        if selection != nil {
+            entries += [("Clear Cells", .clearCells, true, false), ("-", .deleteTable, true, false)]
+        }
+        entries += [
             ("Add Row Above", .rowAbove, index.row > 0, false),
             ("Add Row Below", .rowBelow, true, false),
             ("Add Column Left", .columnLeft, true, false),
@@ -42,8 +51,8 @@ enum TableMenu {
             ("Copy Table as Text", .copyText, true, false),
             ("Convert to Text", .convertToText, true, false),
             ("-", .deleteTable, true, false),
-            ("Delete Row", .deleteRow, index.row > 0, false),
-            ("Delete Column", .deleteColumn, model.columnCount > 1, false),
+            (rows.count > 1 ? "Delete Rows" : "Delete Row", .deleteRow, hasBodyRow, false),
+            (columns.count > 1 ? "Delete Columns" : "Delete Column", .deleteColumn, model.columnCount > columns.count, false),
             ("Delete Table", .deleteTable, true, false),
         ]
         menu.autoenablesItems = false

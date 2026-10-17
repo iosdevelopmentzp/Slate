@@ -11,6 +11,8 @@ protocol TableHost: AnyObject {
     func pasteIntoCell(_ view: TableBlockView)
     func dropIntoCell(_ dragging: any NSDraggingInfo, target: TableImageTarget) -> Bool
     func convertTableToText(_ attachment: TableAttachment)
+    func copyCells(_ attachment: TableAttachment, range: TableCellRange)
+    func pasteIntoCells(_ view: TableBlockView)
     func copyTable(_ attachment: TableAttachment, asText: Bool)
     func imageAction(_ path: String, _ action: AttachmentAction)
 }

@@ -87,6 +87,15 @@ final class TableCellEditor: NSTextView {
         return ImageMenu.prepend(path: path, target: table, action: #selector(TableBlockView.cellImageAction(_:)), to: menu)
     }
 
+    override func selectAll(_ sender: Any?) {
+        let length = (string as NSString).length
+        guard let table, selectedRange() == NSRange(location: 0, length: length) else {
+            super.selectAll(sender)
+            return
+        }
+        table.selectWholeTable()
+    }
+
     func imagePath(at point: CGPoint) -> String? {
         guard let storage = textStorage, storage.length > 0 else { return nil }
         let index = characterIndexForInsertion(at: point)
