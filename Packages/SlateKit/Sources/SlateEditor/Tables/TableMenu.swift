@@ -7,6 +7,8 @@ enum TableMenu {
         case columnLeft
         case columnRight
         case align(TableAlignment)
+        case copyMarkdown
+        case copyText
         case deleteRow
         case deleteColumn
         case deleteTable
@@ -34,6 +36,9 @@ enum TableMenu {
             ("Align Left", .align(.left), true, alignment == .left || alignment == .none),
             ("Align Center", .align(.center), true, alignment == .center),
             ("Align Right", .align(.right), true, alignment == .right),
+            ("-", .deleteTable, true, false),
+            ("Copy Table as Markdown", .copyMarkdown, true, false),
+            ("Copy Table as Text", .copyText, true, false),
             ("-", .deleteTable, true, false),
             ("Delete Row", .deleteRow, index.row > 0, false),
             ("Delete Column", .deleteColumn, model.columnCount > 1, false),

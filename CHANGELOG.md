@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Copy Table as Markdown and Copy Table as Text in the right-click menu of a table. The text form has tabs between the cells, so Numbers, Excel and chat apps get a real grid.
 - Find in Note (`⌥⌘F`) also finds and replaces text in table cells. Close the find bar on a match in a cell and that cell opens for editing with the match selected.
 - The arrow keys enter a table. ↓ from the line above goes to the header row, in the column under the caret; ↑ from the line below goes to the last row; → and ← at the edge of the next line go to the first or the last cell. Before, only a click started editing a cell.
 - Save an image to Downloads with one click. Point at an image in the text and press the round button at its top right corner, or right click an image in the text or in a table cell and choose Save to Downloads. The toast says where the copy went; a name that is taken gets a number.

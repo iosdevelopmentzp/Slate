@@ -213,6 +213,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 133. Save to Downloads copies the image file through `NoteExporting.copyToDownloads`, the same place as the HTML and PDF export, and keeps the file name ("photo 2.png" when the name is taken). It does not open Finder, unlike decision 52: a toast is enough for one image. The hover button is only on images in the note text; a cell thumbnail is 80 pt high, so a cell image has the item in its right-click menu instead. A right click on a cell starts editing that cell, the same as a left click.
 134. The arrow keys enter a table from the text around it. The editor lets the text view move the caret first; when the caret lands on the table paragraph, the table starts editing a cell instead. ↓ and → enter the header row, ↑ and ← the last row. ↑ and ↓ pick the column under the caret, → takes the first cell and ← the last cell with the caret at its end. Shift with an arrow still selects across the table.
 135. Find in Note searches table cells. Slate runs its own `NSTextFinder` with a client that joins the text and the cells; a match never crosses a cell edge. `NSTextFinder` reads the text on a background queue, so the client keeps a copy under a lock and rebuilds it on the main actor. With incremental search the finder moves between matches without changing the selection; when the bar closes on a match in a cell, that cell starts editing with the match selected. Replace in a cell rewrites the cell through `TableCellText`, so its formatting stays.
+136. Copy Table as Markdown puts the GFM table on the clipboard (the source when the table is unchanged). Copy Table as Text puts tab-separated text, one row per line, for Numbers, Excel and chat apps: no formatting, a line break in a cell becomes a space, images are left out. Both also put the Markdown under Slate's own clipboard type, so a paste into Slate gives the table back.
 
 ## Next steps
 
@@ -308,6 +309,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 
 52. Put the caret on the line above a table and press ↓: the header cell under the caret is being edited. Press ↓ until you leave the table, then ↑: you are in the last row. → at the end of the line before and ← at the start of the line after enter the first and the last cell.
 53. Write a note with "milk" in the text and in a table cell. Press ⌥⌘F and type milk: both are highlighted. Press Enter to go between them, then Esc on the cell match: the cell is being edited with milk selected. Replace milk with bread in the find bar: the cell changes and keeps its bold.
+54. Right click a table cell, choose Copy Table as Text and paste into Numbers: each cell lands in its own cell. Copy Table as Markdown and paste into a plain text editor: the `| … |` lines.
 
 ## Known gaps
 

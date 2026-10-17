@@ -513,6 +513,9 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         case .align(let alignment): change({ $0.setAlignment(alignment, column: index.column) }, focus: nil)
         case .deleteRow: change({ $0.deleteRow(index.row) }, focus: nil)
         case .deleteColumn: change({ $0.deleteColumn(index.column) }, focus: nil)
+        case .copyMarkdown, .copyText:
+            guard let attachment else { return }
+            host?.copyTable(attachment, asText: choice.action == .copyText)
         case .deleteTable: requestDeleteTable()
         }
     }

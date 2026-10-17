@@ -15,4 +15,16 @@ enum TableSeparatedText {
         }
         return TableModel(columns: Array(repeating: TableColumn(), count: width), header: cells[0], rows: Array(cells.dropFirst()))
     }
+
+    static func text(of model: TableModel) -> String {
+        model.allRows.map { row in
+            row.map { cell in
+                (TableCellText.inline(cell.markdown)?.string ?? cell.markdown)
+                    .replacingOccurrences(of: RichText.attachmentString, with: "")
+                    .replacingOccurrences(of: RichText.lineBreakString, with: " ")
+                    .replacingOccurrences(of: "\t", with: " ")
+                    .trimmingCharacters(in: .whitespaces)
+            }.joined(separator: "\t")
+        }.joined(separator: "\n")
+    }
 }
