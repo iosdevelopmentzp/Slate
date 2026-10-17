@@ -10,6 +10,7 @@ protocol TableHost: AnyObject {
     func undoInDocument(redo: Bool)
     func pasteIntoCell(_ view: TableBlockView)
     func dropIntoCell(_ dragging: any NSDraggingInfo, target: TableImageTarget) -> Bool
+    func convertTableToText(_ attachment: TableAttachment)
     func copyTable(_ attachment: TableAttachment, asText: Bool)
     func imageAction(_ path: String, _ action: AttachmentAction)
 }

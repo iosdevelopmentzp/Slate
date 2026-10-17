@@ -9,6 +9,7 @@ enum TableMenu {
         case align(TableAlignment)
         case copyMarkdown
         case copyText
+        case convertToText
         case deleteRow
         case deleteColumn
         case deleteTable
@@ -39,6 +40,7 @@ enum TableMenu {
             ("-", .deleteTable, true, false),
             ("Copy Table as Markdown", .copyMarkdown, true, false),
             ("Copy Table as Text", .copyText, true, false),
+            ("Convert to Text", .convertToText, true, false),
             ("-", .deleteTable, true, false),
             ("Delete Row", .deleteRow, index.row > 0, false),
             ("Delete Column", .deleteColumn, model.columnCount > 1, false),

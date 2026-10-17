@@ -47,7 +47,9 @@ extension RichTextController {
         case .indent(let delta):
             _ = indentLists(by: delta)
         case .table:
-            insertTable()
+            if textView.selectedRange().length == 0 || convertSelectionToTable() == false {
+                insertTable()
+            }
             return
         }
         if textView.window?.firstResponder !== textView {

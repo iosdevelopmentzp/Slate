@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Turn text into a table and back. Select lines and press the Table button or `⌥⌘T`: tabs or `|` split the columns and the first line is the header. Convert to Text in the table's right-click menu gives the lines back, with tabs between the cells.
 - Copy Table as Markdown and Copy Table as Text in the right-click menu of a table. The text form has tabs between the cells, so Numbers, Excel and chat apps get a real grid.
 - Find in Note (`⌥⌘F`) also finds and replaces text in table cells. Close the find bar on a match in a cell and that cell opens for editing with the match selected.
 - The arrow keys enter a table. ↓ from the line above goes to the header row, in the column under the caret; ↑ from the line below goes to the last row; → and ← at the edge of the next line go to the first or the last cell. Before, only a click started editing a cell.

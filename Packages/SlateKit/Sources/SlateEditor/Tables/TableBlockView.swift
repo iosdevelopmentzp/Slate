@@ -516,6 +516,10 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         case .copyMarkdown, .copyText:
             guard let attachment else { return }
             host?.copyTable(attachment, asText: choice.action == .copyText)
+        case .convertToText:
+            guard let attachment else { return }
+            endEditing()
+            host?.convertTableToText(attachment)
         case .deleteTable: requestDeleteTable()
         }
     }
