@@ -14,6 +14,7 @@ final class RichTextStyler {
         }
     }
     var loadImage: (String) -> NSImage? = { _ in nil }
+    weak var tableHost: (any TableHost)?
 
     private var fonts: [FontKey: NSFont] = [:]
     private var styles: [StyleKey: NSParagraphStyle] = [:]
@@ -105,7 +106,7 @@ final class RichTextStyler {
             style.tailIndent = -Self.blockInset
             style.paragraphSpacingBefore = 8 * scale
             style.paragraphSpacing = 14 * scale
-        case .image, .divider:
+        case .image, .divider, .table:
             style.paragraphSpacingBefore = 4 * scale
             style.paragraphSpacing = 8 * scale
         }
@@ -174,6 +175,17 @@ final class RichTextStyler {
     }
 
     private func attachment(for block: BlockAttributes, existing: NSTextAttachment?) -> NSTextAttachment {
+        if block.kind == .table {
+            let table = block.table ?? TableBlock(model: .empty())
+            let style = TableStyle(textSize: size(for: .body), colors: configuration.colors)
+            if let existing = existing as? TableAttachment {
+                existing.update(block: table, style: style)
+                return existing
+            }
+            let created = TableAttachment(block: table, style: style)
+            created.host = tableHost
+            return created
+        }
         if block.kind == .divider {
             if let divider = existing as? DividerAttachment, divider.color == configuration.colors.divider { return divider }
             return DividerAttachment(color: configuration.colors.divider)

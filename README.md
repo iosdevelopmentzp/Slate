@@ -4,7 +4,7 @@ Notes in folders, in the macOS menu bar. Working name; rename by replacing `Slat
 
 Slate is a small notes app. You keep notes in folders. You write in formatted text, with a format bar and shortcuts, and you put images in the text. Each note is a plain Markdown file in a folder you choose, so other apps (Obsidian, a text editor, scripts) can read and change it too.
 
-Status: **phase 2 built; phase 3 S5 (agents) built** on `main`. The owner's manual checks are open; the list is in `docs/STATUS.md`.
+Status: **phase 2 built; phase 3 S5 (agents) and S6 (tables) built** on `main`. The owner's manual checks are open; the list is in `docs/STATUS.md`.
 
 ## Screenshots
 
@@ -22,12 +22,13 @@ The owner takes these on a real screen and puts them in `docs/screenshots/`.
 1. **Folders.** Make a folder with "+ New folder" or `⇧⌘N`. Double-click a folder to rename it. Right-click it to change the colour or the icon, to move it, or to delete it. When you delete a folder, its notes move to the quick note folder, and a toast offers Undo.
 2. **Notes.** `⌘N` makes a note in the current folder. A note card shows the title, the date and two lines of text. Drag a card onto a folder to move the note. Pin, Move to, Duplicate and Move to Trash are in the "…" button and the right-click menu.
 3. **Formatted text.** The format bar and the Format menu set the style: Title, Heading, Subheading, Body, Monospaced, bold, italic, strikethrough, checklist, bulleted and numbered lists, quote, link and image. You see the result, not Markdown marks.
-4. **Images in the text.** Paste an image, drag one in, use the Image button, or press `⇧⌘S` for a screenshot. Double-click an image to see it large.
-5. **Quick note.** `⌃⌥Space` opens a small field from any app. Enter saves the note, `⌘Enter` saves and opens it.
-6. **Search.** `⌘F` searches the titles and the text of the current folder. "Search all notes" searches every folder.
-7. **Light or dark.** Settings → General → Appearance, the right-click menu of the menu bar icon, or View → Appearance in the window: Match the system, Light or Dark.
-8. **AI agents.** `slate mcp` lets Claude Code and other MCP clients list, search, read and change notes: run `claude mcp add slate -- slate mcp` once. Settings → General → AI access says which folders agents may change. Copy Path, Copy Link and dragging a card hand one note to an agent. `CLAUDE.md` in the notes folder tells agents the rules.
-9. **Safe by default.** Slate saves as you type. It keeps versions of each note (the clock button next to the title) and can back them up to a git address. Deleted notes stay in the Trash for 30 days.
+4. **Tables.** The Table button or `⌥⌘T` adds a table. Click a cell to type; Tab, Enter and the arrow keys move between cells. The "+" strips on hover add a column or a row, and the right-click menu adds, aligns and deletes rows and columns. In the file a table is a GitHub table with `|`, so other apps can read it.
+5. **Images in the text.** Paste an image, drag one in, use the Image button, or press `⇧⌘S` for a screenshot. Double-click an image to see it large.
+6. **Quick note.** `⌃⌥Space` opens a small field from any app. Enter saves the note, `⌘Enter` saves and opens it.
+7. **Search.** `⌘F` searches the titles and the text of the current folder. "Search all notes" searches every folder.
+8. **Light or dark.** Settings → General → Appearance, the right-click menu of the menu bar icon, or View → Appearance in the window: Match the system, Light or Dark.
+9. **AI agents.** `slate mcp` lets Claude Code and other MCP clients list, search, read and change notes: run `claude mcp add slate -- slate mcp` once. Settings → General → AI access says which folders agents may change. Copy Path, Copy Link and dragging a card hand one note to an agent. `CLAUDE.md` in the notes folder tells agents the rules.
+10. **Safe by default.** Slate saves as you type. It keeps versions of each note (the clock button next to the title) and can back them up to a git address. Deleted notes stay in the Trash for 30 days.
 
 ## Keys
 
@@ -49,6 +50,7 @@ The owner takes these on a real screen and puts them in `docs/screenshots/`.
 | `⌘B`, `⌘I`, `⇧⌘X` | Bold, italic, strikethrough |
 | `⌘K` | Link |
 | `⇧⌘I`, `⇧⌘S` | Image, screenshot |
+| `⌥⌘T` | Table |
 | `⌘,` | Settings |
 | `Esc` | Back, and closes the panel |
 

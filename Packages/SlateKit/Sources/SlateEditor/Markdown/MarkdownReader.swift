@@ -69,6 +69,10 @@ package enum MarkdownReader {
             if text.hasSuffix("\n") { text.removeLast() }
             let language = code.language.flatMap { $0.isEmpty ? nil : $0 }
             return [ReadBlock(text: NSAttributedString(string: text.replacingOccurrences(of: "\n", with: RichText.lineBreakString)), attributes: BlockAttributes(kind: .monospaced, language: language))]
+        case is Table:
+            guard let model = TableMarkdown.parse(source), TableCellText.isSupported(model) else { return nil }
+            let block = BlockAttributes(kind: .table, table: TableBlock(model: model, source: source))
+            return [ReadBlock(text: NSAttributedString(string: RichText.attachmentString), attributes: block)]
         case is ThematicBreak:
             return [ReadBlock(text: NSAttributedString(string: RichText.attachmentString), attributes: BlockAttributes(kind: .divider))]
         case let quote as BlockQuote:

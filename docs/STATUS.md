@@ -4,7 +4,7 @@ Last updated: 2026-10-17
 
 ## Stage
 
-Phase 2 is built and merged into `main` (S1 Simplify, S2 Folders and the soft look, S3 the rich text editor, S4 Polish, then sub-folders, ADR 0011). **Phase 3: S5 Agents and the notes folder is built (ADR 0010).** Next: S6 tables. The owner runs the manual checks below; every item passes or becomes a numbered gap. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
+Phase 2 is built and merged into `main` (S1 Simplify, S2 Folders and the soft look, S3 the rich text editor, S4 Polish, then sub-folders, ADR 0011). **Phase 3: S5 Agents and the notes folder and S6 Tables level 1 are built (ADR 0010, ADR 0009).** Next: S7 images in table cells. The owner runs the manual checks below; every item passes or becomes a numbered gap. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
 
 ## Removed in S1 (ADR 0007)
 
@@ -187,9 +187,19 @@ Numbered. What, then why. A later session must not undo these without a new numb
 114. The card is dragged with an `NSItemProvider` that carries the file URL for other apps and the internal `slate-note:<id>` text only for Slate (`visibility: .ownProcess`), so dropping on a folder still moves the note. Search result rows still drag the internal text only.
 115. Copy Path and Copy Link in the Note menu have no keys: `⌥⇧⌘C` and similar are taken by the text system in many apps, and `UX.md` section 8 lists no key for them.
 
+116. S6 tables follow ADR 0009 level 1. The model stores each cell as its inline Markdown (`TableCell.markdown`), not as attributed text, so an unchanged cell keeps its exact text. The block also keeps the source lines: an unchanged table is written back byte for byte, a changed one in the canonical form `| a | b |` with `---` markers (`:---` and so on as read).
+117. A pipe table is read only when every row has as many cells as the header and every cell is inline text the editor can show. Otherwise the whole table stays a raw block (an image in a cell waits for S7).
+118. No `BlockAttachmentKind` enum (ADR 0009 "Consequences"): `BlockKind.table` with `isAttachment` is enough, and nothing else would use the enum.
+119. A cell edit is committed when the caret moves to another cell, when the table is left, before a structure change, on `flush()` (save, note switch, quit) and 2 s after the last key. Each commit is one undo step of the document. Inside a cell ⌘Z first undoes the typing in that cell.
+120. Spreadsheet rows paste as plain text by default; Edit → Paste as Table (no key) turns tab-separated text, or a Markdown table, into a table. The M2 editor's "Paste as code" bar that ADR 0009 refers to no longer exists, so a menu command replaces the bar. A Markdown table on the pasteboard always pastes as a table.
+121. The table view reserves 20 pt at the right and the bottom for the "+" strips, so there is a little more space after a table than after an image.
+122. Enter and Tab at the end of the table add a row and stay in the table; ↑ in the header row and ↓ in the last row leave it. Return in a cell never makes a new line; a pasted new line becomes a space.
+123. Deleting a table from the menu asks "Delete this table? Yes · No" inline when more than one cell has text (5 s, then it goes away). Backspace after a table removes it at once, like an image; Undo brings it back.
+124. While a cell is edited, the format bar shows the state of the main text, not of the cell. Bold, italic, strikethrough and link from the bar and the menu act on the cell; other format commands leave the table first.
+
 ## Next steps
 
-1. S6 Tables, level 1 (ADR 0009); S7 images in cells after the owner accepts S6.
+1. S7 images in table cells (ADR 0009 level 2).
 2. The owner runs the manual checks below in parallel and reports gaps; fixes come one numbered gap at a time.
 3. M8 ideas only with a new ADR when they widen the v1 scope of ADR 0007.
 
@@ -258,6 +268,13 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 42. Drag a card into Terminal: the path of the file appears. Drag it onto a folder in the sidebar: the note moves as before. Copy Path, Copy Link and `⌥`-click on the title copy the path or the `slate://` link; paste the link in Safari to open the note.
 43. A new notes folder gets `CLAUDE.md` and `AGENTS.md` with the block. Write a line above the block in `CLAUDE.md`, quit and open Slate: the line is still there.
 
+### S6 Tables (ADR 0009)
+
+44. Insert a table with the Table button, fill four cells with Tab, make one word bold with ⌘B, add a column with the "+" strip on the right. Switch to another note: the file holds one table with `|`. Open the note again: it looks the same. ⌘Z undoes the last cell edit.
+45. Open a note from Obsidian or GitHub with a table, change another paragraph: the table lines in the file stay exactly as they were.
+46. Right click a cell: add and delete rows and columns, align a column. Delete Table on a filled table asks first. Arrow keys and Esc leave the table; long text wraps in a cell. Check light and dark mode.
+47. Copy a table and paste it into a plain text editor: you get the Markdown table. Copy rows in Numbers, then Edit → Paste as Table.
+
 ## Known gaps
 
 - S2: a text file dropped on the list does not make a note yet (`UX.md` section 6). Folders reorder with Move up and Move down, not by drag.
@@ -282,4 +299,8 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - S5: a card dropped into the note text of Slate now gives the editor a file, so the editor adds a link to a copy of the note file in `_attachments/` instead of the text `slate-note:<id>`. Neither is useful; a drop of a card into the text should make a link to the note.
 - S5: the Activity line of an agent change can come late when the watcher reports the file before `slate mcp` wrote its change line; it then shows with the next change. `⌥`-click on the title was not tried on screen: a text field may take the click first.
 - S5: the MCP server answers requests in parallel. Two writes to the same note at the same moment are safe (the save checks the hash), but the second may fail with "The note changed since you read it".
+- S6: the agent checked tables with editor tests, a throwaway XCTest in a window (the view is hosted by TextKit, the focus stays while a row grows) and offscreen pictures, not by typing in the running app.
+- S6: the caret in the main text moves past a table with the arrow keys; only a click starts editing a cell. Accessibility shows the table as one element with a label ("Table, 3 rows, 2 columns"); rows and cells are not exposed yet.
+- S6: no manual column resize (ADR 0009 level 1). Very wide tables shrink every column to 60 pt and then stick out to the right.
+- S6: the full test run once more saw the known `FSEventsVaultWatcherIntegrationTests.externalEditArrivesAsAPathChange` failure (during the S5 commit); it passed alone and in the next full run.
 - Sub-folders (ADR 0011): no drag of a folder into another folder, no colour, icon or manual order per sub-folder, no `⌘1`…`⌘9` for sub-folders. Esc does not go up to the parent folder yet; the back chevron does.

@@ -368,6 +368,14 @@ package struct EditorHandlers {
 - `publish()` writes the whole document. Up to 12,000 characters it writes at once; above that it waits 250 ms after the last edit. `flush()` (called when editing ends and before the store saves or switches notes) writes at once.
 - Performance: the 5,000-line fixture opens in about 120 ms and types at about 1.3 ms per key in a debug test build (`RichTextPerformanceTests`, limit 16 ms).
 
+### 6.3 Tables (S6, ADR 0009)
+
+- A table is one paragraph that holds one U+FFFC with `slate.block = table` and `slate.table`, a `TableBlock` (`TableModel` plus the source lines as read). `MarkdownWriter` writes the source back when the model still equals what the source parses to, and `TableMarkdown.render` otherwise.
+- `SlateEditor/Tables/`: `TableModel`, `TableColumn`, `TableCell` (inline Markdown of the cell), `TableCellIndex` (row 0 is the header), `TableMarkdown` (parse and render with `\|`), `TableLayout` (column widths from the content, at least 60 pt, shrink to the text width; row heights from wrapped text), `TableStyle`, `TableAttachment`, `TableViewProvider`, `TableBlockView`, `TableCellEditor`, `TableMenu`, `TableHost`, `TableSeparatedText`. `Markdown/TableCellText` turns cell Markdown into `slate.inline` text and back.
+- The styler gives each table paragraph a `TableAttachment`. TextKit 2 hosts its `TableBlockView` through `TableViewProvider`, registered for the file type of tab-separated text. The view draws the grid and the cells; a click puts a `TableCellEditor` (a small TextKit 2 text view) over the cell.
+- The model lives in the storage attribute. While a cell is being typed the attachment keeps a live model; a commit (moving to another cell, leaving, a structure change, `flush()`, or 2 s after the last key) replaces the attachment character through `replace`, so each commit is one step of the document's undo. ⌘Z inside a cell first undoes the typing in the cell, then the document.
+- `RichTextController+Tables` is the `TableHost`: commit, re-layout of the attachment range, leaving the table, delete, the active table for `flush()` and for the format commands (bold, italic, strikethrough and link go to the cell).
+
 ## 7. Presentation
 
 ### 7.1 Stores (`@Observable final class <Name>Store`, MainActor)

@@ -4,6 +4,18 @@ import UniformTypeIdentifiers
 extension RichTextController {
 
     func perform(_ command: EditorCommand) {
+        if let activeTable {
+            switch command {
+            case .inline(let style):
+                activeTable.cellEditor.toggle(style)
+                return
+            case .link:
+                activeTable.cellEditor.slateLink(nil)
+                return
+            default:
+                activeTable.endEditing()
+            }
+        }
         switch command {
         case .style(let kind):
             applyParagraph(kind, toggles: false)
@@ -23,6 +35,9 @@ extension RichTextController {
             handlers.requestScreenshot(.region)
         case .indent(let delta):
             _ = indentLists(by: delta)
+        case .table:
+            insertTable()
+            return
         }
         if textView.window?.firstResponder !== textView {
             textView.window?.makeFirstResponder(textView)

@@ -1,6 +1,6 @@
 # ADR 0009: Tables as block attachments, GFM pipe tables in the file
 
-Status: accepted, 2026-10-17. Scheduled after Phase 2 (milestone S6 below).
+Status: accepted, 2026-10-17. Level 1 built in milestone S6 (2026-10-17); see `docs/STATUS.md` decisions 116 to 124.
 
 ## Context
 

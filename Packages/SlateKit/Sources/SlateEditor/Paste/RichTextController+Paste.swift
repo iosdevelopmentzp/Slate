@@ -8,7 +8,14 @@ extension RichTextController {
         let fragment = storage.attributedSubstring(from: selection)
         var markdown = MarkdownWriter.write(fragment)
         if markdown.hasSuffix("\n") { markdown.removeLast() }
-        let plain = fragment.string
+        var hasTable = false
+        fragment.enumerateAttribute(.slateTable, in: NSRange(location: 0, length: fragment.length)) { value, _, stop in
+            if value != nil {
+                hasTable = true
+                stop.pointee = true
+            }
+        }
+        let plain = hasTable ? markdown : fragment.string
             .replacingOccurrences(of: RichText.lineBreakString, with: "\n")
             .replacingOccurrences(of: RichText.attachmentString, with: "")
         PasteboardReader.write(markdown: markdown, plain: plain, to: pasteboard)
@@ -31,7 +38,11 @@ extension RichTextController {
                 insertPlain(text)
             }
         case .text(let text):
-            insertPlain(text)
+            if TableMarkdown.looksLikeTable(text) {
+                insertFragment(MarkdownReader.read(text.trimmingCharacters(in: .whitespacesAndNewlines)))
+            } else {
+                insertPlain(text)
+            }
         }
     }
 

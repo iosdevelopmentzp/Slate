@@ -10,4 +10,5 @@ package enum EditorCommand: Hashable, Sendable {
     case divider
     case screenshot
     case indent(Int)
+    case table
 }

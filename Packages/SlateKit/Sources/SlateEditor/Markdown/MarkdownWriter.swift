@@ -92,6 +92,8 @@ package enum MarkdownWriter {
             return image(first.block)
         case .divider:
             return "---"
+        case .table:
+            return first.block.table?.markdown
         }
     }
 

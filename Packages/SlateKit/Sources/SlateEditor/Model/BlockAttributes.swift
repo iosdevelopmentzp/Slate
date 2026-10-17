@@ -8,8 +8,9 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
     package var imagePath: String?
     package var imageAlt: String?
     package var group: Int
+    package var table: TableBlock?
 
-    package init(kind: BlockKind = .body, indent: Int = 0, isDone: Bool = false, language: String? = nil, imagePath: String? = nil, imageAlt: String? = nil, group: Int = 0) {
+    package init(kind: BlockKind = .body, indent: Int = 0, isDone: Bool = false, language: String? = nil, imagePath: String? = nil, imageAlt: String? = nil, group: Int = 0, table: TableBlock? = nil) {
         self.kind = kind
         self.indent = indent
         self.isDone = isDone
@@ -17,6 +18,7 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
         self.imagePath = imagePath
         self.imageAlt = imageAlt
         self.group = group
+        self.table = table
     }
 
     package init(_ attributes: [NSAttributedString.Key: Any]) {
@@ -27,6 +29,7 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
         imagePath = attributes[.slateImagePath] as? String
         imageAlt = attributes[.slateImageAlt] as? String
         group = attributes[.slateGroup] as? Int ?? 0
+        table = attributes[.slateTable] as? TableBlock
     }
 
     package var attributes: [NSAttributedString.Key: Any] {
@@ -37,6 +40,7 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
         if kind == .image, let imagePath { result[.slateImagePath] = imagePath }
         if kind == .image, let imageAlt, imageAlt.isEmpty == false { result[.slateImageAlt] = imageAlt }
         if kind == .quote || kind.isList, group != 0 { result[.slateGroup] = group }
+        if kind == .table, let table { result[.slateTable] = table }
         return result
     }
 
@@ -45,6 +49,7 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
         copy.kind = kind
         if kind.isList == false { copy.indent = 0 }
         if kind != .checklist { copy.isDone = false }
+        if kind != .table { copy.table = nil }
         return copy
     }
 

@@ -84,6 +84,8 @@ final class RichTextView: NSTextView {
     @objc func slateScreenshot(_ sender: Any?) { controller?.perform(.screenshot) }
     @objc func slateIndent(_ sender: Any?) { controller?.perform(.indent(1)) }
     @objc func slateOutdent(_ sender: Any?) { controller?.perform(.indent(-1)) }
+    @objc func slateTable(_ sender: Any?) { controller?.perform(.table) }
+    @objc func slatePasteTable(_ sender: Any?) { controller?.pasteAsTable(from: PasteboardBridge.general) }
 
     @objc func slateFind(_ sender: Any?) {
         let item = NSMenuItem()

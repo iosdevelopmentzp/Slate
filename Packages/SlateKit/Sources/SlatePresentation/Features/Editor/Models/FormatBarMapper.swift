@@ -15,6 +15,7 @@ enum FormatBarMapper {
         case .quote: "Quote"
         case .image: "Image"
         case .divider: "Divider"
+        case .table: "Table"
         case .body: "Body"
         }
     }
@@ -41,6 +42,7 @@ enum FormatBarMapper {
             FormatButtonModel(id: "quote", systemImage: "text.quote", hint: "Quote  ⌘'", command: .quote, isActive: state.kind == .quote, isEnabled: state.canFormatText),
             FormatButtonModel(id: "link", systemImage: "link", hint: "Link  ⌘K", command: .link, isActive: state.isLink, isEnabled: state.canFormatText),
             FormatButtonModel(id: "image", systemImage: "photo", hint: "Image  ⇧⌘I", command: .image, isActive: false, isEnabled: true),
+            FormatButtonModel(id: "table", systemImage: "tablecells", hint: "Table  ⌥⌘T", command: .table, isActive: state.kind == .table, isEnabled: true),
         ]
     }
 

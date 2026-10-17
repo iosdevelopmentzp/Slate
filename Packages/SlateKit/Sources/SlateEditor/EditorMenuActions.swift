@@ -21,4 +21,6 @@ package enum EditorMenuActions {
     package static let indent = #selector(RichTextView.slateIndent(_:))
     package static let outdent = #selector(RichTextView.slateOutdent(_:))
     package static let find = #selector(RichTextView.slateFind(_:))
+    package static let table = #selector(RichTextView.slateTable(_:))
+    package static let pasteTable = #selector(RichTextView.slatePasteTable(_:))
 }

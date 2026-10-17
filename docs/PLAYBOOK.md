@@ -115,6 +115,14 @@ Copy `ShellRunner`, `ShellResult`, `LineBatcher`, `CommandFormatter` from `../De
 - Trap (S3): in a test there is no event loop, so the `UndoManager` puts every change into one group. Tests set `groupsByEvent = false` and open a group per step.
 - Writing Markdown for 130,000 characters takes about 100 ms in a debug build. The controller writes long notes 250 ms after the last key, and flushes before a save.
 
+### Tables as attachment views (S6, ADR 0009)
+
+- Trap (S6): TextKit 2 hosts an attachment view only through a provider class registered with `NSTextAttachment.registerViewProviderClass(_:forFileType:)` for a file type the system knows, and only for an attachment made with `init(data:ofType:)` with non-empty data. Overriding `viewProvider(for:location:textContainer:)` gives a provider whose `loadView` is never called. Slate registers `TableViewProvider` for `public.tab-separated-values-text`.
+- Trap (S6): an attachment subclass that overrides `attachmentBounds(for:…)` gets no view either. The size comes from the provider: set `tracksTextAttachmentViewBounds = true` in its `init` and override the provider's `attachmentBounds`.
+- Trap (S6): with a file type the attachment draws the file icon under the view. Override `image(for:attributes:location:textContainer:)` and return an empty image.
+- Trap (S6): TextKit 2 loads the view later on the main queue. A Swift Testing test on the main actor never sees it; the editor tests add the view to the text view by hand (`EditorHarness.layout()`), and `TableBlockView` waits for `viewDidMoveToWindow` before it takes the focus. The agent checked the real hosting once with a throwaway XCTest that runs `RunLoop.main`; Swift Testing is the rule for committed tests.
+- When the row height changes, `invalidateLayout(for:)` on the attachment range resizes the view; the focus of the cell editor stays (checked with an XCTest in a window). `viewWillMove(toWindow:)` keeps the selection in case TextKit moves the view.
+
 ## 10. GRDB and FTS5 — verified (M3)
 
 - `DatabasePool(path:configuration:)` with `configuration.busyMode = .timeout(2)` and WAL (the pool's default). One pool per vault, owned by `GRDBSearchIndex`.

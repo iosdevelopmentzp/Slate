@@ -45,6 +45,7 @@ struct MainMenuBuilder {
             standard("Cut", #selector(NSText.cut(_:)), key: "x"),
             standard("Copy", #selector(NSText.copy(_:)), key: "c"),
             standard("Paste", #selector(NSText.paste(_:)), key: "v"),
+            standard("Paste as Table", EditorMenuActions.pasteTable),
             standard("Select All", #selector(NSText.selectAll(_:)), key: "a"),
             .separator(),
             standard("Find in Note", EditorMenuActions.find, key: "f", modifiers: [.command, .option]),
@@ -70,6 +71,7 @@ struct MainMenuBuilder {
             standard("Link", EditorMenuActions.link, key: "k"),
             standard("Image", EditorMenuActions.image, key: "i", modifiers: [.command, .shift]),
             standard("Divider", EditorMenuActions.divider),
+            standard("Table", EditorMenuActions.table, key: "t", modifiers: [.command, .option]),
             standard("Screenshot", EditorMenuActions.screenshot, key: "s", modifiers: [.command, .shift]),
         ]))
         main.addItem(submenu("Note", items: note.map(item)))

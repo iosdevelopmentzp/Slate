@@ -21,6 +21,11 @@ import Testing
         #expect(KeyboardMap.command(for: event("i", flags: [.command, .shift])) == .image)
     }
 
+    @Test func optionCommandTInsertsATable() {
+        #expect(KeyboardMap.command(for: event("t", flags: [.command, .option])) == .table)
+        #expect(KeyboardMap.command(for: event("t", flags: [.command])) == nil)
+    }
+
     @Test func commandKeysFormatText() {
         #expect(KeyboardMap.command(for: event("b", flags: [.command])) == .inline(.bold))
         #expect(KeyboardMap.command(for: event("i", flags: [.command])) == .inline(.italic))

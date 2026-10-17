@@ -77,8 +77,9 @@ No hex values outside `Theme`. Both appearances checked in every preview.
 | **New folder** | A soft button at the bottom of the sidebar ("+ New folder"); a new row appears in edit mode with the name selected |
 | **Note card** | As in section 2. Pinned cards come first with a small pin. A card never shows a type, a ticket, a tag or a status |
 | **Search field** | Rounded (8), a magnifier, placeholder "Search", Esc clears. Results replace the cards in place with the matched line as the preview and the words in bold |
-| **Format bar** | Left group: a paragraph style menu button showing the current style name (Title, Heading, Subheading, Body, Monospaced). Middle group: Bold, Italic, Strikethrough. Right group: Checklist, Bulleted list, Numbered list, Quote, Link, Image. A thin gap between groups. Active buttons tinted. Each button has a hint with the shortcut |
+| **Format bar** | Left group: a paragraph style menu button showing the current style name (Title, Heading, Subheading, Body, Monospaced). Middle group: Bold, Italic, Strikethrough. Right group: Checklist, Bulleted list, Numbered list, Quote, Link, Image, Table. A thin gap between groups. Active buttons tinted. Each button has a hint with the shortcut |
 | **Editor text** | Formatted text, no marks. Checklist boxes are round and tick with the accent. Images are rounded (8) blocks with a thin border, 8 pt above and below. Links in the accent, open on `⌘`-click. Raw blocks (Markdown the editor cannot show) in monospaced on a light tinted block |
+| **Table** | A block in the text (ADR 0009): 8 pt radius, a thin border, the header row semibold on a tinted background, cell padding 6 × 8, body text style. A click edits a cell in place. Enter goes to the cell below, Tab and ⇧Tab to the next and previous cell; Tab on the last cell and Enter on the last row add a row. ↑ in the header row, ↓ in the last row, ← at the start of the first cell, → at the end of the last cell and Esc leave the table. ⌘B, ⌘I, ⇧⌘X and ⌘K work in a cell. On hover a thin "+" strip at the right edge adds a column and one at the bottom adds a row. Right click on a cell: Add Row Above, Add Row Below, Add Column Left, Add Column Right, Align Left, Align Center, Align Right, Delete Row, Delete Column, Delete Table ("Delete this table? Yes · No" when more than one cell has text). The Table button and `⌥⌘T` insert a table with a header and one row |
 | **Toast** | Bottom centre, 10 pt radius, surface colour with a soft shadow, 4 s, optional Undo button |
 | **Empty folder** | A soft tinted circle with `square.and.pencil`, "Nothing here yet.", a "New note" accent button and the hint `⌘N` |
 | **No results** | "No notes match.", a "Clear search" link |
@@ -143,6 +144,7 @@ Rules for text: a sentence, not a label with a colon, wherever there is room. Ve
 | `⌘B`, `⌘I`, `⌘⇧X` | Bold, Italic, Strikethrough |
 | `⌘K` | Link |
 | `⇧⌘I` | Image |
+| `⌥⌘T` | Table |
 | `⌘,` | Settings |
 | `Esc` | Back |
 

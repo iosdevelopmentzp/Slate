@@ -18,6 +18,7 @@ final class RichTextController: NSObject {
     var nextGroup = 1_000_000
     var activeLinkPopover: LinkPopover?
     var pendingInline: InlineStyle?
+    weak var activeTable: TableBlockView?
 
     private let undo = UndoManager()
     private var publishTask: Task<Void, Never>?
@@ -39,6 +40,7 @@ final class RichTextController: NSObject {
             guard let self else { return nil }
             return loadImage(path)
         }
+        styler.tableHost = self
     }
 
     var storage: NSTextStorage {
@@ -87,6 +89,7 @@ final class RichTextController: NSObject {
 
     func setMarkdown(_ value: String) {
         guard value != markdown || storage.length == 0 && value.isEmpty == false else { return }
+        activeTable?.endEditing(commit: false)
         publishTask?.cancel()
         publishTask = nil
         let text = MarkdownReader.read(value)
@@ -169,6 +172,7 @@ final class RichTextController: NSObject {
     }
 
     func flush() {
+        activeTable?.commit()
         guard publishTask != nil else { return }
         publishNow()
     }

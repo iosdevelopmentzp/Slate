@@ -118,7 +118,7 @@ extension RichTextController {
             }
             splitParagraph(at: caret, paragraph: paragraph, next: BlockAttributes())
             return true
-        case .image, .divider:
+        case .image, .divider, .table:
             if caret == content.location {
                 replace(NSRange(location: caret, length: 0), with: styled("\n", block: BlockAttributes()), selection: NSRange(location: caret + 1, length: 0))
             } else {
@@ -190,7 +190,7 @@ extension RichTextController {
         case .quote, .title, .heading, .subheading, .monospaced, .raw:
             setBlock(BlockAttributes(), ofParagraphAt: caret)
             return true
-        case .image, .divider:
+        case .image, .divider, .table:
             return false
         case .body:
             guard caret > 0 else { return false }

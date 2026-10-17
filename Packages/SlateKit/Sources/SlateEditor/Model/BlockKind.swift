@@ -12,6 +12,7 @@ nonisolated package enum BlockKind: String, CaseIterable, Sendable {
     case checklist
     case image
     case divider
+    case table
     case raw
 
     package var isList: Bool {
@@ -23,7 +24,7 @@ nonisolated package enum BlockKind: String, CaseIterable, Sendable {
     }
 
     package var isAttachment: Bool {
-        self == .image || self == .divider
+        self == .image || self == .divider || self == .table
     }
 
     package var keepsLineBreaks: Bool {

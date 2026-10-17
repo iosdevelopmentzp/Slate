@@ -34,7 +34,17 @@ final class EditorHarness {
 
     func layout() {
         controller.textView.textLayoutManager?.textViewportLayoutController.layoutViewport()
+        hostTables()
         controller.textView.displayIfNeeded()
+    }
+
+    private func hostTables() {
+        controller.storage.enumerateAttribute(.attachment, in: NSRange(location: 0, length: controller.storage.length)) { value, _, _ in
+            guard let table = value as? TableAttachment, table.loadedView?.superview == nil else { return }
+            let view = table.view()
+            view.frame = table.bounds(in: textView.textContainer, proposed: textView.bounds)
+            textView.addSubview(view)
+        }
     }
 
     func select(_ location: Int, _ length: Int = 0) {
@@ -81,6 +91,14 @@ final class EditorHarness {
 
     func font(at location: Int) -> NSFont? {
         controller.storage.attribute(.font, at: location, effectiveRange: nil) as? NSFont
+    }
+
+    func table(at index: Int = 0) -> TableAttachment? {
+        var tables: [TableAttachment] = []
+        controller.storage.enumerateAttribute(.attachment, in: NSRange(location: 0, length: controller.storage.length)) { value, _, _ in
+            if let table = value as? TableAttachment { tables.append(table) }
+        }
+        return index < tables.count ? tables[index] : nil
     }
 
     static func fixture(_ name: String) throws -> String {

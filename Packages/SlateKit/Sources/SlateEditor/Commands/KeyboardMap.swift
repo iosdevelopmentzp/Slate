@@ -29,6 +29,9 @@ enum KeyboardMap {
             default: return nil
             }
         }
+        if flags == [.command, .option], key == "t" {
+            return .table
+        }
         if flags == [.command] {
             switch event.keyCode {
             case quote: return .quote

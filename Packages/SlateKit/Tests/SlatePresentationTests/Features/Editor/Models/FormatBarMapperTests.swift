@@ -19,16 +19,16 @@ import Testing
         #expect(FormatBarMapper.blockButtons(for: state).filter(\.isActive).map(\.id) == ["checklist", "link"])
     }
 
-    @Test func codeTurnsTextButtonsOffButKeepsImage() {
+    @Test func codeTurnsTextButtonsOffButKeepsImageAndTable() {
         let state = EditorStyleState(kind: .monospaced, canFormatText: false)
 
         #expect(FormatBarMapper.textButtons(for: state).allSatisfy { $0.isEnabled == false })
-        #expect(FormatBarMapper.blockButtons(for: state).filter(\.isEnabled).map(\.id) == ["image"])
+        #expect(FormatBarMapper.blockButtons(for: state).filter(\.isEnabled).map(\.id) == ["image", "table"])
     }
 
     @Test func hintsShowTheShortcut() {
         let hints = (FormatBarMapper.textButtons(for: EditorStyleState()) + FormatBarMapper.blockButtons(for: EditorStyleState())).map(\.hint)
 
-        #expect(hints == ["Bold  ⌘B", "Italic  ⌘I", "Strikethrough  ⇧⌘X", "Checklist  ⇧⌘L", "Bulleted list  ⇧⌘7", "Numbered list  ⇧⌘9", "Quote  ⌘'", "Link  ⌘K", "Image  ⇧⌘I"])
+        #expect(hints == ["Bold  ⌘B", "Italic  ⌘I", "Strikethrough  ⇧⌘X", "Checklist  ⇧⌘L", "Bulleted list  ⇧⌘7", "Numbered list  ⇧⌘9", "Quote  ⌘'", "Link  ⌘K", "Image  ⇧⌘I", "Table  ⌥⌘T"])
     }
 }
