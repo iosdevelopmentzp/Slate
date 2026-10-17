@@ -97,4 +97,15 @@ import Testing
 
         #expect(harness.markdown == "| a | b |\n| :--- | ---: |\n| 1 | 3 |\n")
     }
+
+    @Test func aTableWithBrTagsIsATableNowAndKeepsItsText() throws {
+        let source = "| Task | Notes |\n|---|---|\n| Release | Check the build<br>Update the log |\n"
+        let harness = EditorHarness(markdown: "Plan\n\n" + source)
+        let table = try #require(harness.table())
+
+        #expect(table.text(TableCellIndex(row: 1, column: 1)).string == "Check the build\u{2028}Update the log")
+        harness.caret(after: "Plan")
+        harness.type(" for today")
+        #expect(harness.markdown == "Plan for today\n\n" + source)
+    }
 }

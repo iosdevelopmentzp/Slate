@@ -31,4 +31,22 @@ import Testing
 
         #expect(BlockAttributes(text.attributes(at: 0, effectiveRange: nil)).kind == .raw)
     }
+
+    @Test func aBrTagIsALineBreakInTheCell() throws {
+        let inline = try #require(TableCellText.inline("Check the build<br>Update **the** log<BR/>Send"))
+
+        #expect(inline.string == "Check the build\u{2028}Update the log\u{2028}Send")
+        #expect(TableCellText.markdown(of: inline) == "Check the build<br>Update **the** log<br>Send")
+    }
+
+    @Test func emptyLinesAtTheEdgesAreDropped() throws {
+        #expect(TableCellText.markdown(of: NSAttributedString(string: "\u{2028}a\u{2028}\u{2028}b\u{2028}")) == "a<br><br>b")
+        #expect(TableCellText.inline("<br>")?.length == 0)
+        #expect(TableCellText.markdown(of: NSAttributedString(string: "a <br> tag")) == "a \\<br> tag")
+    }
+
+    @Test func otherHTMLInACellIsRefused() {
+        #expect(TableCellText.inline("a <span>b</span>") == nil)
+        #expect(BlockAttributes(MarkdownReader.read("Text<br>more\n").attributes(at: 0, effectiveRange: nil)).kind == .raw)
+    }
 }

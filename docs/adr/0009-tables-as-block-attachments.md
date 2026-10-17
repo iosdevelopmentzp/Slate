@@ -34,7 +34,7 @@ The owner wants tables like the ones in Apple Notes, maybe with images in cells.
 
 ### Out of scope, by the file format
 
-Multi-paragraph cells, lists inside cells, merged cells, nested tables, row heights, cell colours, formulas. A user who needs those writes a list or a note per row.
+Multi-paragraph cells (line breaks inside a cell came later as `<br>`, ADR 0012), lists inside cells, merged cells, nested tables, row heights, cell colours, formulas. A user who needs those writes a list or a note per row.
 
 ## Consequences
 

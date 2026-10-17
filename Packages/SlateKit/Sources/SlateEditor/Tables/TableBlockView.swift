@@ -306,8 +306,14 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         let selection = editor.selectedRange()
         let length = (editor.string as NSString).length
         switch selector {
-        case #selector(NSResponder.insertNewline(_:)), #selector(NSResponder.insertLineBreak(_:)), #selector(NSResponder.insertNewlineIgnoringFieldEditor(_:)):
-            moveDown(from: editing, addingRow: true)
+        case #selector(NSResponder.insertNewline(_:)):
+            if NSApp?.currentEvent?.modifierFlags.contains(.shift) == true {
+                insertCellLineBreak()
+            } else {
+                moveDown(from: editing, addingRow: true)
+            }
+        case #selector(NSResponder.insertLineBreak(_:)), #selector(NSResponder.insertNewlineIgnoringFieldEditor(_:)):
+            insertCellLineBreak()
         case #selector(NSResponder.insertTab(_:)):
             if editing == last {
                 finishCell()
@@ -324,12 +330,15 @@ final class TableBlockView: NSView, NSTextViewDelegate {
                 beginEditing(TableCellIndex(row: editing.row - 1, column: model.columnCount - 1), caretAtEnd: true)
             }
         case #selector(NSResponder.moveUp(_:)):
-            if editing.row == 0 {
+            if hasLineBreak(before: selection.location) {
+                return false
+            } else if editing.row == 0 {
                 leave(after: false)
             } else {
                 beginEditing(TableCellIndex(row: editing.row - 1, column: editing.column))
             }
         case #selector(NSResponder.moveDown(_:)):
+            guard hasLineBreak(after: NSMaxRange(selection)) == false else { return false }
             moveDown(from: editing, addingRow: false)
         case #selector(NSResponder.moveLeft(_:)):
             guard editing == TableCellIndex(row: 0, column: 0), selection == NSRange(location: 0, length: 0) else { return false }
@@ -346,10 +355,27 @@ final class TableBlockView: NSView, NSTextViewDelegate {
     }
 
     func textView(_ view: NSTextView, shouldChangeTextIn range: NSRange, replacementString: String?) -> Bool {
-        guard let replacementString, replacementString.contains(where: { $0.isNewline || $0 == RichText.lineBreak }) else { return true }
-        let flat = replacementString.components(separatedBy: .newlines).joined(separator: " ").replacingOccurrences(of: RichText.lineBreakString, with: " ")
-        editor.insertText(flat, replacementRange: range)
+        guard let replacementString, replacementString.contains(where: { $0 == "\n" || $0 == "\r" || $0 == "\r\n" }) else { return true }
+        let lines = replacementString
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+            .replacingOccurrences(of: "\n", with: RichText.lineBreakString)
+        editor.insertText(lines, replacementRange: range)
         return false
+    }
+
+    func insertCellLineBreak() {
+        editor.insertText(RichText.lineBreakString, replacementRange: editor.selectedRange())
+    }
+
+    private func hasLineBreak(before location: Int) -> Bool {
+        let text = editor.string as NSString
+        return text.substring(to: min(location, text.length)).contains(RichText.lineBreak)
+    }
+
+    private func hasLineBreak(after location: Int) -> Bool {
+        let text = editor.string as NSString
+        return text.substring(from: min(location, text.length)).contains(RichText.lineBreak)
     }
 
     func undoManager(for view: NSTextView) -> UndoManager? {

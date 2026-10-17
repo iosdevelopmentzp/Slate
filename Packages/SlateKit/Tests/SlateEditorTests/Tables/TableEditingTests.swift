@@ -128,13 +128,41 @@ import Testing
         #expect(view.editing == TableCellIndex(row: 0, column: 0))
     }
 
-    @Test func aNewLineInACellBecomesASpace() {
+    @Test func pastedLinesStayLinesInTheCell() {
         let (harness, view) = start()
 
-        type("a\nb", in: view)
+        type("a\nb\r\nc", in: view)
         view.leave(after: true)
 
-        #expect(harness.markdown == "Intro\n\n| a b | |\n| --- | --- |\n| | |\n")
+        #expect(harness.markdown == "Intro\n\n| a<br>b<br>c | |\n| --- | --- |\n| | |\n")
+    }
+
+    @Test func aLineBreakKeyStartsANewLineInTheCell() {
+        let (harness, view) = start()
+
+        type("first", in: view)
+        command(#selector(NSResponder.insertNewlineIgnoringFieldEditor(_:)), in: view)
+        type("second", in: view)
+        command(#selector(NSResponder.insertLineBreak(_:)), in: view)
+        type("third", in: view)
+
+        #expect(view.editing == TableCellIndex(row: 0, column: 0))
+        view.leave(after: true)
+        #expect(harness.markdown == "Intro\n\n| first<br>second<br>third | |\n| --- | --- |\n| | |\n")
+    }
+
+    @Test func upAndDownMoveBetweenLinesBeforeTheyLeaveTheCell() {
+        let (_, view) = start()
+        type("one", in: view)
+        view.insertCellLineBreak()
+        type("two", in: view)
+
+        #expect(view.textView(view.cellEditor, doCommandBy: #selector(NSResponder.moveUp(_:))) == false)
+        view.cellEditor.setSelectedRange(NSRange(location: 1, length: 0))
+        #expect(view.textView(view.cellEditor, doCommandBy: #selector(NSResponder.moveDown(_:))) == false)
+        view.cellEditor.setSelectedRange(NSRange(location: 6, length: 0))
+        #expect(view.textView(view.cellEditor, doCommandBy: #selector(NSResponder.moveDown(_:))))
+        #expect(view.editing == TableCellIndex(row: 1, column: 0))
     }
 
     @Test func anImportedImageGoesIntoTheCellBeingEdited() {

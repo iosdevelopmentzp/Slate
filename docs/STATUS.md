@@ -208,6 +208,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 128. Thumbnails are 80 pt high with the image's shape and a 4 pt radius; a missing image shows as an empty 80 × 80 square. Wide images make the column wide; the column then shrinks like any other.
 129. Pasting text into a cell pastes it as plain text on one line; Markdown copied from Slate keeps bold, italic, links and images.
 130. A click on a table cell does not pass the mouse event to the cell's text view: forwarding it made `NSTextView` start its mouse tracking loop inside the table's `mouseDown`, and Slate hung at about 60 % CPU (the owner saw it on the first try). The table now puts the caret at the click point itself. Clicks inside the cell that is already being edited still go to the text view directly.
+131. Several lines in a table cell follow ADR 0012: `<br>` in the file, U+2028 in the editor. `⇧Enter`, `⌥Enter` and `⌃Enter` add a line; Enter keeps moving down (ADR 0009). ↑ and ↓ stay in the cell while there is a line above or below the caret; a long line that only wraps on screen does not count. This replaces decision 122 for pasted text: lines stay lines.
 
 ## Next steps
 
@@ -290,6 +291,10 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 
 48. Drop an image from Finder on a cell, paste a screenshot into another cell, and use the Image button while a cell is active. Each shows a thumbnail; double-click opens Quick Look; select a thumbnail and press Delete. The file holds `![](../_attachments/…)` in the cells. Move the note into a sub-folder: the thumbnails still show.
 
+### Line breaks in table cells (ADR 0012)
+
+49. In a cell type a line, press ⇧Enter, type a second line: the row grows. The file has `line one<br>line two`. Open the note in Obsidian: the cell shows two lines.
+
 ## Known gaps
 
 - S2: a text file dropped on the list does not make a note yet (`UX.md` section 6). Folders reorder with Move up and Move down, not by drag.
@@ -319,4 +324,5 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - S7: drop, paste and Quick Look in a cell were tested through the controller, not with a real drag or a real double-click. Thumbnails cannot be resized, and a thumbnail is not selected by a single click (use Shift-arrow in the cell).
 - S6: no manual column resize (ADR 0009 level 1). Very wide tables shrink every column to 60 pt and then stick out to the right.
 - S6: the full test run once more saw the known `FSEventsVaultWatcherIntegrationTests.externalEditArrivesAsAPathChange` failure (during the S5 commit); it passed alone and in the next full run.
+- `FSEventsVaultWatcherIntegrationTests` failed in three of four runs alone on 2026-10-17, with and without the ADR 0012 change (checked with `git stash`); the full run passed. The suite waits on FSEvents timing; it may be the Slate app that runs at the same time. Look at it on its own.
 - Sub-folders (ADR 0011): no drag of a folder into another folder, no colour, icon or manual order per sub-folder, no `⌘1`…`⌘9` for sub-folders. Esc does not go up to the parent folder yet; the back chevron does.
