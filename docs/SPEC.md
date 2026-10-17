@@ -23,7 +23,7 @@ The owner tried the full build (M0 to M7) and asked for a simpler first version.
 
 | In v1 | Parked (code stays in Domain and Data, nothing visible) |
 |---|---|
-| Folders: create, rename, delete, reorder, colour, icon (C1 without kinds) | Note kinds, templates, Insert Template (C2, C11) |
+| Folders: create, rename, delete, reorder, colour, icon (C1 without kinds); sub-folders at any depth (ADR 0011) | Note kinds, templates, Insert Template (C2, C11) |
 | Notes: new, edit, pin, move, duplicate, Trash with restore and 30-day purge (C5, C7, C8) | Tasks, tickets, branches, merge requests, status, `⌘⇧D` (C3, G1, G5, G7) |
 | Rich text editor with a format bar: styles, bold, italic, strikethrough, lists, checklist, quote, link, image, divider; images in the text (ADR 0008) | Markdown marks on screen, code highlighting, Paste as code bar (D1, D3 parts) |
 | Images and files by paste, drag and the Image button; screenshot `⌘⇧S` (B4, D4) | Tags, `#` completion, tag chips (C4) |

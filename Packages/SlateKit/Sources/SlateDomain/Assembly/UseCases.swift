@@ -15,6 +15,10 @@ package struct UseCases: Sendable {
     package let renameSpace: RenameSpaceUseCase
     package let deleteSpace: DeleteSpaceUseCase
     package let restoreSpace: RestoreSpaceUseCase
+    package let createFolder: CreateFolderUseCase
+    package let renameFolder: RenameFolderUseCase
+    package let deleteFolder: DeleteFolderUseCase
+    package let restoreFolder: RestoreFolderUseCase
     package let importAttachment: ImportAttachmentUseCase
     package let attachScreenshot: AttachScreenshotUseCase
     package let ensureDaily: EnsureDailyNoteUseCase
@@ -41,7 +45,11 @@ package struct UseCases: Sendable {
         createSpace = CreateSpaceUseCase(files: ports.files, config: ports.config)
         renameSpace = RenameSpaceUseCase(files: ports.files, config: ports.config, reindex: reindex)
         deleteSpace = DeleteSpaceUseCase(files: ports.files, config: ports.config, move: move)
-        restoreSpace = RestoreSpaceUseCase(files: ports.files, index: ports.index, builder: ports.builder, config: ports.config)
+        restoreSpace = RestoreSpaceUseCase(files: ports.files, config: ports.config, move: move)
+        createFolder = CreateFolderUseCase(files: ports.files)
+        renameFolder = RenameFolderUseCase(files: ports.files, reindex: reindex)
+        deleteFolder = DeleteFolderUseCase(files: ports.files, move: move)
+        restoreFolder = RestoreFolderUseCase(files: ports.files, move: move)
         importAttachment = ImportAttachmentUseCase(attachments: ports.attachments, clock: ports.clock)
         attachScreenshot = AttachScreenshotUseCase(capture: ports.capture, attachments: ports.attachments, clock: ports.clock)
         ensureDaily = EnsureDailyNoteUseCase(files: ports.files, config: ports.config, create: create, keyValues: ports.keyValues, clock: ports.clock)

@@ -120,11 +120,11 @@ import Testing
     }
 
     @Test func folderCanBeCreatedAndRenamedEvenByCaseOnly() async throws {
-        let reading = SpaceName(rawValue: "Reading")
+        let reading = FolderPath(rawValue: "Reading")
         try await store.createFolder(reading)
         _ = try folder.write("a", to: "Reading/A.md")
 
-        try await store.moveFolder(from: reading, to: SpaceName(rawValue: "reading"))
+        try await store.moveFolder(from: reading, to: FolderPath(rawValue: "reading"))
 
         let names = try FileManager.default.contentsOfDirectory(atPath: folder.url.path)
         #expect(names.contains("reading"))
@@ -136,7 +136,7 @@ import Testing
         _ = try folder.write("", to: "Ideas/.DS_Store")
         try FileManager.default.createDirectory(at: folder.url.appendingPathComponent("Ideas/Empty"), withIntermediateDirectories: true)
 
-        try await store.removeFolder(SpaceName(rawValue: "Ideas"))
+        try await store.removeFolder(FolderPath(rawValue: "Ideas"))
 
         #expect(FileManager.default.fileExists(atPath: folder.path("Ideas")) == false)
     }
@@ -146,8 +146,29 @@ import Testing
         let store = FileVaultStore(root: folder.url, ownWrites: ownWrites, recycle: { recycled.append($0) })
         _ = try folder.write("pdf", to: "Ideas/Plan.pdf")
 
-        try await store.removeFolder(SpaceName(rawValue: "Ideas"))
+        try await store.removeFolder(FolderPath(rawValue: "Ideas"))
 
         #expect(recycled.values.map(\.lastPathComponent) == ["Ideas"])
+    }
+
+    @Test func foldersListsSubFoldersAtAnyDepthButNotAttachmentsOrHiddenOnes() async throws {
+        try await store.createFolder(FolderPath(rawValue: "Work/Clients/2026"))
+        try FileManager.default.createDirectory(at: folder.url.appendingPathComponent("Work/.hidden"), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: folder.url.appendingPathComponent("Work/_private"), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: folder.url.appendingPathComponent("_attachments/x"), withIntermediateDirectories: true)
+
+        #expect(try await store.folders().map(\.rawValue) == ["Work/Clients", "Work/Clients/2026"])
+    }
+
+    @Test func aSubFolderIsRenamedEvenByCaseOnly() async throws {
+        let clients = FolderPath(rawValue: "Work/Clients")
+        try await store.createFolder(clients)
+        _ = try folder.write("a", to: "Work/Clients/A.md")
+
+        try await store.moveFolder(from: clients, to: FolderPath(rawValue: "Work/clients"))
+
+        let names = try FileManager.default.contentsOfDirectory(atPath: folder.path("Work"))
+        #expect(names == ["clients"])
+        #expect(try await store.meta(VaultPath(rawValue: "Work/clients/A.md")) != nil)
     }
 }

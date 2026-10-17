@@ -10,7 +10,7 @@ struct SidebarView: View {
     @Environment(\.openAsWindow) private var openAsWindow
     @Environment(\.openSettings) private var openSettings
 
-    @State private var dropTarget: SpaceName?
+    @State private var dropTarget: FolderPath?
 
     var body: some View {
         @Bindable var vault = vault
@@ -19,8 +19,18 @@ struct SidebarView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
                     sourceRow(.all, title: "All notes", icon: "tray.full", count: store.count(in: nil))
-                    ForEach(models) { model in
-                        folder(model)
+                    ForEach(rows) { row in
+                        folder(row)
+                        if row.id == fieldAfter, case .newInside(let parent) = vault.editing {
+                            FolderNameField(
+                                name: $vault.draftName,
+                                icon: "folder",
+                                tint: Tint.blue.color,
+                                onCommit: { Task { await vault.commitEdit() } },
+                                onCancel: { vault.cancelEdit() }
+                            )
+                            .padding(.leading, CGFloat(parent.depth) * 14 + 18)
+                        }
                     }
                     if vault.editing == .new {
                         FolderNameField(
@@ -43,10 +53,35 @@ struct SidebarView: View {
         .background(Theme.base)
     }
 
-    private var models: [FolderRowModel] {
-        vault.spaces.map { space in
-            FolderRowMapper.model(for: space, count: store.count(in: space.folder), defaultFolder: vault.defaultFolder)
+    private var rows: [SidebarFolder] {
+        vault.spaces.flatMap { space -> [SidebarFolder] in
+            let root = FolderPath(space: space.folder)
+            let model = FolderRowMapper.model(for: space, count: store.count(in: root), defaultFolder: vault.defaultFolder)
+            let head = SidebarFolder(model: model, level: 0, disclosure: disclosure(hasChildren: vault.children(of: root).isEmpty == false, isExpanded: vault.isExpanded(root)))
+            guard vault.isExpanded(root) else { return [head] }
+            let below = FolderTreeMapper.nodes(below: space.folder, folders: vault.subfolders, expanded: vault.expanded).map { node in
+                SidebarFolder(
+                    model: FolderRowMapper.model(forSubfolder: node.id, space: space, count: store.count(in: node.id)),
+                    level: node.level,
+                    disclosure: disclosure(hasChildren: node.hasChildren, isExpanded: node.isExpanded)
+                )
+            }
+            return [head] + below
         }
+    }
+
+    private var fieldAfter: FolderPath? {
+        guard case .newInside(let parent) = vault.editing else { return nil }
+        return rows.last { $0.id == parent || parent.contains($0.id) }?.id
+    }
+
+    private func disclosure(hasChildren: Bool, isExpanded: Bool) -> FolderRow.Disclosure {
+        guard hasChildren else { return .empty }
+        return isExpanded ? .expanded : .collapsed
+    }
+
+    private func isRenaming(_ model: FolderRowModel) -> Bool {
+        model.isSpace ? vault.editing == .rename(model.space) : vault.editing == .renameFolder(model.id)
     }
 
     private var topBar: some View {
@@ -69,8 +104,9 @@ struct SidebarView: View {
     }
 
     @ViewBuilder
-    private func folder(_ model: FolderRowModel) -> some View {
-        if vault.editing == .rename(model.id) {
+    private func folder(_ row: SidebarFolder) -> some View {
+        let model = row.model
+        if isRenaming(model) {
             @Bindable var vault = vault
             FolderNameField(
                 name: $vault.draftName,
@@ -79,6 +115,7 @@ struct SidebarView: View {
                 onCommit: { Task { await vault.commitEdit() } },
                 onCancel: { vault.cancelEdit() }
             )
+            .padding(.leading, CGFloat(row.level) * 14 + 18)
         } else {
             VStack(spacing: 4) {
                 FolderRow(
@@ -86,11 +123,14 @@ struct SidebarView: View {
                     icon: model.icon,
                     tint: model.tint.color,
                     count: model.count,
-                    isSelected: store.source == .space(model.id),
-                    isDropTarget: dropTarget == model.id
+                    isSelected: store.source == .showing(model.id),
+                    isDropTarget: dropTarget == model.id,
+                    level: row.level,
+                    disclosure: row.disclosure,
+                    onToggle: { vault.setExpanded(model.id, vault.isExpanded(model.id) == false) }
                 )
-                .onTapGesture { show(.space(model.id)) }
-                .simultaneousGesture(TapGesture(count: 2).onEnded { vault.startRename(model.id) })
+                .onTapGesture { show(.showing(model.id)) }
+                .simultaneousGesture(TapGesture(count: 2).onEnded { vault.startRename(folder: model.id) })
                 .contextMenu { menu(for: model) }
                 .dropDestination(for: String.self) { items, _ in
                     drop(items, on: model.id)
@@ -100,7 +140,7 @@ struct SidebarView: View {
                 if vault.confirmingDelete == model.id {
                     FolderDeleteConfirmation(
                         question: model.deleteQuestion,
-                        onConfirm: { Task { await vault.confirmDelete(model.id) } },
+                        onConfirm: { Task { await vault.confirmDelete(folder: model.id) } },
                         onCancel: { vault.cancelDelete() }
                     )
                     .transition(.opacity)
@@ -113,13 +153,14 @@ struct SidebarView: View {
     private func menu(for model: FolderRowModel) -> some View {
         FolderMenu(
             model: model,
-            canMoveUp: vault.canMove(model.id, by: -1),
-            canMoveDown: vault.canMove(model.id, by: 1),
-            onRename: { vault.startRename(model.id) },
-            onColor: { color in Task { await vault.setColor(color, for: model.id) } },
-            onIcon: { icon in Task { await vault.setIcon(icon, for: model.id) } },
-            onMove: { offset in Task { await vault.move(model.id, by: offset) } },
-            onDelete: { vault.requestDelete(model.id) }
+            canMoveUp: vault.canMove(model.space, by: -1),
+            canMoveDown: vault.canMove(model.space, by: 1),
+            onNewInside: { vault.startNewFolder(in: model.id) },
+            onRename: { vault.startRename(folder: model.id) },
+            onColor: { color in Task { await vault.setColor(color, for: model.space) } },
+            onIcon: { icon in Task { await vault.setIcon(icon, for: model.space) } },
+            onMove: { offset in Task { await vault.move(model.space, by: offset) } },
+            onDelete: { vault.requestDelete(folder: model.id) }
         )
     }
 
@@ -152,15 +193,25 @@ struct SidebarView: View {
         store.show(source)
     }
 
-    private func drop(_ items: [String], on space: SpaceName) -> Bool {
+    private func drop(_ items: [String], on folder: FolderPath) -> Bool {
         let ids = items.compactMap(NoteDragPayload.noteID(from:))
         guard ids.isEmpty == false else { return false }
         Task {
             for id in ids {
-                await store.moveNote(id: id, to: space)
+                await store.moveNote(id: id, toFolder: folder)
             }
         }
         return true
+    }
+}
+
+private struct SidebarFolder: Identifiable {
+    let model: FolderRowModel
+    let level: Int
+    let disclosure: FolderRow.Disclosure
+
+    var id: FolderPath {
+        model.id
     }
 }
 

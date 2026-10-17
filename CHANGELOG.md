@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Sub-folders at any depth. Right-click a folder and choose New folder inside. The sidebar shows the folders as a tree with arrows that show or hide the sub-folders. A folder lists its sub-folders first and then its own notes; a click on a sub-folder opens it, and the back arrow next to the title goes up again. New notes go into the open sub-folder. Notes move into a sub-folder with the card menu (Move to) or by drag and drop. Rename and delete a sub-folder from its menu; delete moves its notes to the parent folder and offers Undo. Image links in a note still work after it moves to another depth.
 - Appearance (Match the system, Light, Dark) is also in the right-click menu of the menu bar icon and in View → Appearance of the window, next to Settings → General.
 - Settings → General has "Back up to" for a git address and a "Back up now" button. Slate says "Backed up", or that the backup failed and where to look.
 - Moving a note to another folder shows a toast with Undo, which moves it back.

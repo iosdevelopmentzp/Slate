@@ -3,10 +3,10 @@ import SlateDomain
 
 actor MockVaultFileStore: VaultFileStore {
     private var files: [VaultPath: (data: Data, meta: FileMeta)] = [:]
-    private var folders: Set<SpaceName>
+    private var folderSet: Set<FolderPath>
 
     init(documents: [NoteDocument] = MockVault.documents, spaces: [Space] = MockVault.spaces) {
-        folders = Set(spaces.map(\.folder))
+        folderSet = Set(spaces.map { FolderPath(space: $0.folder) })
         for document in documents {
             let data = NoteCodec.encode(header: document.header, body: document.body, opaqueHeader: nil, timeZone: .gmt)
             files[document.path] = (data, document.meta)
@@ -50,17 +50,21 @@ actor MockVaultFileStore: VaultFileStore {
         files.keys.filter { $0.folder == folder }.map(\.fileName)
     }
 
-    func createFolder(_ name: SpaceName) {
-        folders.insert(name)
+    func folders() -> [FolderPath] {
+        let fromFiles = files.keys.compactMap(\.folderPath).filter { $0.isSpace == false }
+        return Set(folderSet.filter { $0.isSpace == false } + fromFiles).sorted { $0.rawValue < $1.rawValue }
     }
 
-    func removeFolder(_ name: SpaceName) {
-        folders.remove(name)
+    func createFolder(_ folder: FolderPath) {
+        folderSet.insert(folder)
     }
 
-    func moveFolder(from source: SpaceName, to target: SpaceName) {
-        folders.remove(source)
-        folders.insert(target)
+    func removeFolder(_ folder: FolderPath) {
+        folderSet = folderSet.filter { $0 != folder && folder.contains($0) == false }
+    }
+
+    func moveFolder(from source: FolderPath, to target: FolderPath) {
+        folderSet = Set(folderSet.map { $0.moved(from: source, to: target) })
     }
 
     private func store(_ path: VaultPath, _ data: Data) {

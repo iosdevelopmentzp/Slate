@@ -88,6 +88,26 @@ package enum AttachmentPolicy {
         return file.isEmpty || file.contains("/") ? nil : file
     }
 
+    package static func rewriteLinks(in text: String, from old: VaultPath, to new: VaultPath) -> String {
+        guard old.depth != new.depth else { return text }
+        let source = text as NSString
+        var result = ""
+        var cursor = 0
+        for match in linkTarget.matches(in: text, range: NSRange(location: 0, length: source.length)) {
+            let range = match.range(at: 1)
+            let link = source.substring(with: range)
+            guard let file = attachmentFile(ofLink: link, from: old) else { continue }
+            result += source.substring(with: NSRange(location: cursor, length: range.location - cursor))
+            let suffix = link.split(separator: "#", maxSplits: 1).dropFirst().first.map { "#\($0)" } ?? ""
+            result += relativeLink(to: file, from: new) + suffix
+            cursor = NSMaxRange(range)
+        }
+        result += source.substring(from: cursor)
+        return result
+    }
+
+    private static let linkTarget = try! NSRegularExpression(pattern: #"\]\(([^)\s]+)\)"#)
+
     private static func encode(_ file: String) -> String {
         var allowed = CharacterSet.urlPathAllowed
         allowed.remove(charactersIn: "()<>[]")

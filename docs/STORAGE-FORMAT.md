@@ -32,7 +32,7 @@ Before ADR 0007 a new vault got six spaces: `Inbox`, `Tasks`, `Notes`, `Daily`, 
 Rules:
 
 - A space is any top-level folder whose name does not start with `_` or `.`. Order, icon and default note type come from `.slate/spaces.json`; a folder missing from that file is appended at the end with a default icon.
-- Notes are discovered at any depth under a space. The app **creates** notes only at depth 1 (`<Space>/<Name>.md`). A note in a sub-folder shows in its space with the sub-folder name as a badge. Moving a note always targets depth 1 of the destination space.
+- Notes are discovered at any depth under a space. Since ADR 0011 the app makes sub-folders at any depth, creates notes in the folder or sub-folder that is open, and moves a note into any folder or sub-folder (`<Space>/<Sub>/<Name>.md`). A folder lists its own notes and its sub-folders. When a note moves to another depth, the app rewrites its links into `_attachments/` to match. Sub-folders have no entry in `.slate/spaces.json`.
 - Only `.md` files are notes. Any other file under a space is listed under "Other files" in the space (read-only, open in Finder).
 - The index, the journal and the git history live **outside** the vault: `~/Library/Application Support/Slate/<vault-id>/` where `vault-id` is the first 12 hex characters of the SHA-256 of the vault's standardized path. The vault contains only user content and `.slate/`.
 

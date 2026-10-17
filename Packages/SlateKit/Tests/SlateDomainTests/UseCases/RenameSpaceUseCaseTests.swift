@@ -11,7 +11,7 @@ import Testing
         let renamed = try await UseCases(ports: ports).renameSpace.execute(SpaceName(rawValue: "Archive"), to: "Done")
 
         #expect(renamed == SpaceName(rawValue: "Done"))
-        #expect(spies.files.calls.contains(.moveFolder(from: SpaceName(rawValue: "Archive"), to: renamed)))
+        #expect(spies.files.calls.contains(.moveFolder(from: FolderPath(rawValue: "Archive"), to: FolderPath(space: renamed))))
         #expect(spies.config.config.spaces.map(\.folder.rawValue) == ["Inbox", "Tasks", "Notes", "Daily", "Snippets", "Done"])
         #expect(spies.config.config.archiveSpace == renamed)
         #expect(Set(spies.index.indexed.keys) == [VaultPath(rawValue: "Done/Old.md")])

@@ -1,5 +1,6 @@
 import Foundation
 import SlateDomain
+import SlateMocks
 import SlateTestSupport
 import Testing
 @testable import SlatePresentation
@@ -105,7 +106,7 @@ import Testing
         harness.navigator.show(.space(SpaceName(rawValue: "Snippets")))
 
         vault.requestDelete(SpaceName(rawValue: "Snippets"))
-        #expect(vault.confirmingDelete == SpaceName(rawValue: "Snippets"))
+        #expect(vault.confirmingDelete == FolderPath(rawValue: "Snippets"))
         await vault.confirmDelete(SpaceName(rawValue: "Snippets"))
 
         #expect(vault.confirmingDelete == nil)
@@ -129,5 +130,53 @@ import Testing
 
         #expect(vault.spaces.contains { $0.folder == SpaceName(rawValue: "Inbox") })
         #expect(harness.activity.events.map(\.title) == ["Cannot delete the folder"])
+    }
+
+    @Test func aSubFolderIsMadeInsideItsParentAndShown() async {
+        await vault.refresh()
+
+        vault.startNewFolder(in: FolderPath(rawValue: "Notes"))
+        #expect(vault.editing == .newInside(FolderPath(rawValue: "Notes")))
+        #expect(vault.isExpanded(FolderPath(rawValue: "Notes")))
+        vault.draftName = "Swift"
+        #expect(await vault.commitEdit())
+
+        #expect(vault.subfolders == [FolderPath(rawValue: "Notes/Swift")])
+        #expect(harness.navigator.source == .folder(FolderPath(rawValue: "Notes/Swift")))
+        #expect(harness.keyValues.strings(forKey: "sidebar.expanded") == ["Notes"])
+    }
+
+    @Test func renamingASubFolderFollowsTheShownFolder() async throws {
+        harness.spies.files.seedFolder(FolderPath(rawValue: "Notes/Swift/Actors"))
+        await vault.refresh()
+        vault.setExpanded(FolderPath(rawValue: "Notes/Swift"), true)
+        harness.navigator.show(.folder(FolderPath(rawValue: "Notes/Swift/Actors")))
+
+        vault.startRename(folder: FolderPath(rawValue: "Notes/Swift"))
+        vault.draftName = "Swift 6"
+        #expect(await vault.commitEdit())
+
+        #expect(harness.navigator.source == .folder(FolderPath(rawValue: "Notes/Swift 6/Actors")))
+        #expect(vault.isExpanded(FolderPath(rawValue: "Notes/Swift 6")))
+    }
+
+    @Test func deletingASubFolderMovesItsNotesUpAndOffersUndo() async throws {
+        harness.seed("Notes/Swift/A.md", id: "a")
+        try await harness.index()
+        await vault.refresh()
+        harness.navigator.show(.folder(FolderPath(rawValue: "Notes/Swift")))
+
+        vault.requestDelete(folder: FolderPath(rawValue: "Notes/Swift"))
+        #expect(vault.confirmingDelete == FolderPath(rawValue: "Notes/Swift"))
+        await vault.confirmDelete(folder: FolderPath(rawValue: "Notes/Swift"))
+
+        #expect(vault.subfolders.isEmpty)
+        #expect(harness.navigator.source == .space(SpaceName(rawValue: "Notes")))
+        #expect(harness.toaster.text == "Deleted Swift. 1 note moved to Notes.")
+
+        harness.toaster.performAction()
+
+        try await waitUntil { harness.spies.files.text(at: VaultPath(rawValue: "Notes/Swift/A.md")) != nil }
+        try await waitUntil { harness.navigator.source == .folder(FolderPath(rawValue: "Notes/Swift")) }
     }
 }

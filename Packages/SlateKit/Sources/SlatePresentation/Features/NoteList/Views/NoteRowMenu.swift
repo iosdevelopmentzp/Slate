@@ -9,9 +9,9 @@ struct NoteRowMenu: View {
         Button(isPinned ? "Unpin" : "Pin", systemImage: isPinned ? "pin.slash" : "pin", action: actions.pin)
         if actions.moveTargets.isEmpty == false {
             Menu("Move to", systemImage: "folder") {
-                ForEach(actions.moveTargets) { space in
-                    Button(space.folder.rawValue, systemImage: space.icon ?? "folder.fill") {
-                        actions.move(space.folder)
+                ForEach(actions.moveTargets) { target in
+                    Button(target.title, systemImage: target.icon) {
+                        actions.move(target.id)
                     }
                 }
             }

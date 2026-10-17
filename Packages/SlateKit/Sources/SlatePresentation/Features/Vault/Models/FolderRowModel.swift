@@ -3,7 +3,7 @@ import SlateDomain
 import SlateUI
 
 struct FolderRowModel: Identifiable, Hashable {
-    let id: SpaceName
+    let id: FolderPath
     let title: String
     let icon: String
     let tint: Tint
@@ -12,8 +12,16 @@ struct FolderRowModel: Identifiable, Hashable {
     let canDelete: Bool
     let deleteQuestion: String
 
+    var space: SpaceName {
+        id.space
+    }
+
+    var isSpace: Bool {
+        id.isSpace
+    }
+
     static let preview = FolderRowModel(
-        id: SpaceName(rawValue: "Ideas"),
+        id: FolderPath(rawValue: "Ideas"),
         title: "Ideas",
         icon: "lightbulb.fill",
         tint: .yellow,

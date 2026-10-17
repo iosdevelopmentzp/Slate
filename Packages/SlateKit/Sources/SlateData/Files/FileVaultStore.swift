@@ -90,28 +90,47 @@ actor FileVaultStore: VaultFileStore {
         return try FileManager.default.contentsOfDirectory(atPath: url.path).filter { $0.hasPrefix(".") == false }
     }
 
-    func createFolder(_ name: SpaceName) throws {
-        let url = folder.url(folder: name.rawValue)
-        guard folder.exists(url) == false else { throw VaultError.alreadyExists(name.rawValue) }
+    func folders() throws -> [FolderPath] {
+        var found: [FolderPath] = []
+        let keys: [URLResourceKey] = [.isDirectoryKey]
+        for space in try folder.spaceFolders() {
+            let base = folder.url(folder: space.rawValue)
+            guard let enumerator = FileManager.default.enumerator(at: base, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles, .skipsPackageDescendants]) else { continue }
+            for case let url as URL in enumerator {
+                guard (try? url.resourceValues(forKeys: Set(keys)).isDirectory) == true else { continue }
+                guard url.lastPathComponent.hasPrefix("_") == false else {
+                    enumerator.skipDescendants()
+                    continue
+                }
+                guard let relative = folder.relativePath(of: url, under: base) else { continue }
+                found.append(FolderPath(rawValue: "\(space.rawValue)/\(relative)"))
+            }
+        }
+        return found.sorted { $0.rawValue.localizedStandardCompare($1.rawValue) == .orderedAscending }
+    }
+
+    func createFolder(_ target: FolderPath) throws {
+        let url = folder.url(folder: target.rawValue)
+        guard folder.exists(url) == false else { throw VaultError.alreadyExists(target.name) }
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     }
 
-    func moveFolder(from source: SpaceName, to target: SpaceName) throws {
+    func moveFolder(from source: FolderPath, to target: FolderPath) throws {
         let from = folder.url(folder: source.rawValue)
         let to = folder.url(folder: target.rawValue)
         guard folder.exists(from) else { throw VaultError.notFound(VaultPath(rawValue: source.rawValue)) }
         if StemPolicy.isSame(source.rawValue, target.rawValue) {
-            let step = folder.url(folder: ".\(source.rawValue).slate-rename")
+            let step = from.deletingLastPathComponent().appendingPathComponent(".\(source.name).slate-rename", isDirectory: true)
             try FileCoordination.moving(from: from, to: step)
             try FileCoordination.moving(from: step, to: to)
             return
         }
-        guard folder.exists(to) == false else { throw VaultError.alreadyExists(target.rawValue) }
+        guard folder.exists(to) == false else { throw VaultError.alreadyExists(target.name) }
         try FileCoordination.moving(from: from, to: to)
     }
 
-    func removeFolder(_ name: SpaceName) throws {
-        let url = folder.url(folder: name.rawValue)
+    func removeFolder(_ target: FolderPath) throws {
+        let url = folder.url(folder: target.rawValue)
         guard folder.exists(url) else { return }
         if Self.holdsVisibleFiles(url) {
             try recycle(url)

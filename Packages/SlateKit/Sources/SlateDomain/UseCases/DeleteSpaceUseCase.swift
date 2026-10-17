@@ -15,7 +15,7 @@ package struct DeleteSpaceUseCase: Sendable {
         for path in notes.sorted(by: { $0.rawValue < $1.rawValue }) {
             moves.append(SpaceDeletion.Move(from: path, to: try await move.execute(path, to: spaces.captureSpace)))
         }
-        try await files.removeFolder(name)
+        try await files.removeFolder(FolderPath(space: name))
         spaces.spaces.remove(at: position)
         if spaces.archiveSpace == name { spaces.archiveSpace = spaces.captureSpace }
         try await config.saveSpaces(spaces)

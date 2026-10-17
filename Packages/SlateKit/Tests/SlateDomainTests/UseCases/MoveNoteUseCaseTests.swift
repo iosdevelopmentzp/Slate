@@ -40,4 +40,24 @@ import Testing
 
         #expect(target == VaultPath(rawValue: "Archive/A.md"))
     }
+
+    @Test func movingIntoASubFolderFixesTheImageLinks() async throws {
+        let source = VaultPath(rawValue: "Work/A.md")
+        spies.files.seed(source, NoteText.make(id: "a", title: "A", body: "![](../_attachments/a.png)\n"))
+
+        let target = try await UseCases(ports: ports).move.execute(source, toFolder: FolderPath(rawValue: "Work/Clients"))
+
+        #expect(target == VaultPath(rawValue: "Work/Clients/A.md"))
+        #expect(spies.files.text(at: target)?.contains("![](../../_attachments/a.png)") == true)
+    }
+
+    @Test func aNoteAlreadyInTheFolderStays() async throws {
+        let source = VaultPath(rawValue: "Work/Clients/A.md")
+        spies.files.seed(source, "x")
+
+        let target = try await UseCases(ports: ports).move.execute(source, toFolder: FolderPath(rawValue: "Work/Clients"))
+
+        #expect(target == source)
+        #expect(spies.files.calls.isEmpty)
+    }
 }

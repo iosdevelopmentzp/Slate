@@ -8,9 +8,9 @@ package final class SpyVaultFileStore: VaultFileStore, @unchecked Sendable {
         case write(VaultPath, expected: ContentHash?)
         case create(VaultPath)
         case move(from: VaultPath, to: VaultPath)
-        case createFolder(SpaceName)
-        case moveFolder(from: SpaceName, to: SpaceName)
-        case removeFolder(SpaceName)
+        case createFolder(FolderPath)
+        case moveFolder(from: FolderPath, to: FolderPath)
+        case removeFolder(FolderPath)
     }
 
     private struct File {
@@ -21,7 +21,7 @@ package final class SpyVaultFileStore: VaultFileStore, @unchecked Sendable {
     private let lock = NSLock()
     private var _calls: [Call] = []
     private var files: [VaultPath: File] = [:]
-    private var folders: Set<SpaceName> = []
+    private var _folders: Set<FolderPath> = []
     private var _writeError: TestError?
     private var _modified = Date(timeIntervalSince1970: 1_800_000_000)
 
@@ -40,8 +40,12 @@ package final class SpyVaultFileStore: VaultFileStore, @unchecked Sendable {
         lock.withLock { Set(files.keys) }
     }
 
-    package var folderNames: Set<SpaceName> {
-        lock.withLock { folders }
+    package var folderNames: Set<FolderPath> {
+        lock.withLock { _folders }
+    }
+
+    package func seedFolder(_ folder: FolderPath) {
+        lock.withLock { _ = _folders.insert(folder) }
     }
 
     @discardableResult
@@ -113,32 +117,40 @@ package final class SpyVaultFileStore: VaultFileStore, @unchecked Sendable {
         lock.withLock { files.keys.filter { $0.folder == folder }.map(\.fileName) }
     }
 
-    package func createFolder(_ name: SpaceName) async throws {
-        try lock.withLock {
-            _calls.append(.createFolder(name))
-            guard folders.contains(name) == false else { throw VaultError.alreadyExists(name.rawValue) }
-            folders.insert(name)
+    package func folders() async throws -> [FolderPath] {
+        lock.withLock {
+            let fromFiles = files.keys.compactMap(\.folderPath).flatMap { folder in
+                (1..<folder.depth).map { FolderPath(rawValue: folder.components.prefix($0 + 1).joined(separator: "/")) }
+            }
+            return Set(_folders.filter { $0.isSpace == false } + fromFiles).sorted { $0.rawValue < $1.rawValue }
         }
     }
 
-    package func removeFolder(_ name: SpaceName) async throws {
+    package func createFolder(_ folder: FolderPath) async throws {
+        try lock.withLock {
+            _calls.append(.createFolder(folder))
+            guard _folders.contains(folder) == false else { throw VaultError.alreadyExists(folder.rawValue) }
+            _folders.insert(folder)
+        }
+    }
+
+    package func removeFolder(_ folder: FolderPath) async throws {
         lock.withLock {
-            _calls.append(.removeFolder(name))
-            folders.remove(name)
-            for path in files.keys where path.space == name {
+            _calls.append(.removeFolder(folder))
+            _folders = _folders.filter { $0 != folder && folder.contains($0) == false }
+            for path in files.keys where folder.contains(path) {
                 files[path] = nil
             }
         }
     }
 
-    package func moveFolder(from source: SpaceName, to target: SpaceName) async throws {
+    package func moveFolder(from source: FolderPath, to target: FolderPath) async throws {
         lock.withLock {
             _calls.append(.moveFolder(from: source, to: target))
-            folders.remove(source)
-            folders.insert(target)
-            for (path, file) in files where path.space == source {
+            _folders = Set(_folders.map { $0.moved(from: source, to: target) })
+            for (path, file) in files where source.contains(path) {
                 files[path] = nil
-                let moved = VaultPath(rawValue: ([target.rawValue] + path.components.dropFirst()).joined(separator: "/"))
+                let moved = VaultPath(rawValue: target.rawValue + path.rawValue.dropFirst(source.rawValue.count))
                 files[moved] = File(data: file.data, meta: FileMeta(path: moved, created: file.meta.created, modified: file.meta.modified, size: file.meta.size))
             }
         }

@@ -43,11 +43,16 @@ package enum MockVault {
             "0b6c1f7e-2a3d-4c5e-8f90-1a2b3c4d5e12", space: work, title: "Questions for the team", minutesAgo: 2_880,
             body: "What should the next release include? Who can help with the screenshots?\n"
         ),
+        document(
+            "0b6c1f7e-2a3d-4c5e-8f90-1a2b3c4d5e13", space: work, subfolder: "Clients", title: "Call notes", minutesAgo: 4_320,
+            body: "Agreed on the new dates. Send the summary on Friday.\n"
+        ),
     ]
 
     private static func document(
         _ id: String,
         space: SpaceName,
+        subfolder: String? = nil,
         title: String,
         pinned: Bool = false,
         minutesAgo: Double,
@@ -56,7 +61,8 @@ package enum MockVault {
         let date = reference.addingTimeInterval(-minutesAgo * 60)
         var header = HeaderDefaultsPolicy.header(id: NoteID(rawValue: id), title: title, type: .note, now: date)
         header.pinned = pinned ? true : nil
-        let path = VaultPath(space: space, stem: StemPolicy.stem(forTitle: title))
+        let folder = subfolder.map { FolderPath(space: space).appending($0) } ?? FolderPath(space: space)
+        let path = VaultPath(folder: folder, stem: StemPolicy.stem(forTitle: title))
         let data = NoteCodec.encode(header: header, body: body, opaqueHeader: nil, timeZone: .gmt)
         return NoteDocument(
             path: path,

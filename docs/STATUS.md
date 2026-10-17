@@ -35,9 +35,9 @@ The Presentation code below was deleted. Domain and Data code and tests stay. To
 | First launch | real | "Where should Slate keep your notes?", the default path, Choose…, Start. A new folder gets `Notes/` with the welcome note, `_attachments/` and `.slate/spaces.json` only |
 | Panel | real (S2) | Three columns like the window: sidebar (`⌘0` hides it, remembered), the list, the note. The status item: left click toggles the panel, right click shows New Note, Quick Note, Open Window, Settings, Appearance, Quit. The resize grip sits in the bottom-right corner |
 | Window | real (S2) | The same three columns under a transparent title bar; the sidebar title sits next to the window buttons |
-| Sidebar | real (S2) | "Folders" with Open as window (panel) and Settings at the top. All notes, the folders (tinted icon, name, count, soft pill when selected), Trash, and "+ New folder" at the bottom (`⇧⌘N`). Double click renames inline. Right click: Rename, Colour (eight colours with dots), Icon (16 named icons), Move up, Move down, Delete folder. Delete asks in place ("Delete "Ideas"? Its 4 notes move to Notes. Yes · No", 5 s, Esc cancels) and shows a toast with Undo. A note card dropped on a folder moves there |
+| Sidebar | real (S2) | "Folders" with Open as window (panel) and Settings at the top. All notes, the folders (tinted icon, name, count, soft pill when selected), Trash, and "+ New folder" at the bottom (`⇧⌘N`). Double click renames inline. Right click: Rename, Colour (eight colours with dots), Icon (16 named icons), Move up, Move down, Delete folder. Delete asks in place ("Delete "Ideas"? Its 4 notes move to Notes. Yes · No", 5 s, Esc cancels) and shows a toast with Undo. A note card dropped on a folder moves there. Sub-folders (ADR 0011): a tree with arrows (open state remembered), indented rows with an outline folder icon, New folder inside in every folder menu, Rename and Delete folder for sub-folders, drop a card on a sub-folder |
 | Quick note field | real (S4) | `⌃⌥Space` from any app: a 520 pt rounded card (radius 14, surface colour, the system shadow), "Type a note…", the folder as a tinted chip on the left, "⏎ Save" on the right. Enter saves, `⌘Enter` saves and opens, `⇧Enter` new line, Esc closes and keeps the draft |
-| Note list | real (S2) | The folder name (`.title2`), a round + button, a rounded search field and a thin progress line. Cards: title, date, pin, two-line preview; 12 pt padding, 10 pt radius, 6 pt gap; soft tint when selected or hovered. A "…" button on hover and the right-click menu: Pin, Move to, Duplicate, Move to Trash ("Move to the Trash? Yes · No" in the card). Cards can be dragged onto a folder. Empty folder: "Nothing here yet." with New note and `⌘N` |
+| Note list | real (S2) | The folder name (`.title2`), a round + button, a rounded search field and a thin progress line. Cards: title, date, pin, two-line preview; 12 pt padding, 10 pt radius, 6 pt gap; soft tint when selected or hovered. A "…" button on hover and the right-click menu: Pin, Move to, Duplicate, Move to Trash ("Move to the Trash? Yes · No" in the card). Cards can be dragged onto a folder. Empty folder: "Nothing here yet." with New note and `⌘N`. In a folder with sub-folders: sub-folder rows first (icon, name, count, chevron), then the folder's own notes; inside a sub-folder a back chevron before the title |
 | Trash | real (S2) | Cards with the folder and the age; Restore and Delete now on hover ("Delete now? Yes · No"); "Notes are removed from the Trash after 30 days." under the list; "The Trash is empty." |
 | Editor | real (S3) | Title field (24 pt bold, up to two lines, placeholder "Title") and the versions button (clock); the format bar (36 pt, radius 10): style menu, Bold, Italic, Strikethrough, Checklist, Bulleted, Numbered, Quote, Link, Image, "…" with Divider and Screenshot. Rich text without marks: title 24, heading 18, subheading 15 semibold, body 15, monospaced 13; round checkboxes, bullets, numbers, quote bar, code and raw blocks on a tint, images as rounded blocks (max 360 pt high), dividers. List keys, typing shortcuts ("- ", "1. ", "[] ", "# ", "> "), `⌘K` link popover, `⌘`-click opens links, double-click on an image opens Quick Look. The text column is at most 720 pt wide; "Saved" fades in for a second after a save. Empty: "Pick a note or press ⌘N." Autosave, journal with Restore and Discard, the "Changed on disk" banner |
 | Versions | real | The clock button lists the versions of the note with Restore. Snapshots run quietly with the stored settings |
@@ -169,6 +169,12 @@ Numbered. What, then why. A later session must not undo these without a new numb
 98. The main menu is set when Slate starts and again each time the panel opens, not only with the window. Slate has no Dock icon, so the menu is not visible in the panel, but its keys (`⌘Z`, `⇧⌘Z`, `⌘C`, `⌘V`, the Format keys) work there.
 99. The editor keeps its own `UndoManager`. `RichTextView` answers `undo:` and `redo:` itself, so the Undo and Redo commands use the editor history and not the window's. After an undo the editor writes the Markdown again.
 
+100. Sub-folders follow ADR 0011: any depth; a folder lists its sub-folders first, then only its own notes; the sidebar is a tree with a remembered open state. The owner first chose "a parent lists all notes below it" and changed it after a try to "own notes and sub-folders", like Finder. The folder count in the sidebar and on a sub-folder row is the number of notes in it and in all its sub-folders.
+101. A sub-folder has no colour, icon or place of its own: it takes the colour of its top-level folder, an outline folder icon, and the name order. `.slate/spaces.json` does not change.
+102. `ListSource.folder(FolderPath)` is the list of a sub-folder; `.space` stays for top-level folders, so `⌘1`…`⌘9` and the stored navigator state keep working.
+103. Search in a sub-folder asks the index for the top-level folder and keeps the hits inside the sub-folder; the limit of 200 hits applies before that.
+104. Deleting a top-level folder still moves every note in it, also from its sub-folders, to depth 1 of the quick note folder. Undo puts each note back at its old path and depth.
+
 ## Next steps
 
 1. The owner runs the manual checks below and takes the README screenshots.
@@ -226,6 +232,13 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 34. Tab moves from the folders to the list, to the title, to the text, and the focus is visible.
 35. Take the four README screenshots.
 
+### Sub-folders (ADR 0011)
+
+36. Sub-folders: right-click a folder, New folder inside, type a name, Enter. The folder opens, the sidebar shows it under its parent with an arrow on the parent. Make one more level inside it.
+37. In a folder with sub-folders the list shows the sub-folder rows first and then only the notes of that folder. A click on a row opens the sub-folder; the back chevron goes up. "All notes" shows every note.
+38. `⌘N` inside a sub-folder makes the note there (check in Finder). Drag a card onto a sub-folder row in the sidebar and in the list; use Move to in the card menu. A note with an image moved one level deeper still shows the image, and the file has `../../_attachments/…`.
+39. Rename a sub-folder (double-click or the menu); the open list follows. Delete a sub-folder with notes: it asks first, the notes move to the parent, Undo brings the folder and the notes back. Close and open Slate: the open arrows in the sidebar are as you left them.
+
 ## Known gaps
 
 - S2: a text file dropped on the list does not make a note yet (`UX.md` section 6). Folders reorder with Move up and Move down, not by drag.
@@ -246,3 +259,4 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - Editor (S3): typing latency was measured by a test on the 5,000-line fixture (1.3 ms median, open 120 ms), not with Instruments. Markdown for a long note is written 250 ms after the last key (decision 88).
 - Editor (S3): a code block has no language label and no colours; the language is kept in the file. Images have no resize handle; the right-click menu has no Remove (Backspace removes, Undo brings back).
 - Editor (S3): a pasted URL is not turned into a link with a title (P1). There is no hover preview of a link.
+- Sub-folders (ADR 0011): no drag of a folder into another folder, no colour, icon or manual order per sub-folder, no `⌘1`…`⌘9` for sub-folders. Esc does not go up to the parent folder yet; the back chevron does.

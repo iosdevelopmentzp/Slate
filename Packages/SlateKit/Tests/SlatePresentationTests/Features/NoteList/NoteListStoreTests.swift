@@ -217,4 +217,44 @@ import Testing
 
         try await waitUntil { store.summaries.count == 1 }
     }
+
+    @Test func aFolderListsOnlyItsOwnNotes() async throws {
+        harness.seed("Notes/A.md", id: "a")
+        harness.seed("Notes/Swift/B.md", id: "b")
+        harness.seed("Notes/Swift/Actors/C.md", id: "c")
+        try await harness.index()
+        await store.refresh()
+
+        store.show(.space(SpaceName(rawValue: "Notes")))
+        #expect(store.visibleNotes.map(\.id.rawValue) == ["a"])
+
+        store.show(.folder(FolderPath(rawValue: "Notes/Swift")))
+        #expect(store.visibleNotes.map(\.id.rawValue) == ["b"])
+        #expect(store.count(in: FolderPath(rawValue: "Notes/Swift")) == 2)
+
+        store.show(.all)
+        #expect(store.visibleNotes.count == 3)
+    }
+
+    @Test func aNewNoteGoesIntoTheShownSubFolder() async throws {
+        harness.navigator.show(.folder(FolderPath(rawValue: "Notes/Swift")))
+
+        await store.createNote()
+
+        #expect(harness.spies.files.paths.map(\.folder) == ["Notes/Swift"])
+        #expect(harness.navigator.source == .folder(FolderPath(rawValue: "Notes/Swift")))
+    }
+
+    @Test func aNoteMovesIntoASubFolderAndUndoTakesItBack() async throws {
+        let path = harness.seed("Notes/A.md", id: "a")
+        try await harness.index()
+        await store.refresh()
+
+        await store.moveNote(id: NoteID(rawValue: "a"), toFolder: FolderPath(rawValue: "Notes/Swift"))
+
+        #expect(harness.spies.files.paths == [VaultPath(rawValue: "Notes/Swift/A.md")])
+        #expect(harness.toaster.text == "Moved to Swift")
+        harness.toaster.performAction()
+        try await waitUntil { harness.spies.files.paths == [path] }
+    }
 }

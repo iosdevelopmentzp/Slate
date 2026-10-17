@@ -104,7 +104,7 @@ Packages/SlateKit/
   Sources/
     SlateDomain/
       Models/                    Note, NoteDocument, NoteSummary, NoteHeader, NoteType, Space, Tag, TodoItem, Attachment, Link, SearchHit, Snapshot, TrashItem, CloudStatus, ConflictVersion, ActionDefinition, LinkPattern, SmartView, IssueDetails
-      Values/                    NoteID, VaultPath, SpaceName, Stem, ContentHash, TicketKey, BranchName
+      Values/                    NoteID, VaultPath, SpaceName, FolderPath, Stem, ContentHash, TicketKey, BranchName
       Ports/                     one protocol per file (section 4.3)
       Policies/                  pure functions (section 4.4)
       Codec/                     NoteCodec, FrontmatterParser, FrontmatterWriter
@@ -144,7 +144,7 @@ Packages/SlateKit/
       Shared/                    Surface, ListSource, Navigator, ActivityLog, ActivityRecorder (CommandRecording → ActivityLog), Toaster (+ ToastAction for Undo), PasteboardWriter, WindowLayout, TextFocus, NoteDragPayload, RefreshTask, VaultChangeFeed, NoteLookup, PresentationAssembly (+Preview), View+Inject, View+PreviewEnvironment
       Shared/Events/             AppEvent, AppEvents, SubscriptionToken
       Shell/                     AppWindows (status item, panel, window, capture panel), MenuBarPanel, CapturePanel, MainMenuBuilder, MenuTarget, FirstLaunchWindow, FirstLaunchView, RootView, SidebarView, ColumnResizer, drag and resize
-      Features/Vault/            VaultStore, Models/ (FolderRowModel, FolderRowMapper, FolderEdit, FolderIcon, FolderTint), Views/ (FolderRow, FolderNameField, FolderMenu, FolderDeleteConfirmation)
+      Features/Vault/            VaultStore, Models/ (FolderRowModel, FolderRowMapper, FolderTreeMapper, FolderNode, FolderEdit, FolderIcon, FolderTint), Views/ (FolderRow, FolderNameField, FolderMenu, FolderDeleteConfirmation)
       Features/NoteList/         NoteListStore, Models/ (NoteRowModel, NoteRowMapper, NoteRowActions, TrashRowModel, TrashRowMapper), Views/ (NoteListColumn, NoteListView, NoteCard, NoteRowMenu, TrashListView, TrashRow)
       Features/Editor/           EditorStore (+Attachments, +Journal), Models/ (SaveState, BodyFocus, MarkdownInsertion, FormatBarMapper, FormatButtonModel, FormatStyleModel), Views/ (EditorView, FormatBar, FormatButton, ConflictBanner, RecoveryBanner)
       Features/Search/           SearchStore, Models/ (SearchResultRowModel, SearchResultMapper), Views/ (SearchResultsView, SearchResultRow)
@@ -215,7 +215,7 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 
 | Port | Methods | Live implementation |
 |---|---|---|
-| `VaultFileStore` | `enumerate() -> [FileMeta]`, `read(VaultPath) -> FileContents` (bytes, hash, meta), `meta(VaultPath) -> FileMeta?`, `write(VaultPath, data:, expected: ContentHash?) -> WriteResult` (`.written(hash)`, `.conflict(diskHash:)`), `create(VaultPath, data:) -> ContentHash` (fails when the file exists), `move(from:to:)`, `fileNames(inFolder:)`, `createFolder(SpaceName)`, `moveFolder(from:to:)`, `removeFolder(SpaceName)` (removes an empty folder, moves a folder with other files to the macOS Trash) | `FileVaultStore` (an actor) |
+| `VaultFileStore` | `enumerate() -> [FileMeta]`, `read(VaultPath) -> FileContents` (bytes, hash, meta), `meta(VaultPath) -> FileMeta?`, `write(VaultPath, data:, expected: ContentHash?) -> WriteResult` (`.written(hash)`, `.conflict(diskHash:)`), `create(VaultPath, data:) -> ContentHash` (fails when the file exists), `move(from:to:)`, `fileNames(inFolder:)`, `folders() -> [FolderPath]` (every sub-folder below the top-level folders, not `_` or hidden ones), `createFolder(FolderPath)`, `moveFolder(from:to:)`, `removeFolder(FolderPath)` (removes an empty folder, moves a folder with other files to the macOS Trash) | `FileVaultStore` (an actor) |
 | `SearchIndex` | `summaries(space:)`, `summary(id:)`, `fileStates() -> [VaultPath: IndexedFileState]`, `upsert(IndexedNote)`, `upsert(contentsOf:)`, `updateState(_:for:)`, `remove(path:)`, `search(SearchQuery, limit:) -> [SearchHit]`, `notes(named:)`, `notes(withTicket:)`, `notesLinking(to:)`, `tags() -> [TagCount]`, `todos(isDone:)`, `reset()` | `GRDBSearchIndex` (M3; `MemorySearchIndex` was removed). The spy and the mock answer `search` with `SearchMatchPolicy` |
 | `IndexedNoteBuilding` | `build(NoteDocument) -> IndexedNote` (the document carries its meta and hash; uses swift-markdown) | `IndexedNoteBuilder` |
 | `VaultWatching` | `changes() -> AsyncStream<VaultChange>` | `FSEventsVaultWatcher` |
@@ -273,9 +273,13 @@ Every policy has a test file with fixtures.
 | `CreateNoteUseCase` | config, templates, files, index, builder, clock | type defaults, title and ticket split, unique stem, template render, write, index, returns the document and the caret offset |
 | `SaveNoteUseCase` | files, index, builder, journal, clock | encode, `updated` only when changed, coordinated write with expected hash, index upsert, journal clear; returns `.saved(hash)` or `.conflict(diskHash)` |
 | `RenameNoteUseCase` | files, index, builder, save | per `STORAGE-FORMAT.md` 3.3, returns `RenameReport` (the save result, rewritten files, failures). A link is rewritten only when it resolves to the renamed note (`WikilinkPolicy.resolve`) |
-| `MoveNoteUseCase` | files, index | move to depth 1 of the space, unique stem, index update |
+| `MoveNoteUseCase` | files, index, builder | move into a folder or sub-folder, unique stem, rewrite links into `_attachments/` when the depth changes (`AttachmentPolicy.rewriteLinks`), index update |
 | `DeleteSpaceUseCase` | files, config, move | refuses the quick note folder; moves every note of the folder to the quick note folder, removes the folder and its entry; returns a `SpaceDeletion` for Undo |
-| `RestoreSpaceUseCase` | files, index, builder, config | Undo of a deletion: the folder and its entry come back at the same place, notes that are still where the deletion put them move back |
+| `RestoreSpaceUseCase` | files, config, move | Undo of a deletion: the folder and its entry come back at the same place, notes that are still where the deletion put them move back (through `MoveNoteUseCase`, so image links follow) |
+| `CreateFolderUseCase` | files | a sub-folder inside a folder; the name follows `SpaceNamePolicy`, unique among its siblings (ADR 0011) |
+| `RenameFolderUseCase` | files, reindex | renames a sub-folder (not a top-level folder), even by case only, then reindexes |
+| `DeleteFolderUseCase` | files, move | moves every note in the sub-folder and below to its parent, removes the folder; returns a `FolderDeletion` for Undo |
+| `RestoreFolderUseCase` | files, move | Undo: makes the folders again and moves the notes back to their old paths |
 | `OpenTargetUseCase` | index, create | `slate://open` by id, title or ticket; `.found`, `.created` (a ticket without a note) or `.missing` |
 | `TrashNoteUseCase`, `RestoreNoteUseCase`, `PurgeTrashUseCase` | trash, index, clock | |
 | `QuickCaptureUseCase` | create, append (as nested use cases) | capture input → new note or Today line |
@@ -362,7 +366,7 @@ package struct EditorHandlers {
 
 | Store | Owns | Gets in `init` |
 |---|---|---|
-| `VaultStore` | The folders: create, inline rename, delete with inline confirmation and Undo, reorder, colour and icon (S2). Holds the editing and confirmation state of the sidebar | config, `CreateSpaceUseCase`, `RenameSpaceUseCase`, `DeleteSpaceUseCase`, `RestoreSpaceUseCase`, `Navigator`, `Toaster`, `ActivityLog`, `AppEvents` |
+| `VaultStore` | The folders: create, inline rename, delete with inline confirmation and Undo, reorder, colour and icon (S2); sub-folders: the list from disk, the open state of the tree (saved), create inside, rename, delete with Undo (ADR 0011). Holds the editing and confirmation state of the sidebar | config, files, the space and folder use cases, `KeyValueStore`, `Navigator`, `Toaster`, `ActivityLog`, `AppEvents` |
 | `NoteListStore` | summaries, trash items, filter text, the trash confirmation; create, pin, move with Undo, duplicate, trash with Undo, restore. The list source (all, a space, the Trash) and the selection live in `Navigator` | index, trash, use cases (create, updateHeader, move, archive, duplicate, trash, restore), `Navigator`, `Toaster`, `ActivityLog`, `AppEvents`, `KeyValueStore` |
 | `EditorStore` | open document, `text`, `title`, dirty flag, autosave (500 ms) and title commit (Enter, focus loss, 1.5 s), the title that follows the first body line for a new untitled note, focus requests, conflict state with Keep mine and Take theirs, `pendingSave()` for quit. M2 and later: selection, attachment import, link resolution, journal | files, index, use cases (save, rename), `Navigator`, `Clock`, `AppEvents`, `ActivityLog` |
 | `SearchStore` | M3: query text, parsed query, results (title matches at once, the index after 80 ms), the folder scope | index, `NoteLookup` (the `NoteListStore`), `Navigator`, `Clock`, `ActivityLog`, `AppEvents` |

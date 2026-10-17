@@ -4,11 +4,36 @@ import SlateDomain
 enum ListSource: Hashable {
     case all
     case space(SpaceName)
+    case folder(FolderPath)
     case trash
 
     var space: SpaceName? {
-        guard case .space(let name) = self else { return nil }
-        return name
+        switch self {
+        case .space(let name): name
+        case .folder(let folder): folder.space
+        case .all, .trash: nil
+        }
+    }
+
+    var folder: FolderPath? {
+        switch self {
+        case .space(let name): FolderPath(space: name)
+        case .folder(let folder): folder
+        case .all, .trash: nil
+        }
+    }
+
+    func shows(_ path: VaultPath) -> Bool {
+        switch self {
+        case .all: true
+        case .space(let name): path.folder == name.rawValue
+        case .folder(let folder): path.folder == folder.rawValue
+        case .trash: false
+        }
+    }
+
+    static func showing(_ folder: FolderPath) -> ListSource {
+        folder.isSpace ? .space(folder.space) : .folder(folder)
     }
 
     var storedValue: String {
@@ -16,6 +41,7 @@ enum ListSource: Hashable {
         case .all: "all"
         case .trash: "trash"
         case .space(let name): "space:\(name.rawValue)"
+        case .folder(let folder): "folder:\(folder.rawValue)"
         }
     }
 
@@ -31,6 +57,8 @@ enum ListSource: Hashable {
             self = .trash
         case let value? where value.hasPrefix("space:"):
             self = .space(SpaceName(rawValue: String(value.dropFirst("space:".count))))
+        case let value? where value.hasPrefix("folder:"):
+            self = .folder(FolderPath(rawValue: String(value.dropFirst("folder:".count))))
         default:
             self = .all
         }

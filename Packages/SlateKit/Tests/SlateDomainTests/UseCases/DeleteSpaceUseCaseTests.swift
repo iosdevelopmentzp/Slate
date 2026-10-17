@@ -18,7 +18,7 @@ import Testing
             SpaceDeletion.Move(from: VaultPath(rawValue: "Snippets/A.md"), to: VaultPath(rawValue: "Inbox/A 2.md")),
             SpaceDeletion.Move(from: VaultPath(rawValue: "Snippets/Deep/B.md"), to: VaultPath(rawValue: "Inbox/B.md")),
         ])
-        #expect(spies.files.calls.contains(.removeFolder(SpaceName(rawValue: "Snippets"))))
+        #expect(spies.files.calls.contains(.removeFolder(FolderPath(rawValue: "Snippets"))))
         #expect(spies.config.config.spaces.map(\.folder.rawValue) == ["Inbox", "Tasks", "Notes", "Daily", "Archive"])
         #expect(spies.index.indexed[VaultPath(rawValue: "Inbox/B.md")] != nil)
     }

@@ -13,6 +13,15 @@ package struct VaultPath: Hashable, Sendable, Codable {
         rawValue = "\(space.rawValue)/\(stem).\(Self.noteExtension)"
     }
 
+    package init(folder: FolderPath, stem: String) {
+        rawValue = "\(folder.rawValue)/\(stem).\(Self.noteExtension)"
+    }
+
+    package var folderPath: FolderPath? {
+        guard space != nil else { return nil }
+        return FolderPath(rawValue: folder)
+    }
+
     package var components: [String] {
         rawValue.split(separator: "/").map(String.init)
     }

@@ -13,7 +13,7 @@ package struct RenameSpaceUseCase: Sendable {
         guard caseOnly || spaces.spaces.contains(where: { StemPolicy.isSame($0.folder.rawValue, target.rawValue) }) == false else {
             throw VaultError.alreadyExists(target.rawValue)
         }
-        try await files.moveFolder(from: space, to: target)
+        try await files.moveFolder(from: FolderPath(space: space), to: FolderPath(space: target))
         spaces.spaces = spaces.spaces.map { entry in
             guard entry.folder == space else { return entry }
             return entry.renamed(to: target)

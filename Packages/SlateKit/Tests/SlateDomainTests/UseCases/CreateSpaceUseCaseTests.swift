@@ -10,7 +10,7 @@ import Testing
         let space = try await UseCases(ports: ports).createSpace.execute(name: " Reading ")
 
         #expect(space == SpaceName(rawValue: "Reading"))
-        #expect(spies.files.folderNames == [space])
+        #expect(spies.files.folderNames == [FolderPath(space: space)])
         #expect(spies.config.config.spaces.last == Space(folder: space, icon: "folder.fill", defaultType: "note"))
     }
 

@@ -14,6 +14,13 @@ struct NoteListColumn: View {
         @Bindable var search = search
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
+                if case .folder(let folder) = store.source, let parent = folder.parent {
+                    IconButton(systemImage: "chevron.left", help: "Back to \(parent.name)") {
+                        search.clear()
+                        store.show(.showing(parent))
+                    }
+                    .accessibilityLabel("Back to \(parent.name)")
+                }
                 Text(title)
                     .font(.title2.weight(.semibold))
                     .lineLimit(1)
@@ -50,6 +57,7 @@ struct NoteListColumn: View {
         case .all: "All notes"
         case .trash: "Trash"
         case .space(let name): name.rawValue
+        case .folder(let folder): folder.name
         }
     }
 

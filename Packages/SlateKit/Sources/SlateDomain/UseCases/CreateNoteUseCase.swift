@@ -12,7 +12,7 @@ package struct CreateNoteUseCase: Sendable {
     package func execute(_ draft: NoteDraft) async throws -> CreatedNote {
         let spaces = try await config.spaces()
         let types = try await config.types()
-        let requested = draft.space.flatMap { spaces.space($0) }
+        let requested = (draft.folder?.space ?? draft.space).flatMap { spaces.space($0) }
         let type = HeaderDefaultsPolicy.type(named: draft.type, space: requested, among: types)
         let space = HeaderDefaultsPolicy.space(for: type, requested: requested?.folder, config: spaces)
         let typed = draft.title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -27,8 +27,9 @@ package struct CreateNoteUseCase: Sendable {
         }
         let rendered = ticket == nil ? typed : TitlePolicy.render(type.titlePattern, ticket: ticket, title: bareTitle)
         let title = rendered.isEmpty ? (ticket ?? StemPolicy.untitled) : rendered
-        let stems = try await NoteStems.stems(inFolder: space.rawValue, files: files)
-        let path = VaultPath(space: space, stem: StemPolicy.unique(StemPolicy.stem(forTitle: title), among: stems))
+        let folder = draft.folder.flatMap { $0.space == space ? $0 : nil } ?? FolderPath(space: space)
+        let stems = try await NoteStems.stems(inFolder: folder.rawValue, files: files)
+        let path = VaultPath(folder: folder, stem: StemPolicy.unique(StemPolicy.stem(forTitle: title), among: stems))
         let now = clock.now()
         var header = HeaderDefaultsPolicy.header(id: .generate(), title: title, type: type, now: now)
         if type.fields.contains("ticket") {

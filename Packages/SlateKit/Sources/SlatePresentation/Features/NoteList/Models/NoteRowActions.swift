@@ -2,9 +2,9 @@ import Foundation
 import SlateDomain
 
 struct NoteRowActions {
-    let moveTargets: [Space]
+    let moveTargets: [MoveTargetModel]
     let pin: () -> Void
-    let move: (SpaceName) -> Void
+    let move: (FolderPath) -> Void
     let duplicate: () -> Void
     let requestTrash: () -> Void
 

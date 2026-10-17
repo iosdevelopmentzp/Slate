@@ -88,4 +88,17 @@ import Testing
 
         #expect(harness.editor.bodyFocus?.words == ["cycle"])
     }
+
+    @Test func searchInASubFolderStaysInsideIt() async throws {
+        harness.seed("Notes/Swift/Actors.md", id: "s", title: "Actors", body: "retain")
+        try await seed()
+        harness.navigator.show(.folder(FolderPath(rawValue: "Notes/Swift")))
+
+        search.query = "retain"
+        #expect(search.results.map(\.id.rawValue).allSatisfy { $0 == "s" })
+        await search.waitForResults()
+
+        #expect(search.results.map(\.id.rawValue) == ["s"])
+        #expect(search.scopeName == "Swift")
+    }
 }

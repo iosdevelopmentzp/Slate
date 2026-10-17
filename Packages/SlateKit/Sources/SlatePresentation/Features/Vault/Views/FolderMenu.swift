@@ -7,6 +7,7 @@ struct FolderMenu: View {
     let model: FolderRowModel
     let canMoveUp: Bool
     let canMoveDown: Bool
+    let onNewInside: () -> Void
     let onRename: () -> Void
     let onColor: (SpaceColor) -> Void
     let onIcon: (String) -> Void
@@ -14,7 +15,18 @@ struct FolderMenu: View {
     let onDelete: () -> Void
 
     var body: some View {
+        Button("New folder inside", systemImage: "folder.badge.plus", action: onNewInside)
         Button("Rename", systemImage: "pencil", action: onRename)
+        if model.isSpace {
+            spaceItems
+        }
+        Divider()
+        Button("Delete folder", systemImage: "trash", role: .destructive, action: onDelete)
+            .disabled(model.canDelete == false)
+    }
+
+    @ViewBuilder
+    private var spaceItems: some View {
         Menu("Colour") {
             ForEach(SpaceColor.allCases, id: \.self) { color in
                 Button {
@@ -40,8 +52,5 @@ struct FolderMenu: View {
             .disabled(canMoveUp == false)
         Button("Move down", systemImage: "arrow.down") { onMove(1) }
             .disabled(canMoveDown == false)
-        Divider()
-        Button("Delete folder", systemImage: "trash", role: .destructive, action: onDelete)
-            .disabled(model.canDelete == false)
     }
 }

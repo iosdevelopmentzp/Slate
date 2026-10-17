@@ -39,4 +39,18 @@ import Testing
         #expect(AttachmentPolicy.attachmentFile(ofLink: "../_attachments/x.png", from: note) == "x.png")
         #expect(AttachmentPolicy.attachmentFile(ofLink: "../Notes/x.png", from: note) == nil)
     }
+
+    @Test func movingANoteDeeperRewritesItsAttachmentLinks() {
+        let text = "![](../_attachments/a%20b.png)\n[Plan](../_attachments/plan.pdf#page=2) and [site](https://example.com/x.png) and ![](other/c.png)"
+
+        let moved = AttachmentPolicy.rewriteLinks(in: text, from: VaultPath(rawValue: "Work/A.md"), to: VaultPath(rawValue: "Work/Clients/A.md"))
+
+        #expect(moved == "![](../../_attachments/a%20b.png)\n[Plan](../../_attachments/plan.pdf#page=2) and [site](https://example.com/x.png) and ![](other/c.png)")
+    }
+
+    @Test func movingAtTheSameDepthKeepsTheText() {
+        let text = "![](../_attachments/a.png)"
+
+        #expect(AttachmentPolicy.rewriteLinks(in: text, from: VaultPath(rawValue: "Work/A.md"), to: VaultPath(rawValue: "Home/A.md")) == text)
+    }
 }

@@ -18,6 +18,7 @@ final class SearchStore {
     private(set) var isSearching = false
     private(set) var parsed = SearchQuery()
     private(set) var scope: SpaceName?
+    private(set) var scopeFolder: FolderPath?
 
     @ObservationIgnored private let index: any SearchIndex
     @ObservationIgnored private let notes: any NoteLookup
@@ -50,7 +51,7 @@ final class SearchStore {
     }
 
     var scopeName: String? {
-        scope?.rawValue
+        scopeFolder?.name ?? scope?.rawValue
     }
 
     func clear() {
@@ -85,12 +86,15 @@ final class SearchStore {
         guard isActive else {
             parsed = SearchQuery()
             scope = nil
+            scopeFolder = nil
             results = []
             isSearching = false
             return
         }
         var scoped = SearchQueryParser.parse(query, now: clock.now(), timeZone: clock.timeZone)
         scope = scopeSpace(for: scoped)
+        scopeFolder = scope == nil ? nil : navigator.source.folder.flatMap { $0.isSpace ? nil : $0 }
+        let folder = scopeFolder
         if let scope {
             scoped.filters.append(.space(scope.rawValue))
         }
@@ -104,7 +108,7 @@ final class SearchStore {
             do {
                 let hits = try await index.search(query, limit: Self.limit)
                 guard Task.isCancelled == false else { return }
-                results = hits
+                results = folder.map { folder in hits.filter { folder.contains($0.summary.path) } } ?? hits
             } catch {
                 activity.log("Search failed", detail: error.localizedDescription, outcome: .failure)
             }
@@ -120,9 +124,11 @@ final class SearchStore {
     private func titleMatches(for query: SearchQuery) -> [SearchHit] {
         guard query.hasText, query.filters.allSatisfy({ if case .space = $0 { true } else { false } }) else { return [] }
         let space = navigator.space
+        let folder = scopeFolder
         let words = query.words.map { $0.lowercased() }
         let matching = notes.summaries.filter { summary in
             if let space, summary.space != space { return false }
+            if let folder, folder.contains(summary.path) == false { return false }
             let title = summary.title.lowercased()
             return words.allSatisfy { title.contains($0) }
         }

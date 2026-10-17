@@ -25,4 +25,14 @@ import Testing
         #expect(model.title == "Untitled")
         #expect(model.isPinned)
     }
+
+    @Test func moveTargetsListEveryFolderButTheCurrentOne() {
+        let spaces = [Space(folder: SpaceName(rawValue: "Notes")), Space(folder: SpaceName(rawValue: "Work"), icon: "briefcase.fill")]
+        let folders = [FolderPath(rawValue: "Work/Clients"), FolderPath(rawValue: "Work/Clients/2026")]
+
+        let targets = NoteRowMapper.moveTargets(for: summary(), spaces: spaces, folders: folders)
+
+        #expect(targets.map(\.title) == ["Work", "Work › Clients", "Work › Clients › 2026"])
+        #expect(targets.map(\.icon) == ["briefcase.fill", "folder", "folder"])
+    }
 }

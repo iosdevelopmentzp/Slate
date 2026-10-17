@@ -67,4 +67,12 @@ import Testing
         #expect(created.document.body == "# Hi\n")
         #expect(created.caret == 5)
     }
+
+    @Test func aNewNoteGoesIntoTheChosenSubFolder() async throws {
+        spies.config.config = SpacesConfig(spaces: [Space(folder: SpaceName(rawValue: "Work"))])
+
+        let created = try await UseCases(ports: ports).create.execute(NoteDraft(space: SpaceName(rawValue: "Work"), folder: FolderPath(rawValue: "Work/Clients")))
+
+        #expect(created.document.path.folderPath == FolderPath(rawValue: "Work/Clients"))
+    }
 }

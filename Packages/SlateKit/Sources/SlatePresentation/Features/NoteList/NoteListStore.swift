@@ -81,12 +81,8 @@ final class NoteListStore: NoteLookup {
     }
 
     var visibleNotes: [NoteSummary] {
-        let inSource: [NoteSummary]
-        switch source {
-        case .all: inSource = summaries
-        case .space(let space): inSource = summaries.filter { $0.space == space }
-        case .trash: inSource = []
-        }
+        let source = source
+        let inSource = summaries.filter { source.shows($0.path) }
         let query = filterText.trimmingCharacters(in: .whitespacesAndNewlines)
         let matching = query.isEmpty ? inSource : inSource.filter { $0.title.localizedCaseInsensitiveContains(query) }
         return matching.sorted(by: order)
@@ -106,6 +102,10 @@ final class NoteListStore: NoteLookup {
     func count(in space: SpaceName?) -> Int {
         guard let space else { return summaries.count }
         return summaries.filter { $0.space == space }.count
+    }
+
+    func count(in folder: FolderPath) -> Int {
+        summaries.filter { folder.contains($0.path) }.count
     }
 
     func refresh() async {
@@ -133,7 +133,7 @@ final class NoteListStore: NoteLookup {
             Task { await refresh() }
             return
         }
-        if let selected, source == .all || selected.space == source.space {
+        if let selected, source.shows(selected.path) {
             return
         }
         navigator.select(visibleNotes.first?.id)
@@ -145,10 +145,10 @@ final class NoteListStore: NoteLookup {
 
     func createNote() async {
         do {
-            let created = try await create.execute(NoteDraft(space: source.space))
+            let created = try await create.execute(NoteDraft(space: source.space, folder: source.folder))
             let id = created.document.id
             await refresh()
-            if let space = created.document.path.space, source != .all, source != .space(space) {
+            if let space = created.document.path.space, source.shows(created.document.path) == false {
                 navigator.show(.space(space))
             }
             events.post(.noteCreated(id, caret: created.caret))
@@ -164,7 +164,7 @@ final class NoteListStore: NoteLookup {
             let created = try await create.execute(draft)
             await refresh()
             events.post(.noteCreated(created.document.id, caret: created.caret))
-            if let space = created.document.path.space, source != .all, source != .space(space) {
+            if let space = created.document.path.space, source.shows(created.document.path) == false {
                 navigator.show(.space(space))
             }
             navigator.select(created.document.id)
@@ -202,8 +202,8 @@ final class NoteListStore: NoteLookup {
     }
 
     private func showContaining(_ id: NoteID) {
-        if source != .all, summaries.first(where: { $0.id == id })?.space.map({ source != .space($0) }) ?? true {
-            navigator.show(.all)
+        if let summary = summaries.first(where: { $0.id == id }), source.shows(summary.path) == false {
+            navigator.show(summary.path.folderPath.map(ListSource.showing) ?? .all)
         }
         navigator.select(id)
     }
@@ -216,14 +216,18 @@ final class NoteListStore: NoteLookup {
     }
 
     func moveNote(_ summary: NoteSummary, to space: SpaceName) async {
+        await moveNote(summary, toFolder: FolderPath(space: space))
+    }
+
+    func moveNote(_ summary: NoteSummary, toFolder folder: FolderPath) async {
         do {
-            let target = try await move.execute(summary.path, to: space)
+            let target = try await move.execute(summary.path, toFolder: folder)
             await finishMove(summary, to: target)
-            guard let origin = summary.space else {
-                toaster.show("Moved to \(space.rawValue)")
+            guard let origin = summary.path.folderPath else {
+                toaster.show("Moved to \(folder.name)")
                 return
             }
-            toaster.show("Moved to \(space.rawValue)", action: ToastAction(title: "Undo") { [weak self] in
+            toaster.show("Moved to \(folder.name)", action: ToastAction(title: "Undo") { [weak self] in
                 guard let self else { return }
                 Task { await self.moveBack(id: summary.id, from: target, to: origin) }
             })
@@ -232,9 +236,9 @@ final class NoteListStore: NoteLookup {
         }
     }
 
-    private func moveBack(id: NoteID, from path: VaultPath, to space: SpaceName) async {
+    private func moveBack(id: NoteID, from path: VaultPath, to folder: FolderPath) async {
         do {
-            let target = try await move.execute(path, to: space)
+            let target = try await move.execute(path, toFolder: folder)
             events.post(.noteMoved(from: path, to: target))
             await refresh()
             navigator.select(id)
@@ -244,8 +248,12 @@ final class NoteListStore: NoteLookup {
     }
 
     func moveNote(id: NoteID, to space: SpaceName) async {
-        guard let summary = summaries.first(where: { $0.id == id }), summary.space != space else { return }
-        await moveNote(summary, to: space)
+        await moveNote(id: id, toFolder: FolderPath(space: space))
+    }
+
+    func moveNote(id: NoteID, toFolder folder: FolderPath) async {
+        guard let summary = summaries.first(where: { $0.id == id }), summary.path.folder != folder.rawValue else { return }
+        await moveNote(summary, toFolder: folder)
     }
 
     func duplicateNote(_ summary: NoteSummary) async {
@@ -331,7 +339,7 @@ final class NoteListStore: NoteLookup {
     private func finishMove(_ summary: NoteSummary, to target: VaultPath) async {
         events.post(.noteMoved(from: summary.path, to: target))
         await refresh()
-        if let space = source.space, target.space != space, navigator.selectedNote == summary.id {
+        if source.shows(target) == false, navigator.selectedNote == summary.id {
             navigator.select(visibleNotes.first?.id)
         }
     }

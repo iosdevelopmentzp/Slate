@@ -10,7 +10,7 @@ package struct CreateSpaceUseCase: Sendable {
         guard spaces.spaces.contains(where: { StemPolicy.isSame($0.folder.rawValue, space.rawValue) }) == false else {
             throw VaultError.alreadyExists(space.rawValue)
         }
-        try await files.createFolder(space)
+        try await files.createFolder(FolderPath(space: space))
         spaces.spaces.append(Space(folder: space, icon: "folder.fill", defaultType: NoteType.defaultName))
         try await config.saveSpaces(spaces)
         return space
