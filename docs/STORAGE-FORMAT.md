@@ -453,6 +453,7 @@ The rich text editor reads any Markdown but writes only this subset. A construct
 | Divider | `---` |
 | Bold, italic, strikethrough, inline code | `**x**`, `*x*`, `~~x~~`, `` `x` `` |
 | Link | `[text](url)`; a wikilink `[[Name]]` in a file is shown as a link and written back as a wikilink |
+| Table (from milestone S6, ADR 0009) | a GFM pipe table: header row, alignment row with `:` markers kept, one line per row, `\|` for a pipe inside a cell; cells hold inline content only |
 | Raw block | the source lines exactly as read |
 
 Rules: LF line endings, one trailing newline, no trailing spaces, the header untouched (section 2). A file written by Slate reads back to the same attributed text and writes back byte for byte; a test guards this over the fixture set.

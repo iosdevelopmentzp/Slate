@@ -177,9 +177,10 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 ## Next steps
 
-1. The owner runs the manual checks below and takes the README screenshots.
-2. Fix what the checks find, one numbered gap at a time.
-3. Then M8 ideas (`docs/ROADMAP.md`), each only with a new ADR if it changes the v1 scope of ADR 0007.
+1. S5 Agents and the notes folder (`docs/ROADMAP.md` Phase 3, ADR 0010).
+2. S6 Tables, level 1 (ADR 0009); S7 images in cells after the owner accepts S6.
+3. The owner runs the manual checks below in parallel and reports gaps; fixes come one numbered gap at a time.
+4. M8 ideas only with a new ADR when they widen the v1 scope of ADR 0007.
 
 ## Manual checks (owner)
 
