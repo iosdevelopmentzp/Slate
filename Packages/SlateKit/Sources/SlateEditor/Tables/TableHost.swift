@@ -10,5 +10,5 @@ protocol TableHost: AnyObject {
     func undoInDocument(redo: Bool)
     func pasteIntoCell(_ view: TableBlockView)
     func dropIntoCell(_ dragging: any NSDraggingInfo, target: TableImageTarget) -> Bool
-    func quickLook(_ path: String)
+    func imageAction(_ path: String, _ action: AttachmentAction)
 }

@@ -35,6 +35,7 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
     }
 
     func textStorage(_ textStorage: NSTextStorage, didProcessEditing editedMask: NSTextStorageEditActions, range editedRange: NSRange, changeInLength delta: Int) {
+        imageButton.hide()
         storageEdited(editedMask, range: editedRange, delta: delta)
     }
 

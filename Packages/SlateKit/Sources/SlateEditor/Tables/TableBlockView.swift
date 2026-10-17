@@ -175,7 +175,7 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         guard editing == index, editor.window != nil else { return }
         let local = editor.convert(event.locationInWindow, from: nil)
         if event.clickCount > 1, let path = editor.imagePath(at: local) {
-            host?.quickLook(path)
+            host?.imageAction(path, .quickLook)
             return
         }
         let caret = min(editor.characterIndexForInsertion(at: local), (editor.string as NSString).length)
@@ -185,7 +185,15 @@ final class TableBlockView: NSView, NSTextViewDelegate {
     override func menu(for event: NSEvent) -> NSMenu? {
         let point = convert(event.locationInWindow, from: nil)
         guard let index = currentLayout.cell(at: point) else { return nil }
-        return TableMenu.menu(for: index, model: model, target: self)
+        let menu = TableMenu.menu(for: index, model: model, target: self)
+        beginEditing(index)
+        guard editing == index, editor.window != nil, let path = editor.imagePath(at: editor.convert(event.locationInWindow, from: nil)) else { return menu }
+        return ImageMenu.prepend(path: path, target: self, action: #selector(cellImageAction(_:)), to: menu)
+    }
+
+    @objc func cellImageAction(_ sender: NSMenuItem) {
+        guard let choice = sender.representedObject as? ImageMenuChoice else { return }
+        host?.imageAction(choice.path, choice.action)
     }
 
     // MARK: Editing

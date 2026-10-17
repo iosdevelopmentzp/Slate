@@ -2,6 +2,7 @@ import AppKit
 
 final class RichTextView: NSTextView {
     weak var controller: RichTextController?
+    private var hoverArea: NSTrackingArea?
 
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
         guard window?.firstResponder === self, let command = KeyboardMap.command(for: event), let controller else {
@@ -9,6 +10,25 @@ final class RichTextView: NSTextView {
         }
         controller.perform(command)
         return true
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        guard hoverArea == nil else { return }
+        let area = NSTrackingArea(rect: .zero, options: [.mouseMoved, .mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect], owner: self, userInfo: nil)
+        addTrackingArea(area)
+        hoverArea = area
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        controller?.hoverImage(at: convert(event.locationInWindow, from: nil))
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        guard event.trackingArea === hoverArea else { return }
+        controller?.hoverImage(at: nil)
     }
 
     @objc func undo(_ sender: Any?) {

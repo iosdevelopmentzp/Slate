@@ -210,6 +210,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 130. A click on a table cell does not pass the mouse event to the cell's text view: forwarding it made `NSTextView` start its mouse tracking loop inside the table's `mouseDown`, and Slate hung at about 60 % CPU (the owner saw it on the first try). The table now puts the caret at the click point itself. Clicks inside the cell that is already being edited still go to the text view directly.
 131. Several lines in a table cell follow ADR 0012: `<br>` in the file, U+2028 in the editor. `⇧Enter`, `⌥Enter` and `⌃Enter` add a line; Enter keeps moving down (ADR 0009). ↑ and ↓ stay in the cell while there is a line above or below the caret; a long line that only wraps on screen does not count. This replaces decision 122 for pasted text: lines stay lines.
 132. The Quick Look panel opens one level above the highest visible Slate window. The menu bar panel sits at `.statusBar` level and the Quick Look panel at a lower level, so the preview opened under the panel and looked empty. A detached window was not affected.
+133. Save to Downloads copies the image file through `NoteExporting.copyToDownloads`, the same place as the HTML and PDF export, and keeps the file name ("photo 2.png" when the name is taken). It does not open Finder, unlike decision 52: a toast is enough for one image. The hover button is only on images in the note text; a cell thumbnail is 80 pt high, so a cell image has the item in its right-click menu instead. A right click on a cell starts editing that cell, the same as a left click.
 
 ## Next steps
 
@@ -295,6 +296,11 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 ### Line breaks in table cells (ADR 0012)
 
 49. In a cell type a line, press ⇧Enter, type a second line: the row grows. The file has `line one<br>line two`. Open the note in Obsidian: the cell shows two lines.
+
+### Images: Quick Look and Save to Downloads
+
+50. In the menu bar panel double-click an image in the text and an image in a table cell: Quick Look shows the picture above the panel.
+51. Point at an image in the text: a round button appears at its top right corner. Press it: the toast says "Saved … to Downloads" and the file is in Downloads. Press it again: the second copy gets " 2". Right click a cell thumbnail and choose Save to Downloads: the same.
 
 ## Known gaps
 

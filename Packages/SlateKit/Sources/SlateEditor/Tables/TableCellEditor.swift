@@ -75,10 +75,16 @@ final class TableCellEditor: NSTextView {
 
     override func mouseDown(with event: NSEvent) {
         if event.clickCount == 2, let path = imagePath(at: convert(event.locationInWindow, from: nil)) {
-            table?.host?.quickLook(path)
+            table?.host?.imageAction(path, .quickLook)
             return
         }
         super.mouseDown(with: event)
+    }
+
+    override func menu(for event: NSEvent) -> NSMenu? {
+        let menu = super.menu(for: event) ?? NSMenu()
+        guard let table, let path = imagePath(at: convert(event.locationInWindow, from: nil)) else { return menu }
+        return ImageMenu.prepend(path: path, target: table, action: #selector(TableBlockView.cellImageAction(_:)), to: menu)
     }
 
     func imagePath(at point: CGPoint) -> String? {

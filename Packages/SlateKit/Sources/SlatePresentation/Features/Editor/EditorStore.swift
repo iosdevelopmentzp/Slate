@@ -37,6 +37,7 @@ final class EditorStore {
     @ObservationIgnored let importAttachment: ImportAttachmentUseCase
     @ObservationIgnored let attachScreenshot: AttachScreenshotUseCase
     @ObservationIgnored let workspace: any WorkspaceOpening
+    @ObservationIgnored let exporter: any NoteExporting
     @ObservationIgnored let vaultRoot: URL
     @ObservationIgnored let panel: PanelVisibility
     @ObservationIgnored let toaster: Toaster
@@ -67,6 +68,7 @@ final class EditorStore {
         importAttachment: ImportAttachmentUseCase,
         attachScreenshot: AttachScreenshotUseCase,
         workspace: any WorkspaceOpening,
+        exporter: any NoteExporting,
         vaultRoot: URL,
         panel: PanelVisibility,
         toaster: Toaster,
@@ -84,6 +86,7 @@ final class EditorStore {
         self.importAttachment = importAttachment
         self.attachScreenshot = attachScreenshot
         self.workspace = workspace
+        self.exporter = exporter
         self.vaultRoot = vaultRoot
         self.panel = panel
         self.toaster = toaster

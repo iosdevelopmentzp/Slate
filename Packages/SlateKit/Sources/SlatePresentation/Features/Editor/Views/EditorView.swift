@@ -145,6 +145,7 @@ struct EditorView: View {
                 case .quickLook: Task { await editor.attachment(link, quickLook: true) }
                 case .open: Task { await editor.attachment(link, quickLook: false) }
                 case .reveal: Task { await editor.reveal(link) }
+                case .saveToDownloads: Task { await editor.saveToDownloads(link) }
                 case .copyImage:
                     if let url = editor.resolveLink(link) { PasteboardWriter.writeImage(at: url) }
                 }

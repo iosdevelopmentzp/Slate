@@ -77,6 +77,7 @@ package final class PresentationAssembly {
             importAttachment: useCases.importAttachment,
             attachScreenshot: useCases.attachScreenshot,
             workspace: ports.workspace,
+            exporter: ports.exporter,
             vaultRoot: vaultRoot,
             panel: panelVisibility,
             toaster: toaster,

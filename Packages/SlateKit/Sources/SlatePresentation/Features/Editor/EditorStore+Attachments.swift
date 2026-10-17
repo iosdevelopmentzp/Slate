@@ -95,6 +95,16 @@ extension EditorStore {
         }
     }
 
+    func saveToDownloads(_ link: String) async {
+        guard let url = resolveLink(link) else { return }
+        do {
+            let saved = try await exporter.copyToDownloads(url)
+            toaster.show("Saved \(saved.lastPathComponent) to Downloads")
+        } catch {
+            report("Cannot save the image to Downloads", error)
+        }
+    }
+
     func reveal(_ link: String) async {
         guard let url = resolveLink(link) else { return }
         await workspace.reveal(url)

@@ -24,11 +24,24 @@ extension RichTextController {
         guard storage.length > 0 else { return nil }
         let candidates = [index, index - 1].filter { $0 >= 0 && $0 < storage.length }
         return candidates.first { candidate in
-            let rect = textView.firstRect(forCharacterRange: NSRange(location: candidate, length: 1), actualRange: nil)
-            guard let window = textView.window else { return false }
-            let local = textView.convert(window.convertFromScreen(rect), from: nil)
-            return local.insetBy(dx: -2, dy: -2).contains(point)
+            characterRect(candidate)?.insetBy(dx: -2, dy: -2).contains(point) == true
         }
+    }
+
+    private func characterRect(_ index: Int) -> CGRect? {
+        guard let window = textView.window else { return nil }
+        let rect = textView.firstRect(forCharacterRange: NSRange(location: index, length: 1), actualRange: nil)
+        return textView.convert(window.convertFromScreen(rect), from: nil)
+    }
+
+    func hoverImage(at point: CGPoint?) {
+        guard let point, let index = characterIndex(at: point), let path = imagePath(at: index),
+              (storage.attribute(.attachment, at: index, effectiveRange: nil) as? ImageAttachment)?.picture != nil,
+              let rect = characterRect(index) else {
+            imageButton.hide()
+            return
+        }
+        imageButton.show(path: path, over: rect, in: textView)
     }
 
     func imagePath(at index: Int) -> String? {
@@ -51,13 +64,7 @@ extension RichTextController {
         let candidates = [index, index - 1].filter { $0 >= 0 }
         guard let path = candidates.lazy.compactMap({ self.imagePath(at: $0) }).first else { return nil }
         let menu = NSMenu()
-        let items: [(String, AttachmentAction)] = [("Quick Look", .quickLook), ("Open", .open), ("Show in Finder", .reveal), ("Copy Image", .copyImage)]
-        for (title, action) in items {
-            let item = NSMenuItem(title: title, action: #selector(RichTextView.slateImageAction(_:)), keyEquivalent: "")
-            item.representedObject = ImageMenuChoice(path: path, action: action)
-            item.target = textView
-            menu.addItem(item)
-        }
+        ImageMenu.items(path: path, target: textView, action: #selector(RichTextView.slateImageAction(_:))).forEach(menu.addItem)
         return menu
     }
 }

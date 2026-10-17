@@ -20,6 +20,7 @@ final class RichTextController: NSObject {
     var pendingInline: InlineStyle?
     weak var activeTable: TableBlockView?
     var imageTarget: TableImageTarget?
+    let imageButton = ImageSaveButton()
 
     private let undo = UndoManager()
     private var publishTask: Task<Void, Never>?
@@ -42,6 +43,10 @@ final class RichTextController: NSObject {
             return loadImage(path)
         }
         styler.tableHost = self
+        imageButton.onSave = { [weak self] path in
+            guard let self else { return }
+            handlers.attachment(path, .saveToDownloads)
+        }
     }
 
     var storage: NSTextStorage {

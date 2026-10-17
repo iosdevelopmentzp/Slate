@@ -65,6 +65,7 @@ final class StoreHarness {
         importAttachment: useCases.importAttachment,
         attachScreenshot: useCases.attachScreenshot,
         workspace: ports.workspace,
+        exporter: ports.exporter,
         vaultRoot: URL(fileURLWithPath: "/vault", isDirectory: true),
         panel: panelVisibility,
         toaster: toaster,

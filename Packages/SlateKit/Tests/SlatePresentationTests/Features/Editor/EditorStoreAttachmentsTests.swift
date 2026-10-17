@@ -99,4 +99,22 @@ import Testing
 
         #expect(harness.spies.workspace.calls == [.quickLook(URL(fileURLWithPath: "/vault/_attachments/x.png"))])
     }
+
+    @Test func saveToDownloadsCopiesTheResolvedFile() async throws {
+        try await open("Tasks/A.md")
+
+        await editor.saveToDownloads("../_attachments/x.png")
+
+        #expect(harness.spies.exporter.copied == [URL(fileURLWithPath: "/vault/_attachments/x.png")])
+        #expect(harness.toaster.text == "Saved x.png to Downloads")
+    }
+
+    @Test func aFailedSaveToDownloadsSaysSo() async throws {
+        try await open("Tasks/A.md")
+        harness.spies.exporter.copyError = CocoaError(.fileWriteNoPermission)
+
+        await editor.saveToDownloads("../_attachments/x.png")
+
+        #expect(harness.toaster.text == "Cannot save the image to Downloads")
+    }
 }

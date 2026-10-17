@@ -220,23 +220,14 @@ import Testing
         let (harness, _) = start()
         harness.controller.handlers.attachment = { path, action in if action == .quickLook { looked.append(path) } }
 
-        harness.controller.quickLook("../_attachments/a.png")
+        harness.controller.imageAction("../_attachments/a.png", .quickLook)
 
         #expect(looked == ["../_attachments/a.png"])
     }
 
     @Test func cellImagesShowAsThumbnails() throws {
-        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("slate-cell-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: folder) }
-        let image = NSImage(size: CGSize(width: 40, height: 20), flipped: false) { rect in
-            NSColor.systemBlue.setFill()
-            rect.fill()
-            return true
-        }
-        let url = folder.appendingPathComponent("a.png")
-        let rep = try #require(image.tiffRepresentation.flatMap(NSBitmapImageRep.init(data:)))
-        try #require(rep.representation(using: .png, properties: [:])).write(to: url)
+        let picture = try TestPicture()
+        let url = picture.url
         let harness = EditorHarness(markdown: "| a | b |\n|---|---|\n| ![](../_attachments/a.png) | 2 |\n", resolveImage: { _ in url })
 
         let text = try #require(harness.table()?.text(TableCellIndex(row: 1, column: 0)))
@@ -259,5 +250,25 @@ import Testing
         #expect(harness.window.firstResponder === view.cellEditor)
         #expect(view.cellEditor.selectedRange() == NSRange(location: 0, length: 0))
         #expect(harness.markdown == "Intro\n\n| Item | |\n| --- | --- |\n| | |\n")
+    }
+
+    @Test func aRightClickOnACellImageOffersTheImageActions() throws {
+        let picture = try TestPicture()
+        let url = picture.url
+        let harness = EditorHarness(markdown: "| a | b |\n|---|---|\n| ![](../_attachments/a.png) | 2 |\n", resolveImage: { _ in url })
+        let view = try #require(harness.table()?.view())
+        let rect = view.currentLayout.textRect(TableCellIndex(row: 1, column: 0))
+        let point = view.convert(CGPoint(x: rect.minX + 20, y: rect.midY), to: nil)
+        let event = try #require(NSEvent.mouseEvent(with: .rightMouseDown, location: point, modifierFlags: [], timestamp: 0, windowNumber: harness.window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 1))
+        var actions: [AttachmentAction] = []
+        harness.controller.handlers.attachment = { path, action in if path == "../_attachments/a.png" { actions.append(action) } }
+
+        let menu = try #require(view.menu(for: event))
+        let save = try #require(menu.items.first { $0.title == "Save to Downloads" })
+        view.cellImageAction(save)
+
+        #expect(menu.items.prefix(5).map(\.title) == ImageMenu.entries.map(\.0))
+        #expect(menu.items.contains { $0.title == "Delete Row" })
+        #expect(actions == [.saveToDownloads])
     }
 }

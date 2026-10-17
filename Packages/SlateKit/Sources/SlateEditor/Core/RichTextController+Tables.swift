@@ -111,7 +111,7 @@ extension RichTextController: TableHost {
         tableDidChange(attachment, model: model, before: attachment.block.model)
     }
 
-    func quickLook(_ path: String) {
-        handlers.attachment(path, .quickLook)
+    func imageAction(_ path: String, _ action: AttachmentAction) {
+        handlers.attachment(path, action)
     }
 }

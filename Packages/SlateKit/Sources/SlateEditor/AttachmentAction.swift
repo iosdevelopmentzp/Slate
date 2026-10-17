@@ -5,4 +5,5 @@ package enum AttachmentAction: Sendable {
     case open
     case reveal
     case copyImage
+    case saveToDownloads
 }
