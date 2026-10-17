@@ -33,7 +33,7 @@ The Presentation code below was deleted. Domain and Data code and tests stay. To
 | Screen | State | Notes |
 |---|---|---|
 | First launch | real | "Where should Slate keep your notes?", the default path, Choose…, Start. A new folder gets `Notes/` with the welcome note, `_attachments/` and `.slate/spaces.json` only |
-| Panel | real (S2) | Three columns like the window: sidebar (`⌘0` hides it, remembered), the list, the note. The status item: left click toggles the panel, right click shows New Note, Quick Note, Open Window, Settings, Quit. The resize grip sits in the bottom-right corner |
+| Panel | real (S2) | Three columns like the window: sidebar (`⌘0` hides it, remembered), the list, the note. The status item: left click toggles the panel, right click shows New Note, Quick Note, Open Window, Settings, Appearance, Quit. The resize grip sits in the bottom-right corner |
 | Window | real (S2) | The same three columns under a transparent title bar; the sidebar title sits next to the window buttons |
 | Sidebar | real (S2) | "Folders" with Open as window (panel) and Settings at the top. All notes, the folders (tinted icon, name, count, soft pill when selected), Trash, and "+ New folder" at the bottom (`⇧⌘N`). Double click renames inline. Right click: Rename, Colour (eight colours with dots), Icon (16 named icons), Move up, Move down, Delete folder. Delete asks in place ("Delete "Ideas"? Its 4 notes move to Notes. Yes · No", 5 s, Esc cancels) and shows a toast with Undo. A note card dropped on a folder moves there |
 | Quick note field | real (S4) | `⌃⌥Space` from any app: a 520 pt rounded card (radius 14, surface colour, the system shadow), "Type a note…", the folder as a tinted chip on the left, "⏎ Save" on the right. Enter saves, `⌘Enter` saves and opens, `⇧Enter` new line, Esc closes and keeps the draft |
@@ -43,7 +43,7 @@ The Presentation code below was deleted. Domain and Data code and tests stay. To
 | Versions | real | The clock button lists the versions of the note with Restore. Snapshots run quietly with the stored settings |
 | Search | real (S2) | Titles and text in the current folder, "Search all notes" widens it. Cards show the matched text with the words in bold and the folder name. "No notes match." with Clear search. No filters are offered |
 | Settings | real (S4) | Two pages. General: notes folder with Choose another folder…, Open at login, quick note folder, appearance, text size, "Back up to" (a git address) with "Back up now", Trash days, Check-up (checks, Check again, Activity, Rebuild search). Shortcuts: Open Slate, Quick note, New note |
-| Main menu | real (S3) | While the window is open: Slate, File (New Note, New Folder, Quick Note), Edit (with Find in Note `⌥⌘F`), Format (the five styles, the three lists, Quote, Indent, Outdent, Bold, Italic, Strikethrough, Link, Image, Divider, Screenshot), Note (Pin, Move to Trash), Go (previous and next note and folder, All Notes, folders `⌘1`…`⌘9`), View (sidebar), Window |
+| Main menu | real (S3) | While the window is open: Slate, File (New Note, New Folder, Quick Note), Edit (with Find in Note `⌥⌘F`), Format (the five styles, the three lists, Quote, Indent, Outdent, Bold, Italic, Strikethrough, Link, Image, Divider, Screenshot), Note (Pin, Move to Trash), Go (previous and next note and folder, All Notes, folders `⌘1`…`⌘9`), View (sidebar, Appearance), Window |
 | Extension points | real, no UI | `slate://` and the `slate` CLI (`new`, `open`, `append`, `search`, and the parked `today`), Services → Add to Slate (a plain note in the quick note folder) |
 
 States: planned, placeholder, mock, real, partial (say what is missing).
@@ -180,7 +180,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 
 1. A new notes folder (Settings → Choose another folder…, an empty folder) gets only `Notes/` with the welcome note, `_attachments/` and `.slate/spaces.json`.
 2. No menu, panel, window, card or Settings page shows tasks, tickets, branches, status, Today, tags, saved searches, the palette, actions, export, Float on Top or the outline.
-3. The status item: left click opens the panel; right click shows New Note, Quick Note, Open Window, Settings, Quit.
+3. The status item: left click opens the panel; right click shows New Note, Quick Note, Open Window, Settings, Appearance, Quit.
 4. Settings has two pages, General and Shortcuts. The New note shortcut has no keys until you set them.
 5. `slate://open?title=Welcome%20to%20Slate` opens the welcome note; a title that does not exist says "Slate found no such note".
 

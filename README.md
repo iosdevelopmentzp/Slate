@@ -25,7 +25,8 @@ The owner takes these on a real screen and puts them in `docs/screenshots/`.
 4. **Images in the text.** Paste an image, drag one in, use the Image button, or press `⇧⌘S` for a screenshot. Double-click an image to see it large.
 5. **Quick note.** `⌃⌥Space` opens a small field from any app. Enter saves the note, `⌘Enter` saves and opens it.
 6. **Search.** `⌘F` searches the titles and the text of the current folder. "Search all notes" searches every folder.
-7. **Safe by default.** Slate saves as you type. It keeps versions of each note (the clock button next to the title) and can back them up to a git address. Deleted notes stay in the Trash for 30 days.
+7. **Light or dark.** Settings → General → Appearance, the right-click menu of the menu bar icon, or View → Appearance in the window: Match the system, Light or Dark.
+8. **Safe by default.** Slate saves as you type. It keeps versions of each note (the clock button next to the title) and can back them up to a git address. Deleted notes stay in the Trash for 30 days.
 
 ## Keys
 

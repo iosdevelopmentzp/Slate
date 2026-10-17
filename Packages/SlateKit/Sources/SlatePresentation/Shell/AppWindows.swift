@@ -130,6 +130,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         let layout = layout
         let spaces = assembly.vault.spaces
         let vault = assembly.vault
+        let settings = assembly.settings
         let selectNeighbour: (Int) -> Void = { offset in
             noteList.selectNeighbour(offset, in: search.isActive ? search.results.map(\.summary) : nil)
         }
@@ -173,6 +174,9 @@ package final class AppWindows: NSObject, NSWindowDelegate {
             ],
             go: go,
             view: [Command(title: "Show or Hide the Sidebar", key: "0", modifiers: [.command]) { layout.showsSidebar.toggle() }],
+            appearance: AppAppearance.allCases.map { choice in
+                Command(title: choice.title, key: "", modifiers: [], isOn: { settings.appearance == choice }) { settings.appearance = choice }
+            },
             target: menuTarget
         )
         return builder.build()
@@ -417,6 +421,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         menu.addItem(.separator())
         menu.addItem(item("Open Window", key: "o", modifiers: [.command, .shift], action: #selector(menuOpenWindow)))
         menu.addItem(item("Settings…", key: ",", action: #selector(menuSettings)))
+        menu.addItem(appearanceMenuItem())
         menu.addItem(.separator())
         menu.addItem(item("Quit Slate", key: "q", action: #selector(menuQuit)))
         return menu
@@ -440,6 +445,24 @@ package final class AppWindows: NSObject, NSWindowDelegate {
 
     @objc private func menuOpenWindow() {
         openWindow()
+    }
+
+    private func appearanceMenuItem() -> NSMenuItem {
+        let parent = NSMenuItem(title: "Appearance", action: nil, keyEquivalent: "")
+        let submenu = NSMenu(title: "Appearance")
+        for choice in AppAppearance.allCases {
+            let entry = item(choice.title, key: "", modifiers: [], action: #selector(menuAppearance(_:)))
+            entry.representedObject = choice.rawValue
+            entry.state = assembly.settings.appearance == choice ? .on : .off
+            submenu.addItem(entry)
+        }
+        parent.submenu = submenu
+        return parent
+    }
+
+    @objc private func menuAppearance(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String, let choice = AppAppearance(rawValue: raw) else { return }
+        assembly.settings.appearance = choice
     }
 
     @objc private func menuSettings() {

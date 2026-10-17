@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Appearance (Match the system, Light, Dark) is also in the right-click menu of the menu bar icon and in View → Appearance of the window, next to Settings → General.
 - Settings → General has "Back up to" for a git address and a "Back up now" button. Slate says "Backed up", or that the backup failed and where to look.
 - Moving a note to another folder shows a toast with Undo, which moves it back.
 - Esc in the note text closes the panel, like Esc anywhere else in the panel.

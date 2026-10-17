@@ -7,7 +7,16 @@ struct MainMenuBuilder {
         let title: String
         let key: String
         let modifiers: NSEvent.ModifierFlags
+        var isOn: (() -> Bool)?
         let run: () -> Void
+
+        init(title: String, key: String, modifiers: NSEvent.ModifierFlags, isOn: (() -> Bool)? = nil, run: @escaping () -> Void) {
+            self.title = title
+            self.key = key
+            self.modifiers = modifiers
+            self.isOn = isOn
+            self.run = run
+        }
     }
 
     let app: [Command]
@@ -15,6 +24,7 @@ struct MainMenuBuilder {
     let note: [Command]
     let go: [Command]
     let view: [Command]
+    let appearance: [Command]
     let target: MenuTarget
 
     func build() -> NSMenu {
@@ -64,7 +74,7 @@ struct MainMenuBuilder {
         ]))
         main.addItem(submenu("Note", items: note.map(item)))
         main.addItem(submenu("Go", items: go.map(item)))
-        main.addItem(submenu("View", items: view.map(item)))
+        main.addItem(submenu("View", items: view.map(item) + [.separator(), submenu("Appearance", items: appearance.map(item))]))
         let window = submenu("Window", items: [
             standard("Minimize", #selector(NSWindow.performMiniaturize(_:)), key: "m"),
             standard("Zoom", #selector(NSWindow.performZoom(_:))),
@@ -92,7 +102,7 @@ struct MainMenuBuilder {
         let item = NSMenuItem(title: command.title, action: #selector(MenuTarget.perform(_:)), keyEquivalent: command.key)
         item.keyEquivalentModifierMask = command.modifiers
         item.target = target
-        item.representedObject = MenuTarget.Action(run: command.run)
+        item.representedObject = MenuTarget.Action(run: command.run, isOn: command.isOn)
         return item
     }
 }
