@@ -10,6 +10,7 @@ package struct VaultBootstrap: Sendable {
     - ⌘N makes a new note in the current folder.
     - ⌃⌥Space writes a quick note from any app.
     - ⌘F searches your notes.
+    - To give a note to an AI agent, drag its card into the agent's window, or use Copy Path or Copy Link in the card menu. ⌥-click on the title copies the path too.
 
     """
 

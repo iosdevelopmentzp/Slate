@@ -33,6 +33,7 @@ final class NoteListStore: NoteLookup {
     @ObservationIgnored private let activity: ActivityLog
     @ObservationIgnored private let events: AppEvents
     @ObservationIgnored private let store: any KeyValueStore
+    @ObservationIgnored private let vaultRoot: URL
     @ObservationIgnored private let refreshTask = RefreshTask()
     @ObservationIgnored private var subscription: SubscriptionToken?
     @ObservationIgnored private var confirmationTask: Task<Void, Never>?
@@ -52,7 +53,8 @@ final class NoteListStore: NoteLookup {
         toaster: Toaster,
         activity: ActivityLog,
         events: AppEvents,
-        store: any KeyValueStore
+        store: any KeyValueStore,
+        vaultRoot: URL
     ) {
         self.index = index
         trashRepository = trash
@@ -69,11 +71,29 @@ final class NoteListStore: NoteLookup {
         self.activity = activity
         self.events = events
         self.store = store
+        self.vaultRoot = vaultRoot
         sort = .updated
         subscription = events.subscribe { [weak self] event in
             guard let self else { return }
             handle(event)
         }
+    }
+
+    func fileURL(for summary: NoteSummary) -> URL {
+        vaultRoot.appendingPathComponent(summary.path.rawValue, isDirectory: false)
+    }
+
+    func copyPath(_ summary: NoteSummary) {
+        toaster.copy(fileURL(for: summary).path, label: "Path")
+    }
+
+    func copyLink(_ summary: NoteSummary) {
+        guard let link = NoteLinkPolicy.openLink(for: summary.id) else { return }
+        toaster.copy(link.absoluteString, label: "Link")
+    }
+
+    func dragProvider(for summary: NoteSummary) -> NSItemProvider {
+        NoteDrag.provider(id: summary.id, fileURL: fileURL(for: summary))
     }
 
     var source: ListSource {

@@ -19,6 +19,27 @@ import Testing
         }
     }
 
+    @Test func agentPermissionsDefaultWithoutAFileAndRoundTrip() async throws {
+        #expect(try await repository.agentPermissions() == AgentPermissions())
+
+        let permissions = AgentPermissions(writableFolders: ["AI", "Work/Clients"], allowCreate: false, allowTrash: true)
+        try await repository.saveAgentPermissions(permissions)
+
+        #expect(try await repository.agentPermissions() == permissions)
+        let text = try String(contentsOf: folder.url.appendingPathComponent(".slate/agents.json"), encoding: .utf8)
+        #expect(text.contains("\"writableFolders\" : [\n    \"AI\",\n    \"Work/Clients\"\n  ]"))
+    }
+
+    @Test func unknownKeysInAgentsJSONSurviveASave() async throws {
+        _ = try folder.write(#"{"version":1,"note":"mine","allowTrash":true}"#, to: ".slate/agents.json")
+
+        #expect(try await repository.agentPermissions().allowTrash)
+        try await repository.saveAgentPermissions(AgentPermissions(writableFolders: ["AI"]))
+
+        let text = try String(contentsOf: folder.url.appendingPathComponent(".slate/agents.json"), encoding: .utf8)
+        #expect(text.contains(#""note" : "mine""#))
+    }
+
     @Test func withoutAFileTheDefaultOrderAppliesToExistingFolders() async throws {
         try makeFolders(["Work", "Notes", "Ideas", "_attachments", ".slate"])
 

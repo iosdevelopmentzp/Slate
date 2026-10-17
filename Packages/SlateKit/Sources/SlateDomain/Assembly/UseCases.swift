@@ -30,6 +30,7 @@ package struct UseCases: Sendable {
     package let toggleTodo: ToggleTodoUseCase
     package let runAction: RunActionUseCase
     package let openTarget: OpenTargetUseCase
+    package let agentGuide: AgentGuideWriter
 
     package init(ports: Ports) {
         create = CreateNoteUseCase(files: ports.files, index: ports.index, builder: ports.builder, templates: ports.templates, config: ports.config, keyValues: ports.keyValues, clock: ports.clock)
@@ -61,5 +62,6 @@ package struct UseCases: Sendable {
         toggleTodo = ToggleTodoUseCase(files: ports.files, index: ports.index, save: save)
         runAction = RunActionUseCase(runner: ports.actions, append: append)
         openTarget = OpenTargetUseCase(index: ports.index, create: create)
+        agentGuide = AgentGuideWriter(files: ports.files)
     }
 }

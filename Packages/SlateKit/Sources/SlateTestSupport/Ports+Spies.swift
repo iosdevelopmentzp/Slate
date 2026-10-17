@@ -23,7 +23,8 @@ package extension Ports {
             actions: spies.actions,
             exporter: spies.exporter,
             secrets: spies.secrets,
-            tracker: spies.tracker
+            tracker: spies.tracker,
+            agentChanges: spies.agentChanges
         )
         return (ports, spies)
     }

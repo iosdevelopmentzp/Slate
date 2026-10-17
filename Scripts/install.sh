@@ -17,3 +17,5 @@ cp "$ROOT/Packages/SlateKit/.build/release/slate" "$BIN/slate"
 /System/Library/CoreServices/pbs -update || true
 open "$TARGET"
 echo "Installed $TARGET and $BIN/slate"
+echo "To let Claude Code use your notes, run: claude mcp add slate -- slate mcp"
+echo "If Claude Code cannot find slate, use the full path: claude mcp add slate -- $BIN/slate mcp"

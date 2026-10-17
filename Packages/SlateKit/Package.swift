@@ -20,6 +20,7 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-markdown.git", from: "0.9.0"),
         .package(url: "https://github.com/sindresorhus/KeyboardShortcuts.git", from: "1.10.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.8.2"),
+        .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", from: "0.9.0"),
     ],
     targets: [
         .target(name: "SlateDomain", swiftSettings: shared),
@@ -58,6 +59,7 @@ let package = Package(
             dependencies: [
                 "SlateDomain", "SlateData",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "MCP", package: "swift-sdk"),
             ],
             swiftSettings: shared
         ),
@@ -70,7 +72,11 @@ let package = Package(
             swiftSettings: mainActor
         ),
         .testTarget(name: "SlateUITests", dependencies: ["SlateUI"], swiftSettings: mainActor),
-        .testTarget(name: "SlateCLITests", dependencies: ["SlateCLI", "SlateData", "SlateTestSupport"], swiftSettings: shared),
+        .testTarget(
+            name: "SlateCLITests",
+            dependencies: ["SlateCLI", "SlateData", "SlateTestSupport", .product(name: "MCP", package: "swift-sdk")],
+            swiftSettings: shared
+        ),
         .testTarget(name: "SlatePresentationTests", dependencies: ["SlatePresentation", "SlateMocks", "SlateTestSupport"], swiftSettings: mainActor),
     ]
 )

@@ -21,6 +21,7 @@ final class SettingsStore {
     private(set) var checks: [DoctorCheck] = []
     private(set) var isChecking = false
     private(set) var isRebuilding = false
+    private(set) var agentPermissions = AgentPermissions()
     let vaultPath: String
 
     @ObservationIgnored var changeVault: () -> Void = {}
@@ -116,6 +117,39 @@ final class SettingsStore {
             activity.log("Cannot rebuild search", detail: error.localizedDescription, outcome: .failure)
         }
         await runDoctor()
+    }
+
+    func loadAgentPermissions() async {
+        do {
+            agentPermissions = try await config.agentPermissions()
+        } catch {
+            activity.log("Cannot read AI access", detail: error.localizedDescription, outcome: .failure)
+        }
+    }
+
+    func setAgentAccess(_ folder: SpaceName, allowed: Bool) async {
+        await saveAgentPermissions(agentPermissions.setting(folder.rawValue, writable: allowed))
+    }
+
+    func setAgentsMayCreate(_ allowed: Bool) async {
+        var permissions = agentPermissions
+        permissions.allowCreate = allowed
+        await saveAgentPermissions(permissions)
+    }
+
+    func setAgentsMayTrash(_ allowed: Bool) async {
+        var permissions = agentPermissions
+        permissions.allowTrash = allowed
+        await saveAgentPermissions(permissions)
+    }
+
+    private func saveAgentPermissions(_ permissions: AgentPermissions) async {
+        do {
+            try await config.saveAgentPermissions(permissions)
+            agentPermissions = permissions
+        } catch {
+            activity.log("Cannot save AI access", detail: error.localizedDescription, outcome: .failure)
+        }
     }
 
     private enum Keys {

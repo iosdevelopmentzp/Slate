@@ -25,6 +25,20 @@ import Testing
         #expect(harness.keyValues.string(forKey: "appearance") == "dark")
     }
 
+    @Test func aiAccessLoadsAndSavesThePermissions() async {
+        harness.spies.config.permissions = AgentPermissions(writableFolders: ["Notes"])
+        await settings.loadAgentPermissions()
+
+        await settings.setAgentAccess(SpaceName(rawValue: "Work"), allowed: true)
+        await settings.setAgentAccess(SpaceName(rawValue: "Notes"), allowed: false)
+        await settings.setAgentsMayCreate(false)
+        await settings.setAgentsMayTrash(true)
+
+        let expected = AgentPermissions(writableFolders: ["Work"], allowCreate: false, allowTrash: true)
+        #expect(settings.agentPermissions == expected)
+        #expect(harness.spies.config.permissions == expected)
+    }
+
     @Test func loginItemAsksForApprovalWithAHint() async {
         harness.spies.loginItem.current = .requiresApproval
 

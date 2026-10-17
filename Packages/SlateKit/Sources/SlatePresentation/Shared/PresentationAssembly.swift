@@ -28,7 +28,7 @@ package final class PresentationAssembly {
         hints = HintCenter()
         panelVisibility = PanelVisibility()
         layout = WindowLayout(store: ports.keyValues)
-        feed = VaultChangeFeed(watcher: ports.watcher, reindex: useCases.reindex, activity: activity, events: events)
+        feed = VaultChangeFeed(watcher: ports.watcher, reindex: useCases.reindex, activity: activity, events: events, agentChanges: ports.agentChanges, clock: ports.clock)
         vault = VaultStore(
             config: ports.config,
             createSpace: useCases.createSpace,
@@ -61,7 +61,8 @@ package final class PresentationAssembly {
             toaster: toaster,
             activity: activity,
             events: events,
-            store: ports.keyValues
+            store: ports.keyValues,
+            vaultRoot: vaultRoot
         )
         search = SearchStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
         editor = EditorStore(

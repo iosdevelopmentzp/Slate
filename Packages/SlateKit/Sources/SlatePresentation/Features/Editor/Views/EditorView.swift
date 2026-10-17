@@ -112,6 +112,7 @@ struct EditorView: View {
                 .focused($isTitleFocused)
                 .onSubmit { editor.submitTitle() }
                 .disabled(document.isHeaderOpaque)
+                .simultaneousGesture(TapGesture().modifiers(.option).onEnded { editor.copyPath() })
                 .accessibilityLabel("Title")
             IconButton(systemImage: "clock.arrow.circlepath", help: "Versions of this note") {
                 showsHistory.toggle()

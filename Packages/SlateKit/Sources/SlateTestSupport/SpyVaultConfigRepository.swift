@@ -15,6 +15,7 @@ package final class SpyVaultConfigRepository: VaultConfigRepository, @unchecked 
     private var _patterns: [LinkPattern] = []
     private var _views = SmartView.defaults
     private var _actions: [ActionDefinition] = []
+    private var _permissions = AgentPermissions()
 
     package init() {}
 
@@ -69,6 +70,19 @@ package final class SpyVaultConfigRepository: VaultConfigRepository, @unchecked 
     package var actionList: [ActionDefinition] {
         get { lock.withLock { _actions } }
         set { lock.withLock { _actions = newValue } }
+    }
+
+    package var permissions: AgentPermissions {
+        get { lock.withLock { _permissions } }
+        set { lock.withLock { _permissions = newValue } }
+    }
+
+    package func agentPermissions() async throws -> AgentPermissions {
+        lock.withLock { _permissions }
+    }
+
+    package func saveAgentPermissions(_ permissions: AgentPermissions) async throws {
+        lock.withLock { _permissions = permissions }
     }
 
     package func views() async throws -> [SmartView] {

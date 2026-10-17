@@ -257,4 +257,17 @@ import Testing
         harness.toaster.performAction()
         try await waitUntil { harness.spies.files.paths == [path] }
     }
+
+    @Test func copyPathAndCopyLinkPutTheNoteOnThePasteboard() async throws {
+        harness.seed("Notes/Groceries.md", id: "g")
+        try await harness.index()
+        let summary = try #require(try await harness.ports.index.summary(id: NoteID(rawValue: "g")))
+
+        harness.noteList.copyPath(summary)
+        harness.noteList.copyLink(summary)
+
+        #expect(harness.copied == ["/vault/Notes/Groceries.md", "slate://open?id=g"])
+        #expect(harness.toaster.text == "Link copied")
+        #expect(harness.noteList.fileURL(for: summary).path == "/vault/Notes/Groceries.md")
+    }
 }

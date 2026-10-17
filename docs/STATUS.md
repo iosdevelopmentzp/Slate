@@ -4,7 +4,7 @@ Last updated: 2026-10-17
 
 ## Stage
 
-Phase 2 on branch `phase2-simple-v1`. **S1 Simplify, S2 Folders and the soft look, S3 the rich text editor and S4 Polish are built.** Next: the owner runs the manual checks below; every item passes or becomes a numbered gap. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
+Phase 2 is built and merged into `main` (S1 Simplify, S2 Folders and the soft look, S3 the rich text editor, S4 Polish, then sub-folders, ADR 0011). **Phase 3: S5 Agents and the notes folder is built (ADR 0010).** Next: S6 tables. The owner runs the manual checks below; every item passes or becomes a numbered gap. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
 
 ## Removed in S1 (ADR 0007)
 
@@ -175,12 +175,23 @@ Numbered. What, then why. A later session must not undo these without a new numb
 103. Search in a sub-folder asks the index for the top-level folder and keeps the hits inside the sub-folder; the limit of 200 hits applies before that.
 104. Deleting a top-level folder still moves every note in it, also from its sub-folders, to depth 1 of the quick note folder. Undo puts each note back at its old path and depth.
 
+105. S5 uses the official MCP package `modelcontextprotocol/swift-sdk` 0.9.0. It builds with Swift 6.3.3 and the project settings, so the fallback server of ADR 0010 was not needed. Only `SlateCLI` and its tests depend on it.
+106. Tool answers are JSON text (pretty printed, sorted keys); errors are one plain sentence with `isError`. Every call first runs the unchanged-files scan of the index, like the other CLI commands.
+107. `read_note` returns the whole file and `hash` (SHA-256 of the file bytes). `update_note` takes the body only. When the agent sends the whole file back, the header part is dropped and the app's header is kept.
+108. Every agent write takes a snapshot before the write (only when there are unsaved changes, with the usual `snapshot: N files` message) and one after it (`agent: <tool> <title>`, no push). So Restore can always go back to the state before the agent. When versions are off in the settings, no snapshot is taken.
+109. The Activity line "Changed by an agent" crosses processes through `<support>/agent-changes.jsonl` (the last 200 changes; port `AgentChangeLog`). The app reads it after each change the watcher reports. It is not in the notes folder, so the storage format does not change for it.
+110. `create_note` needs a folder that exists (top-level or sub-folder) and does not use a template: the body is what the agent sends, or empty. `attach_image` names the file `<stamp>-agent.<ext>`, takes the extension from the first bytes (not from the file name), puts the caption into the alt text and appends the image at the end of the note.
+111. Permission rules (`AgentPermissions`): a listed folder allows its sub-folders; case does not matter; folders that start with `.` or `_` are never writable; `move_note` needs both the old and the new folder. Reading is allowed in every note. Path rules (`AgentPathPolicy`): relative paths or absolute paths inside the notes folder, never `..`, never `.`/`_` folders, only `.md` files at depth 1 or more.
+112. The AI access box lists the top-level folders. Turning one on allows its sub-folders. A sub-folder written into `agents.json` by hand is kept and works, but has no switch.
+113. The guide block is checked each time the app opens the notes folder, not only when the version changes: the app writes when the block differs from the current one. A file without markers gets the block at the end. If the owner deletes the block, it comes back at the next start.
+114. The card is dragged with an `NSItemProvider` that carries the file URL for other apps and the internal `slate-note:<id>` text only for Slate (`visibility: .ownProcess`), so dropping on a folder still moves the note. Search result rows still drag the internal text only.
+115. Copy Path and Copy Link in the Note menu have no keys: `⌥⇧⌘C` and similar are taken by the text system in many apps, and `UX.md` section 8 lists no key for them.
+
 ## Next steps
 
-1. S5 Agents and the notes folder (`docs/ROADMAP.md` Phase 3, ADR 0010).
-2. S6 Tables, level 1 (ADR 0009); S7 images in cells after the owner accepts S6.
-3. The owner runs the manual checks below in parallel and reports gaps; fixes come one numbered gap at a time.
-4. M8 ideas only with a new ADR when they widen the v1 scope of ADR 0007.
+1. S6 Tables, level 1 (ADR 0009); S7 images in cells after the owner accepts S6.
+2. The owner runs the manual checks below in parallel and reports gaps; fixes come one numbered gap at a time.
+3. M8 ideas only with a new ADR when they widen the v1 scope of ADR 0007.
 
 ## Manual checks (owner)
 
@@ -240,6 +251,13 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 38. `⌘N` inside a sub-folder makes the note there (check in Finder). Drag a card onto a sub-folder row in the sidebar and in the list; use Move to in the card menu. A note with an image moved one level deeper still shows the image, and the file has `../../_attachments/…`.
 39. Rename a sub-folder (double-click or the menu); the open list follows. Delete a sub-folder with notes: it asks first, the notes move to the parent, Undo brings the folder and the notes back. Close and open Slate: the open arrows in the sidebar are as you left them.
 
+### S5 Agents (ADR 0010)
+
+40. Run `Scripts/install.sh`, then `claude mcp add slate -- slate mcp`. In Claude Code ask "add a line to my note Groceries": it uses `append_to_note`, and the open editor shows the line within a second. Activity (Settings → Check-up) shows "Changed by an agent: Groceries"; the clock button shows the version `agent: append_to_note Groceries`, and Restore goes back.
+41. Ask the agent to change a note in a folder that is off in AI access: it gets "Agents may not change notes in …", and nothing changes on disk. Ask it to update a note after you typed in it: it gets "The note changed since you read it, read it again."
+42. Drag a card into Terminal: the path of the file appears. Drag it onto a folder in the sidebar: the note moves as before. Copy Path, Copy Link and `⌥`-click on the title copy the path or the `slate://` link; paste the link in Safari to open the note.
+43. A new notes folder gets `CLAUDE.md` and `AGENTS.md` with the block. Write a line above the block in `CLAUDE.md`, quit and open Slate: the line is still there.
+
 ## Known gaps
 
 - S2: a text file dropped on the list does not make a note yet (`UX.md` section 6). Folders reorder with Move up and Move down, not by drag.
@@ -260,4 +278,8 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - Editor (S3): typing latency was measured by a test on the 5,000-line fixture (1.3 ms median, open 120 ms), not with Instruments. Markdown for a long note is written 250 ms after the last key (decision 88).
 - Editor (S3): a code block has no language label and no colours; the language is kept in the file. Images have no resize handle; the right-click menu has no Remove (Backspace removes, Undo brings back).
 - Editor (S3): a pasted URL is not turned into a link with a title (P1). There is no hover preview of a link.
+- S5: the agent did not run Claude Code against `slate mcp`. A stdio test sent `initialize`, `tools/list`, `tools/call create_note` and `resources/list` and got the right answers; the tools are tested over a temporary notes folder.
+- S5: a card dropped into the note text of Slate now gives the editor a file, so the editor adds a link to a copy of the note file in `_attachments/` instead of the text `slate-note:<id>`. Neither is useful; a drop of a card into the text should make a link to the note.
+- S5: the Activity line of an agent change can come late when the watcher reports the file before `slate mcp` wrote its change line; it then shows with the next change. `⌥`-click on the title was not tried on screen: a text field may take the click first.
+- S5: the MCP server answers requests in parallel. Two writes to the same note at the same moment are safe (the save checks the hash), but the second may fail with "The note changed since you read it".
 - Sub-folders (ADR 0011): no drag of a folder into another folder, no colour, icon or manual order per sub-folder, no `⌘1`…`⌘9` for sub-folders. Esc does not go up to the parent folder yet; the back chevron does.

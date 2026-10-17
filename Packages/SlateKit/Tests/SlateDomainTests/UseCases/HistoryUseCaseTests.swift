@@ -20,6 +20,12 @@ import Testing
         #expect(spies.history.calls == [.ensure, .snapshot(nil)])
     }
 
+    @Test func snapshotUsesTheGivenMessage() async throws {
+        _ = try await UseCases(ports: ports).snapshot.execute(push: false, message: "agent: append_to_note Groceries")
+
+        #expect(spies.history.calls == [.ensure, .snapshot("agent: append_to_note Groceries")])
+    }
+
     @Test func snapshotPushesToTheRemote() async throws {
         HistorySettings(remote: "git@example.com:me/notes.git").save(to: keyValues)
 

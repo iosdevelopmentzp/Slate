@@ -40,4 +40,18 @@ import Testing
 
         #expect(harness.activity.events.map(\.detail) == ["Inbox/Bad.md"])
     }
+
+    @Test func changesByAnAgentShowInActivityOnce() async throws {
+        let harness = StoreHarness()
+        let path = harness.seed("Notes/Groceries.md", id: "g")
+        let feed = harness.feed
+        try await harness.spies.agentChanges.record(AgentChange(date: harness.ports.clock.now().addingTimeInterval(-60), tool: "append_to_note", title: "Old", path: path))
+        try await harness.spies.agentChanges.record(AgentChange(date: harness.ports.clock.now().addingTimeInterval(1), tool: "append_to_note", title: "Groceries", path: path))
+
+        await feed.apply(.paths([path]))
+        await feed.apply(.paths([path]))
+
+        #expect(harness.activity.events.map(\.title) == ["Changed by an agent: Groceries"])
+        #expect(harness.activity.events.map(\.detail) == ["Notes/Groceries.md"])
+    }
 }

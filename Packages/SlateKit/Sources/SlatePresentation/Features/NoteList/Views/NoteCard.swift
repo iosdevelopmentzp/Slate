@@ -59,7 +59,7 @@ struct NoteCard: View {
         .contextMenu {
             NoteRowMenu(isPinned: model.isPinned, actions: actions)
         }
-        .draggable(NoteDragPayload.text(for: model.id))
+        .onDrag(actions.drag)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(model.title)
     }

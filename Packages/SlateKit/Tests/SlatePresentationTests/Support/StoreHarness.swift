@@ -50,7 +50,8 @@ final class StoreHarness {
         toaster: toaster,
         activity: activity,
         events: events,
-        store: keyValues
+        store: keyValues,
+        vaultRoot: URL(fileURLWithPath: "/vault", isDirectory: true)
     )
     lazy var editor = EditorStore(
         files: ports.files,
@@ -95,7 +96,7 @@ final class StoreHarness {
     )
     lazy var search = SearchStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
     lazy var panelVisibility = PanelVisibility()
-    lazy var feed = VaultChangeFeed(watcher: ports.watcher, reindex: useCases.reindex, activity: activity, events: events)
+    lazy var feed = VaultChangeFeed(watcher: ports.watcher, reindex: useCases.reindex, activity: activity, events: events, agentChanges: ports.agentChanges, clock: ports.clock)
 
     init() {
         (ports, spies) = Ports.spies(keyValues: keyValues)

@@ -7,13 +7,19 @@ final class VaultChangeFeed {
     private let reindex: ReindexVaultUseCase
     private let activity: ActivityLog
     private let events: AppEvents
+    private let agentChanges: any AgentChangeLog
+    private let clock: any Clock
     private var task: Task<Void, Never>?
+    private var agentsCheckedAt: Date
 
-    init(watcher: any VaultWatching, reindex: ReindexVaultUseCase, activity: ActivityLog, events: AppEvents) {
+    init(watcher: any VaultWatching, reindex: ReindexVaultUseCase, activity: ActivityLog, events: AppEvents, agentChanges: any AgentChangeLog, clock: any Clock) {
         self.watcher = watcher
         self.reindex = reindex
         self.activity = activity
         self.events = events
+        self.agentChanges = agentChanges
+        self.clock = clock
+        agentsCheckedAt = clock.now()
     }
 
     func start() {
@@ -39,10 +45,19 @@ final class VaultChangeFeed {
         case .paths(let paths):
             await scan(.paths(paths))
             events.post(.vaultChanged(paths))
+            await reportAgentChanges()
         case .rescan:
             await scan(.all)
             events.post(.spacesChanged)
             events.post(.vaultRescanned)
+        }
+    }
+
+    private func reportAgentChanges() async {
+        guard let changes = try? await agentChanges.changes(after: agentsCheckedAt), let last = changes.last else { return }
+        agentsCheckedAt = last.date
+        for change in changes {
+            activity.log("Changed by an agent: \(change.title)", detail: change.path.rawValue, outcome: .info)
         }
     }
 

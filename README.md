@@ -4,7 +4,7 @@ Notes in folders, in the macOS menu bar. Working name; rename by replacing `Slat
 
 Slate is a small notes app. You keep notes in folders. You write in formatted text, with a format bar and shortcuts, and you put images in the text. Each note is a plain Markdown file in a folder you choose, so other apps (Obsidian, a text editor, scripts) can read and change it too.
 
-Status: **phase 2, S1 to S4 built** on branch `phase2-simple-v1`. The owner's manual checks are open; the list is in `docs/STATUS.md`.
+Status: **phase 2 built; phase 3 S5 (agents) built** on `main`. The owner's manual checks are open; the list is in `docs/STATUS.md`.
 
 ## Screenshots
 
@@ -26,7 +26,8 @@ The owner takes these on a real screen and puts them in `docs/screenshots/`.
 5. **Quick note.** `⌃⌥Space` opens a small field from any app. Enter saves the note, `⌘Enter` saves and opens it.
 6. **Search.** `⌘F` searches the titles and the text of the current folder. "Search all notes" searches every folder.
 7. **Light or dark.** Settings → General → Appearance, the right-click menu of the menu bar icon, or View → Appearance in the window: Match the system, Light or Dark.
-8. **Safe by default.** Slate saves as you type. It keeps versions of each note (the clock button next to the title) and can back them up to a git address. Deleted notes stay in the Trash for 30 days.
+8. **AI agents.** `slate mcp` lets Claude Code and other MCP clients list, search, read and change notes: run `claude mcp add slate -- slate mcp` once. Settings → General → AI access says which folders agents may change. Copy Path, Copy Link and dragging a card hand one note to an agent. `CLAUDE.md` in the notes folder tells agents the rules.
+9. **Safe by default.** Slate saves as you type. It keeps versions of each note (the clock button next to the title) and can back them up to a git address. Deleted notes stay in the Trash for 30 days.
 
 ## Keys
 

@@ -22,6 +22,10 @@ struct FileVaultConfigRepository: VaultConfigRepository {
         configFolder.appendingPathComponent("views.json")
     }
 
+    private var agentsURL: URL {
+        configFolder.appendingPathComponent(AgentPermissions.fileName)
+    }
+
     private var actionsFolder: URL {
         configFolder.appendingPathComponent("actions", isDirectory: true)
     }
@@ -138,6 +142,21 @@ struct FileVaultConfigRepository: VaultConfigRepository {
                 output: (object["output"] as? String).flatMap(ActionDefinition.Output.init(rawValue:)) ?? .activity
             )
         }
+    }
+
+    func agentPermissions() async throws -> AgentPermissions {
+        guard FileManager.default.fileExists(atPath: agentsURL.path) else { return AgentPermissions() }
+        let data = try FileCoordination.readCoordinated(agentsURL)
+        return (try? JSONDecoder().decode(AgentPermissions.self, from: data)) ?? AgentPermissions()
+    }
+
+    func saveAgentPermissions(_ permissions: AgentPermissions) async throws {
+        var object = try JSONFile.object(at: agentsURL) ?? [:]
+        object["version"] = permissions.version
+        object["writableFolders"] = permissions.writableFolders
+        object["allowCreate"] = permissions.allowCreate
+        object["allowTrash"] = permissions.allowTrash
+        try JSONFile.write(object, to: agentsURL)
     }
 
     private static func pattern(from entry: [String: Any]) -> LinkPattern? {

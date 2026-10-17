@@ -9,4 +9,6 @@ package protocol VaultConfigRepository: Sendable {
     func saveLinkPatterns(_ patterns: [LinkPattern]) async throws
     func views() async throws -> [SmartView]
     func actions() async throws -> [ActionDefinition]
+    func agentPermissions() async throws -> AgentPermissions
+    func saveAgentPermissions(_ permissions: AgentPermissions) async throws
 }

@@ -14,8 +14,10 @@ Slate/                          the vault (user-chosen folder, default ~/Documen
   <Folder>/                     every other space the user makes
   _attachments/                 every image and file, flat (section 5)
   _templates/                   optional: one Markdown body per note type (section 6); not created since ADR 0007
+  CLAUDE.md, AGENTS.md          the guide for AI agents between the slate:begin and slate:end markers (ADR 0010)
   .slate/                       configuration that syncs with the vault (section 7)
     spaces.json                 written on first launch
+    agents.json                 optional: what agents may change through `slate mcp` (section 7.6, ADR 0010)
     links.json                  optional (parked by ADR 0007)
     views.json                  optional (parked by ADR 0007)
     types/<type>.json           optional (parked by ADR 0007)
@@ -34,7 +36,8 @@ Rules:
 - A space is any top-level folder whose name does not start with `_` or `.`. Order, icon and default note type come from `.slate/spaces.json`; a folder missing from that file is appended at the end with a default icon.
 - Notes are discovered at any depth under a space. Since ADR 0011 the app makes sub-folders at any depth, creates notes in the folder or sub-folder that is open, and moves a note into any folder or sub-folder (`<Space>/<Sub>/<Name>.md`). A folder lists its own notes and its sub-folders. When a note moves to another depth, the app rewrites its links into `_attachments/` to match. Sub-folders have no entry in `.slate/spaces.json`.
 - Only `.md` files are notes. Any other file under a space is listed under "Other files" in the space (read-only, open in Finder).
-- The index, the journal and the git history live **outside** the vault: `~/Library/Application Support/Slate/<vault-id>/` where `vault-id` is the first 12 hex characters of the SHA-256 of the vault's standardized path. The vault contains only user content and `.slate/`.
+- `CLAUDE.md` and `AGENTS.md` at the root are not notes. Each time the app opens the vault it writes the same block into both, between `<!-- slate:begin -->` and `<!-- slate:end -->`, and writes only when the block differs. Text outside the markers is never changed; a file without the markers gets the block at the end. Deleting the block brings it back at the next start.
+- The index, the journal, the git history and the list of agent changes (`agent-changes.jsonl`) live **outside** the vault: `~/Library/Application Support/Slate/<vault-id>/` where `vault-id` is the first 12 hex characters of the SHA-256 of the vault's standardized path. The vault contains only user content and `.slate/`.
 
 ---
 
@@ -338,6 +341,19 @@ All files are JSON with a top-level `"version": 1`. Unknown keys are ignored and
 
 `when`: `always`, `task`, `hasBranch`, `hasTicket`, `hasMR`. `output`: `activity`, `appendToNote` (appended at the end of the body as a fenced `log` block), `clipboard`. Environment given to the command: `SLATE_VAULT`, `SLATE_NOTE_PATH`, `SLATE_NOTE_TITLE`, `SLATE_TICKET`, `SLATE_BRANCH`, `SLATE_MR`, `SLATE_STATUS`. The command runs with the vault as the working folder and a 60 s timeout.
 
+
+### 7.6 `agents.json` (ADR 0010)
+
+```json
+{
+  "version": 1,
+  "writableFolders": ["Notes"],
+  "allowCreate": true,
+  "allowTrash": false
+}
+```
+
+Read by `slate mcp` before every tool call and written by Settings → General → AI access. A missing file or a missing key means the values above. `writableFolders` holds folder paths; a folder allows its sub-folders too, case does not matter. Folders that start with `.` or `_` are never writable. Unknown keys are kept on save. The `slate` command itself does not read this file.
 ---
 
 ## 8. Trash, temporary files, atomic writes

@@ -92,7 +92,10 @@ struct NoteListView: View {
             pin: { Task { await store.togglePin(summary) } },
             move: { folder in Task { await store.moveNote(summary, toFolder: folder) } },
             duplicate: { Task { await store.duplicateNote(summary) } },
-            requestTrash: { store.requestTrash(summary.id) }
+            requestTrash: { store.requestTrash(summary.id) },
+            copyPath: { store.copyPath(summary) },
+            copyLink: { store.copyLink(summary) },
+            drag: { store.dragProvider(for: summary) }
         )
     }
 }

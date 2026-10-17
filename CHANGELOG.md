@@ -7,6 +7,12 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- AI agents can work with the notes (ADR 0010, S5). `slate mcp` is an MCP server with eleven tools: list_folders, list_notes, search_notes, read_note, create_note, append_to_note, update_note, move_note, trash_note, attach_image and open_in_slate, and the resource `slate://note/<id>`. Add it to Claude Code with `claude mcp add slate -- slate mcp`. Every tool writes through the same code as the app, so the header, the file name and the search stay right. `update_note` refuses a change when the note changed after the agent read it.
+- Settings → General → AI access: choose the folders that agents may change (Notes by default), and whether agents may create notes or move notes to the Trash (off by default). The choice is saved in `.slate/agents.json`. The box shows the line to add Slate to Claude Code, with a Copy button.
+- Slate keeps a version before and after every change by an agent, with the message `agent: <tool> <title>`, and Activity shows "Changed by an agent: <title>".
+- Slate writes a guide for agents into `CLAUDE.md` and `AGENTS.md` at the root of the notes folder, between `<!-- slate:begin -->` and `<!-- slate:end -->`. Your own text outside the markers stays as it is.
+- Copy Path and Copy Link in the card menu and in the Note menu. `⌥`-click on the note title copies the path. A card dragged into a terminal, an agent window or Finder carries the note file.
+- The welcome note and `Scripts/install.sh` explain how to give notes to an agent.
 - Sub-folders at any depth. Right-click a folder and choose New folder inside. The sidebar shows the folders as a tree with arrows that show or hide the sub-folders. A folder lists its sub-folders first and then its own notes; a click on a sub-folder opens it, and the back arrow next to the title goes up again. New notes go into the open sub-folder. Notes move into a sub-folder with the card menu (Move to) or by drag and drop. Rename and delete a sub-folder from its menu; delete moves its notes to the parent folder and offers Undo. Image links in a note still work after it moves to another depth.
 - Appearance (Match the system, Light, Dark) is also in the right-click menu of the menu bar icon and in View → Appearance of the window, next to Settings → General.
 - Settings → General has "Back up to" for a git address and a "Back up now" button. Slate says "Backed up", or that the backup failed and where to look.

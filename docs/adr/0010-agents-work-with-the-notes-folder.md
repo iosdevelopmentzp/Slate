@@ -1,6 +1,6 @@
 # ADR 0010: Agents work with the notes folder through documented rules, the CLI and an MCP server
 
-Status: accepted, 2026-10-17. Scheduled after Phase 2 (milestone S5 below).
+Status: accepted, 2026-10-17. Built in milestone S5 (2026-10-17) with the official MCP package; see `docs/STATUS.md` decisions 105 to 115.
 
 ## Context
 

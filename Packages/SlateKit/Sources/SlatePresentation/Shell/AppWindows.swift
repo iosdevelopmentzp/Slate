@@ -165,6 +165,14 @@ package final class AppWindows: NSObject, NSWindowDelegate {
                     guard let selected = noteList.selected else { return }
                     Task { await noteList.togglePin(selected) }
                 },
+                Command(title: "Copy Path", key: "", modifiers: []) {
+                    guard let selected = noteList.selected else { return }
+                    noteList.copyPath(selected)
+                },
+                Command(title: "Copy Link", key: "", modifiers: []) {
+                    guard let selected = noteList.selected else { return }
+                    noteList.copyLink(selected)
+                },
                 Command(title: "Move to Trash", key: String(UnicodeScalar(NSBackspaceCharacter)!), modifiers: [.command]) {
                     if TextFocus.isEditingText {
                         TextFocus.send(#selector(NSResponder.deleteToBeginningOfLine(_:)))

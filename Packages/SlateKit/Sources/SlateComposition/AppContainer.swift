@@ -94,6 +94,7 @@ public final class AppContainer: NSObject, NSApplicationDelegate {
         }
         Task {
             try? await ports.config.ensureDefaults()
+            try? await useCases.agentGuide.execute()
             assembly.start()
         }
     }

@@ -76,6 +76,7 @@ struct GeneralSettingsView: View {
                     }
                 }
             }
+            AgentAccessSection()
             Section("Check-up") {
                 ForEach(settings.checks) { check in
                     HStack(alignment: .firstTextBaseline, spacing: 8) {

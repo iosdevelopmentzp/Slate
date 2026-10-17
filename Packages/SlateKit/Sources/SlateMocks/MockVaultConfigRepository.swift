@@ -3,6 +3,7 @@ import SlateDomain
 
 actor MockVaultConfigRepository: VaultConfigRepository {
     private var config: SpacesConfig
+    private var permissions = AgentPermissions()
 
     init(config: SpacesConfig = MockVault.config) {
         self.config = config
@@ -30,6 +31,14 @@ actor MockVaultConfigRepository: VaultConfigRepository {
 
     func views() -> [SmartView] {
         SmartView.defaults
+    }
+
+    func agentPermissions() -> AgentPermissions {
+        permissions
+    }
+
+    func saveAgentPermissions(_ permissions: AgentPermissions) {
+        self.permissions = permissions
     }
 
     func actions() -> [ActionDefinition] {

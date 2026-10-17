@@ -25,7 +25,7 @@ One local Swift package `Packages/SlateKit`, tools 6.2, Swift 6 language mode. T
 | `SlatePresentation` | Domain, UI, Editor, Mocks, KeyboardShortcuts | MainActor | stores, row models and mappers, views, events, `PresentationAssembly`, `AppWindows` |
 | `SlateComposition` | Domain, Data, Mocks, Presentation | MainActor | `AppContainer` (the only `public` type), URL scheme handling, Services provider, launch at login |
 | `SlateTestSupport` | Domain | nonisolated | `Spy<Port>` for every port, `TemporaryDirectory`, `waitUntil`, fixtures |
-| `slate` (executable, target `SlateCLI`) | Domain, Data, swift-argument-parser | nonisolated | the command line tool (section 9.3) |
+| `slate` (executable, target `SlateCLI`) | Domain, Data, swift-argument-parser, MCP (`modelcontextprotocol/swift-sdk`) | nonisolated | the command line tool and `slate mcp`, the MCP server for agents (ADR 0010) |
 
 - `SlatePresentation` imports `SlateMocks` in one file only: `Shared/PresentationAssembly+Preview.swift`.
 - `SlateEditor` imports AppKit, SwiftUI, Foundation, Observation and, only under `Markdown/`, the `Markdown` product of swift-markdown. It knows nothing about notes, vaults or the index. This keeps the riskiest code replaceable.
@@ -76,6 +76,7 @@ let package = Package(
         .executableTarget(name: "SlateCLI", dependencies: [
             "SlateDomain", "SlateData",
             .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            .product(name: "MCP", package: "swift-sdk"),
         ], swiftSettings: shared),
         .testTarget(name: "SlateDomainTests", dependencies: ["SlateDomain", "SlateTestSupport"], swiftSettings: shared),
         .testTarget(name: "SlateDataTests", dependencies: ["SlateData", "SlateMocks", "SlateTestSupport"], swiftSettings: shared),
@@ -154,7 +155,8 @@ Packages/SlateKit/
       Features/Activity/         ActivityView
     SlateComposition/            AppContainer, URLCommandParser, URLCommandHandler, ServicesProvider, LoginItem
     SlateTestSupport/            Spy<Port> per port, PortSpies, Ports+Spies, TemporaryDirectory, WaitUntil, TestError, VaultFixture (writes a sample vault into a temporary folder)
-    SlateCLI/                    SlateCommand (root), New, Open, Append, Today, Search, List, Path, CLIContainer
+    SlateCLI/                    SlateCommand (root), New, Open, Append, Today, Search, List, Path, MCP, CLIContainer;
+                                 MCPServerFactory, MCPToolCatalog (the eleven tools), MCPToolRunner (+Read, +Write), MCPArguments
   Tests/
     SlateDomainTests/ SlateDataTests/ (+ Integration/) SlateEditorTests/ SlateUITests/ SlatePresentationTests/
 Scripts/
@@ -222,7 +224,7 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 | `AttachmentStore` | M2: `fileNames()`, `write(Data, named:)` and `copy(URL, named:)` (both fail when the name exists), `size(of:)`, `externalSize(URL)`, `url(for:)`. Naming and links are `AttachmentPolicy`; the use cases pick the name. M5 adds `moveToTrash(file)` | `FileAttachmentStore` |
 | `TrashRepository` | `trash(VaultPath, at: Date) -> TrashItem`, `restore(TrashItem) -> VaultPath`, `items()`, `delete(TrashItem)` (M5: to the macOS Trash with `FileManager.trashItem`; the use case picks the items) | `FileTrashRepository` |
 | `TemplateRepository` | `body(for: String) -> String` (type name; a missing file falls back to `BuiltInTemplates`), `ensureDefaults()` | `FileTemplateRepository` |
-| `VaultConfigRepository` | M1: `spaces() -> SpacesConfig` (folders on disk merged with `spaces.json`), `saveSpaces(SpacesConfig)`, `types() -> [NoteType]` (built-ins plus `.slate/types/`), `ensureDefaults()`. M4 adds `linkPatterns()`, `views()`, `actions()` and tracker settings for the defaults | `FileVaultConfigRepository` |
+| `VaultConfigRepository` | S5 adds `agentPermissions()` and `saveAgentPermissions(_:)` (`.slate/agents.json`). M1: `spaces() -> SpacesConfig` (folders on disk merged with `spaces.json`), `saveSpaces(SpacesConfig)`, `types() -> [NoteType]` (built-ins plus `.slate/types/`), `ensureDefaults()`. M4 adds `linkPatterns()`, `views()`, `actions()` and tracker settings for the defaults | `FileVaultConfigRepository` |
 | `JournalStore` | `save(JournalEntry)`, `entry(for:)`, `clear(_:)`; one JSON file per note in `<support>/journal/` | `FileJournalStore` |
 | `ScreenCapturing` | `capture(CaptureMode, to: URL)`; success is a file larger than zero bytes, checked by `AttachScreenshotUseCase` | `ScreencaptureTool` |
 | `HistoryRepository` | `isAvailable()`, `ensureRepository()`, `snapshot(message:) -> Bool`, `history(of:) -> [Snapshot]`, `contents(of:at:) -> Data`, `push(to:)`, `lastSnapshot()` | `GitHistoryRepository` (an actor, `<support>/history.git`) |
@@ -236,6 +238,7 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 | `NoteExporting` | `html(title:body:)`, `pdf(title:body:)`, `saveToDownloads(_:fileName:)` | `NoteExporter` (System, AppKit for the PDF) over `HTMLExporter` (Export, swift-markdown) |
 | `WorkspaceOpening` | `open(URL)`, `reveal(URL)`, `quickLook(URL)` | `WorkspaceOpener` |
 | `CommandRecording` | `record(CommandRecord)` | `ActivityLog` conformance in Presentation |
+| `AgentChangeLog` | `record(AgentChange)`, `changes(after: Date)`; written by `slate mcp`, read by the app for the Activity line "Changed by an agent" (S5) | `FileAgentChangeLog` (an actor, `<support>/agent-changes.jsonl`, the last 200 lines) |
 
 `Ports` (Domain `Assembly/Ports.swift`) is a struct with one property per port. `Ports.live(root:keyValues:)` in Data (later milestones add the Application Support folder, the shell and the recorder), `Ports.mock()` in Mocks, `Ports.spies(keyValues:)` in TestSupport (the key-value store defaults to `SpyKeyValueStore`).
 
@@ -263,6 +266,10 @@ Since M7 the code has twenty ports (`actions`, `exporter` in M6; `secrets`, `tra
 | `TrashRetentionPolicy` | which items are due for purge |
 | `HeaderDefaultsPolicy` | header defaults per type and space |
 | `SlackFormatPolicy` | Markdown → Slack text (F6) |
+| `AgentPathPolicy` | S5: a path or folder from an agent → `VaultPath` or `FolderPath`; rejects `..`, paths outside the vault, `.` and `_` folders |
+| `AgentGuide` | S5: the text of the `CLAUDE.md` / `AGENTS.md` block, its markers and the registration line |
+| `ImageTypePolicy` | S5: PNG, JPEG, GIF, WebP or HEIC from the first bytes |
+| `NoteLinkPolicy` | S5: `slate://open?id=<id>` for Copy Link and `open_in_slate` |
 
 Every policy has a test file with fixtures.
 
@@ -289,7 +296,8 @@ Every policy has a test file with fixtures.
 | `ImportAttachmentUseCase` | attachments | data or file → Markdown |
 | `ReindexVaultUseCase` | files, index, builder, cloud | full or paths; compare `(mtime, size)` then hash; reports progress through an `AsyncStream<IndexProgress>` |
 | `ToggleTodoUseCase` | files, index, builder | edit one line in a file by number, coordinated |
-| `SnapshotHistoryUseCase` | history, clock, kv | throttle, snapshot when dirty, optional push |
+| `SnapshotHistoryUseCase` | history, clock, kv | throttle, snapshot when dirty, optional push, an optional message (`agent: <tool> <title>`) |
+| `AgentGuideWriter` | files | S5: writes the agent block into `CLAUDE.md` and `AGENTS.md`, keeps the text outside the markers, writes only on a change |
 | `RestoreVersionUseCase` | history, save | write the old content through `SaveNoteUseCase` |
 | `RunActionUseCase` | actions, files, index | environment from the note, output routing |
 | `CleanAttachmentsUseCase` | index, attachments | unreferenced files to trash |
@@ -458,6 +466,7 @@ Keystroke → `SearchStore` debounce 80 ms → title matches from the in-memory 
 | A code language | one file in `SlateEditor/Highlighting/languages/` and a fixture test |
 | A new source of data (another tracker, a web clipper) | a port in Domain, a live type in Data, a mock, a spy, a use case when two ports meet, a store or an action |
 | A CLI command | one file in `SlateCLI`, reuse a use case; never new file logic in the CLI |
+| An MCP tool | a schema in `MCPToolCatalog`, a method in `MCPToolRunner+Read` or `+Write`; every write checks `AgentPermissions`, goes through a use case, and ends with `afterWrite` (an `AgentChange` and a snapshot `agent: <tool> <title>`); a test in `MCPToolTests` over a temporary notes folder |
 | A URL route | `URLCommandParser`, `URLCommandHandler`, tests |
 | A screen | `/add-feature` skill (copied from DevHub): store, models, views, assembly line, tests |
 
@@ -516,5 +525,6 @@ Must exist by the end of the milestone that introduces the type (`ROADMAP.md`):
 | `swift-markdown` | parsing bodies for the index, outline, export | `SlateData/Index/`, `SlateData/Export/` |
 | `KeyboardShortcuts` | global hotkeys with a recorder view in Settings, no Accessibility permission | `SlatePresentation` (recorder view), `SlateComposition` (registration) |
 | `swift-argument-parser` | the CLI | `SlateCLI` |
+| `swift-sdk` (`modelcontextprotocol`, 0.9) | the MCP server `slate mcp`: JSON-RPC over stdio, tool and resource types (ADR 0010) | `SlateCLI` only |
 
 Not used, on purpose: SwiftData and Core Data (files are the store), CloudKit (needs a developer account), `highlight.js` or any JavaScript engine (start time), `STTextView` (dual licence, and `NSTextView` on TextKit 2 is enough), a YAML library (the header is a flat subset).

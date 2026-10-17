@@ -23,7 +23,8 @@ extension Ports {
             actions: MockActionRunner(),
             exporter: MockExporter(),
             secrets: MockSecretStore(),
-            tracker: MockIssueTracker()
+            tracker: MockIssueTracker(),
+            agentChanges: MockAgentChangeLog()
         )
     }
 }
