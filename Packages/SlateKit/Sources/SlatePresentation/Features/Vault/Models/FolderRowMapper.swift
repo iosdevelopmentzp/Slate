@@ -34,6 +34,16 @@ enum FolderRowMapper {
         )
     }
 
+    static func model(forTask folder: FolderPath, space: Space?, count: Int, note: NoteSummary?) -> FolderRowModel {
+        var model = model(forSubfolder: folder, space: space, count: count)
+        guard let note else { return model }
+        let status = note.status ?? .todo
+        model.status = TaskStatusMapper.tag(for: status)
+        model.ticket = note.ticket
+        model.statusRank = TaskStatusMapper.rank(status)
+        return model
+    }
+
     static func icon(for space: Space) -> String {
         guard let icon = space.icon, icon.isEmpty == false, icon != "folder" else { return "folder.fill" }
         return icon

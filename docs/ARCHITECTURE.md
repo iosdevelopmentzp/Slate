@@ -289,6 +289,8 @@ Every policy has a test file with fixtures.
 | `RestoreFolderUseCase` | files, move | Undo: makes the folders again and moves the notes back to their old paths |
 | `SetProjectUseCase` | config | ADR 0014: sets or removes the `project` object of a top-level folder, switches between the plain folder icon and `shippingbox.fill`, makes a new project writable for agents |
 | `CreateProjectUseCase` | createSpace, setProject | A new top-level folder that is a project from the start |
+| `StartTaskUseCase` | files, config, create, keyValues | ADR 0014: in a project only; splits the ticket from the title, makes the task folder (a taken name gets a number) and an active task note with ticket and branch |
+| `SetTaskStatusUseCase` | files, updateHeader | Sets `status` of a task note; refuses a note without `type: task` |
 | `OpenTargetUseCase` | index, create | `slate://open` by id, title or ticket; `.found`, `.created` (a ticket without a note) or `.missing` |
 | `TrashNoteUseCase`, `RestoreNoteUseCase`, `PurgeTrashUseCase` | trash, index, clock | |
 | `QuickCaptureUseCase` | create, append (as nested use cases) | capture input → new note or Today line |

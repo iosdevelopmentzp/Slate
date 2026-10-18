@@ -31,6 +31,7 @@ final class StoreHarness {
         restoreFolder: useCases.restoreFolder,
         setProject: useCases.setProject,
         createProject: useCases.createProject,
+        startTask: useCases.startTask,
         store: keyValues,
         navigator: navigator,
         toaster: toaster,

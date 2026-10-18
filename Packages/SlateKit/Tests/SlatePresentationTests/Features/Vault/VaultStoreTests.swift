@@ -84,6 +84,23 @@ import Testing
         #expect(vault.isProject(inbox) == false)
     }
 
+    @Test func newTaskInAProjectOpensItsFolderAndNote() async throws {
+        await vault.refresh()
+        await vault.setProject(true, for: SpaceName(rawValue: "Notes"))
+        vault.startNewTask(in: SpaceName(rawValue: "Notes"))
+        #expect(vault.editing == .newTask(SpaceName(rawValue: "Notes")))
+
+        vault.draftName = "ABC-9 Crash on start"
+        let done = await vault.commitEdit()
+
+        #expect(done)
+        #expect(harness.navigator.source == .folder(FolderPath(rawValue: "Notes/ABC-9 Crash on start")))
+        let selected = try #require(harness.navigator.selectedNote)
+        let note = try #require(try await harness.ports.index.summaries(space: nil).first { $0.id == selected })
+        #expect(note.status == .active)
+        #expect(harness.posted.contains(.indexUpdated))
+    }
+
     @Test func moveStaysInsideFoldersOrProjects() async {
         await vault.refresh()
         await vault.setProject(true, for: SpaceName(rawValue: "Tasks"))

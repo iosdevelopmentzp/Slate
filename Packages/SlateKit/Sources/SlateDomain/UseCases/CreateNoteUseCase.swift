@@ -34,7 +34,10 @@ package struct CreateNoteUseCase: Sendable {
         var header = HeaderDefaultsPolicy.header(id: .generate(), title: title, type: type, now: now)
         if type.fields.contains("ticket") {
             header.ticket = ticket
-            header.branch = SlugPolicy.renderBranch(pattern: type.branchPattern, ticket: ticket, title: bareTitle)
+            header.branch = draft.branch ?? SlugPolicy.renderBranch(pattern: type.branchPattern, ticket: ticket, title: bareTitle)
+        }
+        if let status = draft.status, type.hasStatus {
+            header.status = status.rawValue
         }
         let body: TemplateRenderer.Rendered
         if let text = draft.body {

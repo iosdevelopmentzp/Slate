@@ -34,6 +34,15 @@ import Testing
         #expect(editor.isDirty == false)
     }
 
+    @Test func setStatusWritesTheHeader() async throws {
+        let path = try await open("Inbox/A.md")
+
+        await editor.setStatus(.done)
+
+        #expect(editor.document?.header.status == "done")
+        #expect(text(at: path).contains("status: done"))
+    }
+
     @Test func typingSavesAfterAShortPause() async throws {
         let path = try await open("Inbox/A.md")
 

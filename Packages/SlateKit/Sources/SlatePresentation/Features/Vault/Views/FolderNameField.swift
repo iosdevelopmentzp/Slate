@@ -6,6 +6,7 @@ struct FolderNameField: View {
     @Binding var name: String
     let icon: String
     let tint: Color
+    var prompt = "Folder name"
     let onCommit: () -> Void
     let onCancel: () -> Void
 
@@ -18,7 +19,7 @@ struct FolderNameField: View {
                 .foregroundStyle(tint)
                 .frame(width: 18)
                 .accessibilityHidden(true)
-            TextField("Folder name", text: $name)
+            TextField(prompt, text: $name)
                 .textFieldStyle(.plain)
                 .focused($isFocused)
                 .onSubmit(onCommit)

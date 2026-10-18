@@ -18,6 +18,8 @@ package enum BuiltInTemplates {
 
         ## Questions
 
+        ## Log
+
         """,
         "daily": """
         ## Log

@@ -10,15 +10,18 @@ struct SubfolderCard: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: "folder.fill")
+            Image(systemName: model.status == nil ? "folder.fill" : "checkmark.circle.fill")
                 .font(.system(size: 15))
-                .foregroundStyle(model.tint.color)
+                .foregroundStyle(model.status.map { $0.tint.color } ?? model.tint.color)
                 .accessibilityHidden(true)
             Text(model.title)
                 .font(.body.weight(.medium))
                 .lineLimit(1)
                 .truncationMode(.tail)
             Spacer(minLength: 4)
+            if let status = model.status {
+                ModelTag(model: status)
+            }
             Text("\(model.count)")
                 .font(.callout)
                 .foregroundStyle(.secondary)
@@ -44,6 +47,12 @@ struct SubfolderCard: View {
         .padding()
         .frame(width: 320)
         .preferredColorScheme(.light)
+}
+
+#Preview("Task") {
+    SubfolderCard(model: .taskPreview, isDropTarget: false)
+        .padding()
+        .frame(width: 320)
 }
 
 #Preview("Dark") {

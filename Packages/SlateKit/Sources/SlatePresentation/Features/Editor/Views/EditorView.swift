@@ -7,6 +7,7 @@ struct EditorView: View {
     @Environment(EditorStore.self) private var editor
     @Environment(SettingsStore.self) private var settings
     @Environment(Toaster.self) private var toaster
+    @Environment(VaultStore.self) private var vault
     @State private var showsHistory = false
     @State private var commands = EditorCommands()
     @FocusState private var isTitleFocused: Bool
@@ -104,6 +105,20 @@ struct EditorView: View {
     }
 
     private func header(for document: NoteDocument) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            titleRow(for: document)
+            if let task = TaskLineMapper.model(for: document.header, inProject: document.path.space.map(vault.isProject) ?? false) {
+                TaskLine(model: task) { status in
+                    Task { await editor.setStatus(status) }
+                }
+            }
+        }
+        .padding(.horizontal, Self.sidePadding)
+        .padding(.top, 28)
+        .padding(.bottom, 8)
+    }
+
+    private func titleRow(for document: NoteDocument) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
             TextField("Title", text: titleBinding, axis: .vertical)
                 .textFieldStyle(.plain)
@@ -122,9 +137,6 @@ struct EditorView: View {
             }
             .accessibilityLabel("Versions")
         }
-        .padding(.horizontal, Self.sidePadding)
-        .padding(.top, 28)
-        .padding(.bottom, 8)
     }
 
     private var handlers: EditorHandlers {

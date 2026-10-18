@@ -223,6 +223,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 142. The Files section reads the folder directly (`VaultFileStore.files(in:)`), not the index: files are not indexed. The watcher now reports every changed file under a folder, not only notes; temporary names (`.sb-`, `~`, `.tmp`, `.swp`, hidden names) are dropped, and the reindex still looks only at `.md` paths. A trashed file goes to the macOS Trash, not to Slate's Trash, because Slate's Trash and its list are built for notes; Undo moves it back.
 
+143. A task is the folder plus the note with the same stem and `type: task`; when there is no such stem, the first task note directly in the folder counts. Status, ticket and branch show only inside projects (`TaskLineMapper` and the project list check the space), so a task note from the old `Tasks` folder looks as before. The status sort and pills come from `TaskStatusMapper`. The task template gained `## Log` at the end; it applies to every new task note, also outside projects.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -328,6 +330,8 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 59. Press + next to Projects, type MyApp and press Enter: the project shows under Projects with a box icon and opens. Right click it, Link Repository…, pick a code folder: the menu now says Change Repository…. Right click a folder, Make a Project: it moves to the Projects section and keeps its notes. Make a Folder moves it back. Settings → AI access shows MyApp as writable.
 
 60. Drag a PDF and a PNG from Finder onto the list of a folder: an accent outline shows, then both are in a Files section under the notes, the PNG with a thumbnail. Double click the PDF: Quick Look opens. "…" → Rename, type a name without `.pdf`, press Enter: the file keeps `.pdf`. "…" → Move to Trash, then Undo in the toast: the file is back. In Terminal, `cp` a file into the folder: it shows up within a second.
+
+61. Right click MyApp, New Task, type `ABC-123 Fix login`, Enter: the folder `ABC-123 Fix login` opens with its note, the note shows In progress, `ABC-123` and `feature/ABC-123-fix-login` under the title. Click the pill, choose In review: the file has `status: review`. Go up to MyApp: the task shows an orange In review pill above a Done task.
 
 ## Known gaps
 

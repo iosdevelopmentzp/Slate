@@ -14,6 +14,8 @@ package struct UseCases: Sendable {
     package let createSpace: CreateSpaceUseCase
     package let setProject: SetProjectUseCase
     package let createProject: CreateProjectUseCase
+    package let startTask: StartTaskUseCase
+    package let setTaskStatus: SetTaskStatusUseCase
     package let renameSpace: RenameSpaceUseCase
     package let deleteSpace: DeleteSpaceUseCase
     package let restoreSpace: RestoreSpaceUseCase
@@ -44,6 +46,8 @@ package struct UseCases: Sendable {
         updateHeader = UpdateHeaderUseCase(files: ports.files, save: save)
         trash = TrashNoteUseCase(trash: ports.trash, index: ports.index, clock: ports.clock)
         restore = RestoreNoteUseCase(trash: ports.trash, files: ports.files, index: ports.index, builder: ports.builder)
+        startTask = StartTaskUseCase(files: ports.files, config: ports.config, create: create, keyValues: ports.keyValues)
+        setTaskStatus = SetTaskStatusUseCase(files: ports.files, updateHeader: updateHeader)
         reindex = ReindexVaultUseCase(files: ports.files, index: ports.index, builder: ports.builder)
         createSpace = CreateSpaceUseCase(files: ports.files, config: ports.config)
         setProject = SetProjectUseCase(config: ports.config)

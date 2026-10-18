@@ -43,6 +43,7 @@ package final class PresentationAssembly {
             restoreFolder: useCases.restoreFolder,
             setProject: useCases.setProject,
             createProject: useCases.createProject,
+            startTask: useCases.startTask,
             store: ports.keyValues,
             navigator: navigator,
             toaster: toaster,

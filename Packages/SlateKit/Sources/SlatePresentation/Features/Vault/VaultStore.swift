@@ -28,6 +28,7 @@ final class VaultStore {
     @ObservationIgnored private let restoreFolder: RestoreFolderUseCase
     @ObservationIgnored private let setProject: SetProjectUseCase
     @ObservationIgnored private let createProject: CreateProjectUseCase
+    @ObservationIgnored private let startTask: StartTaskUseCase
     @ObservationIgnored private let store: any KeyValueStore
     @ObservationIgnored private let navigator: Navigator
     @ObservationIgnored private let toaster: Toaster
@@ -50,6 +51,7 @@ final class VaultStore {
         restoreFolder: RestoreFolderUseCase,
         setProject: SetProjectUseCase,
         createProject: CreateProjectUseCase,
+        startTask: StartTaskUseCase,
         store: any KeyValueStore,
         navigator: Navigator,
         toaster: Toaster,
@@ -68,6 +70,7 @@ final class VaultStore {
         self.restoreFolder = restoreFolder
         self.setProject = setProject
         self.createProject = createProject
+        self.startTask = startTask
         self.store = store
         expanded = Set((store.strings(forKey: Keys.expanded) ?? []).map(FolderPath.init(rawValue:)))
         self.navigator = navigator
@@ -130,6 +133,13 @@ final class VaultStore {
         editing = .newProject
     }
 
+    func startNewTask(in project: SpaceName) {
+        cancelDelete()
+        setExpanded(FolderPath(space: project), true)
+        draftName = ""
+        editing = .newTask(project)
+    }
+
     func startNewFolder(in parent: FolderPath) {
         cancelDelete()
         setExpanded(parent, true)
@@ -187,6 +197,8 @@ final class VaultStore {
             done = await create(named: name)
         case .newProject:
             done = await createProject(named: name)
+        case .newTask(let project):
+            done = await startTask(named: name, in: project)
         case .newInside(let parent):
             done = await create(named: name, in: parent)
         case .rename(let space):
@@ -222,6 +234,25 @@ final class VaultStore {
             return true
         } catch {
             report("Cannot create the project", error)
+            return false
+        }
+    }
+
+    @discardableResult
+    func startTask(named name: String, in project: SpaceName) async -> Bool {
+        guard name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else { return true }
+        do {
+            let created = try await startTask.execute(in: project, title: name)
+            await refresh()
+            if let folder = created.document.path.folderPath {
+                navigator.show(.showing(folder))
+            }
+            events.post(.indexUpdated)
+            events.post(.noteCreated(created.document.id, caret: created.caret))
+            navigator.select(created.document.id)
+            return true
+        } catch {
+            report("Cannot start the task", error)
             return false
         }
     }

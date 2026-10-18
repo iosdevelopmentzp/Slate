@@ -13,10 +13,14 @@ struct FolderMenu: View {
     let onIcon: (String) -> Void
     let onMove: (Int) -> Void
     let onProject: (Bool) -> Void
+    let onNewTask: () -> Void
     let onLinkRepository: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
+        if model.isProject {
+            Button("New Task", systemImage: "checkmark.circle", action: onNewTask)
+        }
         Button("New folder inside", systemImage: "folder.badge.plus", action: onNewInside)
         Button("Rename", systemImage: "pencil", action: onRename)
         if model.isSpace {

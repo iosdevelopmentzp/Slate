@@ -69,6 +69,27 @@ struct SidebarView: View {
         .padding(.top, 12)
         ForEach(rows(for: vault.projects)) { row in
             folder(row)
+            if row.id == fieldAfter, case .newInside(let parent) = vault.editing {
+                FolderNameField(
+                    name: $vault.draftName,
+                    icon: "folder",
+                    tint: Tint.blue.color,
+                    onCommit: { Task { await vault.commitEdit() } },
+                    onCancel: { vault.cancelEdit() }
+                )
+                .padding(.leading, CGFloat(parent.depth) * 14 + 18)
+            }
+            if row.id == fieldAfter, case .newTask(let project) = vault.editing {
+                FolderNameField(
+                    name: $vault.draftName,
+                    icon: "checkmark.circle",
+                    tint: Tint.blue.color,
+                    prompt: "ABC-123 Task title",
+                    onCommit: { Task { await vault.commitEdit() } },
+                    onCancel: { vault.cancelEdit() }
+                )
+                .padding(.leading, CGFloat(FolderPath(space: project).depth) * 14 + 18)
+            }
         }
         if vault.editing == .newProject {
             FolderNameField(
@@ -109,7 +130,12 @@ struct SidebarView: View {
     }
 
     private var fieldAfter: FolderPath? {
-        guard case .newInside(let parent) = vault.editing else { return nil }
+        let parent: FolderPath
+        switch vault.editing {
+        case .newInside(let folder): parent = folder
+        case .newTask(let project): parent = FolderPath(space: project)
+        default: return nil
+        }
         return rows.last { $0.id == parent || parent.contains($0.id) }?.id
     }
 
@@ -199,6 +225,7 @@ struct SidebarView: View {
             onIcon: { icon in Task { await vault.setIcon(icon, for: model.space) } },
             onMove: { offset in Task { await vault.move(model.space, by: offset) } },
             onProject: { isProject in Task { await vault.setProject(isProject, for: model.space) } },
+            onNewTask: { vault.startNewTask(in: model.space) },
             onLinkRepository: { linkRepository(for: model.space) },
             onDelete: { vault.requestDelete(folder: model.id) }
         )

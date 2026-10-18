@@ -9,8 +9,10 @@ package struct NoteDraft: Hashable, Sendable {
     package var bodyPrefix: String?
     package var template: String?
     package var folder: FolderPath?
+    package var branch: String?
+    package var status: NoteStatus?
 
-    package init(title: String? = nil, type: String? = nil, space: SpaceName? = nil, ticket: String? = nil, body: String? = nil, bodyPrefix: String? = nil, template: String? = nil, folder: FolderPath? = nil) {
+    package init(title: String? = nil, type: String? = nil, space: SpaceName? = nil, ticket: String? = nil, body: String? = nil, bodyPrefix: String? = nil, template: String? = nil, folder: FolderPath? = nil, branch: String? = nil, status: NoteStatus? = nil) {
         self.title = title
         self.type = type
         self.space = space
@@ -19,5 +21,7 @@ package struct NoteDraft: Hashable, Sendable {
         self.bodyPrefix = bodyPrefix
         self.template = template
         self.folder = folder
+        self.branch = branch
+        self.status = status
     }
 }

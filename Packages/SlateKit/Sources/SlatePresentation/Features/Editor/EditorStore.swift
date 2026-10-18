@@ -208,6 +208,10 @@ final class EditorStore {
         }
     }
 
+    func setStatus(_ status: NoteStatus) async {
+        await updateHeader { $0.status = status.rawValue }
+    }
+
     func keepMine() async {
         guard let current = document else { return }
         do {

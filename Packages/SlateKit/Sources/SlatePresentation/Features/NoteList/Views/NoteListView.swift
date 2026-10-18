@@ -116,9 +116,17 @@ struct NoteListView: View {
     private var subfolders: [FolderRowModel] {
         guard let folder = store.source.folder else { return [] }
         let space = vault.spaces.first { $0.folder == folder.space }
-        return vault.children(of: folder).map { child in
-            FolderRowMapper.model(forSubfolder: child, space: space, count: store.count(in: child))
+        let children = vault.children(of: folder)
+        guard space?.isProject == true, folder.isSpace else {
+            return children.map { child in
+                FolderRowMapper.model(forSubfolder: child, space: space, count: store.count(in: child))
+            }
         }
+        return children
+            .map { child in
+                FolderRowMapper.model(forTask: child, space: space, count: store.count(in: child), note: TaskStatusMapper.taskNote(in: child, among: store.summaries))
+            }
+            .sorted { $0.statusRank < $1.statusRank }
     }
 
     private func subfolder(_ model: FolderRowModel) -> some View {
