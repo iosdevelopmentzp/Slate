@@ -89,6 +89,25 @@ import Testing
         #expect(FileManager.default.fileExists(atPath: source.appendingPathComponent("Plan.md").path))
     }
 
+    @Test func importOfARepositoryRootCopiesOnlyTheNotesAndSkipsBuildFolders() async throws {
+        let outside = try TemporaryDirectory()
+        _ = try outside.write("[core]", to: "app/.git/config")
+        _ = try outside.write("# Readme", to: "app/README.md")
+        _ = try outside.write("# Plan", to: "app/docs/Plan.md")
+        _ = try outside.write("code", to: "app/Sources/App.swift")
+        _ = try outside.write("# Pod", to: "app/Pods/Lib/README.md")
+        let source = outside.url.appendingPathComponent("app", isDirectory: true)
+
+        let report = try await store.importFolder(source, into: FolderPath(rawValue: "App"))
+
+        #expect(report.notesOnly)
+        #expect(report.notes == 2)
+        #expect(report.files == 0)
+        #expect(FileManager.default.fileExists(atPath: folder.path("App/docs/Plan.md")))
+        #expect(FileManager.default.fileExists(atPath: folder.path("App/Sources")) == false)
+        #expect(FileManager.default.fileExists(atPath: folder.path("App/Pods")) == false)
+    }
+
     @Test func readReturnsBytesHashAndMeta() async throws {
         _ = try folder.write("hello", to: path.rawValue)
 

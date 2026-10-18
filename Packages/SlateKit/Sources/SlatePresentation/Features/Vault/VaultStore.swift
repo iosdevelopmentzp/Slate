@@ -9,11 +9,17 @@ final class VaultStore {
     static let newProjectName = "New project"
     static let confirmationTime: Duration = .seconds(5)
 
-    var config = SpacesConfig(spaces: [])
+    var config = SpacesConfig(spaces: []) {
+        didSet { rebuildTree() }
+    }
     var draftName = ""
     private(set) var editing: FolderEdit?
     private(set) var confirmingDelete: FolderPath?
-    private(set) var subfolders: [FolderPath] = []
+    private(set) var subfolders: [FolderPath] = [] {
+        didSet { rebuildTree() }
+    }
+    private(set) var tree = FolderTree([])
+    private(set) var moveTargets: [MoveTargetModel] = []
     private(set) var expanded: Set<FolderPath>
 
     @ObservationIgnored private let repository: any VaultConfigRepository
@@ -171,7 +177,12 @@ final class VaultStore {
     }
 
     func children(of parent: FolderPath) -> [FolderPath] {
-        FolderTreeMapper.children(of: parent, in: subfolders)
+        tree.children(of: parent)
+    }
+
+    private func rebuildTree() {
+        tree = FolderTree(subfolders)
+        moveTargets = NoteRowMapper.moveTargets(spaces: config.spaces, tree: tree)
     }
 
     func isExpanded(_ folder: FolderPath) -> Bool {
@@ -279,6 +290,9 @@ final class VaultStore {
     static func importedMessage(_ imported: ImportedProject) -> String {
         let notes = imported.report.notes == 1 ? "1 note" : "\(imported.report.notes) notes"
         let files = imported.report.files == 1 ? "1 file" : "\(imported.report.files) files"
+        guard imported.report.notesOnly == false else {
+            return "Imported \(notes) into \(imported.space.rawValue). From a code repository Slate copies only the notes."
+        }
         return "Imported \(notes) and \(files) into \(imported.space.rawValue)"
     }
 

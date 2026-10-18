@@ -235,6 +235,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 149. The own-write window of the watcher is 10 s, not 2 s. An event counts as Slate's own write only when the hash on disk equals the hash Slate wrote, so a longer window cannot hide an edit by another tool; under load FSEvents reported Slate's writes after more than 2 s. `externalEditArrivesAsAPathChange` writes the file up to three times, because under load the folder event of the setup can arrive with the first write and turn it into a rescan.
 
+150. The folder tree is a `FolderTree` index (parent → sorted children), built once in `VaultStore` when the folders change, together with the Move to targets. Before, `FolderTreeMapper.children` filtered every folder for every node, and every note card built the whole Move to list: with 2,238 folders one card took about 30 s. Now the tree and the menus of 60 cards take 0.13 s in a debug build. Import Folder… of a folder that holds `.git` copies only `.md` files; `Pods`, `Carthage`, `node_modules`, `DerivedData` and `build` folders are always skipped.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.

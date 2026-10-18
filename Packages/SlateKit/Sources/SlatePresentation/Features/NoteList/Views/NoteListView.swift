@@ -153,7 +153,7 @@ struct NoteListView: View {
 
     private func actions(for summary: NoteSummary) -> NoteRowActions {
         NoteRowActions(
-            moveTargets: NoteRowMapper.moveTargets(for: summary, spaces: vault.spaces, folders: vault.subfolders),
+            moveTargets: NoteRowMapper.moveTargets(for: summary, among: vault.moveTargets),
             pin: { Task { await store.togglePin(summary) } },
             move: { folder in Task { await store.moveNote(summary, toFolder: folder) } },
             duplicate: { Task { await store.duplicateNote(summary) } },

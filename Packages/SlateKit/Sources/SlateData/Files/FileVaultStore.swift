@@ -181,11 +181,18 @@ actor FileVaultStore: VaultFileStore {
 
     func importFolder(_ source: URL, into target: FolderPath) throws -> FolderImport {
         let base = folder.url(folder: target.rawValue)
-        var report = FolderImport(repository: Self.repository(containing: source))
+        let notesOnly = folder.exists(source.appendingPathComponent(".git"))
+        var report = FolderImport(repository: Self.repository(containing: source), notesOnly: notesOnly)
         let keys: [URLResourceKey] = [.isRegularFileKey, .isDirectoryKey]
         guard let enumerator = FileManager.default.enumerator(at: source, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles, .skipsPackageDescendants]) else { return report }
         for case let url as URL in enumerator {
-            guard (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true,
+            let values = try? url.resourceValues(forKeys: Set(keys))
+            if values?.isDirectory == true {
+                if Self.skippedFolders.contains(url.lastPathComponent) { enumerator.skipDescendants() }
+                continue
+            }
+            guard values?.isRegularFile == true,
+                  notesOnly == false || url.pathExtension == VaultPath.noteExtension,
                   let relative = folder.relativePath(of: url, under: source)
             else { continue }
             let destination = base.appendingPathComponent(relative, isDirectory: false)
@@ -200,6 +207,8 @@ actor FileVaultStore: VaultFileStore {
         }
         return report
     }
+
+    static let skippedFolders: Set<String> = ["Pods", "Carthage", "node_modules", "DerivedData", "build", "Build"]
 
     private static func repository(containing url: URL) -> String? {
         var current = url.standardizedFileURL

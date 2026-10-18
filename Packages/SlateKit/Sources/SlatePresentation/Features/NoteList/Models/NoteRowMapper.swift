@@ -14,16 +14,23 @@ enum NoteRowMapper {
         )
     }
 
+    static func moveTargets(spaces: [Space], tree: FolderTree) -> [MoveTargetModel] {
+        let icons = Dictionary(spaces.map { ($0.folder, FolderRowMapper.icon(for: $0)) }, uniquingKeysWith: { first, _ in first })
+        return tree.moveTargets(spaces: spaces.map(\.folder)).map { node in
+            MoveTargetModel(
+                id: node.id,
+                title: node.id.components.joined(separator: " › "),
+                icon: node.id.isSpace ? (icons[node.id.space] ?? "folder.fill") : "folder"
+            )
+        }
+    }
+
+    static func moveTargets(for summary: NoteSummary, among targets: [MoveTargetModel]) -> [MoveTargetModel] {
+        let folder = summary.path.folder
+        return targets.filter { $0.id.rawValue != folder }
+    }
+
     static func moveTargets(for summary: NoteSummary, spaces: [Space], folders: [FolderPath]) -> [MoveTargetModel] {
-        FolderTreeMapper.moveTargets(spaces: spaces.map(\.folder), folders: folders)
-            .filter { $0.id.rawValue != summary.path.folder }
-            .map { node in
-                let space = spaces.first { $0.folder == node.id.space }
-                return MoveTargetModel(
-                    id: node.id,
-                    title: node.id.components.joined(separator: " › "),
-                    icon: node.id.isSpace ? (space.map(FolderRowMapper.icon(for:)) ?? "folder.fill") : "folder"
-                )
-            }
+        moveTargets(for: summary, among: moveTargets(spaces: spaces, tree: FolderTree(folders)))
     }
 }

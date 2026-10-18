@@ -145,7 +145,7 @@ struct SidebarView: View {
             let model = FolderRowMapper.model(for: space, count: store.count(in: root), defaultFolder: vault.defaultFolder)
             let head = SidebarFolder(model: model, level: 0, disclosure: disclosure(hasChildren: vault.children(of: root).isEmpty == false, isExpanded: vault.isExpanded(root)))
             guard vault.isExpanded(root) else { return [head] }
-            let below = FolderTreeMapper.nodes(below: space.folder, folders: vault.subfolders, expanded: vault.expanded).map { node in
+            let below = vault.tree.nodes(below: space.folder, expanded: vault.expanded).map { node in
                 SidebarFolder(
                     model: FolderRowMapper.model(forSubfolder: node.id, space: space, count: store.count(in: node.id)),
                     level: node.level,
