@@ -74,7 +74,12 @@ final class TableCellEditor: NSTextView {
     }
 
     override func mouseDown(with event: NSEvent) {
-        if event.clickCount == 2, let path = imagePath(at: convert(event.locationInWindow, from: nil)) {
+        let point = convert(event.locationInWindow, from: nil)
+        if event.modifierFlags.contains(.command), let href = href(at: point) {
+            table?.host?.openLink(href)
+            return
+        }
+        if event.clickCount == 2, let path = imagePath(at: point) {
             table?.host?.imageAction(path, .quickLook)
             return
         }
@@ -94,6 +99,17 @@ final class TableCellEditor: NSTextView {
             return
         }
         table.selectWholeTable()
+    }
+
+    func href(at point: CGPoint) -> String? {
+        guard let storage = textStorage, storage.length > 0, let window else { return nil }
+        let index = characterIndexForInsertion(at: point)
+        let hit = [index, index - 1].first { candidate in
+            guard candidate >= 0, candidate < storage.length else { return false }
+            let screen = firstRect(forCharacterRange: NSRange(location: candidate, length: 1), actualRange: nil)
+            return convert(window.convertFromScreen(screen), from: nil).insetBy(dx: -2, dy: -2).contains(point)
+        }
+        return hit.flatMap { storage.attribute(.slateHref, at: $0, effectiveRange: nil) as? String }
     }
 
     func imagePath(at point: CGPoint) -> String? {

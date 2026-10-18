@@ -64,6 +64,38 @@ import Testing
         #expect(view.cellEditor.selectedRange() == NSRange(location: 1, length: 0))
     }
 
+    private func click(_ cell: TableCellIndex, in view: TableBlockView, _ harness: EditorHarness, flags: NSEvent.ModifierFlags) throws -> NSEvent {
+        view.beginEditing(cell)
+        let editor = view.cellEditor
+        let screen = editor.firstRect(forCharacterRange: NSRange(location: 1, length: 1), actualRange: nil)
+        let rect = harness.window.convertFromScreen(screen)
+        return try #require(NSEvent.mouseEvent(with: .leftMouseDown, location: CGPoint(x: rect.midX, y: rect.midY), modifierFlags: flags, timestamp: 0, windowNumber: harness.window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 1))
+    }
+
+    @Test func commandClickOnALinkInACellOpensIt() throws {
+        let harness = EditorHarness(markdown: "| [site](https://example.com) | [[Decisions]] |\n|---|---|\n| 1 | 2 |\n")
+        var opened: [EditorLink] = []
+        harness.controller.handlers.openLink = { opened.append($0) }
+        let view = try #require(harness.table()?.loadedView)
+
+        view.mouseDown(with: try click(TableCellIndex(row: 0, column: 0), in: view, harness, flags: .command))
+        view.mouseDown(with: try click(TableCellIndex(row: 0, column: 1), in: view, harness, flags: .command))
+
+        #expect(opened == [.url("https://example.com"), .wiki("Decisions")])
+    }
+
+    @Test func aPlainClickOnALinkInACellOnlyPlacesTheCaret() throws {
+        let harness = EditorHarness(markdown: "| [site](https://example.com) | b |\n|---|---|\n| 1 | 2 |\n")
+        var opened: [EditorLink] = []
+        harness.controller.handlers.openLink = { opened.append($0) }
+        let view = try #require(harness.table()?.loadedView)
+
+        view.mouseDown(with: try click(TableCellIndex(row: 0, column: 0), in: view, harness, flags: []))
+
+        #expect(opened.isEmpty)
+        #expect(view.editing == TableCellIndex(row: 0, column: 0))
+    }
+
     @Test func arrowsAwayFromATableStillMoveTheCaret() {
         let harness = EditorHarness(markdown: "One\nTwo\n")
         harness.caret(after: "On")

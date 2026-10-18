@@ -15,4 +15,5 @@ protocol TableHost: AnyObject {
     func pasteIntoCells(_ view: TableBlockView)
     func copyTable(_ attachment: TableAttachment, asText: Bool)
     func imageAction(_ path: String, _ action: AttachmentAction)
+    func openLink(_ href: String)
 }

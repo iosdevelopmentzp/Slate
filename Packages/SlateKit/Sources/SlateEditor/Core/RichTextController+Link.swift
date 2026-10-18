@@ -57,11 +57,15 @@ extension RichTextController {
 
     func openLink(at location: Int) -> Bool {
         guard location < storage.length, let href = storage.attribute(.slateHref, at: location, effectiveRange: nil) as? String else { return false }
+        openLink(href)
+        return true
+    }
+
+    func openLink(_ href: String) {
         if href.hasPrefix(RichText.wikiPrefix) {
             handlers.openLink(.wiki(String(href.dropFirst(RichText.wikiPrefix.count))))
         } else {
             handlers.openLink(.url(href))
         }
-        return true
     }
 }

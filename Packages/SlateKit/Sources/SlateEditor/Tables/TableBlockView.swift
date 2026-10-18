@@ -189,6 +189,10 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         beginEditing(index)
         guard editing == index, editor.window != nil else { return }
         let local = editor.convert(event.locationInWindow, from: nil)
+        if event.modifierFlags.contains(.command), let href = editor.href(at: local) {
+            host?.openLink(href)
+            return
+        }
         if event.clickCount > 1, let path = editor.imagePath(at: local) {
             host?.imageAction(path, .quickLook)
             return
