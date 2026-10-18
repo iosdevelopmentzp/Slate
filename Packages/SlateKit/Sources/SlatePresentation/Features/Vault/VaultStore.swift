@@ -29,6 +29,7 @@ final class VaultStore {
     @ObservationIgnored private let setProject: SetProjectUseCase
     @ObservationIgnored private let createProject: CreateProjectUseCase
     @ObservationIgnored private let startTask: StartTaskUseCase
+    @ObservationIgnored private let importFolder: ImportFolderUseCase
     @ObservationIgnored private let store: any KeyValueStore
     @ObservationIgnored private let navigator: Navigator
     @ObservationIgnored private let toaster: Toaster
@@ -52,6 +53,7 @@ final class VaultStore {
         setProject: SetProjectUseCase,
         createProject: CreateProjectUseCase,
         startTask: StartTaskUseCase,
+        importFolder: ImportFolderUseCase,
         store: any KeyValueStore,
         navigator: Navigator,
         toaster: Toaster,
@@ -71,6 +73,7 @@ final class VaultStore {
         self.setProject = setProject
         self.createProject = createProject
         self.startTask = startTask
+        self.importFolder = importFolder
         self.store = store
         expanded = Set((store.strings(forKey: Keys.expanded) ?? []).map(FolderPath.init(rawValue:)))
         self.navigator = navigator
@@ -255,6 +258,25 @@ final class VaultStore {
             report("Cannot start the task", error)
             return false
         }
+    }
+
+    func importProject(from folder: URL) async {
+        do {
+            let imported = try await importFolder.execute(folder)
+            await refresh()
+            navigator.show(.space(imported.space))
+            events.post(.indexUpdated)
+            events.post(.vaultRescanned)
+            toaster.show(Self.importedMessage(imported))
+        } catch {
+            report("Cannot import the folder", error)
+        }
+    }
+
+    static func importedMessage(_ imported: ImportedProject) -> String {
+        let notes = imported.report.notes == 1 ? "1 note" : "\(imported.report.notes) notes"
+        let files = imported.report.files == 1 ? "1 file" : "\(imported.report.files) files"
+        return "Imported \(notes) and \(files) into \(imported.space.rawValue)"
     }
 
     func setProject(_ isProject: Bool, for space: SpaceName) async {

@@ -290,7 +290,7 @@ A project (ADR 0014) is a space whose entry has a `project` object:
 
 `id` is a UUID string and is required; an object without it is ignored. `repositories` (paths on this Mac) and `remote` (the `origin` URL) are optional. Unknown keys inside `project` are kept when the app writes the file. Removing the object makes the project an ordinary folder again; its notes do not move.
 
-A task in a project is a folder directly in it, named from the ticket and the title (`ABC-123 Fix login`, a taken name gets a number). Its task note has the same stem, `type: task`, `status: active`, the `ticket` and the `branch` (from the given branch or the task type's branch pattern), and the `task.md` body. The `## Log` section at the end is where agents append a dated line per session (S9).
+A task in a project is a folder directly in it, named from the ticket and the title (`ABC-123 Fix login`, a taken name gets a number). Its task note has the same stem, `type: task`, `status: active`, the `ticket` and the `branch` (from the given branch or the task type's branch pattern), and the `task.md` body. The `## Log` section at the end is where agents append a dated line per session (S9). Import Folder copies a folder from outside the notes folder into a new project, with its sub-folders, notes and files; files that already exist are kept, hidden files are skipped, and the source stays as it is.
 
 ### 7.2 `links.json`
 

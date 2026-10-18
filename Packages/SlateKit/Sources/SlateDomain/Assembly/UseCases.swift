@@ -15,6 +15,7 @@ package struct UseCases: Sendable {
     package let setProject: SetProjectUseCase
     package let createProject: CreateProjectUseCase
     package let startTask: StartTaskUseCase
+    package let importFolder: ImportFolderUseCase
     package let setTaskStatus: SetTaskStatusUseCase
     package let renameSpace: RenameSpaceUseCase
     package let deleteSpace: DeleteSpaceUseCase
@@ -52,6 +53,7 @@ package struct UseCases: Sendable {
         createSpace = CreateSpaceUseCase(files: ports.files, config: ports.config)
         setProject = SetProjectUseCase(config: ports.config)
         createProject = CreateProjectUseCase(createSpace: createSpace, setProject: setProject)
+        importFolder = ImportFolderUseCase(files: ports.files, config: ports.config, createProject: createProject, setProject: setProject, reindex: reindex)
         renameSpace = RenameSpaceUseCase(files: ports.files, config: ports.config, reindex: reindex)
         deleteSpace = DeleteSpaceUseCase(files: ports.files, config: ports.config, move: move)
         restoreSpace = RestoreSpaceUseCase(files: ports.files, config: ports.config, move: move)

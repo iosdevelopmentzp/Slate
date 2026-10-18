@@ -82,6 +82,11 @@ actor MockVaultFileStore: VaultFileStore {
         return URL(fileURLWithPath: "/Trash/\(path.fileName)")
     }
 
+    func importFolder(_ source: URL, into folder: FolderPath) -> FolderImport {
+        folderSet.insert(folder)
+        return FolderImport()
+    }
+
     func restoreFile(_ trashed: URL, to path: VaultPath) {
         store(path, Data())
     }

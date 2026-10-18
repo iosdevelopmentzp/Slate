@@ -11,6 +11,7 @@ struct SidebarView: View {
     @Environment(\.openSettings) private var openSettings
 
     @State private var dropTarget: FolderPath?
+    @State private var isProjectDropTarget = false
 
     var body: some View {
         @Bindable var vault = vault
@@ -62,11 +63,37 @@ struct SidebarView: View {
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(.secondary)
             Spacer()
-            IconButton(systemImage: "plus", help: "New project") { vault.startNewProject() }
-                .accessibilityLabel("New project")
+            Menu {
+                Button("New Project", systemImage: SetProjectUseCase.projectIcon) { vault.startNewProject() }
+                Button("Import Folder…", systemImage: "square.and.arrow.down") { importFolder() }
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 22, height: 22)
+                    .contentShape(Rectangle())
+            }
+            .menuStyle(.button)
+            .buttonStyle(.plain)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .foregroundStyle(.secondary)
+            .hint("New project or import a folder")
+            .accessibilityLabel("New project")
         }
         .padding(.leading, 8)
         .padding(.top, 12)
+        .padding(.vertical, 2)
+        .background(isProjectDropTarget ? Theme.selection.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: Theme.pillRadius, style: .continuous))
+        .dropDestination(for: URL.self) { urls, _ in
+            let folders = urls.filter { $0.hasDirectoryPath }
+            guard folders.isEmpty == false else { return false }
+            Task {
+                for folder in folders {
+                    await vault.importProject(from: folder)
+                }
+            }
+            return true
+        } isTargeted: { isProjectDropTarget = $0 }
         ForEach(rows(for: vault.projects)) { row in
             folder(row)
             if row.id == fieldAfter, case .newInside(let parent) = vault.editing {
@@ -229,6 +256,12 @@ struct SidebarView: View {
             onLinkRepository: { linkRepository(for: model.space) },
             onDelete: { vault.requestDelete(folder: model.id) }
         )
+    }
+
+    private func importFolder() {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        guard let folder = FolderPicker.chooseFolder(directory: home, prompt: "Import", message: "Choose a folder to copy into Slate as a project. The folder itself does not change.") else { return }
+        Task { await vault.importProject(from: folder) }
     }
 
     private func linkRepository(for space: SpaceName) {

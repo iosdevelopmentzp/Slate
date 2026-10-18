@@ -101,6 +101,17 @@ import Testing
         #expect(harness.posted.contains(.indexUpdated))
     }
 
+    @Test func importShowsTheNewProjectAndSaysWhatCameIn() async {
+        harness.spies.files.importResult = FolderImport(notes: 1, files: 4)
+
+        await vault.importProject(from: URL(fileURLWithPath: "/dev/myapp/.slate"))
+
+        #expect(vault.projects.map(\.folder.rawValue) == ["myapp"])
+        #expect(harness.navigator.source == .space(SpaceName(rawValue: "myapp")))
+        #expect(harness.toaster.text == "Imported 1 note and 4 files into myapp")
+        #expect(harness.posted.contains(.vaultRescanned))
+    }
+
     @Test func moveStaysInsideFoldersOrProjects() async {
         await vault.refresh()
         await vault.setProject(true, for: SpaceName(rawValue: "Tasks"))

@@ -14,6 +14,7 @@ package final class SpyVaultFileStore: VaultFileStore, @unchecked Sendable {
         case importFile(String, into: FolderPath)
         case trashFile(VaultPath)
         case restoreFile(VaultPath)
+        case importFolder(String, into: FolderPath)
     }
 
     private struct File {
@@ -25,6 +26,7 @@ package final class SpyVaultFileStore: VaultFileStore, @unchecked Sendable {
     private var _calls: [Call] = []
     private var files: [VaultPath: File] = [:]
     private var trashed: [String: File] = [:]
+    private var _importResult = FolderImport()
     private var _folders: Set<FolderPath> = []
     private var _writeError: TestError?
     private var _modified = Date(timeIntervalSince1970: 1_800_000_000)
@@ -175,6 +177,18 @@ package final class SpyVaultFileStore: VaultFileStore, @unchecked Sendable {
             let path = VaultPath(rawValue: "\(folder.rawValue)/\(FileNamePolicy.unique(source.lastPathComponent, among: taken))")
             store(path, data)
             return path
+        }
+    }
+
+    package var importResult: FolderImport {
+        get { lock.withLock { _importResult } }
+        set { lock.withLock { _importResult = newValue } }
+    }
+
+    package func importFolder(_ source: URL, into folder: FolderPath) async throws -> FolderImport {
+        lock.withLock {
+            _calls.append(.importFolder(source.lastPathComponent, into: folder))
+            return _importResult
         }
     }
 

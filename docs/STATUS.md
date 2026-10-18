@@ -225,6 +225,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 143. A task is the folder plus the note with the same stem and `type: task`; when there is no such stem, the first task note directly in the folder counts. Status, ticket and branch show only inside projects (`TaskLineMapper` and the project list check the space), so a task note from the old `Tasks` folder looks as before. The status sort and pills come from `TaskStatusMapper`. The task template gained `## Log` at the end; it applies to every new task note, also outside projects.
 
+144. Import Folder copies, it never moves: the source may be a work repository that the owner keeps as it is. Files already at the target are kept, hidden files and package contents are skipped. The repository is the first folder above the source (or the source itself) that holds `.git`.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -332,6 +334,8 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 60. Drag a PDF and a PNG from Finder onto the list of a folder: an accent outline shows, then both are in a Files section under the notes, the PNG with a thumbnail. Double click the PDF: Quick Look opens. "…" → Rename, type a name without `.pdf`, press Enter: the file keeps `.pdf`. "…" → Move to Trash, then Undo in the toast: the file is back. In Terminal, `cp` a file into the folder: it shows up within a second.
 
 61. Right click MyApp, New Task, type `ABC-123 Fix login`, Enter: the folder `ABC-123 Fix login` opens with its note, the note shows In progress, `ABC-123` and `feature/ABC-123-fix-login` under the title. Click the pill, choose In review: the file has `status: review`. Go up to MyApp: the task shows an orange In review pill above a Done task.
+
+62. Make a folder `demo/.slate` in a git repository with a note and a PNG in a sub-folder. Projects + → Import Folder…, pick `demo/.slate`: a project `demo` opens, the toast says "Imported 1 note and 1 file into demo", the sub-folder and the PNG are there, Change Repository… shows in its menu, and search finds the note. `demo/.slate` is unchanged.
 
 ## Known gaps
 

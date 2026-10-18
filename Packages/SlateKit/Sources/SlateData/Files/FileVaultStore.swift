@@ -179,6 +179,39 @@ actor FileVaultStore: VaultFileStore {
         try FileManager.default.moveItem(at: trashed, to: url)
     }
 
+    func importFolder(_ source: URL, into target: FolderPath) throws -> FolderImport {
+        let base = folder.url(folder: target.rawValue)
+        var report = FolderImport(repository: Self.repository(containing: source))
+        let keys: [URLResourceKey] = [.isRegularFileKey, .isDirectoryKey]
+        guard let enumerator = FileManager.default.enumerator(at: source, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles, .skipsPackageDescendants]) else { return report }
+        for case let url as URL in enumerator {
+            guard (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true,
+                  let relative = folder.relativePath(of: url, under: source)
+            else { continue }
+            let destination = base.appendingPathComponent(relative, isDirectory: false)
+            guard folder.exists(destination) == false else { continue }
+            try FileManager.default.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try FileManager.default.copyItem(at: url, to: destination)
+            if url.pathExtension == VaultPath.noteExtension {
+                report.notes += 1
+            } else {
+                report.files += 1
+            }
+        }
+        return report
+    }
+
+    private static func repository(containing url: URL) -> String? {
+        var current = url.standardizedFileURL
+        while current.pathComponents.count > 1 {
+            if FileManager.default.fileExists(atPath: current.appendingPathComponent(".git").path) {
+                return current.path
+            }
+            current = current.deletingLastPathComponent()
+        }
+        return nil
+    }
+
     private static func holdsVisibleFiles(_ url: URL) -> Bool {
         guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: [.isRegularFileKey], options: [.skipsHiddenFiles]) else { return false }
         for case let item as URL in enumerator where (try? item.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true {

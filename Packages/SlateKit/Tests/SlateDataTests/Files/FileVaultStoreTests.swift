@@ -67,6 +67,28 @@ import Testing
         }
     }
 
+    @Test func importFolderCopiesNotesAndFilesAndFindsTheRepository() async throws {
+        let outside = try TemporaryDirectory()
+        _ = try outside.write("[core]", to: "myapp/.git/config")
+        _ = try outside.write("# Plan", to: "myapp/.slate/Plan.md")
+        _ = try outside.write("log", to: "myapp/.slate/ABC-1/crash.log")
+        _ = try outside.write("# Task", to: "myapp/.slate/ABC-1/ABC-1.md")
+        _ = try outside.write("x", to: "myapp/.slate/.DS_Store")
+        _ = try folder.write("# Kept", to: "MyApp/Plan.md")
+        let source = outside.url.appendingPathComponent("myapp/.slate", isDirectory: true)
+
+        let report = try await store.importFolder(source, into: FolderPath(rawValue: "MyApp"))
+
+        #expect(report.notes == 1)
+        #expect(report.files == 1)
+        #expect(report.repository == outside.url.appendingPathComponent("myapp").standardizedFileURL.path)
+        #expect(try String(contentsOfFile: folder.path("MyApp/Plan.md"), encoding: .utf8) == "# Kept")
+        #expect(FileManager.default.fileExists(atPath: folder.path("MyApp/ABC-1/ABC-1.md")))
+        #expect(FileManager.default.fileExists(atPath: folder.path("MyApp/ABC-1/crash.log")))
+        #expect(FileManager.default.fileExists(atPath: folder.path("MyApp/.DS_Store")) == false)
+        #expect(FileManager.default.fileExists(atPath: source.appendingPathComponent("Plan.md").path))
+    }
+
     @Test func readReturnsBytesHashAndMeta() async throws {
         _ = try folder.write("hello", to: path.rawValue)
 
