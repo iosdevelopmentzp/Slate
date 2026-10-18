@@ -71,6 +71,15 @@ for h in post-commit post-merge; do printf '#!/bin/sh\nexec "$(git rev-parse --s
 
 After a commit that changes code, Slate is built and installed in the background, and a notification says when it is done. The log is `.git/slate-install.log`.
 
+## Claude Code
+
+```sh
+claude mcp add -s user slate -- slate mcp
+ln -s "$PWD/Skills/slate-task" ~/.claude/skills/slate-task
+```
+
+The first line gives Claude Code the Slate tools in every folder. The second adds the `slate-task` skill: in a repository linked to a Slate project (Link Repository…), the agent finds its task at the start of a session, keeps Context, Plan, Findings and Log in the task note, and writes what is done and what is next at the end. The skill stays in this repository, so a change to it works in the next session. To use the tools without a question on each call, add `"mcp__slate"` to `permissions.allow` in `~/.claude/settings.json`.
+
 You need Xcode with the macOS 26.4 SDK. You do not need a developer account: the app is signed to run on this Mac only. After `Scripts/run.sh` a note icon appears in the menu bar. Click it to open the panel. Click outside the panel to close it. To see the first launch window again, run `defaults delete local.slate.app vault.path`.
 
 ## Read in this order

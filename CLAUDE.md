@@ -49,6 +49,7 @@ Modules, one direction: `Composition → Presentation → Domain ← Data`; Pres
 | `Scripts/` | `build.sh`, `test.sh`, `check-layers.sh`, `layer-exceptions.txt`, `run.sh`, `install.sh`, `generate-vault.sh` |
 | `docs/` | `SPEC.md`, `STORAGE-FORMAT.md`, `ARCHITECTURE.md`, `UX.md`, `ROADMAP.md`, `PLAYBOOK.md`, `BOOTSTRAP.md`, `STATUS.md`, `adr/` |
 | `.claude/rules/` | `layers.md` (always), `domain.md`, `data.md`, `presentation.md`, `testing.md` (by path) |
+| `Skills/slate-task/` | The skill for agents in other repositories: keep task documentation in Slate through `slate mcp`. Linked into `~/.claude/skills/`, so a change here is live at once |
 | `.claude/skills/` | `add-feature`, `add-use-case`, `build-and-run`, `panel-window`, `testing`, `ui-components`, `update-docs` (copied from DevHub; examples still name DevHub features) |
 | `.claude/hooks/` | session brief on start, changelog check on stop |
 
