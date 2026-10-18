@@ -287,6 +287,8 @@ Every policy has a test file with fixtures.
 | `RenameFolderUseCase` | files, reindex | renames a sub-folder (not a top-level folder), even by case only, then reindexes |
 | `DeleteFolderUseCase` | files, move | moves every note in the sub-folder and below to its parent, removes the folder; returns a `FolderDeletion` for Undo |
 | `RestoreFolderUseCase` | files, move | Undo: makes the folders again and moves the notes back to their old paths |
+| `SetProjectUseCase` | config | ADR 0014: sets or removes the `project` object of a top-level folder, switches between the plain folder icon and `shippingbox.fill`, makes a new project writable for agents |
+| `CreateProjectUseCase` | createSpace, setProject | A new top-level folder that is a project from the start |
 | `OpenTargetUseCase` | index, create | `slate://open` by id, title or ticket; `.found`, `.created` (a ticket without a note) or `.missing` |
 | `TrashNoteUseCase`, `RestoreNoteUseCase`, `PurgeTrashUseCase` | trash, index, clock | |
 | `QuickCaptureUseCase` | create, append (as nested use cases) | capture input → new note or Today line |

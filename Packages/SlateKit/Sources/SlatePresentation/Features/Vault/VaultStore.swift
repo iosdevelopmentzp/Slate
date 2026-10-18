@@ -6,6 +6,7 @@ import SlateDomain
 @Observable
 final class VaultStore {
     static let newFolderName = "New folder"
+    static let newProjectName = "New project"
     static let confirmationTime: Duration = .seconds(5)
 
     var config = SpacesConfig(spaces: [])
@@ -25,6 +26,8 @@ final class VaultStore {
     @ObservationIgnored private let renameFolder: RenameFolderUseCase
     @ObservationIgnored private let deleteFolder: DeleteFolderUseCase
     @ObservationIgnored private let restoreFolder: RestoreFolderUseCase
+    @ObservationIgnored private let setProject: SetProjectUseCase
+    @ObservationIgnored private let createProject: CreateProjectUseCase
     @ObservationIgnored private let store: any KeyValueStore
     @ObservationIgnored private let navigator: Navigator
     @ObservationIgnored private let toaster: Toaster
@@ -45,6 +48,8 @@ final class VaultStore {
         renameFolder: RenameFolderUseCase,
         deleteFolder: DeleteFolderUseCase,
         restoreFolder: RestoreFolderUseCase,
+        setProject: SetProjectUseCase,
+        createProject: CreateProjectUseCase,
         store: any KeyValueStore,
         navigator: Navigator,
         toaster: Toaster,
@@ -61,6 +66,8 @@ final class VaultStore {
         self.renameFolder = renameFolder
         self.deleteFolder = deleteFolder
         self.restoreFolder = restoreFolder
+        self.setProject = setProject
+        self.createProject = createProject
         self.store = store
         expanded = Set((store.strings(forKey: Keys.expanded) ?? []).map(FolderPath.init(rawValue:)))
         self.navigator = navigator
@@ -79,6 +86,18 @@ final class VaultStore {
 
     var spaces: [Space] {
         config.spaces
+    }
+
+    var folderSpaces: [Space] {
+        config.spaces.filter { $0.isProject == false }
+    }
+
+    var projects: [Space] {
+        config.spaces.filter(\.isProject)
+    }
+
+    func isProject(_ space: SpaceName) -> Bool {
+        config.space(space)?.isProject ?? false
     }
 
     var defaultFolder: SpaceName {
@@ -103,6 +122,12 @@ final class VaultStore {
         cancelDelete()
         draftName = uniqueNewName()
         editing = .new
+    }
+
+    func startNewProject() {
+        cancelDelete()
+        draftName = Self.uniqueName(among: spaces.map(\.folder.rawValue), base: Self.newProjectName)
+        editing = .newProject
     }
 
     func startNewFolder(in parent: FolderPath) {
@@ -160,6 +185,8 @@ final class VaultStore {
         switch editing {
         case .new:
             done = await create(named: name)
+        case .newProject:
+            done = await createProject(named: name)
         case .newInside(let parent):
             done = await create(named: name, in: parent)
         case .rename(let space):
@@ -183,6 +210,40 @@ final class VaultStore {
         } catch {
             report("Cannot create the folder", error)
             return false
+        }
+    }
+
+    @discardableResult
+    func createProject(named name: String) async -> Bool {
+        do {
+            let space = try await createProject.execute(name: name)
+            await refresh()
+            navigator.show(.space(space))
+            return true
+        } catch {
+            report("Cannot create the project", error)
+            return false
+        }
+    }
+
+    func setProject(_ isProject: Bool, for space: SpaceName) async {
+        do {
+            let project = isProject ? (config.space(space)?.project ?? ProjectInfo()) : nil
+            try await setProject.execute(space, project: project)
+            await refresh()
+        } catch {
+            report(isProject ? "Cannot make the folder a project" : "Cannot make the project a folder", error)
+        }
+    }
+
+    func setRepositories(_ repositories: [String], for space: SpaceName) async {
+        guard var project = config.space(space)?.project else { return }
+        project.repositories = repositories
+        do {
+            try await setProject.execute(space, project: project)
+            await refresh()
+        } catch {
+            report("Cannot save the repository", error)
         }
     }
 
@@ -334,9 +395,7 @@ final class VaultStore {
     }
 
     func move(_ space: SpaceName, by offset: Int) async {
-        guard let index = config.spaces.firstIndex(where: { $0.folder == space }) else { return }
-        let target = index + offset
-        guard config.spaces.indices.contains(target) else { return }
+        guard let index = config.spaces.firstIndex(where: { $0.folder == space }), let target = neighbor(of: index, by: offset) else { return }
         var updated = config
         updated.spaces.swapAt(index, target)
         await save(updated)
@@ -364,18 +423,24 @@ final class VaultStore {
 
     func canMove(_ space: SpaceName, by offset: Int) -> Bool {
         guard let index = config.spaces.firstIndex(where: { $0.folder == space }) else { return false }
-        return config.spaces.indices.contains(index + offset)
+        return neighbor(of: index, by: offset) != nil
+    }
+
+    private func neighbor(of index: Int, by offset: Int) -> Int? {
+        let group = config.spaces[index].isProject
+        let candidates = offset < 0 ? Array(config.spaces.indices.prefix(upTo: index).reversed()) : Array(config.spaces.indices.suffix(from: index + 1))
+        return candidates.first { config.spaces[$0].isProject == group }
     }
 
     private func uniqueNewName() -> String {
         Self.uniqueName(among: spaces.map(\.folder.rawValue))
     }
 
-    private static func uniqueName(among taken: [String]) -> String {
-        var name = Self.newFolderName
+    private static func uniqueName(among taken: [String], base: String = VaultStore.newFolderName) -> String {
+        var name = base
         var number = 2
         while taken.contains(where: { StemPolicy.isSame($0, name) }) {
-            name = "\(Self.newFolderName) \(number)"
+            name = "\(base) \(number)"
             number += 1
         }
         return name

@@ -11,6 +11,8 @@ struct FolderRowModel: Identifiable, Hashable {
     let count: Int
     let canDelete: Bool
     let deleteQuestion: String
+    var isProject = false
+    var repository: String?
 
     var space: SpaceName {
         id.space

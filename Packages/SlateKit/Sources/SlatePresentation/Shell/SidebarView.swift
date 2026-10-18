@@ -19,7 +19,7 @@ struct SidebarView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
                     sourceRow(.all, title: "All notes", icon: "tray.full", count: store.count(in: nil))
-                    ForEach(rows) { row in
+                    ForEach(rows(for: vault.folderSpaces)) { row in
                         folder(row)
                         if row.id == fieldAfter, case .newInside(let parent) = vault.editing {
                             FolderNameField(
@@ -41,6 +41,7 @@ struct SidebarView: View {
                             onCancel: { vault.cancelEdit() }
                         )
                     }
+                    projectsSection
                     sourceRow(.trash, title: "Trash", icon: "trash", count: nil)
                         .padding(.top, 10)
                 }
@@ -53,8 +54,45 @@ struct SidebarView: View {
         .background(Theme.base)
     }
 
+    @ViewBuilder
+    private var projectsSection: some View {
+        @Bindable var vault = vault
+        HStack(spacing: 4) {
+            Text("Projects")
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(.secondary)
+            Spacer()
+            IconButton(systemImage: "plus", help: "New project") { vault.startNewProject() }
+                .accessibilityLabel("New project")
+        }
+        .padding(.leading, 8)
+        .padding(.top, 12)
+        ForEach(rows(for: vault.projects)) { row in
+            folder(row)
+        }
+        if vault.editing == .newProject {
+            FolderNameField(
+                name: $vault.draftName,
+                icon: SetProjectUseCase.projectIcon,
+                tint: Tint.blue.color,
+                onCommit: { Task { await vault.commitEdit() } },
+                onCancel: { vault.cancelEdit() }
+            )
+        } else if vault.projects.isEmpty {
+            Text("A project keeps the notes, tasks and files of one code repository.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 8)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
     private var rows: [SidebarFolder] {
-        vault.spaces.flatMap { space -> [SidebarFolder] in
+        rows(for: vault.folderSpaces) + rows(for: vault.projects)
+    }
+
+    private func rows(for spaces: [Space]) -> [SidebarFolder] {
+        spaces.flatMap { space -> [SidebarFolder] in
             let root = FolderPath(space: space.folder)
             let model = FolderRowMapper.model(for: space, count: store.count(in: root), defaultFolder: vault.defaultFolder)
             let head = SidebarFolder(model: model, level: 0, disclosure: disclosure(hasChildren: vault.children(of: root).isEmpty == false, isExpanded: vault.isExpanded(root)))
@@ -160,8 +198,16 @@ struct SidebarView: View {
             onColor: { color in Task { await vault.setColor(color, for: model.space) } },
             onIcon: { icon in Task { await vault.setIcon(icon, for: model.space) } },
             onMove: { offset in Task { await vault.move(model.space, by: offset) } },
+            onProject: { isProject in Task { await vault.setProject(isProject, for: model.space) } },
+            onLinkRepository: { linkRepository(for: model.space) },
             onDelete: { vault.requestDelete(folder: model.id) }
         )
+    }
+
+    private func linkRepository(for space: SpaceName) {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        guard let folder = FolderPicker.chooseFolder(directory: home, prompt: "Link", message: "Choose the code repository of \(space.rawValue).") else { return }
+        Task { await vault.setRepositories([folder.standardizedFileURL.path], for: space) }
     }
 
     private func sourceRow(_ source: ListSource, title: String, icon: String, count: Int?) -> some View {

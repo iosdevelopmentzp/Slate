@@ -55,6 +55,50 @@ import Testing
         #expect(vault.canMove(SpaceName(rawValue: "Tasks"), by: -1) == false)
     }
 
+    @Test func newProjectIsListedUnderProjectsAndShown() async {
+        await vault.refresh()
+        vault.startNewProject()
+
+        #expect(vault.draftName == "New project")
+        vault.draftName = "MyApp"
+        let done = await vault.commitEdit()
+
+        #expect(done)
+        #expect(vault.projects.map(\.folder.rawValue) == ["MyApp"])
+        #expect(vault.folderSpaces.contains { $0.folder.rawValue == "MyApp" } == false)
+        #expect(harness.navigator.source == .space(SpaceName(rawValue: "MyApp")))
+    }
+
+    @Test func folderBecomesAProjectAndKeepsItsRepository() async {
+        await vault.refresh()
+        let inbox = SpaceName(rawValue: "Inbox")
+
+        await vault.setProject(true, for: inbox)
+        await vault.setRepositories(["/tmp/myapp"], for: inbox)
+
+        #expect(vault.isProject(inbox))
+        #expect(vault.projects.first?.project?.repositories == ["/tmp/myapp"])
+
+        await vault.setProject(false, for: inbox)
+
+        #expect(vault.isProject(inbox) == false)
+    }
+
+    @Test func moveStaysInsideFoldersOrProjects() async {
+        await vault.refresh()
+        await vault.setProject(true, for: SpaceName(rawValue: "Tasks"))
+        await vault.setProject(true, for: SpaceName(rawValue: "Daily"))
+
+        #expect(vault.canMove(SpaceName(rawValue: "Tasks"), by: -1) == false)
+        #expect(vault.canMove(SpaceName(rawValue: "Notes"), by: -1))
+
+        await vault.move(SpaceName(rawValue: "Notes"), by: -1)
+        await vault.move(SpaceName(rawValue: "Tasks"), by: 1)
+
+        #expect(vault.folderSpaces.map(\.folder.rawValue) == ["Notes", "Inbox", "Snippets", "Archive"])
+        #expect(vault.projects.map(\.folder.rawValue) == ["Daily", "Tasks"])
+    }
+
     @Test func spacesChangedEventRefreshes() async throws {
         _ = vault
         harness.spies.config.config = SpacesConfig(spaces: [Space(folder: SpaceName(rawValue: "Only"))])
@@ -120,7 +164,7 @@ import Testing
 
         try await waitUntil { vault.spaces.contains { $0.folder == SpaceName(rawValue: "Snippets") } }
         try await waitUntil { harness.spies.files.text(at: VaultPath(rawValue: "Snippets/A.md")) != nil }
-        #expect(harness.navigator.source == .space(SpaceName(rawValue: "Snippets")))
+        try await waitUntil { harness.navigator.source == .space(SpaceName(rawValue: "Snippets")) }
     }
 
     @Test func theQuickNoteFolderIsNotDeleted() async {

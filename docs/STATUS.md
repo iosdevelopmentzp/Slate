@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-10-17
+Last updated: 2026-10-18
 
 ## Stage
 
@@ -219,6 +219,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 139. Cell selection is a rectangle (`TableCellRange`: anchor and head) held by the table view; while it is shown the table view itself is the first responder and no cell is being edited. Every change on it goes through `change`, so each is one undo step. A copy of one cell puts only its inline Markdown on the clipboard, a copy of more cells a GFM table plus tab-separated text. A paste takes Slate's Markdown, a GFM table, tab-separated text or plain lines, and grows the table when the block does not fit. Bold and the other styles are added to every cell unless every non-empty cell already has them, then removed. Typing replaces the anchor cell, as in Numbers. A drag that starts inside the text of the cell being edited selects text, not cells (the text view runs its own mouse loop).
 140. Image size follows ADR 0013: a `|width` suffix in the alt text, the Obsidian form. The reader and the writer did not change, so a file with `|300x200` stays as it is. An image with a width is not capped at 360 pt high. In the text there is a drag grip and a Size menu; in a cell only the Size menu, because a cell thumbnail is small and the drag would fight the cell's text editing. During a drag the image is resized on screen only; the file changes once, on mouse up.
 
+141. Projects follow ADR 0014. A project is a top-level folder whose entry in `.slate/spaces.json` has a `project` object (`id`, `repositories`, `remote`), not a separate `projects.json`: the entry already moves with a rename, so no second file has to follow it. Make a Project keeps a chosen icon and sets `shippingbox.fill` only on a plain folder icon; Make a Folder sets the plain icon back. A new project adds the folder to the writable folders of `.slate/agents.json`; Make a Folder does not take that right away again.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -318,6 +320,10 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 56. Make a table with eight columns of long text: it stays inside the note and the right edge is cut. Swipe sideways on it: the columns move, and the thin bar under it moves too. Tab through the cells: the cell being edited is always visible.
 57. Shift-click from one cell to another: a rectangle of cells is tinted. Press Delete: they are empty, ⌘Z brings them back. Select two cells, ⌘C, select one cell elsewhere, ⌘V: both values land there. Select a column and press ⌘B: every cell is bold. Drag from one cell to another across the table: the same rectangle selection.
 58. Point at an image in the text and drag the grip at its bottom right corner: the image gets narrower, and the file has `![|<width>](…)`. Right click it, Size ▸ Original Size: the suffix is gone. Right click a cell thumbnail, Size ▸ Large: the thumbnail is 200 pt wide and the cell has `![\|200](…)`. Open the note in Obsidian: both images have the same size there.
+
+### Projects (ADR 0014)
+
+59. Press + next to Projects, type MyApp and press Enter: the project shows under Projects with a box icon and opens. Right click it, Link Repository…, pick a code folder: the menu now says Change Repository…. Right click a folder, Make a Project: it moves to the Projects section and keeps its notes. Make a Folder moves it back. Settings → AI access shows MyApp as writable.
 
 ## Known gaps
 

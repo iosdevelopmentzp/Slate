@@ -12,6 +12,10 @@ Vocabulary: the **vault** is the root folder. A **space** is a top-level folder 
 Slate/                          the vault (user-chosen folder, default ~/Documents/Slate, ADR 0002)
   Notes/                        space; the only folder a new vault gets (ADR 0007)
   <Folder>/                     every other space the user makes
+  <Project>/                    a space with a `project` object in spaces.json (ADR 0014)
+    <ABC-123 Title>/            a task folder
+      <ABC-123 Title>.md        its task note (type: task, ticket, branch, status)
+      <other notes and files>
   _attachments/                 every image and file, flat (section 5)
   _templates/                   optional: one Markdown body per note type (section 6); not created since ADR 0007
   CLAUDE.md, AGENTS.md          the guide for AI agents between the slate:begin and slate:end markers (ADR 0010)
@@ -274,6 +278,15 @@ All files are JSON with a top-level `"version": 1`. Unknown keys are ignored and
 ```
 
 `color` is one of `red`, `orange`, `yellow`, `green`, `teal`, `blue`, `purple`, `pink`; missing means `blue`. A folder on disk that is missing from the list is appended with `folder.fill`, `blue`, `note`. Deleting a folder in the app moves its notes to `captureSpace` and removes the entry.
+
+A project (ADR 0014) is a space whose entry has a `project` object:
+
+```json
+{ "folder": "MyApp", "icon": "shippingbox.fill", "color": "blue", "defaultType": "note",
+  "project": { "id": "3f2a9c1e-…", "repositories": ["/Users/me/dev/myapp"], "remote": "git@gitlab.example.com:group/myapp.git" } }
+```
+
+`id` is a UUID string and is required; an object without it is ignored. `repositories` (paths on this Mac) and `remote` (the `origin` URL) are optional. Unknown keys inside `project` are kept when the app writes the file. Removing the object makes the project an ordinary folder again; its notes do not move.
 
 ### 7.2 `links.json`
 

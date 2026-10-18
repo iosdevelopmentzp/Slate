@@ -50,3 +50,14 @@ Starts from `main` after S4 and the sub-folders work (ADR 0011). Same rules as P
 | S5 | **Agents and the notes folder** (ADR 0010, section "Milestone S5"; done 2026-10-17, manual checks open) | The `CLAUDE.md` / `AGENTS.md` block with markers; Copy path, Copy link, `⌥`-click, card drag-out; `slate mcp` with the eleven tools and the note resource; `.slate/agents.json`; the AI access box in Settings; a snapshot and an Activity line per agent write; the registration line in `Scripts/install.sh`; the welcome note line | The "Done when" paragraph of ADR 0010; `AgentGuideWriterTests`, `AgentPermissionsTests`, `MCPToolTests`, `NoteDragTests` pass |
 | S6 | **Tables, level 1** (ADR 0009, section "Milestone S6"; done 2026-10-17, manual checks open) | `TableModel`, the table block attachment and view, the Table button and `⌥⌘T`, cell editing with inline styles, keyboard rules, hover handles, context menu, column widths, copy and paste, undo, reader and writer with `\|`, raw fallback, `STORAGE-FORMAT.md` section 11 row, `UX.md` component row | The "Done when" paragraph of ADR 0009; `TableMarkdownTests`, `TableModelTests`, `TablePasteTests` pass |
 | S7 | **Tables, level 2: images in cells** (done 2026-10-17 before the owner's check of S6, see `STATUS.md` decision 125) | Only after the owner accepts S6 | Thumbnails in cells by drop, paste and the Image button; Quick Look; the file keeps `![](…)` inside the cell |
+
+## Phase 4: projects, agents and versions (ADR 0014, ADR 0015)
+
+Starts from `main` after the second round of tables. Same rules as Phase 2. The plan was agreed with the owner on 2026-10-18.
+
+| # | Milestone | Scope | Done when |
+|---|---|---|---|
+| S8 | **Projects and files** (ADR 0014) | The Projects section, Make a Project, Link Repository…; task folders with a task note, status, ticket and branch in the list and the editor; the Files section in every folder with Quick Look, Open, Save to Downloads, Rename, Trash, drop from Finder; Import Folder | Manual checks of the Projects section in `STATUS.md` pass |
+| S9 | **Agents and projects** | `slate mcp` finds the project of its working directory (path, worktree, remote) and says so in its instructions; tools `project_context`, `start_task`, `set_task_status`, `log_progress`, `add_file`, `list_files`, `save_version`; `slate project` and `slate task`; registration with `-s user` | A real Claude Code session in a repository starts a task, logs progress, and a second session reads the log |
+| S10 | **Versions** (ADR 0015) | A history repository per project; preview and diff of a version; versions of files; the Changes list of a project; Save Version with a name; Clear History | Manual checks of the versions section pass |
+

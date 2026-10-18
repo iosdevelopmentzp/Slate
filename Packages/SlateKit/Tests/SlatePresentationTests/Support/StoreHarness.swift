@@ -29,6 +29,8 @@ final class StoreHarness {
         renameFolder: useCases.renameFolder,
         deleteFolder: useCases.deleteFolder,
         restoreFolder: useCases.restoreFolder,
+        setProject: useCases.setProject,
+        createProject: useCases.createProject,
         store: keyValues,
         navigator: navigator,
         toaster: toaster,

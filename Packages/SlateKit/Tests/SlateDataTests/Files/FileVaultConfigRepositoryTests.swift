@@ -71,6 +71,25 @@ import Testing
         #expect(try await repository.spaces().spaces.first?.icon == "bolt")
     }
 
+    @Test func projectIsReadBackAndItsUnknownKeysSurvive() async throws {
+        try makeFolders(["Notes", "MyApp"])
+        _ = try folder.write(#"{"version": 1, "spaces": [{"folder": "Notes"}, {"folder": "MyApp", "project": {"id": "p1", "repositories": ["/tmp/myapp"], "board": "x"}}]}"#, to: ".slate/spaces.json")
+
+        var config = try await repository.spaces()
+        #expect(config.spaces.first?.project == nil)
+        #expect(config.spaces.last?.project == ProjectInfo(id: "p1", repositories: ["/tmp/myapp"]))
+
+        config.spaces[1].project?.remote = "git@gitlab.example.com:group/myapp.git"
+        config.spaces[0].project = ProjectInfo(id: "p2")
+        try await repository.saveSpaces(config)
+
+        let text = try String(contentsOf: folder.url.appendingPathComponent(".slate/spaces.json"), encoding: .utf8)
+        #expect(text.contains(#""board" : "x""#))
+        let saved = try await repository.spaces().spaces
+        #expect(saved.map(\.project?.id) == ["p2", "p1"])
+        #expect(saved.last?.project?.remote == "git@gitlab.example.com:group/myapp.git")
+    }
+
     @Test func folderMissingOnDiskIsDropped() async throws {
         try makeFolders(["Inbox"])
         _ = try folder.write(#"{"version": 1, "spaces": [{"folder": "Gone"}, {"folder": "Inbox"}]}"#, to: ".slate/spaces.json")

@@ -65,6 +65,7 @@ struct FileVaultConfigRepository: VaultConfigRepository {
             entry["icon"] = space.icon ?? "folder.fill"
             entry["color"] = space.color.rawValue
             entry["defaultType"] = space.defaultType ?? NoteType.defaultName
+            entry["project"] = space.project.map { Self.object(for: $0, previous: entry["project"] as? [String: Any]) }
             return entry
         }
         object["captureSpace"] = config.captureSpace.rawValue
@@ -167,7 +168,21 @@ struct FileVaultConfigRepository: VaultConfigRepository {
     private static func space(from entry: [String: Any]) -> Space? {
         guard let folder = entry["folder"] as? String, folder.isEmpty == false else { return nil }
         let color = (entry["color"] as? String).flatMap(SpaceColor.init(rawValue:)) ?? .blue
-        return Space(folder: SpaceName(rawValue: folder), icon: entry["icon"] as? String, color: color, defaultType: entry["defaultType"] as? String)
+        let project = (entry["project"] as? [String: Any]).flatMap(Self.project)
+        return Space(folder: SpaceName(rawValue: folder), icon: entry["icon"] as? String, color: color, defaultType: entry["defaultType"] as? String, project: project)
+    }
+
+    private static func project(from entry: [String: Any]) -> ProjectInfo? {
+        guard let id = entry["id"] as? String, id.isEmpty == false else { return nil }
+        return ProjectInfo(id: id, repositories: entry["repositories"] as? [String] ?? [], remote: entry["remote"] as? String)
+    }
+
+    private static func object(for project: ProjectInfo, previous: [String: Any]?) -> [String: Any] {
+        var entry = previous ?? [:]
+        entry["id"] = project.id
+        entry["repositories"] = project.repositories
+        entry["remote"] = project.remote
+        return entry
     }
 
     private static func type(from object: [String: Any]) -> NoteType? {

@@ -12,6 +12,8 @@ package struct UseCases: Sendable {
     package let restore: RestoreNoteUseCase
     package let reindex: ReindexVaultUseCase
     package let createSpace: CreateSpaceUseCase
+    package let setProject: SetProjectUseCase
+    package let createProject: CreateProjectUseCase
     package let renameSpace: RenameSpaceUseCase
     package let deleteSpace: DeleteSpaceUseCase
     package let restoreSpace: RestoreSpaceUseCase
@@ -44,6 +46,8 @@ package struct UseCases: Sendable {
         restore = RestoreNoteUseCase(trash: ports.trash, files: ports.files, index: ports.index, builder: ports.builder)
         reindex = ReindexVaultUseCase(files: ports.files, index: ports.index, builder: ports.builder)
         createSpace = CreateSpaceUseCase(files: ports.files, config: ports.config)
+        setProject = SetProjectUseCase(config: ports.config)
+        createProject = CreateProjectUseCase(createSpace: createSpace, setProject: setProject)
         renameSpace = RenameSpaceUseCase(files: ports.files, config: ports.config, reindex: reindex)
         deleteSpace = DeleteSpaceUseCase(files: ports.files, config: ports.config, move: move)
         restoreSpace = RestoreSpaceUseCase(files: ports.files, config: ports.config, move: move)

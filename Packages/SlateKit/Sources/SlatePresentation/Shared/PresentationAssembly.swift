@@ -40,6 +40,8 @@ package final class PresentationAssembly {
             renameFolder: useCases.renameFolder,
             deleteFolder: useCases.deleteFolder,
             restoreFolder: useCases.restoreFolder,
+            setProject: useCases.setProject,
+            createProject: useCases.createProject,
             store: ports.keyValues,
             navigator: navigator,
             toaster: toaster,

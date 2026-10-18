@@ -5,7 +5,7 @@ import SlateUI
 enum FolderRowMapper {
 
     static func model(for space: Space, count: Int, defaultFolder: SpaceName) -> FolderRowModel {
-        FolderRowModel(
+        var model = FolderRowModel(
             id: FolderPath(space: space.folder),
             title: space.folder.rawValue,
             icon: icon(for: space),
@@ -15,6 +15,9 @@ enum FolderRowMapper {
             canDelete: space.folder != defaultFolder,
             deleteQuestion: question(for: space.folder.rawValue, count: count, target: defaultFolder.rawValue)
         )
+        model.isProject = space.isProject
+        model.repository = space.project?.repositories.first
+        return model
     }
 
     static func model(forSubfolder folder: FolderPath, space: Space?, count: Int) -> FolderRowModel {

@@ -12,6 +12,8 @@ struct FolderMenu: View {
     let onColor: (SpaceColor) -> Void
     let onIcon: (String) -> Void
     let onMove: (Int) -> Void
+    let onProject: (Bool) -> Void
+    let onLinkRepository: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -52,5 +54,12 @@ struct FolderMenu: View {
             .disabled(canMoveUp == false)
         Button("Move down", systemImage: "arrow.down") { onMove(1) }
             .disabled(canMoveDown == false)
+        Divider()
+        if model.isProject {
+            Button(model.repository == nil ? "Link Repository…" : "Change Repository…", systemImage: "link", action: onLinkRepository)
+            Button("Make a Folder", systemImage: "folder") { onProject(false) }
+        } else {
+            Button("Make a Project", systemImage: SetProjectUseCase.projectIcon) { onProject(true) }
+        }
     }
 }
