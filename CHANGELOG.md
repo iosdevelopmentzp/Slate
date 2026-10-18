@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- A Files section in every folder lists the files that are not notes: logs, screenshots, PDF, JSON. Each row has a thumbnail or an icon, the size and the date. Double click opens Quick Look, and the "…" menu has Open, Show in Finder, Save to Downloads, Copy Path, Rename and Move to Trash with Undo. Drop files from Finder on the list to copy them into the folder. A file that an agent or another app adds shows up within a second.
 - Projects (ADR 0014). A project is a folder for the notes, tasks and files of one code repository. Projects have their own section in the sidebar under the folders, with a + button. Right click a folder and choose Make a Project, or a project and choose Make a Folder; the notes stay where they are. Link Repository… remembers which repository the project belongs to. Agents may change the notes of a new project.
 - Change the size of an image (ADR 0013). Drag the grip at the bottom right corner of an image in the text, or right click an image or a cell thumbnail and choose Size. The width is stored the Obsidian way, `![photo|300](…)`, so Obsidian shows the same size.
 - Select several table cells: Shift-click, drag across cells, Shift with an arrow at the edge of a cell, or ⌘A twice. Copy, cut, paste a block of cells, clear them with Delete, or make them bold or italic in one step. Align, Delete Rows and Delete Columns in the menu act on the whole selection.

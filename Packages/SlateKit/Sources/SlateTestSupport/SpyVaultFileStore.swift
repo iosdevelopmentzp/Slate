@@ -11,6 +11,9 @@ package final class SpyVaultFileStore: VaultFileStore, @unchecked Sendable {
         case createFolder(FolderPath)
         case moveFolder(from: FolderPath, to: FolderPath)
         case removeFolder(FolderPath)
+        case importFile(String, into: FolderPath)
+        case trashFile(VaultPath)
+        case restoreFile(VaultPath)
     }
 
     private struct File {
@@ -21,6 +24,7 @@ package final class SpyVaultFileStore: VaultFileStore, @unchecked Sendable {
     private let lock = NSLock()
     private var _calls: [Call] = []
     private var files: [VaultPath: File] = [:]
+    private var trashed: [String: File] = [:]
     private var _folders: Set<FolderPath> = []
     private var _writeError: TestError?
     private var _modified = Date(timeIntervalSince1970: 1_800_000_000)
@@ -153,6 +157,41 @@ package final class SpyVaultFileStore: VaultFileStore, @unchecked Sendable {
                 let moved = VaultPath(rawValue: target.rawValue + path.rawValue.dropFirst(source.rawValue.count))
                 files[moved] = File(data: file.data, meta: FileMeta(path: moved, created: file.meta.created, modified: file.meta.modified, size: file.meta.size))
             }
+        }
+    }
+
+    package func files(in folder: FolderPath) async throws -> [FileMeta] {
+        lock.withLock {
+            files.values.map(\.meta).filter { $0.path.folder == folder.rawValue && $0.path.isNote == false }.sorted { $0.path.rawValue < $1.path.rawValue }
+        }
+    }
+
+    package func importFile(_ source: URL, into folder: FolderPath) async throws -> VaultPath {
+        let data = (try? Data(contentsOf: source)) ?? Data()
+        return try lock.withLock {
+            _calls.append(.importFile(source.lastPathComponent, into: folder))
+            if let _writeError { throw _writeError }
+            let taken = files.keys.filter { $0.folder == folder.rawValue }.map(\.fileName)
+            let path = VaultPath(rawValue: "\(folder.rawValue)/\(FileNamePolicy.unique(source.lastPathComponent, among: taken))")
+            store(path, data)
+            return path
+        }
+    }
+
+    package func trashFile(_ path: VaultPath) async throws -> URL {
+        try lock.withLock {
+            _calls.append(.trashFile(path))
+            guard let file = files.removeValue(forKey: path) else { throw VaultError.notFound(path) }
+            trashed[path.fileName] = file
+            return URL(fileURLWithPath: "/Trash/\(path.fileName)")
+        }
+    }
+
+    package func restoreFile(_ trashedURL: URL, to path: VaultPath) async throws {
+        try lock.withLock {
+            _calls.append(.restoreFile(path))
+            guard let file = trashed.removeValue(forKey: trashedURL.lastPathComponent) else { throw VaultError.notFound(path) }
+            files[path] = File(data: file.data, meta: FileMeta(path: path, created: file.meta.created, modified: file.meta.modified, size: file.meta.size))
         }
     }
 

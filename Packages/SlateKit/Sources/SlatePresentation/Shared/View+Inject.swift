@@ -11,6 +11,7 @@ extension View {
             .environment(assembly.layout)
             .environment(assembly.vault)
             .environment(assembly.noteList)
+            .environment(assembly.files)
             .environment(assembly.editor)
             .environment(assembly.search)
             .environment(assembly.settings)

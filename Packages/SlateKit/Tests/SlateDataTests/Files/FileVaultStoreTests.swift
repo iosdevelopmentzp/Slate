@@ -29,6 +29,44 @@ import Testing
         #expect(paths == [VaultPath(rawValue: "Inbox/A.md"), VaultPath(rawValue: "Notes/Swift/B.md")])
     }
 
+    @Test func filesListsOnlyTheOtherFilesDirectlyInTheFolder() async throws {
+        _ = try folder.write("a", to: "MyApp/Task/Task.md")
+        _ = try folder.write("log", to: "MyApp/Task/crash.log")
+        _ = try folder.write("png", to: "MyApp/Task/b.png")
+        _ = try folder.write("x", to: "MyApp/Task/.DS_Store")
+        _ = try folder.write("t", to: "MyApp/Task/.crash.log.slate-tmp")
+        _ = try folder.write("deep", to: "MyApp/Task/Logs/old.log")
+
+        let files = try await store.files(in: FolderPath(rawValue: "MyApp/Task"))
+
+        #expect(files.map(\.path.rawValue) == ["MyApp/Task/b.png", "MyApp/Task/crash.log"])
+        #expect(files.last?.size == 3)
+    }
+
+    @Test func importCopiesTheFileAndNumbersATakenName() async throws {
+        let source = try folder.write("one", to: "Outside/crash.log")
+        _ = try folder.write("old", to: "MyApp/crash.log")
+
+        let path = try await store.importFile(source, into: FolderPath(rawValue: "MyApp"))
+
+        #expect(path == VaultPath(rawValue: "MyApp/crash 2.log"))
+        #expect(try String(contentsOfFile: folder.path("MyApp/crash 2.log"), encoding: .utf8) == "one")
+        #expect(FileManager.default.fileExists(atPath: source.path))
+    }
+
+    @Test func restorePutsAFileBackAndRefusesToOverwrite() async throws {
+        let trashed = try folder.write("one", to: "Elsewhere/crash.log")
+        let target = VaultPath(rawValue: "MyApp/Task/crash.log")
+
+        try await store.restoreFile(trashed, to: target)
+
+        #expect(try String(contentsOfFile: folder.path(target.rawValue), encoding: .utf8) == "one")
+        let second = try folder.write("two", to: "Elsewhere/crash.log")
+        await #expect(throws: VaultError.alreadyExists("crash.log")) {
+            try await store.restoreFile(second, to: target)
+        }
+    }
+
     @Test func readReturnsBytesHashAndMeta() async throws {
         _ = try folder.write("hello", to: path.rawValue)
 

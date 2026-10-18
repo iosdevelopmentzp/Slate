@@ -139,6 +139,46 @@ actor FileVaultStore: VaultFileStore {
         }
     }
 
+    func files(in target: FolderPath) throws -> [FileMeta] {
+        let url = folder.url(folder: target.rawValue)
+        guard folder.exists(url) else { return [] }
+        let keys: [URLResourceKey] = [.isRegularFileKey, .creationDateKey, .contentModificationDateKey, .fileSizeKey]
+        let items = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles])
+        return items.compactMap { item -> FileMeta? in
+            guard item.pathExtension != VaultPath.noteExtension,
+                  item.lastPathComponent.hasSuffix(".slate-tmp") == false,
+                  (try? item.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true
+            else { return nil }
+            return try? folder.meta(at: item, path: VaultPath(rawValue: "\(target.rawValue)/\(item.lastPathComponent)"))
+        }
+        .sorted { $0.path.fileName.localizedStandardCompare($1.path.fileName) == .orderedAscending }
+    }
+
+    func importFile(_ source: URL, into target: FolderPath) throws -> VaultPath {
+        let base = folder.url(folder: target.rawValue)
+        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        let wanted = FileNamePolicy.cleaned(source.lastPathComponent) ?? "file"
+        let taken = (try? FileManager.default.contentsOfDirectory(atPath: base.path)) ?? []
+        let path = VaultPath(rawValue: "\(target.rawValue)/\(FileNamePolicy.unique(wanted, among: taken))")
+        try FileManager.default.copyItem(at: source, to: folder.url(path))
+        return path
+    }
+
+    func trashFile(_ path: VaultPath) throws -> URL {
+        let url = folder.url(path)
+        guard folder.exists(url) else { throw VaultError.notFound(path) }
+        var result: NSURL?
+        try FileManager.default.trashItem(at: url, resultingItemURL: &result)
+        return (result as URL?) ?? url
+    }
+
+    func restoreFile(_ trashed: URL, to path: VaultPath) throws {
+        let url = folder.url(path)
+        guard folder.exists(url) == false else { throw VaultError.alreadyExists(path.fileName) }
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.moveItem(at: trashed, to: url)
+    }
+
     private static func holdsVisibleFiles(_ url: URL) -> Bool {
         guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: [.isRegularFileKey], options: [.skipsHiddenFiles]) else { return false }
         for case let item as URL in enumerator where (try? item.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true {

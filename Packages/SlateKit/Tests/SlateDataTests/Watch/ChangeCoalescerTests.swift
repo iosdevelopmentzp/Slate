@@ -12,8 +12,8 @@ import Testing
     }
 
     @Test func notesUnderASpaceArePaths() {
-        #expect(classify("Inbox/A.md") == .note(VaultPath(rawValue: "Inbox/A.md")))
-        #expect(classify("Notes/Swift/B.md") == .note(VaultPath(rawValue: "Notes/Swift/B.md")))
+        #expect(classify("Inbox/A.md") == .file(VaultPath(rawValue: "Inbox/A.md")))
+        #expect(classify("Notes/Swift/B.md") == .file(VaultPath(rawValue: "Notes/Swift/B.md")))
     }
 
     @Test func ignoredNamesAreDropped() {
@@ -23,7 +23,10 @@ import Testing
         #expect(classify(".git/index") == .ignore)
         #expect(classify(".obsidian/app.json") == .ignore)
         #expect(classify("_attachments/a.png") == .ignore)
-        #expect(classify("Inbox/image.png") == .ignore)
+        #expect(classify("Inbox/image.png") == .file(VaultPath(rawValue: "Inbox/image.png")))
+        #expect(classify("Inbox/Other.md.sb-b6ceb2a3-R5wp7x") == .ignore)
+        #expect(classify("Inbox/draft.txt~") == .ignore)
+        #expect(classify("Inbox/upload.tmp") == .ignore)
     }
 
     @Test func foldersConfigAndTemplatesNeedARescan() {

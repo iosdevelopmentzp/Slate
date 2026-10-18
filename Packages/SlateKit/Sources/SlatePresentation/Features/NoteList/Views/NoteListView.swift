@@ -7,8 +7,10 @@ struct NoteListView: View {
     @Environment(VaultStore.self) private var vault
     @Environment(Navigator.self) private var navigator
     @Environment(SearchStore.self) private var search
+    @Environment(FolderFilesStore.self) private var files
 
     @State private var dropTarget: FolderPath?
+    @State private var isFileDropTarget = false
 
     var body: some View {
         if store.source == .trash {
@@ -17,6 +19,23 @@ struct NoteListView: View {
             SearchResultsView()
         } else {
             notes
+                .dropDestination(for: URL.self) { urls, _ in
+                    let local = urls.filter(\.isFileURL)
+                    guard store.source.folder != nil, local.isEmpty == false else { return false }
+                    Task { await files.importFiles(local) }
+                    return true
+                } isTargeted: { isFileDropTarget = $0 }
+                .overlay {
+                    if isFileDropTarget {
+                        RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
+                            .strokeBorder(Theme.selection, lineWidth: 2)
+                            .padding(4)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .task(id: store.source) {
+                    await files.show(store.source.folder)
+                }
         }
     }
 
@@ -29,7 +48,7 @@ struct NoteListView: View {
             EmptyStateView(systemImage: "exclamationmark.triangle", title: "Slate cannot read the notes. \(failure)", actionTitle: "Try again") {
                 Task { await store.refresh() }
             }
-        } else if notes.isEmpty, folders.isEmpty, store.isLoading == false {
+        } else if notes.isEmpty, folders.isEmpty, files.files.isEmpty, store.isLoading == false {
             EmptyStateView(systemImage: "square.and.pencil", title: "Nothing here yet.", actionTitle: "New note", shortcut: "⌘N") {
                 Task { await store.createNote() }
             }
@@ -41,6 +60,12 @@ struct NoteListView: View {
                     }
                     ForEach(notes) { summary in
                         card(summary, now: now)
+                    }
+                    if files.files.isEmpty == false {
+                        ListSectionHeader("Files", detail: "\(files.files.count)")
+                        ForEach(files.files, id: \.path) { meta in
+                            file(meta, now: now)
+                        }
                     }
                 }
                 .padding(.horizontal, Theme.columnPadding)
@@ -59,6 +84,33 @@ struct NoteListView: View {
             onConfirmTrash: { Task { await store.confirmTrash(summary) } }
         )
         .onTapGesture { store.select(summary.id) }
+    }
+
+    @ViewBuilder
+    private func file(_ meta: FileMeta, now: Date) -> some View {
+        if files.renaming == meta.path {
+            @Bindable var files = files
+            FileNameField(
+                name: $files.draftName,
+                onCommit: { Task { await files.commitRename() } },
+                onCancel: { files.cancelRename() }
+            )
+        } else {
+            FileRow(model: FileRowMapper.model(for: meta, now: now), url: files.url(for: meta.path), actions: fileActions(for: meta.path))
+        }
+    }
+
+    private func fileActions(for path: VaultPath) -> FileRowActions {
+        FileRowActions(
+            quickLook: { Task { await files.quickLook(path) } },
+            open: { Task { await files.open(path) } },
+            reveal: { Task { await files.reveal(path) } },
+            saveToDownloads: { Task { await files.saveToDownloads(path) } },
+            copyPath: { files.copyPath(path) },
+            rename: { files.startRename(path) },
+            trash: { Task { await files.trash(path) } },
+            drag: { files.dragProvider(for: path) }
+        )
     }
 
     private var subfolders: [FolderRowModel] {

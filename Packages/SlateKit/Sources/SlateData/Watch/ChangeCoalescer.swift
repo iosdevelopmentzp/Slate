@@ -44,7 +44,7 @@ final class ChangeCoalescer: @unchecked Sendable {
                 continue
             case .rescan:
                 needsRescan = true
-            case .note(let path):
+            case .file(let path):
                 pending.insert(path)
             }
         }
@@ -60,6 +60,7 @@ final class ChangeCoalescer: @unchecked Sendable {
             return
         }
         let external = pending.filter { path in
+            guard path.isNote else { return true }
             let disk = (try? Data(contentsOf: root.appendingPathComponent(path.rawValue))).map(ContentHash.of)
             return ownWrites.isOwn(path, diskHash: disk) == false
         }
@@ -70,7 +71,7 @@ final class ChangeCoalescer: @unchecked Sendable {
     enum Classification: Hashable {
         case ignore
         case rescan
-        case note(VaultPath)
+        case file(VaultPath)
     }
 
     static func classify(_ event: Event, root: URL) -> Classification {
@@ -85,7 +86,12 @@ final class ChangeCoalescer: @unchecked Sendable {
         if first.hasPrefix(".") || first.hasPrefix("_") { return .ignore }
         if components.count == 1 || event.isDirectory { return .rescan }
         let path = VaultPath(rawValue: relative)
-        return path.isNote ? .note(path) : .ignore
+        guard path.isNote || isTemporary(name) == false else { return .ignore }
+        return .file(path)
+    }
+
+    static func isTemporary(_ name: String) -> Bool {
+        name.hasPrefix(".") || name.hasSuffix("~") || name.contains(".sb-") || name.lowercased().hasSuffix(".tmp") || name.lowercased().hasSuffix(".swp")
     }
 
     static func relativePath(_ eventPath: String, root: URL) -> String? {

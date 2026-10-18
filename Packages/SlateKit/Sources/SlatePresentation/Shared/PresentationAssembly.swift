@@ -13,6 +13,7 @@ package final class PresentationAssembly {
     let feed: VaultChangeFeed
     let vault: VaultStore
     let noteList: NoteListStore
+    let files: FolderFilesStore
     let editor: EditorStore
     let panelVisibility: PanelVisibility
     let search: SearchStore
@@ -66,6 +67,7 @@ package final class PresentationAssembly {
             store: ports.keyValues,
             vaultRoot: vaultRoot
         )
+        files = FolderFilesStore(files: ports.files, workspace: ports.workspace, exporter: ports.exporter, toaster: toaster, activity: activity, events: events, vaultRoot: vaultRoot)
         search = SearchStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
         editor = EditorStore(
             files: ports.files,

@@ -14,7 +14,7 @@ actor MockVaultFileStore: VaultFileStore {
     }
 
     func enumerate() -> [FileMeta] {
-        files.values.map(\.meta)
+        files.values.map(\.meta).filter { $0.path.isNote }
     }
 
     func read(_ path: VaultPath) throws -> FileContents {
@@ -65,6 +65,25 @@ actor MockVaultFileStore: VaultFileStore {
 
     func moveFolder(from source: FolderPath, to target: FolderPath) {
         folderSet = Set(folderSet.map { $0.moved(from: source, to: target) })
+    }
+
+    func files(in folder: FolderPath) -> [FileMeta] {
+        files.values.map(\.meta).filter { $0.path.folder == folder.rawValue && $0.path.isNote == false }
+    }
+
+    func importFile(_ source: URL, into folder: FolderPath) -> VaultPath {
+        let path = VaultPath(rawValue: "\(folder.rawValue)/\(source.lastPathComponent)")
+        store(path, Data())
+        return path
+    }
+
+    func trashFile(_ path: VaultPath) -> URL {
+        files[path] = nil
+        return URL(fileURLWithPath: "/Trash/\(path.fileName)")
+    }
+
+    func restoreFile(_ trashed: URL, to path: VaultPath) {
+        store(path, Data())
     }
 
     private func store(_ path: VaultPath, _ data: Data) {

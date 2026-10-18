@@ -12,4 +12,8 @@ package protocol VaultFileStore: Sendable {
     func createFolder(_ folder: FolderPath) async throws
     func moveFolder(from: FolderPath, to: FolderPath) async throws
     func removeFolder(_ folder: FolderPath) async throws
+    func files(in folder: FolderPath) async throws -> [FileMeta]
+    func importFile(_ source: URL, into folder: FolderPath) async throws -> VaultPath
+    func trashFile(_ path: VaultPath) async throws -> URL
+    func restoreFile(_ trashed: URL, to path: VaultPath) async throws
 }

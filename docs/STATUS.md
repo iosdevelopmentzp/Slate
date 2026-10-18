@@ -221,6 +221,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 141. Projects follow ADR 0014. A project is a top-level folder whose entry in `.slate/spaces.json` has a `project` object (`id`, `repositories`, `remote`), not a separate `projects.json`: the entry already moves with a rename, so no second file has to follow it. Make a Project keeps a chosen icon and sets `shippingbox.fill` only on a plain folder icon; Make a Folder sets the plain icon back. A new project adds the folder to the writable folders of `.slate/agents.json`; Make a Folder does not take that right away again.
 
+142. The Files section reads the folder directly (`VaultFileStore.files(in:)`), not the index: files are not indexed. The watcher now reports every changed file under a folder, not only notes; temporary names (`.sb-`, `~`, `.tmp`, `.swp`, hidden names) are dropped, and the reindex still looks only at `.md` paths. A trashed file goes to the macOS Trash, not to Slate's Trash, because Slate's Trash and its list are built for notes; Undo moves it back.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -324,6 +326,8 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 ### Projects (ADR 0014)
 
 59. Press + next to Projects, type MyApp and press Enter: the project shows under Projects with a box icon and opens. Right click it, Link Repository…, pick a code folder: the menu now says Change Repository…. Right click a folder, Make a Project: it moves to the Projects section and keeps its notes. Make a Folder moves it back. Settings → AI access shows MyApp as writable.
+
+60. Drag a PDF and a PNG from Finder onto the list of a folder: an accent outline shows, then both are in a Files section under the notes, the PNG with a thumbnail. Double click the PDF: Quick Look opens. "…" → Rename, type a name without `.pdf`, press Enter: the file keeps `.pdf`. "…" → Move to Trash, then Undo in the toast: the file is back. In Terminal, `cp` a file into the folder: it shows up within a second.
 
 ## Known gaps
 
