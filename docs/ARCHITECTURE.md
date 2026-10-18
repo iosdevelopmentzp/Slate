@@ -528,8 +528,10 @@ Must exist by the end of the milestone that introduces the type (`ROADMAP.md`):
 |---|---|
 | `Scripts/build.sh [Debug\|Release]` | `check-layers.sh`, then `xcodebuild -quiet` into `DerivedData/`; prints `layers: ok` and the `.app` path |
 | `Scripts/test.sh [--skip integration] [--filter Suite]` | `swift test -q` in the package |
-| `Scripts/run.sh` | Debug build, `pkill -x Slate`, open |
-| `Scripts/install.sh` | Release build to `/Applications/Slate.app`, the `slate` CLI to `~/.local/bin/slate` |
+| `Scripts/run.sh` | Debug build, `quit.sh`, open |
+| `Scripts/install.sh` | Release build (in `DerivedData/Install` and `DerivedData/InstallCLI`) to `/Applications/Slate.app`, the `slate` CLI to `~/.local/bin/slate` |
+| `Scripts/quit.sh` | asks Slate to quit so it saves the open note; `pkill` after 10 seconds |
+| `Scripts/auto-install.sh` | called by the `post-commit` and `post-merge` hooks in `.git/hooks/`: on `main`, when a commit changes code, runs `install.sh` in the background, one at a time, with a notification; the log is `.git/slate-install.log` |
 | `Scripts/generate-vault.sh <folder> <count>` | writes `<count>` sample notes with headers, tags, todos, code and images for performance checks |
 | `Scripts/check-layers.sh` | the rules below |
 

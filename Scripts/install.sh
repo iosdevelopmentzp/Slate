@@ -2,17 +2,17 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APP="$("$ROOT/Scripts/build.sh" Release | tail -1)"
+APP="$(SLATE_DERIVED_DATA="$ROOT/DerivedData/Install" "$ROOT/Scripts/build.sh" Release | tail -1)"
 TARGET="/Applications/Slate.app"
 BIN="$HOME/.local/bin"
 
-pkill -x Slate || true
+swift build --package-path "$ROOT/Packages/SlateKit" --scratch-path "$ROOT/DerivedData/InstallCLI" -c release --product slate -q
+mkdir -p "$BIN"
+cp "$ROOT/DerivedData/InstallCLI/release/slate" "$BIN/slate"
+
+"$ROOT/Scripts/quit.sh"
 rm -rf "$TARGET"
 cp -R "$APP" "$TARGET"
-
-swift build --package-path "$ROOT/Packages/SlateKit" -c release --product slate -q
-mkdir -p "$BIN"
-cp "$ROOT/Packages/SlateKit/.build/release/slate" "$BIN/slate"
 
 /System/Library/CoreServices/pbs -update || true
 open "$TARGET"

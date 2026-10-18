@@ -7,6 +7,8 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- `Scripts/auto-install.sh`: with the `post-commit` and `post-merge` hooks from the README, a commit on `main` that changes code builds Slate and installs it to `/Applications` in the background, with a notification. The Dock, Spotlight and Launchpad always open the last commit.
+- `Scripts/quit.sh`: `run.sh` and `install.sh` ask Slate to quit, so it saves the open note first. Before, `pkill` stopped it at once.
 - An app icon: a white note with an orange title line on a slate blue square. It shows in Finder, Spotlight, Launchpad and the Dock.
 - Versions you can look at (ADR 0015). The clock button of a note shows the versions on the left and, for the one you pick, what changed since then (added lines green, removed lines red) or its whole text, with Restore. Name a version with Save Version, like "before refactor"; it shows in bold with a bookmark, and agents can do the same with `save_version`.
 - Changes of a folder: the clock button in the list header shows who changed what and when, with an Agent badge on the changes made by agents, and the notes and files added, changed or removed. Click a note to open it.

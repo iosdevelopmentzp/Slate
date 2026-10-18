@@ -63,6 +63,14 @@ Scripts/run.sh        # build, quit the running app, open the new one
 Scripts/install.sh    # Release build to /Applications and the slate CLI to ~/.local/bin
 ```
 
+To keep `/Applications/Slate.app` at the last commit on `main`, add two git hooks once:
+
+```sh
+for h in post-commit post-merge; do printf '#!/bin/sh\nexec "$(git rev-parse --show-toplevel)/Scripts/auto-install.sh"\n' > .git/hooks/$h; chmod +x .git/hooks/$h; done
+```
+
+After a commit that changes code, Slate is built and installed in the background, and a notification says when it is done. The log is `.git/slate-install.log`.
+
 You need Xcode with the macOS 26.4 SDK. You do not need a developer account: the app is signed to run on this Mac only. After `Scripts/run.sh` a note icon appears in the menu bar. Click it to open the panel. Click outside the panel to close it. To see the first launch window again, run `defaults delete local.slate.app vault.path`.
 
 ## Read in this order

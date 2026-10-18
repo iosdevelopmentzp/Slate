@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CONFIG="${1:-Debug}"
-DERIVED="$ROOT/DerivedData"
+DERIVED="${SLATE_DERIVED_DATA:-$ROOT/DerivedData}"
 
 if [ "${SKIP_LAYER_CHECK:-0}" != "1" ]; then
     "$ROOT/Scripts/check-layers.sh"

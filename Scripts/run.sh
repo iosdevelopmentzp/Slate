@@ -4,6 +4,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APP="$("$ROOT/Scripts/build.sh" Debug | tail -1)"
 
-pkill -x Slate || true
+"$ROOT/Scripts/quit.sh"
 open "$APP"
 echo "Launched $APP"
