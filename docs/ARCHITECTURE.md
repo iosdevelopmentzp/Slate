@@ -227,7 +227,7 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 | `VaultConfigRepository` | S5 adds `agentPermissions()` and `saveAgentPermissions(_:)` (`.slate/agents.json`). M1: `spaces() -> SpacesConfig` (folders on disk merged with `spaces.json`), `saveSpaces(SpacesConfig)`, `types() -> [NoteType]` (built-ins plus `.slate/types/`), `ensureDefaults()`. M4 adds `linkPatterns()`, `views()`, `actions()` and tracker settings for the defaults | `FileVaultConfigRepository` |
 | `JournalStore` | `save(JournalEntry)`, `entry(for:)`, `clear(_:)`; one JSON file per note in `<support>/journal/` | `FileJournalStore` |
 | `ScreenCapturing` | `capture(CaptureMode, to: URL)`; success is a file larger than zero bytes, checked by `AttachScreenshotUseCase` | `ScreencaptureTool` |
-| `HistoryRepository` | `isAvailable()`, `ensureRepository()`, `snapshot(message:) -> Bool`, `history(of:) -> [Snapshot]`, `contents(of:at:) -> Data`, `push(to:)`, `lastSnapshot()` | `GitHistoryRepository` (an actor, `<support>/history.git`) |
+| `HistoryRepository` | `isAvailable()`, `ensureRepository()`, `snapshot(message:) -> Bool`, `history(of:) -> [Snapshot]`, `contents(of:at:) -> Data` (raw bytes), `push(to:)` (with `--force` once after a clear), `lastSnapshot()`, `changes(in: FolderPath?, limit:) -> [SnapshotChange]`, `clear(FolderPath?)` (ADR 0015) | `GitHistoryRepository` (an actor, `<support>/history.git`) |
 | `CloudStatusProviding` | `status(of: VaultPath) -> CloudStatus`, `startDownload(VaultPath)`, `conflictVersions(VaultPath) -> [ConflictVersion]`, `keep(version:, for:)`, `isCloudFolder(URL) -> Bool` | `UbiquityStatusProvider` |
 | `LinkTitleFetching` | `title(for: URL) -> String?` (2 s timeout) | `URLSessionLinkTitleFetcher` |
 | `IssueTrackerClient` | `issue(_:) -> IssueDetails`, `currentUser()` | `JiraIssueClient` (REST v3, basic auth, 5 s) with `JiraIssueParser` |
@@ -235,7 +235,7 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 | `KeyValueStore` | `string/bool/int/data(forKey:)`, setters | `UserDefaultsKeyValueStore` |
 | `Clock` | `now() -> Date`, `timeZone` | `SystemClock` |
 | `ActionRunning` | `run(command, environment:, workingDirectory:) -> ActionResult`; `/bin/zsh -c`, 60 s limit | `ShellActionRunner` |
-| `NoteExporting` | `html(title:body:)`, `pdf(title:body:)`, `saveToDownloads(_:fileName:)` | `NoteExporter` (System, AppKit for the PDF) over `HTMLExporter` (Export, swift-markdown) |
+| `NoteExporting` | `html(title:body:)`, `pdf(title:body:)`, `saveToDownloads(_:fileName:)`, `copyToDownloads(_:)`, `temporaryFile(_:fileName:)` (a copy for Quick Look of an old version) | `NoteExporter` (System, AppKit for the PDF) over `HTMLExporter` (Export, swift-markdown) |
 | `WorkspaceOpening` | `open(URL)`, `reveal(URL)`, `quickLook(URL)` | `WorkspaceOpener` |
 | `CommandRecording` | `record(CommandRecord)` | `ActivityLog` conformance in Presentation |
 | `AgentChangeLog` | `record(AgentChange)`, `changes(after: Date)`; written by `slate mcp`, read by the app for the Activity line "Changed by an agent" (S5) | `FileAgentChangeLog` (an actor, `<support>/agent-changes.jsonl`, the last 200 lines) |
