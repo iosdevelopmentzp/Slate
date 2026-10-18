@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- An app icon: a white note with an orange title line on a slate blue square. It shows in Finder, Spotlight, Launchpad and the Dock.
 - Versions you can look at (ADR 0015). The clock button of a note shows the versions on the left and, for the one you pick, what changed since then (added lines green, removed lines red) or its whole text, with Restore. Name a version with Save Version, like "before refactor"; it shows in bold with a bookmark, and agents can do the same with `save_version`.
 - Changes of a folder: the clock button in the list header shows who changed what and when, with an Agent badge on the changes made by agents, and the notes and files added, changed or removed. Click a note to open it.
 - Versions of files: Versions… in the menu of a file shows its earlier versions with Quick Look and Restore. Files larger than 50 MB are not kept.
