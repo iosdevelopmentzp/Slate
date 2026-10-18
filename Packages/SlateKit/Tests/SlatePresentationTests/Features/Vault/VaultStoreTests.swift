@@ -73,11 +73,15 @@ import Testing
         await vault.refresh()
         let inbox = SpaceName(rawValue: "Inbox")
 
+        harness.spies.repositories.result = RepositoryInfo(root: "/dev/myapp-worktree", mainRoot: "/dev/myapp", remote: "git@gitlab.example.com:group/myapp.git")
+
         await vault.setProject(true, for: inbox)
-        await vault.setRepositories(["/tmp/myapp"], for: inbox)
+        await vault.linkRepository(URL(fileURLWithPath: "/dev/myapp-worktree"), to: inbox)
 
         #expect(vault.isProject(inbox))
-        #expect(vault.projects.first?.project?.repositories == ["/tmp/myapp"])
+        #expect(vault.projects.first?.project?.repositories == ["/dev/myapp"])
+        #expect(vault.projects.first?.project?.remote == "git@gitlab.example.com:group/myapp.git")
+        #expect(harness.toaster.text == "Linked myapp-worktree and its remote")
 
         await vault.setProject(false, for: inbox)
 

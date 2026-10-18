@@ -227,6 +227,9 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 144. Import Folder copies, it never moves: the source may be a work repository that the owner keeps as it is. Files already at the target are kept, hidden files and package contents are skipped. The repository is the first folder above the source (or the source itself) that holds `.git`.
 
+145. S9: `slate mcp` reads its working directory once at start (`FileManager.currentDirectoryPath`, which is the directory Claude Code starts it in) and puts the project into the MCP `instructions`; `project_context` and `start_task` also take `path`, because a client may start the server elsewhere. MCP `roots` are not used yet: the swift-sdk server would have to ask the client after `initialize`, and the path argument covers the case. The project lookup order is: a linked path that holds the directory, the main checkout of a worktree, then the normalized remote (scheme, user, port, `.git` and case dropped).
+146. S9: `add_file` copies a file from a path or from base64 with a name, at most 200 MB, into a folder agents may write; a taken name gets a number. `save_version` is a snapshot with the message `version: <name>` and no push. The registration line is now `claude mcp add -s user slate -- slate mcp` so every repository sees the server; the old local registration keeps working.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -337,6 +340,11 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 
 62. Make a folder `demo/.slate` in a git repository with a note and a PNG in a sub-folder. Projects + → Import Folder…, pick `demo/.slate`: a project `demo` opens, the toast says "Imported 1 note and 1 file into demo", the sub-folder and the PNG are there, Change Repository… shows in its menu, and search finds the note. `demo/.slate` is unchanged.
 
+### Agents and projects (S9)
+
+63. Run `Scripts/install.sh`, then `claude mcp remove slate` and `claude mcp add -s user slate -- slate mcp`. In a repository linked to MyApp (Link Repository…), start Claude Code and ask "start the task ABC-123 Fix login and note what you find": it calls `project_context` and `start_task`, and the task shows up in Slate within a second with In progress. Ask it to add a log file and to finish the session: the file is in the task's Files section and the Log has a dated entry. Start a new Claude Code session and ask "where did we stop?": it reads the log through `project_context`.
+64. In the same repository run `slate project`, `slate task status ABC-123 review` and `slate task log ABC-123 "Next: tests"`: the pill turns orange and the Log has the entry. In a git worktree of the repository `slate project` names the same project.
+
 ## Known gaps
 
 - Tables, second round: a drag that starts in the text of the cell being edited selects text only; start the drag on another cell or use Shift-click.
@@ -362,6 +370,8 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - S5: the agent did not run Claude Code against `slate mcp`. A stdio test sent `initialize`, `tools/list`, `tools/call create_note` and `resources/list` and got the right answers; the tools are tested over a temporary notes folder.
 - S5: a card dropped into the note text of Slate now gives the editor a file, so the editor adds a link to a copy of the note file in `_attachments/` instead of the text `slate-note:<id>`. Neither is useful; a drop of a card into the text should make a link to the note.
 - S5: the Activity line of an agent change can come late when the watcher reports the file before `slate mcp` wrote its change line; it then shows with the next change. `⌥`-click on the title was not tried on screen: a text field may take the click first.
+- S9: the agent ran `slate mcp` over stdio in a temporary repository (instructions name the project, `start_task` and `project_context` answer), not a real Claude Code session; manual check 63 is that run.
+- S9: `project_context` sent in the same batch as `start_task` can answer before the task exists, because the server answers requests in parallel (next gap). Claude Code waits for each answer, so this matters only for scripts.
 - S5: the MCP server answers requests in parallel. Two writes to the same note at the same moment are safe (the save checks the hash), but the second may fail with "The note changed since you read it".
 - S6: the agent checked tables with editor tests, a throwaway XCTest in a window (the view is hosted by TextKit, the focus stays while a row grows) and offscreen pictures, not by typing in the running app.
 - S6: accessibility shows the table as one element with a label ("Table, 3 rows, 2 columns"); rows and cells are not exposed yet.

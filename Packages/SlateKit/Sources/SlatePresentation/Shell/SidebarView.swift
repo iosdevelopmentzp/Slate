@@ -267,7 +267,7 @@ struct SidebarView: View {
     private func linkRepository(for space: SpaceName) {
         let home = FileManager.default.homeDirectoryForCurrentUser
         guard let folder = FolderPicker.chooseFolder(directory: home, prompt: "Link", message: "Choose the code repository of \(space.rawValue).") else { return }
-        Task { await vault.setRepositories([folder.standardizedFileURL.path], for: space) }
+        Task { await vault.linkRepository(folder, to: space) }
     }
 
     private func sourceRow(_ source: ListSource, title: String, icon: String, count: Int?) -> some View {

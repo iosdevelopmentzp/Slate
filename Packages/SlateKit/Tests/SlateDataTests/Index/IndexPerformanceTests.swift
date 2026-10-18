@@ -33,7 +33,7 @@ struct IndexPerformanceTests {
             actions: spyPorts.actions,
             exporter: spyPorts.exporter,
             secrets: spyPorts.secrets,
-            tracker: spyPorts.tracker, agentChanges: spyPorts.agentChanges
+            tracker: spyPorts.tracker, agentChanges: spyPorts.agentChanges, repositories: spyPorts.repositories
         )
         let reindex = UseCases(ports: ports).reindex
         let clock = ContinuousClock()

@@ -21,6 +21,11 @@ struct CLIContainer {
         shell = ShellRunner(recorder: NoopRecorder())
     }
 
+    static func directory(_ path: String?) -> URL {
+        let raw = path.map { ($0 as NSString).expandingTildeInPath } ?? FileManager.default.currentDirectoryPath
+        return URL(fileURLWithPath: raw, isDirectory: true).standardizedFileURL
+    }
+
     func refreshIndex() async throws {
         _ = try await useCases.reindex.execute(.all)
     }

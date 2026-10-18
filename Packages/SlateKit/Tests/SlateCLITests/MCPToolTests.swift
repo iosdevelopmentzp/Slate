@@ -60,10 +60,11 @@ import Testing
         return try object(answer.text)["id"] as? String ?? ""
     }
 
-    @Test func theCatalogHasTheElevenTools() {
+    @Test func theCatalogHasTheEighteenTools() {
         #expect(MCPToolCatalog.tools.map(\.name) == [
             "list_folders", "list_notes", "search_notes", "read_note", "create_note", "append_to_note",
             "update_note", "move_note", "trash_note", "attach_image", "open_in_slate",
+            "project_context", "start_task", "set_task_status", "log_progress", "add_file", "list_files", "save_version",
         ])
         #expect(MCPToolCatalog.tools.allSatisfy { ($0.description ?? "").isEmpty == false })
     }

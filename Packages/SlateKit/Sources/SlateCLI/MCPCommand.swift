@@ -1,6 +1,7 @@
 import ArgumentParser
 import Foundation
 import MCP
+import SlateDomain
 
 struct MCPCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "mcp", abstract: "Run the MCP server for AI agents over standard input and output.")
@@ -12,7 +13,8 @@ struct MCPCommand: AsyncParsableCommand {
         let runner = MCPToolRunner(root: container.root, ports: container.ports, useCases: container.useCases) { url in
             _ = try await CLIShell.open(url)
         }
-        let server = await MCPServerFactory.server(runner: runner)
+        let match = try? await container.useCases.findProject.execute(directory: runner.workingDirectory)
+        let server = await MCPServerFactory.server(runner: runner, instructions: MCPServerFactory.instructions(for: match, root: container.root))
         try await server.start(transport: StdioTransport())
         await server.waitUntilCompleted()
     }

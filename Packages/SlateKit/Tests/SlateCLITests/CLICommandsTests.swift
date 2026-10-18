@@ -68,6 +68,31 @@ import Testing
         try await run(["list", "--space", "Tasks"])
     }
 
+    @Test func projectAndTaskCommandsKeepATaskUpToDate() async throws {
+        let code = try TemporaryDirectory()
+
+        try await run(["project", "add", "MyApp", "--repo", code.url.path])
+        try await run(["task", "new", "ABC-5 Fix login", "--repo", code.url.path, "--branch", "feature/ABC-5"])
+        try await run(["task", "status", "ABC-5", "review"])
+        try await run(["task", "log", "ABC-5", "Wrote the test."])
+        try await run(["project", "--repo", code.url.path, "--json"])
+
+        let note = try text("MyApp/ABC-5 Fix login/ABC-5 Fix login.md")
+        #expect(note.contains("status: review"))
+        #expect(note.contains("branch: feature/ABC-5"))
+        #expect(note.contains("** Wrote the test."))
+        let spaces = try text(".slate/spaces.json")
+        #expect(spaces.contains(code.url.standardizedFileURL.path))
+    }
+
+    @Test func taskNewOutsideAProjectSaysHowToLinkOne() async throws {
+        let code = try TemporaryDirectory()
+
+        await #expect(throws: CLIError.self) {
+            try await run(["task", "new", "ABC-5 Fix", "--repo", code.url.path])
+        }
+    }
+
     @Test func aMissingVaultIsAnError() async throws {
         await #expect(throws: (any Error).self) {
             var command = try SlateCommand.parseAsRoot(["today", "--vault", "/nonexistent/folder"])

@@ -27,7 +27,7 @@ The owner takes these on a real screen and puts them in `docs/screenshots/`.
 6. **Quick note.** `⌃⌥Space` opens a small field from any app. Enter saves the note, `⌘Enter` saves and opens it.
 7. **Search.** `⌘F` searches the titles and the text of the current folder. "Search all notes" searches every folder.
 8. **Light or dark.** Settings → General → Appearance, the right-click menu of the menu bar icon, or View → Appearance in the window: Match the system, Light or Dark.
-9. **AI agents.** `slate mcp` lets Claude Code and other MCP clients list, search, read and change notes: run `claude mcp add slate -- slate mcp` once. Settings → General → AI access says which folders agents may change. Copy Path, Copy Link and dragging a card hand one note to an agent. `CLAUDE.md` in the notes folder tells agents the rules.
+9. **AI agents.** `slate mcp` lets Claude Code and other MCP clients list, search, read and change notes: run `claude mcp add -s user slate -- slate mcp` once. Settings → General → AI access says which folders agents may change. Copy Path, Copy Link and dragging a card hand one note to an agent. `CLAUDE.md` in the notes folder tells agents the rules. A **project** keeps the documentation of one code repository: an agent that works in the repository finds it with `project_context`, starts a task folder with `start_task`, adds files with `add_file` and writes a dated entry with `log_progress` at the end of each session. `slate project` and `slate task` do the same from the command line.
 10. **Safe by default.** Slate saves as you type. It keeps versions of each note (the clock button next to the title) and can back them up to a git address. Deleted notes stay in the Trash for 30 days.
 
 ## Keys

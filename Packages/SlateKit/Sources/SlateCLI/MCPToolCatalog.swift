@@ -48,6 +48,37 @@ enum MCPToolCatalog {
         tool("open_in_slate", "Show a note in the Slate app.", [
             "id": text("The note id."),
         ], required: ["id"], readOnly: true),
+        tool("project_context", "Find the Slate project of a code repository and read its tasks: status, ticket, branch, folders, and the task of the current branch. Call it at the start of a session.", [
+            "path": text("The working directory of the repository. Default: the directory the server runs in."),
+            "project": text("The project name in Slate, when the repository is not linked."),
+        ], required: [], readOnly: true),
+        tool("start_task", "Start a task in a project: Slate makes a task folder and a task note with Context, Plan, Findings, Links, Questions and Log, status active.", [
+            "title": text("The task title, like ABC-123 Fix the login crash. A ticket at the start is split off."),
+            "ticket": text("The ticket, when it is not in the title."),
+            "branch": text("The git branch. Default: the current branch of the repository."),
+            "project": text("The project name. Default: the project of the working directory."),
+            "path": text("The working directory of the repository. Default: the directory the server runs in."),
+        ], required: ["title"]),
+        tool("set_task_status", "Change the status of a task: todo, active, review, done or dropped.", [
+            "task": text("The task: its note id, its folder like MyApp/ABC-123 Fix login, or its ticket."),
+            "status": text("todo, active, review, done or dropped."),
+        ], required: ["task", "status"]),
+        tool("log_progress", "Add a dated entry to the Log section of a task note: what was done, what is left, the next step.", [
+            "task": text("The task: its note id, its folder, or its ticket."),
+            "text": text("The Markdown text of the entry."),
+        ], required: ["task", "text"]),
+        tool("add_file", "Copy a file into a folder of the notes folder, like a log, a screenshot, a PDF or JSON. A taken name gets a number. At most 200 MB.", [
+            "folder": text("The folder, like MyApp/ABC-123 Fix login."),
+            "path": text("The absolute path of the file on this Mac. Use path or base64."),
+            "base64": text("The file data in base64. Needs name."),
+            "name": text("The file name in Slate, like crash.log."),
+        ], required: ["folder"]),
+        tool("list_files", "List the files of a folder that are not notes: name, path, size, date.", [
+            "folder": text("The folder, like MyApp/ABC-123 Fix login."),
+        ], required: ["folder"], readOnly: true),
+        tool("save_version", "Save a named version of the notes folder, like a checkpoint at the end of a session. The owner sees it in the versions of each note.", [
+            "name": text("A short name, like end of session 3."),
+        ], required: ["name"]),
     ]
 
     private static func tool(_ name: String, _ description: String, _ properties: [String: Value], required: [String], readOnly: Bool = false, destructive: Bool = false) -> Tool {

@@ -1,10 +1,19 @@
 import Foundation
 import MCP
+import SlateDomain
 
 enum MCPServerFactory {
     static let instructions = "Slate notes: Markdown files in folders. Read CLAUDE.md in the notes folder for the rules. Find a note with list_notes or search_notes, read it with read_note, change it with append_to_note or update_note."
 
-    static func server(runner: MCPToolRunner) async -> Server {
+    static func instructions(for match: ProjectMatch?, root: URL) -> String {
+        guard let match else {
+            return instructions + " When you work in a code repository, call project_context with its path to find its Slate project and keep the task documentation there."
+        }
+        let folder = root.appendingPathComponent(match.space.folder.rawValue, isDirectory: true).path
+        return instructions + " This working directory belongs to the Slate project \(match.space.folder.rawValue) (\(folder)). At the start of a session call project_context. " + MCPToolRunner.projectRules
+    }
+
+    static func server(runner: MCPToolRunner, instructions: String = instructions) async -> Server {
         let server = Server(
             name: "slate",
             version: VersionCommand.version,

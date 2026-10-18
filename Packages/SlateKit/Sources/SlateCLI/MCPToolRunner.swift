@@ -33,6 +33,13 @@ struct MCPToolRunner: Sendable {
         case "trash_note": try await trashNote(arguments)
         case "attach_image": try await attachImage(arguments)
         case "open_in_slate": try await openInSlate(arguments)
+        case "project_context": try await projectContext(arguments)
+        case "start_task": try await startTask(arguments)
+        case "set_task_status": try await setTaskStatus(arguments)
+        case "log_progress": try await logProgress(arguments)
+        case "add_file": try await addFile(arguments)
+        case "list_files": try await listFiles(arguments)
+        case "save_version": try await saveVersion(arguments)
         default: throw AgentError.unknownTool(name)
         }
     }

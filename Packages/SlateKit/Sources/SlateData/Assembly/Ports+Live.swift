@@ -29,7 +29,8 @@ extension Ports {
             exporter: NoteExporter(),
             secrets: secrets,
             tracker: JiraIssueClient(keyValues: keyValues, secrets: secrets, session: URLSession.shared),
-            agentChanges: FileAgentChangeLog(url: support.appendingPathComponent(FileAgentChangeLog.fileName))
+            agentChanges: FileAgentChangeLog(url: support.appendingPathComponent(FileAgentChangeLog.fileName)),
+            repositories: GitRepositoryInspector(shell: shell)
         )
     }
 }

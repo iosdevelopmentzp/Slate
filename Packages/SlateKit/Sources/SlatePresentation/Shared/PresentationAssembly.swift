@@ -45,6 +45,7 @@ package final class PresentationAssembly {
             createProject: useCases.createProject,
             startTask: useCases.startTask,
             importFolder: useCases.importFolder,
+            linkRepository: useCases.linkRepository,
             store: ports.keyValues,
             navigator: navigator,
             toaster: toaster,

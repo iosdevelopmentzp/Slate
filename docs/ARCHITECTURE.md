@@ -239,6 +239,7 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 | `WorkspaceOpening` | `open(URL)`, `reveal(URL)`, `quickLook(URL)` | `WorkspaceOpener` |
 | `CommandRecording` | `record(CommandRecord)` | `ActivityLog` conformance in Presentation |
 | `AgentChangeLog` | `record(AgentChange)`, `changes(after: Date)`; written by `slate mcp`, read by the app for the Activity line "Changed by an agent" (S5) | `FileAgentChangeLog` (an actor, `<support>/agent-changes.jsonl`, the last 200 lines) |
+| `RepositoryInspecting` | `inspect(URL) -> RepositoryInfo?`: the checkout root, the main checkout (for a git worktree), the `origin` remote and the current branch (S9, ADR 0014) | `GitRepositoryInspector` (`git rev-parse`, `remote get-url`, `branch --show-current` through `ShellRunner`) |
 
 `Ports` (Domain `Assembly/Ports.swift`) is a struct with one property per port. `Ports.live(root:keyValues:)` in Data (later milestones add the Application Support folder, the shell and the recorder), `Ports.mock()` in Mocks, `Ports.spies(keyValues:)` in TestSupport (the key-value store defaults to `SpyKeyValueStore`).
 
@@ -292,6 +293,11 @@ Every policy has a test file with fixtures.
 | `StartTaskUseCase` | files, config, create, keyValues | ADR 0014: in a project only; splits the ticket from the title, makes the task folder (a taken name gets a number) and an active task note with ticket and branch |
 | `SetTaskStatusUseCase` | files, updateHeader | Sets `status` of a task note; refuses a note without `type: task` |
 | `ImportFolderUseCase` | files, config, createProject, setProject, reindex | ADR 0014: copies a folder from outside into a new project (a hidden folder such as `<repo>/.slate` is named after its parent), links the git repository that holds it, reads the index again; the source does not change |
+| `LinkRepositoryUseCase` | config, repositories, setProject | Stores the main checkout of a repository (first in the list) and its remote in the project |
+| `FindProjectUseCase` | config, repositories | The project of a directory: a linked path that holds it, the main checkout of its worktree, or the same remote (`ProjectLookupPolicy`); or a project by name |
+| `ProjectTasksUseCase` | files, index | The task notes directly in the task folders of a project, with status, ticket and branch, newest first |
+| `FindTaskUseCase` | config, projectTasks | A task by note id, note path, folder, ticket or title, across all projects |
+| `LogProgressUseCase` | append, clock | A `- **yyyy-MM-dd HH:mm** text` entry under `## Log` of a task note (`TaskLogPolicy`) |
 | `OpenTargetUseCase` | index, create | `slate://open` by id, title or ticket; `.found`, `.created` (a ticket without a note) or `.missing` |
 | `TrashNoteUseCase`, `RestoreNoteUseCase`, `PurgeTrashUseCase` | trash, index, clock | |
 | `QuickCaptureUseCase` | create, append (as nested use cases) | capture input → new note or Today line |

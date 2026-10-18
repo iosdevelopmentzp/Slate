@@ -16,6 +16,11 @@ package struct UseCases: Sendable {
     package let createProject: CreateProjectUseCase
     package let startTask: StartTaskUseCase
     package let importFolder: ImportFolderUseCase
+    package let findProject: FindProjectUseCase
+    package let projectTasks: ProjectTasksUseCase
+    package let findTask: FindTaskUseCase
+    package let logProgress: LogProgressUseCase
+    package let linkRepository: LinkRepositoryUseCase
     package let setTaskStatus: SetTaskStatusUseCase
     package let renameSpace: RenameSpaceUseCase
     package let deleteSpace: DeleteSpaceUseCase
@@ -73,5 +78,10 @@ package struct UseCases: Sendable {
         runAction = RunActionUseCase(runner: ports.actions, append: append)
         openTarget = OpenTargetUseCase(index: ports.index, create: create)
         agentGuide = AgentGuideWriter(files: ports.files)
+        findProject = FindProjectUseCase(config: ports.config, repositories: ports.repositories)
+        projectTasks = ProjectTasksUseCase(files: ports.files, index: ports.index)
+        findTask = FindTaskUseCase(config: ports.config, projectTasks: projectTasks)
+        logProgress = LogProgressUseCase(append: append, clock: ports.clock)
+        linkRepository = LinkRepositoryUseCase(config: ports.config, repositories: ports.repositories, setProject: setProject)
     }
 }

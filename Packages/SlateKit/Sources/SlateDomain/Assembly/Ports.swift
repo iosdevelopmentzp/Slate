@@ -22,6 +22,7 @@ package struct Ports: Sendable {
     package let secrets: any SecretStore
     package let tracker: any IssueTrackerClient
     package let agentChanges: any AgentChangeLog
+    package let repositories: any RepositoryInspecting
 
     package init(
         keyValues: any KeyValueStore,
@@ -44,7 +45,8 @@ package struct Ports: Sendable {
         exporter: any NoteExporting,
         secrets: any SecretStore,
         tracker: any IssueTrackerClient,
-        agentChanges: any AgentChangeLog
+        agentChanges: any AgentChangeLog,
+        repositories: any RepositoryInspecting
     ) {
         self.keyValues = keyValues
         self.files = files
@@ -67,5 +69,6 @@ package struct Ports: Sendable {
         self.secrets = secrets
         self.tracker = tracker
         self.agentChanges = agentChanges
+        self.repositories = repositories
     }
 }

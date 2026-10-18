@@ -33,6 +33,7 @@ final class StoreHarness {
         createProject: useCases.createProject,
         startTask: useCases.startTask,
         importFolder: useCases.importFolder,
+        linkRepository: useCases.linkRepository,
         store: keyValues,
         navigator: navigator,
         toaster: toaster,

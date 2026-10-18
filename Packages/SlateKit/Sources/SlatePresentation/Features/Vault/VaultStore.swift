@@ -30,6 +30,7 @@ final class VaultStore {
     @ObservationIgnored private let createProject: CreateProjectUseCase
     @ObservationIgnored private let startTask: StartTaskUseCase
     @ObservationIgnored private let importFolder: ImportFolderUseCase
+    @ObservationIgnored private let linkRepository: LinkRepositoryUseCase
     @ObservationIgnored private let store: any KeyValueStore
     @ObservationIgnored private let navigator: Navigator
     @ObservationIgnored private let toaster: Toaster
@@ -54,6 +55,7 @@ final class VaultStore {
         createProject: CreateProjectUseCase,
         startTask: StartTaskUseCase,
         importFolder: ImportFolderUseCase,
+        linkRepository: LinkRepositoryUseCase,
         store: any KeyValueStore,
         navigator: Navigator,
         toaster: Toaster,
@@ -74,6 +76,7 @@ final class VaultStore {
         self.createProject = createProject
         self.startTask = startTask
         self.importFolder = importFolder
+        self.linkRepository = linkRepository
         self.store = store
         expanded = Set((store.strings(forKey: Keys.expanded) ?? []).map(FolderPath.init(rawValue:)))
         self.navigator = navigator
@@ -289,14 +292,13 @@ final class VaultStore {
         }
     }
 
-    func setRepositories(_ repositories: [String], for space: SpaceName) async {
-        guard var project = config.space(space)?.project else { return }
-        project.repositories = repositories
+    func linkRepository(_ directory: URL, to space: SpaceName) async {
         do {
-            try await setProject.execute(space, project: project)
+            let project = try await linkRepository.execute(space, directory: directory)
             await refresh()
+            toaster.show(project.remote == nil ? "Linked \(directory.lastPathComponent)" : "Linked \(directory.lastPathComponent) and its remote")
         } catch {
-            report("Cannot save the repository", error)
+            report("Cannot link the repository", error)
         }
     }
 

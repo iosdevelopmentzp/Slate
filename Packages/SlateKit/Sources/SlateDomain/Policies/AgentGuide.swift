@@ -4,7 +4,7 @@ package enum AgentGuide {
     package static let begin = "<!-- slate:begin -->"
     package static let end = "<!-- slate:end -->"
     package static let fileNames = ["CLAUDE.md", "AGENTS.md"]
-    package static let registration = "claude mcp add slate -- slate mcp"
+    package static let registration = "claude mcp add -s user slate -- slate mcp"
 
     package static var block: String {
         begin + "\n" + text + end + "\n"
@@ -21,6 +21,7 @@ package enum AgentGuide {
 
     - `<Folder>/<Note>.md`: a note. A folder may hold sub-folders, like `Work/Clients/Call notes.md`.
     - `_attachments/`: images and files that notes link to. One flat folder.
+    - `<Project>/`: a project, a folder for the documentation of one code repository. `<Project>/<ABC-123 Title>/` is a task folder with its task note `<ABC-123 Title>.md`, more notes and any files.
     - `.slate/`: settings of the app. Do not write here.
     - `.trash/`: deleted notes. Do not write here.
     - `CLAUDE.md`, `AGENTS.md`: this guide. They are not notes.
@@ -57,6 +58,18 @@ package enum AgentGuide {
     5. Write a whole file in one operation. Do not write a file line by line.
     6. Do not delete files. Do not change files outside this folder. Do not store passwords, tokens or other secrets in notes.
 
+    ## Projects and tasks
+
+    A project belongs to a code repository. When you work on a task in a repository, keep its documentation in Slate, so the next session can go on where this one stopped:
+
+    1. At the start of a session call `project_context` (MCP) or run `slate project` in the repository. It names the project, its tasks with status, and the task of the current branch.
+    2. No task yet: `start_task` with a title like `ABC-123 Fix login`, or `slate task new "ABC-123 Fix login"`. Slate makes the task folder and the task note with Context, Plan, Findings, Links, Questions and Log.
+    3. Write what you learn into the task note or into more notes in the task folder. Add logs, screenshots, JSON and other files with `add_file`.
+    4. At the end of a session call `log_progress` (or `slate task log ABC-123 "…"`): what was done, what is left, the next step.
+    5. Set the status with `set_task_status` (or `slate task status ABC-123 review`): `todo`, `active`, `review`, `done`, `dropped`.
+
+    The header of a task note has `type: task`, `ticket`, `branch` and `status`. Keep them.
+
     ## The slate command
 
     Every command takes `--json` for JSON output and `--vault <folder>` for another notes folder.
@@ -67,10 +80,12 @@ package enum AgentGuide {
     - `slate list --space Notes`: list the notes, newest first.
     - `slate path --title "Groceries"`: print the file path of a note.
     - `slate open --title "Groceries"`: show a note in Slate. The link `slate://open?id=<id>` does the same.
+    - `slate project`: the project of the current repository and its tasks. `slate project add MyApp --repo .` links a repository to a project.
+    - `slate task new "ABC-123 Fix login"`, `slate task status ABC-123 done`, `slate task log ABC-123 "Next: tests"`: work with a task of the current repository.
 
     ## MCP server
 
-    `slate mcp` is an MCP server over stdio. Add it to Claude Code with `\(registration)`. Its tools: `list_folders`, `list_notes`, `search_notes`, `read_note`, `create_note`, `append_to_note`, `update_note`, `move_note`, `trash_note`, `attach_image`, `open_in_slate`. The resource `slate://note/<id>` gives the text of a note.
+    `slate mcp` is an MCP server over stdio. Add it to Claude Code with `\(registration)`. Its tools: `list_folders`, `list_notes`, `search_notes`, `read_note`, `create_note`, `append_to_note`, `update_note`, `move_note`, `trash_note`, `attach_image`, `open_in_slate`, and for projects `project_context`, `start_task`, `set_task_status`, `log_progress`, `add_file`, `list_files`, `save_version`. The resource `slate://note/<id>` gives the text of a note.
 
     The owner chooses in Slate which folders agents may change, and whether agents may create notes or move notes to the Trash. A tool that is not allowed answers with a sentence that says so. Slate keeps a version of the note before every change by an agent.
 

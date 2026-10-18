@@ -13,6 +13,10 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
     case notAnImage
     case imageTooLarge
     case unknownTool(String)
+    case noProject(String, known: [String])
+    case noTask(String)
+    case notAFile(String)
+    case fileTooLarge
 
     private static let settingsHint = "The owner can change this in Slate: Settings → General → AI access."
 
@@ -42,6 +46,14 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
             "The image is larger than 50 MB. Make it smaller and try again."
         case .unknownTool(let name):
             "Slate has no tool \(name). Ask for the list of tools again."
+        case .noProject(let place, let known):
+            "No Slate project belongs to \(place). Projects: \(known.isEmpty ? "none" : known.joined(separator: ", ")). Pass project with one of these names, or ask the owner to link the repository: right click the project in Slate, Link Repository…, or run slate project add <Name> --repo <path>."
+        case .noTask(let task):
+            "No task matches \(task). Use project_context to see the tasks, or start one with start_task."
+        case .notAFile(let path):
+            "\(path) is not a file on this Mac. Pass an absolute path or base64 with a name."
+        case .fileTooLarge:
+            "The file is larger than 200 MB. Keep a link to it in a note instead."
         }
     }
 }
