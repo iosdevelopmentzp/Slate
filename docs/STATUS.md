@@ -4,7 +4,7 @@ Last updated: 2026-10-18
 
 ## Stage
 
-Phase 2 is built and merged into `main` (S1 Simplify, S2 Folders and the soft look, S3 the rich text editor, S4 Polish, then sub-folders, ADR 0011). **Phase 3 is built: S5 Agents and the notes folder (ADR 0010), S6 Tables level 1 and S7 images in table cells (ADR 0009).** Next: the owner's manual checks 40 to 48. The owner runs the manual checks below; every item passes or becomes a numbered gap. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
+Phase 2 is built and merged into `main` (S1 Simplify, S2 Folders and the soft look, S3 the rich text editor, S4 Polish, then sub-folders, ADR 0011). **Phase 3 is built: S5 Agents and the notes folder (ADR 0010), S6 Tables level 1 and S7 images in table cells (ADR 0009). Phase 4 is built: S8 Projects and files, S9 Agents and projects (ADR 0014), S10 Versions (ADR 0015).** Next: the owner's manual checks 40 to 68. The owner runs the manual checks below; every item passes or becomes a numbered gap. M0 to M7 stay in `main` (commit `545e0d6` is the last commit before S1 and holds every removed view).
 
 Phase 3 run (2026-10-17), what is done and what is left:
 
@@ -230,6 +230,11 @@ Numbered. What, then why. A later session must not undo these without a new numb
 145. S9: `slate mcp` reads its working directory once at start (`FileManager.currentDirectoryPath`, which is the directory Claude Code starts it in) and puts the project into the MCP `instructions`; `project_context` and `start_task` also take `path`, because a client may start the server elsewhere. MCP `roots` are not used yet: the swift-sdk server would have to ask the client after `initialize`, and the path argument covers the case. The project lookup order is: a linked path that holds the directory, the main checkout of a worktree, then the normalized remote (scheme, user, port, `.git` and case dropped).
 146. S9: `add_file` copies a file from a path or from base64 with a name, at most 200 MB, into a folder agents may write; a taken name gets a number. `save_version` is a snapshot with the message `version: <name>` and no push. The registration line is now `claude mcp add -s user slate -- slate mcp` so every repository sees the server; the old local registration keeps working.
 
+147. S10 follows ADR 0015 with one history repository, not one per project as the first plan said: Restore and the version list of a note that lived in an ordinary folder before it became a project stay in one place, and a list of changes of a folder is `git log -- <folder>`. Clear History of a folder rewrites the history in a temporary bare copy (`--no-local` clone, `filter-branch --index-filter`, fetch back, move the branch), because `filter-branch` in the repository itself removed the folder from the disk in a test. After any clear the next push uses `--force` once (a marker file in the history repository).
+148. The large file limit is a constant, 50 MB, not a setting. Files above it are listed in `info/exclude` before every snapshot; a file that was already in the history stays tracked.
+
+149. The own-write window of the watcher is 10 s, not 2 s. An event counts as Slate's own write only when the hash on disk equals the hash Slate wrote, so a longer window cannot hide an edit by another tool; under load FSEvents reported Slate's writes after more than 2 s. `externalEditArrivesAsAPathChange` writes the file up to three times, because under load the folder event of the setup can arrive with the first write and turn it into a rescan.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -345,6 +350,13 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 63. Run `Scripts/install.sh`, then `claude mcp remove slate` and `claude mcp add -s user slate -- slate mcp`. In a repository linked to MyApp (Link Repository…), start Claude Code and ask "start the task ABC-123 Fix login and note what you find": it calls `project_context` and `start_task`, and the task shows up in Slate within a second with In progress. Ask it to add a log file and to finish the session: the file is in the task's Files section and the Log has a dated entry. Start a new Claude Code session and ask "where did we stop?": it reads the log through `project_context`.
 64. In the same repository run `slate project`, `slate task status ABC-123 review` and `slate task log ABC-123 "Next: tests"`: the pill turns orange and the Log has the entry. In a git worktree of the repository `slate project` names the same project.
 
+### Versions (ADR 0015)
+
+65. Change a note twice with a pause of ten minutes (or press Save Version between). Open the clock button: pick the older version, "Changes since" shows the new lines in green and the old ones in red; "Text" shows the old text. Type "before cleanup" and press Save Version: it shows in bold at the top.
+66. Let an agent log progress in a task, then open the clock button in the list header of the project: the change says "Logged progress in …" with an Agent badge and names the note; click it and the note opens.
+67. Replace a PNG in a task folder with another picture, wait for a version, then "…" → Versions… on the file: Quick Look of the older version shows the old picture; Restore brings it back.
+68. In the Changes of a project, Clear History of MyApp… → Clear History: the list shows one version, the notes and files are still there, and the versions of notes in other folders are kept. Settings → General → Clear History…: each note has one version left.
+
 ## Known gaps
 
 - Tables, second round: a drag that starts in the text of the cell being edited selects text only; start the drag on another cell or use Shift-click.
@@ -356,7 +368,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - Esc closes the panel from the list and from the note text (S4); the search field clears on Esc first. The agent tested the editor part only in a test window.
 - Capture (M4): the field does not take pasted images or files yet (`SPEC.md` 3.4). The agent did not test that the source app keeps the focus; scripted key presses do not reach the panel (first gap above).
 - Search (M3): no progress bar or "Indexing 3,120 of 10,000" line during the first full scan (`UX.md` section 5). The list fills as the scan runs.
-- History (M5): no diff view and no preview of a version before Restore (Appendix B). The first snapshot of a large folder runs at launch in the background and can take seconds.
+- History (M5): the first snapshot of a large folder runs at launch in the background and can take seconds. Every snapshot walks the notes folder once to find files over 50 MB.
 - Quit waits up to 3 s for the save and the last snapshot; a slow push is cut off and runs at the next snapshot.
 - `.claude/skills/add-feature`, `add-use-case`, `build-and-run` and `update-docs` and the example in `.claude/rules/presentation.md` still show DevHub features.
 - Dark mode pass (M7) was done by reading the code: every colour is a `Theme` token, a `Tint` or a system colour, and the editor uses dynamic `NSColor`s. Nothing was looked at on screen.

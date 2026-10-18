@@ -28,6 +28,22 @@ package actor ShellRunner {
         }
     }
 
+    nonisolated package func runData(_ executable: String, _ arguments: [String], cwd: String?, environment: [String: String] = [:]) async throws -> (data: Data, exitCode: Int32) {
+        let command = CommandFormatter.displayCommand(executable, arguments)
+        do {
+            let result = try await withCheckedThrowingContinuation { continuation in
+                Self.blockingQueue.async {
+                    continuation.resume(with: Result { try Self.runBlockingData(executable, arguments, cwd: cwd, environment: environment) })
+                }
+            }
+            recorder.record(CommandRecord(command: command, cwd: cwd, exitCode: result.exitCode, error: nil, outputTail: ["\(result.data.count) bytes"]))
+            return result
+        } catch {
+            recorder.record(CommandRecord(command: command, cwd: cwd, exitCode: nil, error: error.localizedDescription, outputTail: []))
+            throw error
+        }
+    }
+
     func stream(
         _ executable: String,
         _ arguments: [String],
@@ -86,6 +102,17 @@ package actor ShellRunner {
             stderr: String(decoding: stderrData, as: UTF8.self),
             exitCode: process.terminationStatus
         )
+    }
+
+    private static func runBlockingData(_ executable: String, _ arguments: [String], cwd: String?, environment: [String: String]) throws -> (data: Data, exitCode: Int32) {
+        let process = makeProcess(executable, arguments, cwd: cwd, environment: environment)
+        let stdoutPipe = Pipe()
+        process.standardOutput = stdoutPipe
+        process.standardError = FileHandle.nullDevice
+        try process.run()
+        let data = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        return (data, process.terminationStatus)
     }
 
     private static func makeProcess(_ executable: String, _ arguments: [String], cwd: String?, environment extra: [String: String]) -> Process {

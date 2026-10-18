@@ -8,6 +8,8 @@ package final class SpyHistoryRepository: HistoryRepository, @unchecked Sendable
         case history(VaultPath)
         case contents(VaultPath, String)
         case push(String)
+        case changes(FolderPath?)
+        case clear(FolderPath?)
     }
 
     private let lock = NSLock()
@@ -17,6 +19,7 @@ package final class SpyHistoryRepository: HistoryRepository, @unchecked Sendable
     private var _snapshots: [VaultPath: [Snapshot]] = [:]
     private var _contents: [String: Data] = [:]
     private var _pushError: TestError?
+    private var _changes: [SnapshotChange] = []
 
     package init() {}
 
@@ -43,6 +46,31 @@ package final class SpyHistoryRepository: HistoryRepository, @unchecked Sendable
         lock.withLock {
             _snapshots[path, default: []].insert(snapshot, at: 0)
             _contents["\(snapshot.hash):\(path.rawValue)"] = Data(text.utf8)
+        }
+    }
+
+    package var changeList: [SnapshotChange] {
+        get { lock.withLock { _changes } }
+        set { lock.withLock { _changes = newValue } }
+    }
+
+    package func changes(in folder: FolderPath?, limit: Int) async throws -> [SnapshotChange] {
+        lock.withLock {
+            _calls.append(.changes(folder))
+            return Array(_changes.prefix(limit))
+        }
+    }
+
+    package func clear(_ folder: FolderPath?) async throws {
+        lock.withLock {
+            _calls.append(.clear(folder))
+            if let folder {
+                for path in _snapshots.keys where folder.contains(path) {
+                    _snapshots[path] = []
+                }
+            } else {
+                _snapshots = [:]
+            }
         }
     }
 

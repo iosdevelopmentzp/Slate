@@ -8,6 +8,7 @@ struct FileRowActions {
     let copyPath: () -> Void
     let rename: () -> Void
     let trash: () -> Void
+    let versions: () -> Void
     let drag: () -> NSItemProvider
 }
 
@@ -20,6 +21,7 @@ extension FileRowActions {
         copyPath: {},
         rename: {},
         trash: {},
+        versions: {},
         drag: { NSItemProvider() }
     )
 }

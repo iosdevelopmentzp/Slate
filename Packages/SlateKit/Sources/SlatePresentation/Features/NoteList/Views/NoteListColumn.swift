@@ -8,6 +8,7 @@ struct NoteListColumn: View {
     @Environment(WindowLayout.self) private var layout
     @Environment(\.surface) private var surface
     @FocusState private var isSearchFocused: Bool
+    @State private var showsChanges = false
 
     var body: some View {
         @Bindable var store = store
@@ -26,6 +27,18 @@ struct NoteListColumn: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
                 Spacer(minLength: 8)
+                if let folder = store.source.folder {
+                    IconButton(systemImage: "clock.arrow.circlepath", help: "Changes in this folder") {
+                        showsChanges.toggle()
+                    }
+                    .popover(isPresented: $showsChanges, arrowEdge: .bottom) {
+                        ChangesView(folder: folder) { path in
+                            showsChanges = false
+                            store.open(path)
+                        }
+                    }
+                    .accessibilityLabel("Changes")
+                }
                 RoundButton(systemImage: "plus", help: "New note (⌘N)", isProminent: true) {
                     Task { await store.createNote() }
                 }

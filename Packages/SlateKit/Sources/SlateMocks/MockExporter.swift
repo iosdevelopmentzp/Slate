@@ -14,6 +14,10 @@ struct MockExporter: NoteExporting {
         URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
     }
 
+    func temporaryFile(_ data: Data, fileName: String) async throws -> URL {
+        URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
+    }
+
     func copyToDownloads(_ source: URL) async throws -> URL {
         URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(source.lastPathComponent)
     }

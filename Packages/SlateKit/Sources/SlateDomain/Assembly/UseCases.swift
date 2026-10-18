@@ -37,6 +37,8 @@ package struct UseCases: Sendable {
     package let purgeTrash: PurgeTrashUseCase
     package let snapshot: SnapshotHistoryUseCase
     package let restoreVersion: RestoreVersionUseCase
+    package let restoreFileVersion: RestoreFileVersionUseCase
+    package let clearHistory: ClearHistoryUseCase
     package let toggleTodo: ToggleTodoUseCase
     package let runAction: RunActionUseCase
     package let openTarget: OpenTargetUseCase
@@ -74,6 +76,8 @@ package struct UseCases: Sendable {
         purgeTrash = PurgeTrashUseCase(trash: ports.trash, keyValues: ports.keyValues, clock: ports.clock)
         snapshot = SnapshotHistoryUseCase(history: ports.history, keyValues: ports.keyValues)
         restoreVersion = RestoreVersionUseCase(history: ports.history, files: ports.files, save: save)
+        restoreFileVersion = RestoreFileVersionUseCase(history: ports.history, files: ports.files)
+        clearHistory = ClearHistoryUseCase(history: ports.history)
         toggleTodo = ToggleTodoUseCase(files: ports.files, index: ports.index, save: save)
         runAction = RunActionUseCase(runner: ports.actions, append: append)
         openTarget = OpenTargetUseCase(index: ports.index, create: create)

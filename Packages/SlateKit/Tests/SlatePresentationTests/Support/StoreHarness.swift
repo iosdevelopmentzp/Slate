@@ -109,6 +109,18 @@ final class StoreHarness {
         toaster: toaster,
         events: events
     )
+    lazy var versions = VersionsStore(
+        history: ports.history,
+        files: ports.files,
+        snapshot: useCases.snapshot,
+        restoreFileVersion: useCases.restoreFileVersion,
+        clearHistory: useCases.clearHistory,
+        exporter: ports.exporter,
+        workspace: ports.workspace,
+        toaster: toaster,
+        activity: activity,
+        events: events
+    )
     lazy var search = SearchStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
     lazy var panelVisibility = PanelVisibility()
     lazy var feed = VaultChangeFeed(watcher: ports.watcher, reindex: useCases.reindex, activity: activity, events: events, agentChanges: ports.agentChanges, clock: ports.clock)

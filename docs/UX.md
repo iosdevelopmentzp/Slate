@@ -95,7 +95,7 @@ No hex values outside `Theme`. Both appearances checked in every preview.
 | Loading a large folder | Cards fill in as the scan runs; a thin progress line under the search field until it ends |
 | Saving | "Saved" fades in at the top-right of the editor for one second |
 | Conflict | The banner |
-| Versions | The clock button next to the title lists versions with Restore; nothing else about history is visible except "Back up to" in Settings |
+| Versions | The clock button next to the title opens a 640 pt popover: "Name this version" with Save Version, the versions on the left (a named version shows its name in bold with a bookmark, an agent's version has a purple Agent badge), and on the right the chosen version as "Changes since" (added lines green with +, removed lines red with −, struck through) or as "Text", with Restore. The list header of a folder has the same clock button for the Changes of the folder: the last 100 versions, each with what happened in plain words and the notes and files added, changed or removed; a click on a note opens it; "Clear History of <folder>…" at the bottom asks inline first. A file's "…" menu has Versions… with Quick Look and Restore per version. Settings → General has Clear History… under Back up to (ADR 0015) |
 | Error from a command | A toast with one line and "Details", which opens the Activity list from Settings → General → Check-up |
 | Trash | Cards with "Restore" and "Delete now" on hover; the footer line "Notes are removed from the Trash after 30 days." |
 
@@ -161,4 +161,4 @@ All of them appear in the main menu of the window.
 6. No modal dialog, no alert, no sheet.
 7. Keyboard: reachable with Tab, shortcuts from section 8, Esc goes back.
 8. Colours only through `Theme`, the accent and the folder colours.
-9. Nothing on screen names a kind, a ticket, a tag, a status, the index, the vault or a snapshot.
+9. Nothing on screen names a kind, a ticket, a tag, a status, the index, the vault or a snapshot. Exception (ADR 0014): inside a project, task folders and task notes show their status, ticket and branch.

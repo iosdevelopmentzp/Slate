@@ -23,6 +23,6 @@ import Testing
 
         writes.record(path, hash: hash, at: now)
 
-        #expect(writes.isOwn(path, diskHash: hash, at: now.addingTimeInterval(3)) == false)
+        #expect(writes.isOwn(path, diskHash: hash, at: now.addingTimeInterval(OwnWrites.window + 1)) == false)
     }
 }

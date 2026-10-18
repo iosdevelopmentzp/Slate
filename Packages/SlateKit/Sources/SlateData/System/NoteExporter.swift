@@ -39,6 +39,14 @@ struct NoteExporter: NoteExporting {
         return url
     }
 
+    func temporaryFile(_ data: Data, fileName: String) async throws -> URL {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("Slate versions", isDirectory: true).appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let url = folder.appendingPathComponent(FileNamePolicy.cleaned(fileName) ?? "version")
+        try data.write(to: url, options: .atomic)
+        return url
+    }
+
     private func freeURL(for fileName: String) -> URL {
         let cleaned = fileName.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
         let base = (cleaned as NSString).deletingPathExtension

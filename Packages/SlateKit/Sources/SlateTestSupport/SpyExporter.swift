@@ -31,6 +31,11 @@ package final class SpyExporter: NoteExporting, @unchecked Sendable {
         return URL(fileURLWithPath: "/Downloads").appendingPathComponent(fileName)
     }
 
+    package func temporaryFile(_ data: Data, fileName: String) async throws -> URL {
+        lock.withLock { _saved["tmp/\(fileName)"] = data }
+        return URL(fileURLWithPath: "/tmp").appendingPathComponent(fileName)
+    }
+
     package func copyToDownloads(_ source: URL) async throws -> URL {
         if let copyError { throw copyError }
         lock.withLock { _copied.append(source) }

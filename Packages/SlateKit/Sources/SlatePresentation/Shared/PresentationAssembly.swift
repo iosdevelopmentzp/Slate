@@ -20,6 +20,7 @@ package final class PresentationAssembly {
     let settings: SettingsStore
     let capture: CaptureStore
     let history: HistoryStore
+    let versions: VersionsStore
 
     package init(ports: Ports, useCases: UseCases, activity: ActivityLog, vaultRoot: URL) {
         events = AppEvents()
@@ -112,6 +113,18 @@ package final class PresentationAssembly {
             store: ports.keyValues,
             activity: activity,
             toaster: toaster,
+            events: events
+        )
+        versions = VersionsStore(
+            history: ports.history,
+            files: ports.files,
+            snapshot: useCases.snapshot,
+            restoreFileVersion: useCases.restoreFileVersion,
+            clearHistory: useCases.clearHistory,
+            exporter: ports.exporter,
+            workspace: ports.workspace,
+            toaster: toaster,
+            activity: activity,
             events: events
         )
     }

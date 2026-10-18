@@ -35,6 +35,19 @@ import Testing
         #expect(store.failure == nil)
     }
 
+    @Test func openSelectsANoteByPathAndShowsItsFolder() async throws {
+        let path = harness.seed("Notes/Sub/B.md", id: "b")
+        try await harness.index()
+        await store.refresh()
+        harness.navigator.show(.space(SpaceName(rawValue: "Inbox")))
+
+        store.open(path)
+        store.open(VaultPath(rawValue: "Notes/Missing.md"))
+
+        #expect(harness.navigator.selectedNote == NoteID(rawValue: "b"))
+        #expect(harness.navigator.source == .folder(FolderPath(rawValue: "Notes/Sub")))
+    }
+
     @Test func refreshFailureIsShownAndLogged() async {
         harness.spies.index.summariesError = .scripted("disk gone")
 

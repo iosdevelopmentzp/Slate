@@ -2,7 +2,7 @@ import Foundation
 import SlateDomain
 
 final class OwnWrites: @unchecked Sendable {
-    static let window: TimeInterval = 2
+    static let window: TimeInterval = 10
 
     private struct Entry {
         let hash: ContentHash?

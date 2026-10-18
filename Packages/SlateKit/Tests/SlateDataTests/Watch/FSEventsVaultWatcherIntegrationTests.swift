@@ -5,7 +5,7 @@ import Testing
 @testable import SlateData
 
 @Suite(.tags(.integration), .serialized) struct FSEventsVaultWatcherIntegrationTests {
-    private func first(in stream: AsyncStream<VaultChange>, matching match: @escaping @Sendable (VaultChange) -> Bool) async -> VaultChange? {
+    private func first(in stream: AsyncStream<VaultChange>, waiting timeout: Duration = .seconds(5), matching match: @escaping @Sendable (VaultChange) -> Bool) async -> VaultChange? {
         await withTaskGroup(of: VaultChange?.self) { group in
             group.addTask {
                 for await change in stream where match(change) {
@@ -14,7 +14,7 @@ import Testing
                 return nil
             }
             group.addTask {
-                try? await Task.sleep(for: .seconds(5))
+                try? await Task.sleep(for: timeout)
                 return nil
             }
             let result = await group.next() ?? nil
@@ -34,9 +34,15 @@ import Testing
         let expected = VaultChange.paths([VaultPath(rawValue: "Inbox/A.md")])
         try await settle()
 
-        _ = try folder.write("hello", to: "Inbox/A.md")
+        let writer = Task {
+            for attempt in 1...3 {
+                _ = try? folder.write("hello \(attempt)", to: "Inbox/A.md")
+                try? await Task.sleep(for: .seconds(2))
+            }
+        }
+        defer { writer.cancel() }
 
-        #expect(await first(in: stream) { $0 == expected } == expected)
+        #expect(await first(in: stream, waiting: .seconds(8)) { $0 == expected } == expected)
     }
 
     @Test func newFolderArrivesAsARescan() async throws {

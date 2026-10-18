@@ -562,7 +562,6 @@ Window: the same as the panel with a sidebar on the left: Spaces (with counts), 
 
 ## Appendix B. Ideas backlog (not required)
 
-- Note history diff view (git diff rendered side by side).
 - "Standup from Today" through `claude -p`, posted to Slack through a DevHub Slack command.
 - Clipboard history limited to the last 10 text items, for pasting into notes.
 - A "Reading" space with a web clipper (Safari Services + readability conversion).

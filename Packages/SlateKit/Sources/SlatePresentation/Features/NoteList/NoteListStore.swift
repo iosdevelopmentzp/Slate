@@ -83,6 +83,14 @@ final class NoteListStore: NoteLookup {
         vaultRoot.appendingPathComponent(summary.path.rawValue, isDirectory: false)
     }
 
+    func open(_ path: VaultPath) {
+        guard let summary = summaries.first(where: { $0.path == path }) else { return }
+        if let folder = path.folderPath, source.shows(path) == false {
+            navigator.show(.showing(folder))
+        }
+        navigator.select(summary.id)
+    }
+
     func copyPath(_ summary: NoteSummary) {
         toaster.copy(fileURL(for: summary).path, label: "Path")
     }

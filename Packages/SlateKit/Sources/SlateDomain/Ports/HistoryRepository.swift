@@ -9,4 +9,6 @@ package protocol HistoryRepository: Sendable {
     func push(to remote: String) async throws
     func lastSnapshot() async throws -> Snapshot?
     func canReach(_ remote: String) async -> Bool
+    func changes(in folder: FolderPath?, limit: Int) async throws -> [SnapshotChange]
+    func clear(_ folder: FolderPath?) async throws
 }

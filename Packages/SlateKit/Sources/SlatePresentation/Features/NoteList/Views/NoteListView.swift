@@ -11,6 +11,7 @@ struct NoteListView: View {
 
     @State private var dropTarget: FolderPath?
     @State private var isFileDropTarget = false
+    @State private var versionsOf: VaultPath?
 
     var body: some View {
         if store.source == .trash {
@@ -97,6 +98,9 @@ struct NoteListView: View {
             )
         } else {
             FileRow(model: FileRowMapper.model(for: meta, now: now), url: files.url(for: meta.path), actions: fileActions(for: meta.path))
+                .popover(isPresented: Binding(get: { versionsOf == meta.path }, set: { if $0 == false { versionsOf = nil } }), arrowEdge: .trailing) {
+                    FileVersionsView(path: meta.path)
+                }
         }
     }
 
@@ -109,6 +113,7 @@ struct NoteListView: View {
             copyPath: { files.copyPath(path) },
             rename: { files.startRename(path) },
             trash: { Task { await files.trash(path) } },
+            versions: { versionsOf = path },
             drag: { files.dragProvider(for: path) }
         )
     }

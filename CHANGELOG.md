@@ -7,6 +7,10 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Versions you can look at (ADR 0015). The clock button of a note shows the versions on the left and, for the one you pick, what changed since then (added lines green, removed lines red) or its whole text, with Restore. Name a version with Save Version, like "before refactor"; it shows in bold with a bookmark, and agents can do the same with `save_version`.
+- Changes of a folder: the clock button in the list header shows who changed what and when, with an Agent badge on the changes made by agents, and the notes and files added, changed or removed. Click a note to open it.
+- Versions of files: Versions… in the menu of a file shows its earlier versions with Quick Look and Restore. Files larger than 50 MB are not kept.
+- Clear History of a folder (in its Changes) or of everything (Settings → General) keeps only the notes and files as they are now. Slate asks first, and the next backup replaces the old history on the remote.
 - Agents keep the documentation of their task in Slate. `slate mcp` finds the project of the repository it runs in (also from a git worktree or a fresh clone with the same remote) and tells the agent so when the session starts. Seven new tools: `project_context` (the project, its tasks and the task of the current branch), `start_task`, `set_task_status`, `log_progress` (a dated entry in the Log section), `add_file`, `list_files` and `save_version`. Register the server once for every repository with `claude mcp add -s user slate -- slate mcp`.
 - `slate project` shows the project of the current repository and its tasks, `slate project add MyApp --repo .` links a repository, and `slate task new`, `slate task status` and `slate task log` work with a task from the terminal. Link Repository… in the app also stores the remote, and the main checkout when you pick a worktree.
 - Import Folder… in the + menu next to Projects, or drop a folder from Finder on the Projects label. Slate copies the folder with its notes, files and sub-folders into a new project and says how many came in. A hidden folder such as `myapp/.slate` gets the name of its repository, and the repository is linked to the project. The original folder does not change.
@@ -75,6 +79,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - Note kinds and the New menu, tasks, ticket and branch chips, status, `⌘⇧D`, Today and daily notes (`⌥⌘T`, `⌘[`, `⌘]`), snippets, meetings, tags and tag chips, Insert Template, saved searches, Open TODOs, the palette (`⌘K`), actions, Copy for Slack, Copy as Markdown, Save as HTML and PDF, Float on Top and note windows, the outline, ticket details, the Links and History pages of Settings, the history and push state and the Activity button in the footer. The files and the command line keep working; the code for them is in commit `545e0d6`.
 
 ### Fixed
+- An earlier version of an image or another binary file came back broken: the history read it as text. It now comes back byte for byte.
 - Quick Look shows the image again when you open it from the panel. The preview opened under the panel, so it looked empty; now it opens above every Slate window.
 
 ### Added

@@ -70,6 +70,7 @@ struct GeneralSettingsView: View {
                     }
                     .disabled(history.isSnapshotting || remote.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
+                ClearHistoryRow()
                 Picker("Keep notes in the Trash for", selection: $settings.trashRetentionDays) {
                     ForEach(SettingsStore.retentionChoices, id: \.self) { days in
                         Text("\(days) days").tag(days)
