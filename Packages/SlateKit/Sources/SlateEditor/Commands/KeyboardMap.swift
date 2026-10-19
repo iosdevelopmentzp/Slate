@@ -8,6 +8,31 @@ enum KeyboardMap {
     static let rightBracket: UInt16 = 30
     static let arrowUp: UInt16 = 126
     static let arrowDown: UInt16 = 125
+    static let arrowLeft: UInt16 = 123
+    static let arrowRight: UInt16 = 124
+
+    static func tableMove(for event: NSEvent) -> TableMenu.Action? {
+        guard event.modifierFlags.intersection([.command, .shift, .option, .control]) == [.command, .option] else { return nil }
+        switch event.keyCode {
+        case arrowUp: return .moveRowUp
+        case arrowDown: return .moveRowDown
+        case arrowLeft: return .moveColumnLeft
+        case arrowRight: return .moveColumnRight
+        default: return nil
+        }
+    }
+
+    static func tableKey(for action: TableMenu.Action) -> String? {
+        let key: Int
+        switch action {
+        case .moveRowUp: key = NSUpArrowFunctionKey
+        case .moveRowDown: key = NSDownArrowFunctionKey
+        case .moveColumnLeft: key = NSLeftArrowFunctionKey
+        case .moveColumnRight: key = NSRightArrowFunctionKey
+        default: return nil
+        }
+        return UnicodeScalar(key).map { String(Character($0)) }
+    }
 
     static func caretDirection(for event: NSEvent) -> CaretDirection? {
         guard event.modifierFlags.intersection([.command, .shift, .option, .control]) == [.control, .shift] else { return nil }

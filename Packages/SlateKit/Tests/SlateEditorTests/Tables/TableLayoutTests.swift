@@ -40,4 +40,30 @@ import Testing
         #expect(layout.column(atX: 120) == 1)
         #expect(layout.column(atX: 500) == 2)
     }
+
+    @Test func gripsShowForTheRowAndColumnUnderThePointer() {
+        let layout = TableLayout(columnWidths: [60, 80], rowHeights: [30, 30, 30])
+
+        #expect(layout.grips(near: CGPoint(x: 30, y: 45)) == [.row(1), .column(0)])
+        #expect(layout.grips(near: CGPoint(x: 100, y: 15)) == [.column(1)])
+        #expect(layout.grip(at: CGPoint(x: 3, y: 45)) == .row(1))
+    }
+
+    @Test func aPlusShowsAtABorderNearTheEdge() {
+        let layout = TableLayout(columnWidths: [60, 80], rowHeights: [30, 30, 30])
+
+        #expect(layout.grip(at: CGPoint(x: 5, y: 61)) == .insertRow(2))
+        #expect(layout.grip(at: CGPoint(x: 61, y: 4)) == .insertColumn(1))
+        #expect(layout.grips(near: CGPoint(x: 40, y: 61)).contains(.insertRow(2)) == false)
+        #expect(layout.grips(near: CGPoint(x: 5, y: 1)).contains(.insertRow(0)) == false)
+    }
+
+    @Test func aDropGoesToTheNearestBorder() {
+        let layout = TableLayout(columnWidths: [60, 80], rowHeights: [30, 30, 30])
+
+        #expect(layout.rowInsertion(atY: 5) == 1)
+        #expect(layout.rowInsertion(atY: 70) == 2)
+        #expect(layout.rowInsertion(atY: 200) == 3)
+        #expect(layout.columnInsertion(atX: 130) == 2)
+    }
 }

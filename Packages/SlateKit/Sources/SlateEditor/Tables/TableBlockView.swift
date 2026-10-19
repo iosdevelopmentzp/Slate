@@ -6,6 +6,8 @@ final class TableBlockView: NSView, NSTextViewDelegate {
     private(set) var before: TableModel?
     private let editor = TableCellEditor.make()
     private var isHovered = false
+    var hoverPoint: CGPoint?
+    var grab: TableGrab?
     var scrollOffset: CGFloat = 0
     var cellSelection: TableCellRange?
     private var dragStart: TableCellIndex?
@@ -119,6 +121,9 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         if isHovered {
             drawHandles(layout: layout, colors: colors)
         }
+        if isHovered || grab != nil {
+            drawGrips(layout: layout, colors: colors)
+        }
         if isHovered, let scroller = scrollerRect(layout: layout) {
             colors.secondaryText.withAlphaComponent(0.35).setFill()
             NSBezierPath(roundedRect: scroller, xRadius: 1.5, yRadius: 1.5).fill()
@@ -155,7 +160,7 @@ final class TableBlockView: NSView, NSTextViewDelegate {
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
         if let tracking { removeTrackingArea(tracking) }
-        let area = NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect], owner: self)
+        let area = NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .mouseMoved, .activeInKeyWindow, .inVisibleRect], owner: self)
         addTrackingArea(area)
         tracking = area
     }
@@ -167,12 +172,26 @@ final class TableBlockView: NSView, NSTextViewDelegate {
 
     override func mouseExited(with event: NSEvent) {
         isHovered = false
+        hoverPoint = nil
         needsDisplay = true
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        let layout = currentLayout
+        let changed = layout.grips(near: point) != hoverPoint.map(layout.grips(near:)) || layout.grip(at: point) != hoverPoint.flatMap(layout.grip(at:))
+        hoverPoint = point
+        isHovered = true
+        if changed { needsDisplay = true }
     }
 
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
         let layout = currentLayout
+        if let grip = layout.grip(at: point) {
+            pressGrip(grip, at: point)
+            return
+        }
         if let handle = handles(layout: layout).first(where: { $0.0.insetBy(dx: -2, dy: -2).contains(point) })?.1 {
             switch handle {
             case .column: addColumn(at: model.columnCount, focus: TableCellIndex(row: 0, column: model.columnCount))
@@ -202,6 +221,10 @@ final class TableBlockView: NSView, NSTextViewDelegate {
     }
 
     override func mouseDragged(with event: NSEvent) {
+        if grab != nil {
+            dragGrip(to: convert(event.locationInWindow, from: nil))
+            return
+        }
         guard let start = dragStart, let index = currentLayout.cell(at: convert(event.locationInWindow, from: nil)) else { return }
         guard index != start || cellSelection != nil else { return }
         extendSelection(from: start, to: index)
@@ -209,6 +232,10 @@ final class TableBlockView: NSView, NSTextViewDelegate {
 
     override func mouseUp(with event: NSEvent) {
         dragStart = nil
+        if grab != nil {
+            releaseGrip()
+            return
+        }
         super.mouseUp(with: event)
     }
 
@@ -520,12 +547,10 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         var updated = attachment.model
         transform(&updated)
         attachment.setLiveModel(updated)
-        let wasEditing = editing != nil || focus != nil
         commit()
-        if let focus, updated.contains(focus) {
-            beginEditing(focus)
-        } else if wasEditing, let editing, updated.contains(editing) {
-            beginEditing(editing)
+        if let target = focus ?? editing, updated.contains(target) {
+            editing = nil
+            beginEditing(target)
         } else if editing != nil {
             endEditing(commit: false)
         }
@@ -596,6 +621,7 @@ final class TableBlockView: NSView, NSTextViewDelegate {
         case .rowBelow: change({ $0.insertRow(at: index.row + 1) }, focus: nil)
         case .columnLeft: change({ $0.insertColumn(at: index.column) }, focus: nil)
         case .columnRight: change({ $0.insertColumn(at: index.column + 1) }, focus: nil)
+        case .moveRowUp, .moveRowDown, .moveColumnLeft, .moveColumnRight: move(choice.action, at: index, selection: selection)
         case .align(let alignment): change({ $0.setAlignment(alignment, columns: selection?.columns ?? index.column...index.column) }, focus: nil)
         case .deleteRow:
             clearCellSelection()

@@ -44,6 +44,10 @@ final class TableCellEditor: NSTextView {
     }
 
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if window?.firstResponder === self, let action = KeyboardMap.tableMove(for: event), let table, let editing = table.editing {
+            table.move(action, at: editing, selection: nil)
+            return true
+        }
         guard window?.firstResponder === self, let command = KeyboardMap.command(for: event) else {
             return super.performKeyEquivalent(with: event)
         }

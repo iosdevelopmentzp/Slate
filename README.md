@@ -22,7 +22,7 @@ The owner takes these on a real screen and puts them in `docs/screenshots/`.
 1. **Folders.** Make a folder with "+ New folder" or `⇧⌘N`. Double-click a folder to rename it. Right-click it to change the colour or the icon, to move it, or to delete it. When you delete a folder, its notes move to the quick note folder, and a toast offers Undo.
 2. **Notes.** `⌘N` makes a note in the current folder. A note card shows the title, the date and two lines of text. Drag a card onto a folder to move the note. Pin, Move to, Duplicate and Move to Trash are in the "…" button and the right-click menu.
 3. **Formatted text.** The format bar and the Format menu set the style: Title, Heading, Subheading, Body, Code block, bold, italic, strikethrough, checklist, bulleted and numbered lists, quote, link and image. You see the result, not Markdown marks.
-4. **Tables.** The Table button or `⌥⌘T` adds a table. Click a cell to type; Tab, Enter and the arrow keys move between cells, and ⇧Enter starts a new line in the cell. The "+" strips on hover add a column or a row, and the right-click menu adds, aligns and deletes rows and columns. Drop or paste an image into a cell to show a thumbnail there. Select lines and press Table to turn them into a table. Shift-click or drag to select several cells, then copy, paste, clear or format them together. Wide tables scroll sideways, and Find in Note searches the cells. In the file a table is a GitHub table with `|`, so other apps can read it.
+4. **Tables.** The Table button or `⌥⌘T` adds a table. Click a cell to type; Tab, Enter and the arrow keys move between cells, and ⇧Enter starts a new line in the cell. The "+" strips on hover add a column or a row at the end, and a round "+" on the line between two rows or two columns adds one there. Drag the small grip of a row or a column to move it, or press `⌥⌘` with an arrow. The right-click menu adds, moves, aligns and deletes rows and columns. Drop or paste an image into a cell to show a thumbnail there. Select lines and press Table to turn them into a table. Shift-click or drag to select several cells, then copy, paste, clear or format them together. Wide tables scroll sideways, and Find in Note searches the cells. In the file a table is a GitHub table with `|`, so other apps can read it.
 5. **Images in the text.** Paste an image, drag one in, use the Image button, or press `⇧⌘S` for a screenshot. Double-click an image to see it large. Drag the grip at its corner to change its size, and press the round button on it to save a copy to Downloads.
 6. **Quick note.** `⌃⌥Space` opens a small field from any app. Enter saves the note, `⌘Enter` saves and opens it.
 7. **Search.** `⌘F` searches the titles and the text of the current folder. "Search all notes" searches every folder.
@@ -52,6 +52,7 @@ The owner takes these on a real screen and puts them in `docs/screenshots/`.
 | `⇧⌘A` | Attach a file |
 | `⌃⇧↑`, `⌃⇧↓` | Add a caret on the line above or below, then type at every caret. Esc leaves one caret |
 | `⌥⌘T` | Table |
+| `⌥⌘↑`, `⌥⌘↓`, `⌥⌘←`, `⌥⌘→` | In a table: move the row up or down, the column left or right |
 | `⌥⇧⌘J` | Format the selected JSON, or the code block at the caret |
 | `⌘,` | Settings |
 | `⌘W` | Hide the window. The Dock icon, the menu bar icon or `⌥⌘N` shows it again |

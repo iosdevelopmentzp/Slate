@@ -6,6 +6,10 @@ enum TableMenu {
         case rowBelow
         case columnLeft
         case columnRight
+        case moveRowUp
+        case moveRowDown
+        case moveColumnLeft
+        case moveColumnRight
         case align(TableAlignment)
         case copyMarkdown
         case copyText
@@ -43,6 +47,11 @@ enum TableMenu {
             ("Add Column Left", .columnLeft, true, false),
             ("Add Column Right", .columnRight, true, false),
             ("-", .deleteTable, true, false),
+            ("Move Row Up", .moveRowUp, model.canMoveRows(rows, to: rows.lowerBound - 1), false),
+            ("Move Row Down", .moveRowDown, model.canMoveRows(rows, to: rows.upperBound + 2), false),
+            ("Move Column Left", .moveColumnLeft, model.canMoveColumns(columns, to: columns.lowerBound - 1), false),
+            ("Move Column Right", .moveColumnRight, model.canMoveColumns(columns, to: columns.upperBound + 2), false),
+            ("-", .deleteTable, true, false),
             ("Align Left", .align(.left), true, alignment == .left || alignment == .none),
             ("Align Center", .align(.center), true, alignment == .center),
             ("Align Right", .align(.right), true, alignment == .right),
@@ -66,6 +75,10 @@ enum TableMenu {
             item.isEnabled = enabled
             item.state = isOn ? .on : .off
             item.representedObject = Choice(index: index, action: action)
+            if let key = KeyboardMap.tableKey(for: action) {
+                item.keyEquivalent = key
+                item.keyEquivalentModifierMask = [.command, .option]
+            }
             menu.addItem(item)
         }
         return menu

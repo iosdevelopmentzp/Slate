@@ -100,6 +100,10 @@ extension TableBlockView {
     }
 
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if window?.firstResponder === self, let range = cellSelection, let action = KeyboardMap.tableMove(for: event) {
+            move(action, at: range.head, selection: range)
+            return true
+        }
         guard cellSelection != nil, window?.firstResponder === self, let command = KeyboardMap.command(for: event), case .inline(let flag) = command else {
             return super.performKeyEquivalent(with: event)
         }

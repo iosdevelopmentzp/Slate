@@ -299,4 +299,74 @@ import Testing
         #expect(thumbnail.bounds.size == CGSize(width: 60, height: 30))
         #expect(harness.markdown == source)
     }
+
+    private func fill(_ view: TableBlockView) {
+        for text in ["h1", "h2", "a1", "a2", "b1", "b2"] {
+            type(text, in: view)
+            if text != "b2" { command(#selector(NSResponder.insertTab(_:)), in: view) }
+        }
+    }
+
+    private func key(_ code: UInt16, _ scalar: Int, in harness: EditorHarness) -> NSEvent? {
+        let text = UnicodeScalar(scalar).map { String(Character($0)) } ?? ""
+        return NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [.command, .option], timestamp: 0, windowNumber: harness.window.windowNumber, context: nil, characters: text, charactersIgnoringModifiers: text, isARepeat: false, keyCode: code)
+    }
+
+    @Test func optionCommandUpMovesTheRowAndTheCaretGoesWithIt() throws {
+        let (harness, view) = start()
+        fill(view)
+
+        let event = try #require(key(KeyboardMap.arrowUp, NSUpArrowFunctionKey, in: harness))
+        #expect(view.cellEditor.performKeyEquivalent(with: event))
+
+        #expect(view.editing == TableCellIndex(row: 1, column: 1))
+        #expect(harness.markdown == "Intro\n\n| h1 | h2 |\n| --- | --- |\n| b1 | b2 |\n| a1 | a2 |\n")
+    }
+
+    @Test func optionCommandRightMovesTheColumn() throws {
+        let (harness, view) = start()
+        fill(view)
+        view.beginEditing(TableCellIndex(row: 1, column: 0))
+
+        let event = try #require(key(KeyboardMap.arrowRight, NSRightArrowFunctionKey, in: harness))
+        #expect(view.cellEditor.performKeyEquivalent(with: event))
+
+        #expect(view.editing == TableCellIndex(row: 1, column: 1))
+        #expect(harness.markdown == "Intro\n\n| h2 | h1 |\n| --- | --- |\n| a2 | a1 |\n| b2 | b1 |\n")
+    }
+
+    @Test func draggingARowGripMovesTheRow() {
+        let (harness, view) = start()
+        fill(view)
+        let layout = view.currentLayout
+
+        view.pressGrip(.row(2), at: CGPoint(x: 3, y: layout.cellRect(TableCellIndex(row: 2, column: 0)).midY))
+        view.dragGrip(to: CGPoint(x: 3, y: layout.rowTop(1) + 2))
+        view.releaseGrip()
+
+        #expect(harness.markdown == "Intro\n\n| h1 | h2 |\n| --- | --- |\n| b1 | b2 |\n| a1 | a2 |\n")
+    }
+
+    @Test func thePlusAtABorderAddsARowThere() {
+        let (harness, view) = start()
+        fill(view)
+
+        view.pressGrip(.insertRow(2), at: .zero)
+
+        #expect(view.editing == TableCellIndex(row: 2, column: 0))
+        #expect(harness.markdown == "Intro\n\n| h1 | h2 |\n| --- | --- |\n| a1 | a2 |\n| | |\n| b1 | b2 |\n")
+    }
+
+    @Test func theMenuMovesAColumnLeft() {
+        let (harness, view) = start()
+        fill(view)
+        let menu = TableMenu.menu(for: TableCellIndex(row: 1, column: 1), model: view.attachment?.model ?? .empty(), target: view)
+        let item = menu.items.first { $0.title == "Move Column Left" }
+
+        #expect(item?.isEnabled == true)
+        #expect(menu.items.first { $0.title == "Move Column Right" }?.isEnabled == false)
+        if let item { view.tableMenuAction(item) }
+
+        #expect(harness.markdown == "Intro\n\n| h2 | h1 |\n| --- | --- |\n| a2 | a1 |\n| b2 | b1 |\n")
+    }
 }

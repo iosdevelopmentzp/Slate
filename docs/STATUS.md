@@ -164,6 +164,12 @@ Numbered. What, then why. A later session must not undo these without a new numb
 84. Select a word, press `⌘K` and type an address at once: the letters go into the Link to field, not into the note. Enter makes the link.
 85. Click in a link: a small bar under it shows the address (or the note name) with Open, Edit, Copy and Remove. Edit opens the link window with the text and the address; change the text and press Enter: the link shows the new text.
 86. In the link window, type the start of a note name: the field completes it from the notes list. Save: the link is `[[Note|text]]` in the file and `⌘`-click opens the note. Right-click a link in the text and in a table cell: the menu starts with Open Link, Edit Link…, Copy Link Address and Remove Link.
+
+### Table rows and columns
+
+87. Move the pointer over a table: the row under it shows a small grip at its left edge, the column one at its top. Near the left edge, on the line between two rows, a round "+" shows; click it: an empty row appears there with the caret in it. The same at the top edge between two columns.
+88. Drag the grip of a body row up or down: an accent line shows the place, and the row moves there. Drag a column grip sideways: the column moves with its alignment. The header row has no grip.
+89. Click a grip: the row or the column is selected and the menu opens with Move Row Up and the other items. In a cell, `⌥⌘↑` and `⌥⌘↓` move the row and the caret stays in the same cell text; `⌥⌘←` and `⌥⌘→` move the column. Undo puts it back.
 80. The sort order is fixed to "date changed" with pinned notes first; the stored `list.sort` is no longer read. `UX.md` has no sort control.
 81. The window uses `.fullSizeContentView` with a transparent title bar; the sidebar title and, with the sidebar hidden, the list title leave 80 pt for the window buttons.
 82. The agent checks the look by rendering views offscreen with `NSHostingView.cacheDisplay` from a throwaway test (not committed). This found the colour problem of decision 78.
@@ -251,6 +257,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 150. The folder tree is a `FolderTree` index (parent → sorted children), built once in `VaultStore` when the folders change, together with the Move to targets. Before, `FolderTreeMapper.children` filtered every folder for every node, and every note card built the whole Move to list: with 2,238 folders one card took about 30 s. Now the tree and the menus of 60 cards take 0.13 s in a debug build. Import Folder… of a folder that holds `.git` copies only `.md` files; `Pods`, `Carthage`, `node_modules`, `DerivedData` and `build` folders are always skipped.
 151. Slate is one normal window with a Dock icon (ADR 0016). The close button and `⌘W` hide the window, the Dock icon, the menu bar icon and `⌥⌘N` show it on the current desktop (`moveToActiveSpace`), and the window is open or hidden at launch as it was at quit. The panel is gone; Quick note keeps its panel.
 152. The link window (`LinkPopover`) has two fields: Text and Link to. `LinkAddress` turns the Link to value into the link: a note name from the list or any text that is not an address becomes `[[Note]]`, an address with a scheme or a path stays as it is, and `example.com/x` gets `https://`. The window takes the keyboard when it opens (`makeKeyAndOrderFront`, again after the run loop and in `popoverDidShow`): before, the first key went into the note, and the transient popover closed at once. The link bar (`LinkBar`) is a subview of the text view, like the image buttons.
+153. Table grips (`TableGrip`, `TableLayout+Grips`) are drawn inside the cell padding, because the table view has room only at its right and bottom edge (the "+" strips). Moves are `TableModel.moveRows` and `moveColumns`; `TableModel.position(of:moving:to:)` maps the edited cell and the selection to their new place. A table change now reloads the edited cell from the model instead of writing the editor text into the old index, which put the old cell text into the moved row.
 
 ## Next steps
 

@@ -7,6 +7,8 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Tables: a round "+" on the line between two rows or two columns adds a row or a column there. Before, the "+" strips added only at the end, and a row in the middle needed the right-click menu.
+- Tables: rows and columns can be moved. Drag the small grip at the left of a row or at the top of a column, press `⌥⌘` with an arrow, or use Move Row Up, Move Row Down, Move Column Left and Move Column Right in the right-click menu. A click on a grip selects the row or the column and opens the menu. The header row stays first.
 - A click in a link shows a small bar under it with the address or the note name, and Open, Edit, Copy and Remove buttons. The right-click menu of a link has the same actions, in the text and in table cells.
 - The link window has a Text field next to the address, so you can change what a link shows. Link to takes a web address or the name of a note, and completes note names as you type. A note name makes a `[[Note|text]]` link.
 - `batch_edit` makes several small changes in one call, in one or more notes. Slate checks all of them first, so when one fails nothing is written, and it keeps one version for the whole batch.
