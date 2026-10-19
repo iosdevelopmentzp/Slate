@@ -152,25 +152,6 @@ Numbered. What, then why. A later session must not undo these without a new numb
 78. `Theme.base` and `Theme.surface` are own dynamic colours (light 0.955 / 1.0 white, dark 0.135 / 0.19 white). The system window and control background colours are too close on macOS 26 for cards to show. Every other colour stays a system colour.
 79. Accent buttons use `AccentButtonStyle` (own capsule in the accent colour), because `.borderedProminent` looks grey in a panel that is not the key window.
 
-### Slate as a window
-
-80. The Slate icon is in the Dock and in ⌘-Tab. Press Attach file and move to the file chooser: the Slate window stays. Choose a file: it is attached.
-81. Press the close button or `⌘W`: the window goes away, the previous app gets the focus, and Slate stays in the Dock. Click the Dock icon: the window comes back with the same folder and note.
-82. Leave the window on desktop 1, move to desktop 2 and click the menu bar icon (or press `⌥⌘N`): the window comes to desktop 2, and macOS does not switch back to desktop 1. Click the icon again: the window hides.
-90. Click in the Terminal, then click the menu bar icon: the Slate window opens in front of the Terminal and takes the keyboard. Do the same with Settings… from the right-click menu of the icon.
-83. Hide the window and quit Slate from the menu bar menu, then open Slate again: only the icons show. Show the window and quit: at the next launch the window opens.
-
-### Links
-
-84. Select a word, press `⌘K` and type an address at once: the letters go into the Link to field, not into the note. Enter makes the link.
-85. Click in a link: a small bar under it shows the address (or the note name) with Open, Edit, Copy and Remove. Edit opens the link window with the text and the address; change the text and press Enter: the link shows the new text.
-86. In the link window, type the start of a note name: the field completes it from the notes list. Save: the link is `[[Note|text]]` in the file and `⌘`-click opens the note. Right-click a link in the text and in a table cell: the menu starts with Open Link, Edit Link…, Copy Link Address and Remove Link. Click a link in a table cell and press `⌘K` (or the Link button, which is active in a cell): the link window opens with the cell link and stays. Change the address and press Enter: the cell link changes.
-
-### Table rows and columns
-
-87. Move the pointer over a table: the row under it shows a small grip at its left edge, the column one at its top. Near the left edge, on the line between two rows, a round "+" shows; click it: an empty row appears there with the caret in it. The same at the top edge between two columns.
-88. Drag the grip of a body row up or down: an accent line shows the place, and the row moves there. Drag a column grip sideways: the column moves with its alignment. The header row has no grip.
-89. Click a grip: the row or the column is selected and the menu opens with Move Row Up and the other items. In a cell, `⌥⌘↑` and `⌥⌘↓` move the row and the caret stays in the same cell text; `⌥⌘←` and `⌥⌘→` move the column. Undo puts it back.
 80. The sort order is fixed to "date changed" with pinned notes first; the stored `list.sort` is no longer read. `UX.md` has no sort control.
 81. The window uses `.fullSizeContentView` with a transparent title bar; the sidebar title and, with the sidebar hidden, the list title leave 80 pt for the window buttons.
 82. The agent checks the look by rendering views offscreen with `NSHostingView.cacheDisplay` from a throwaway test (not committed). This found the colour problem of decision 78.
@@ -259,6 +240,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 151. Slate is one normal window with a Dock icon (ADR 0016). The close button and `⌘W` hide the window, the Dock icon, the menu bar icon and `⌥⌘N` show it on the current desktop (`moveToActiveSpace`), and the window is open or hidden at launch as it was at quit. The panel is gone; Quick note keeps its panel.
 152. The link window (`LinkPopover`) has two fields: Text and Link to. `LinkAddress` turns the Link to value into the link: a note name from the list or any text that is not an address becomes `[[Note]]`, an address with a scheme or a path stays as it is, and `example.com/x` gets `https://`. The window takes the keyboard when it opens (`makeKeyAndOrderFront`, again after the run loop and in `popoverDidShow`): before, the first key went into the note, and the transient popover closed at once. The link bar (`LinkBar`) is a subview of the text view, like the image buttons. In a table cell the window is anchored to the cell editor; while it is open, `TableBlockView.textDidEndEditing` keeps the cell editing (`TableCellEditor.isEditingLink`), because removing the cell editor closes the popover.
 153. Table grips (`TableGrip`, `TableLayout+Grips`) are drawn inside the cell padding, because the table view has room only at its right and bottom edge (the "+" strips). Moves are `TableModel.moveRows` and `moveColumns`; `TableModel.position(of:moving:to:)` maps the edited cell and the selection to their new place. A table change now reloads the edited cell from the model instead of writing the editor text into the old index, which put the old cell text into the moved row.
+154. Slate activates itself with `NSApp.activate(ignoringOtherApps: true)` in `AppWindows` (the window, Settings, the return after a screenshot). The plain `NSApp.activate()` is a request that macOS refuses after a click on the status item, so the window opened behind the active app. The details are in `docs/PLAYBOOK.md` section 1.
+155. `Scripts/install.sh` signs the installed app and the `slate` command with the local certificate from `~/.config/slate/sign-identity` (ADR 0003 amendment). Ad-hoc builds asked for Documents access after every install, because macOS ties permissions to the signature. The hash lives outside the repository, so no name is in it (ADR 0006).
 
 ## Next steps
 
@@ -407,6 +390,27 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 
 78. In Claude Code, in a repository with a task in Slate, ask the agent to mark one Plan step done and to change one row of a table. The agent uses `replace_in_note` or `update_section`, not `update_note`. Open the note in Slate: only those lines changed, and the versions show "Changed" with the agent badge. Ask it to add a line at the top of a changelog section: the line is first.
 79. Ask the agent to mark the first Plan step done: it calls `set_plan_item`, and the next `project_context` shows `done: 1` and the next step. Ask for three changes at once: one `batch_edit` call, and the versions of the note show one agent version, not three.
+
+### Slate as a window
+
+80. The Slate icon is in the Dock and in ⌘-Tab. Press Attach file and move to the file chooser: the Slate window stays. Choose a file: it is attached.
+81. Press the close button or `⌘W`: the window goes away, the previous app gets the focus, and Slate stays in the Dock. Click the Dock icon: the window comes back with the same folder and note.
+82. Leave the window on desktop 1, move to desktop 2 and click the menu bar icon (or press `⌥⌘N`): the window comes to desktop 2, and macOS does not switch back to desktop 1. Click the icon again: the window hides.
+83. Hide the window and quit Slate from the menu bar menu, then open Slate again: only the icons show. Show the window and quit: at the next launch the window opens.
+84. Click in the Terminal, then click the menu bar icon: the Slate window opens in front of the Terminal and takes the keyboard. Do the same with Settings… from the right-click menu of the icon.
+85. Allow the access to Documents once after an install. Make a commit on `main` (the next install): Slate opens without asking again.
+
+### Links
+
+86. Select a word, press `⌘K` and type an address at once: the letters go into the Link to field, not into the note. Enter makes the link.
+87. Click in a link: a small bar under it shows the address (or the note name) with Open, Edit, Copy and Remove. Edit opens the link window with the text and the address; change the text and press Enter: the link shows the new text.
+88. In the link window, type the start of a note name: the field completes it from the notes list. Save: the link is `[[Note|text]]` in the file and `⌘`-click opens the note. Right-click a link in the text and in a table cell: the menu starts with Open Link, Edit Link…, Copy Link Address and Remove Link. Click a link in a table cell and press `⌘K` (or the Link button, which is active in a cell): the link window opens with the cell link and stays. Change the address and press Enter: the cell link changes.
+
+### Table rows and columns
+
+89. Move the pointer over a table: the row under it shows a small grip at its left edge, the column one at its top. Near the left edge, on the line between two rows, a round "+" shows; click it: an empty row appears there with the caret in it. The same at the top edge between two columns.
+90. Drag the grip of a body row up or down: an accent line shows the place, and the row moves there. Drag a column grip sideways: the column moves with its alignment. The header row has no grip.
+91. Click a grip: the row or the column is selected and the menu opens with Move Row Up and the other items. In a cell, `⌥⌘↑` and `⌥⌘↓` move the row and the caret stays in the same cell text; `⌥⌘←` and `⌥⌘→` move the column. Undo puts it back.
 
 ## Known gaps
 

@@ -16,3 +16,12 @@ The app runs `screencapture`, `git`, `open` and user scripts (actions), reads an
 - A rebuild changes the code signature; macOS may ask for the Screen Recording permission again. The bundle identifier stays stable to limit this.
 - Features that need an entitlement (iCloud container, App Groups, push) are out of reach by design.
 - If distribution is ever wanted, the Data layer is where sandbox adaptations would go (security-scoped bookmarks for the vault, an XPC helper for shell commands); the rest of the app would not change.
+
+## Amendment, 2026-10-19: a stable local signature
+
+Every install asked again for access to the Documents folder, because each ad-hoc build is a new app for macOS. The privacy permissions belong to the code signature.
+
+- Xcode still builds with "Sign to Run Locally" (ad-hoc).
+- `Scripts/install.sh` signs the installed app and the `slate` command again with a local certificate, when `SLATE_SIGN_IDENTITY` or the file `~/.config/slate/sign-identity` names one (the SHA-1 hash from `security find-identity -v -p codesigning`). An "Apple Development" certificate of a free account works. The designated requirement then names the certificate, not the build, so macOS keeps the permissions between installs.
+- The certificate name is never in the repository (ADR 0006). Without the setting, the install stays ad-hoc.
+- Still no notarization, no App Store, no sandbox, no hardened runtime.

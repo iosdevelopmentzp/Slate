@@ -19,7 +19,7 @@ Copy `AppWindows`, `MenuBarPanel`, `WindowLayout`, the drag and resize views and
 - **Windows.** `NSWindow` with `setFrameAutosaveName`, the same root view with a `Surface` environment value; `NSHostingController.sizingOptions = [.minSize]` so the window resizes by its edges.
 - **Appearance.** Slate follows the system appearance: do nothing. Never set `NSApp.appearance`: the menu bar icon label turns black on a dark menu bar.
 - **Launch at login:** `SMAppService.mainApp.register()`; status `requiresApproval` means System Settings → Login Items; show the path in the activity log.
-- **Ad-hoc signing.** Each rebuild changes the binary; macOS may ask for a permission again (Screen Recording for screenshots). Keep the bundle ID stable and install to `/Applications` for daily use.
+- **Ad-hoc signing.** Each ad-hoc build is a new app for macOS, so it asks again for access to Documents and for Screen Recording. `Scripts/install.sh` signs the installed app with the certificate named in `~/.config/slate/sign-identity` (ADR 0003 amendment); then the permissions stay. A Debug build from `Scripts/run.sh` is still ad-hoc and still asks. Keep the bundle ID stable and install to `/Applications` for daily use.
 
 ## 2. Capture panel that does not steal focus — verified (Verba), built in M4 (`CapturePanel`, `CaptureTextView`)
 

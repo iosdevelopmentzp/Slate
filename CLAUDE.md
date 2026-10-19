@@ -11,7 +11,7 @@ Read first, in this order: this file, `docs/STATUS.md`, `docs/ROADMAP.md`, then 
 - Xcode project `Slate.xcodeproj`, one app target `Slate`, macOS 26.4+, Swift 6 language mode, default actor isolation `MainActor`. The target holds only `Slate/SlateApp.swift` and `Assets.xcassets` and links the product `SlateComposition`. `SlateApp` hands the app delegate to `AppContainer` through `@NSApplicationDelegateAdaptor`.
 - `Config/Slate-Info.plist` (`INFOPLIST_FILE`) holds the `slate://` URL scheme and the "Add to Slate" service; Xcode merges the generated keys into it (`GENERATE_INFOPLIST_FILE` stays on).
 - Local package `Packages/SlateKit` (tools 6.2, Swift 6). `project.pbxproj` holds the package reference.
-- No App Sandbox. Ad-hoc signing (`Sign to Run Locally`). No Apple Developer account. Keep it this way: the app shells out to `screencapture`, `git` and `open`.
+- No App Sandbox. Xcode signs ad-hoc (`Sign to Run Locally`); `Scripts/install.sh` signs the installed app again with a local certificate from `~/.config/slate/sign-identity` when the file exists, so macOS keeps permissions between installs (ADR 0003 amendment). No notarization. Keep it this way: the app shells out to `screencapture`, `git` and `open`.
 - `INFOPLIST_KEY_LSUIElement = NO`: Slate has a Dock icon and one main window; the close button hides the window (ADR 0016). The menu bar icon and `⌥⌘N` show the window on the current desktop.
 - `Slate/` is an Xcode synchronized folder. Edit `project.pbxproj` only for build settings, never for file lists. New code goes into the package, not into `Slate/`.
 

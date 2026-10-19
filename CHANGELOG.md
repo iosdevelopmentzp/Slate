@@ -76,6 +76,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - The width of the list is draggable (260 to 420 points, double-click for the default) and remembered, and so is the sidebar (`⌘0` in the panel too).
 
 ### Changed
+- `Scripts/install.sh` signs Slate and the `slate` command with a local certificate when `~/.config/slate/sign-identity` (or `SLATE_SIGN_IDENTITY`) holds its SHA-1 hash. macOS then keeps the access to the Documents folder and other permissions after each install, instead of asking again.
 - Slate is a normal window app with a Dock icon, like Terminal or a browser. The window no longer closes when you click outside it, so a file chooser for Attach file or Image no longer closes Slate. The close button and `⌘W` hide the window and give the focus back to the previous app. The Dock icon, the menu bar icon and `⌥⌘N` show the window again on the desktop you are on, with the same note open; when the window is in front, the menu bar icon and `⌥⌘N` hide it. At launch the window is open or hidden as it was when Slate quit.
 - The format bar shows Divider, Screenshot and Format JSON as buttons when the window is wide enough. In a narrow window they stay in the "…" menu.
 - The quick note field has the soft look: a rounded white card, the folder as a tinted chip on the left and "⏎ Save" on the right.
