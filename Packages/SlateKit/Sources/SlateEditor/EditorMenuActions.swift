@@ -16,6 +16,7 @@ package enum EditorMenuActions {
     package static let code = #selector(RichTextView.slateCode(_:))
     package static let link = #selector(RichTextView.slateLink(_:))
     package static let image = #selector(RichTextView.slateImage(_:))
+    package static let file = #selector(RichTextView.slateFile(_:))
     package static let divider = #selector(RichTextView.slateDivider(_:))
     package static let screenshot = #selector(RichTextView.slateScreenshot(_:))
     package static let indent = #selector(RichTextView.slateIndent(_:))

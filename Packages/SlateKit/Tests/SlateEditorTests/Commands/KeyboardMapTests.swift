@@ -19,6 +19,7 @@ import Testing
         #expect(KeyboardMap.command(for: event("(", keyCode: KeyboardMap.digitNine, flags: [.command, .shift])) == .list(.numbered))
         #expect(KeyboardMap.command(for: event("x", flags: [.command, .shift])) == .inline(.strikethrough))
         #expect(KeyboardMap.command(for: event("i", flags: [.command, .shift])) == .image)
+        #expect(KeyboardMap.command(for: event("a", flags: [.command, .shift])) == .file)
     }
 
     @Test func optionCommandTInsertsATable() {

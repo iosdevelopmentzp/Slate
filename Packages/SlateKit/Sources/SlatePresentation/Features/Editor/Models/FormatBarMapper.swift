@@ -8,7 +8,7 @@ enum FormatBarMapper {
         case .title: "Title"
         case .heading: "Heading"
         case .subheading: "Subheading"
-        case .monospaced, .raw: "Monospaced"
+        case .monospaced, .raw: "Code block"
         case .checklist: "Checklist"
         case .bullet: "Bulleted list"
         case .numbered: "Numbered list"
@@ -40,8 +40,10 @@ enum FormatBarMapper {
             block(.bullet, id: "bulleted", image: "list.bullet", hint: "Bulleted list  ⇧⌘7", state: state),
             block(.numbered, id: "numbered", image: "list.number", hint: "Numbered list  ⇧⌘9", state: state),
             FormatButtonModel(id: "quote", systemImage: "text.quote", hint: "Quote  ⌘'", command: .quote, isActive: state.kind == .quote, isEnabled: state.canFormatText),
+            FormatButtonModel(id: "code", systemImage: "chevron.left.forwardslash.chevron.right", hint: "Code block  ⇧⌘M", command: .list(.monospaced), isActive: state.kind == .monospaced, isEnabled: state.canFormatText || state.kind == .monospaced),
             FormatButtonModel(id: "link", systemImage: "link", hint: "Link  ⌘K", command: .link, isActive: state.isLink, isEnabled: state.canFormatText),
             FormatButtonModel(id: "image", systemImage: "photo", hint: "Image  ⇧⌘I", command: .image, isActive: false, isEnabled: true),
+            FormatButtonModel(id: "file", systemImage: "paperclip", hint: "Attach file  ⇧⌘A", command: .file, isActive: false, isEnabled: true),
             FormatButtonModel(id: "table", systemImage: "tablecells", hint: "Table  ⌥⌘T", command: .table, isActive: state.kind == .table, isEnabled: true),
         ]
     }

@@ -32,6 +32,9 @@ extension RichTextController {
         case .image(let data, let fileExtension):
             handlers.pasteImage(data, fileExtension)
         case .html(let data):
+            if let text = pasteboard.string(forType: .string), insertCode(text) {
+                return
+            }
             if let fragment = HTMLImport.fragment(from: data) {
                 insertFragment(fragment)
             } else if let text = pasteboard.string(forType: .string) {
@@ -40,7 +43,7 @@ extension RichTextController {
         case .text(let text):
             if TableMarkdown.looksLikeTable(text) {
                 insertFragment(MarkdownReader.read(text.trimmingCharacters(in: .whitespacesAndNewlines)))
-            } else {
+            } else if insertCode(text) == false {
                 insertPlain(text)
             }
         }
@@ -61,6 +64,17 @@ extension RichTextController {
         default:
             return false
         }
+    }
+
+    func insertCode(_ text: String) -> Bool {
+        guard currentBlock.kind.keepsLineBreaks == false, let code = CodeText.block(from: text) else { return false }
+        let block = BlockAttributes(kind: .monospaced, language: code.language)
+        let selection = textView.selectedRange()
+        if selection.length > 0 {
+            replace(selection, with: NSAttributedString(), selection: NSRange(location: selection.location, length: 0))
+        }
+        insertBlocks(styled(code.code.replacingOccurrences(of: "\n", with: RichText.lineBreakString), block: block))
+        return true
     }
 
     func insertPlain(_ text: String) {

@@ -21,7 +21,7 @@ The owner takes these on a real screen and puts them in `docs/screenshots/`.
 
 1. **Folders.** Make a folder with "+ New folder" or `⇧⌘N`. Double-click a folder to rename it. Right-click it to change the colour or the icon, to move it, or to delete it. When you delete a folder, its notes move to the quick note folder, and a toast offers Undo.
 2. **Notes.** `⌘N` makes a note in the current folder. A note card shows the title, the date and two lines of text. Drag a card onto a folder to move the note. Pin, Move to, Duplicate and Move to Trash are in the "…" button and the right-click menu.
-3. **Formatted text.** The format bar and the Format menu set the style: Title, Heading, Subheading, Body, Monospaced, bold, italic, strikethrough, checklist, bulleted and numbered lists, quote, link and image. You see the result, not Markdown marks.
+3. **Formatted text.** The format bar and the Format menu set the style: Title, Heading, Subheading, Body, Code block, bold, italic, strikethrough, checklist, bulleted and numbered lists, quote, link and image. You see the result, not Markdown marks.
 4. **Tables.** The Table button or `⌥⌘T` adds a table. Click a cell to type; Tab, Enter and the arrow keys move between cells, and ⇧Enter starts a new line in the cell. The "+" strips on hover add a column or a row, and the right-click menu adds, aligns and deletes rows and columns. Drop or paste an image into a cell to show a thumbnail there. Select lines and press Table to turn them into a table. Shift-click or drag to select several cells, then copy, paste, clear or format them together. Wide tables scroll sideways, and Find in Note searches the cells. In the file a table is a GitHub table with `|`, so other apps can read it.
 5. **Images in the text.** Paste an image, drag one in, use the Image button, or press `⇧⌘S` for a screenshot. Double-click an image to see it large. Drag the grip at its corner to change its size, and press the round button on it to save a copy to Downloads.
 6. **Quick note.** `⌃⌥Space` opens a small field from any app. Enter saves the note, `⌘Enter` saves and opens it.
@@ -44,12 +44,13 @@ The owner takes these on a real screen and puts them in `docs/screenshots/`.
 | `⌘↑`, `⌘↓` | Previous and next note |
 | `⇧⌘P` | Pin or unpin |
 | `⌘⌫` | Move the note to the Trash (asks first) |
-| `⇧⌘T`, `⇧⌘H`, `⇧⌘J`, `⇧⌘B`, `⇧⌘M` | Title, Heading, Subheading, Body, Monospaced |
+| `⇧⌘T`, `⇧⌘H`, `⇧⌘J`, `⇧⌘B`, `⇧⌘M` | Title, Heading, Subheading, Body, Code block |
 | `⇧⌘L`, `⇧⌘7`, `⇧⌘9` | Checklist, bulleted list, numbered list |
 | `⌘'` | Quote |
 | `⌘B`, `⌘I`, `⇧⌘X` | Bold, italic, strikethrough |
 | `⌘K` | Link |
 | `⇧⌘I`, `⇧⌘S` | Image, screenshot |
+| `⇧⌘A` | Attach a file |
 | `⌥⌘T` | Table |
 | `⌘,` | Settings |
 | `Esc` | Back, and closes the panel |

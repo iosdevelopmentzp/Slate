@@ -7,6 +7,9 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Paste JSON or code and it becomes a code block: one block in a monospaced font, with no space between the lines. JSON on one line is split into indented lines; JSON that already has lines keeps them. This also works for code copied from a web page. Plain text stays paragraphs as before.
+- A Code block button in the format bar. It turns the selected lines into one code block, and inside a code block it turns the block back into paragraphs. The style is now called Code block instead of Monospaced.
+- Attach any file to a note: the paperclip button in the format bar, Format → Attach File or `⇧⌘A`. The file is copied to `_attachments` and the note gets a link with the file name; ⌘-click the link to open it. Before, the button chose only images; dropping and pasting files from Finder worked already.
 - The `slate-task` skill in `Skills/slate-task/` for Claude Code: at the start of a session it finds the task of the repository in Slate and says where the last session stopped; it keeps Context, Plan, Findings, Questions and files in the task folder, writes a Log line after each commit, and at the end writes what is done and next, sets the status and saves a version. The README has the line that links it into `~/.claude/skills/`.
 - `Scripts/auto-install.sh`: with the `post-commit` and `post-merge` hooks from the README, a commit on `main` that changes code builds Slate and installs it to `/Applications` in the background, with a notification. The Dock, Spotlight and Launchpad always open the last commit.
 - `Scripts/quit.sh`: `run.sh` and `install.sh` ask Slate to quit, so it saves the open note first. Before, `pkill` stopped it at once.

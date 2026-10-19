@@ -25,6 +25,7 @@ enum KeyboardMap {
             case "l": return .list(.checklist)
             case "x": return .inline(.strikethrough)
             case "i": return .image
+            case "a": return .file
             case "s": return .screenshot
             default: return nil
             }

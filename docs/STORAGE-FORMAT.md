@@ -477,7 +477,7 @@ The rich text editor reads any Markdown but writes only this subset. A construct
 | Heading | `## text` |
 | Subheading | `### text` |
 | Body paragraph | the text; paragraphs separated by one blank line |
-| Monospaced block | a fenced block: ```` ``` ```` (the original language word kept when the file had one) |
+| Code block | a fenced block: ```` ``` ```` (the original language word kept when the file had one) |
 | Quote | `> ` before each line |
 | Bulleted list, levels 0 to 2 | `- item`, nested with two spaces per level |
 | Numbered list, levels 0 to 2 | `1. item`, renumbered on save |

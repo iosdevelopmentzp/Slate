@@ -8,7 +8,7 @@ import Testing
         let state = EditorStyleState(kind: .subheading)
 
         #expect(FormatBarMapper.styleName(for: state) == "Subheading")
-        #expect(FormatBarMapper.styles(for: state).map(\.title) == ["Title", "Heading", "Subheading", "Body", "Monospaced"])
+        #expect(FormatBarMapper.styles(for: state).map(\.title) == ["Title", "Heading", "Subheading", "Body", "Code block"])
         #expect(FormatBarMapper.styles(for: state).filter(\.isCurrent).map(\.id) == [.subheading])
     }
 
@@ -19,16 +19,17 @@ import Testing
         #expect(FormatBarMapper.blockButtons(for: state).filter(\.isActive).map(\.id) == ["checklist", "link"])
     }
 
-    @Test func codeTurnsTextButtonsOffButKeepsImageAndTable() {
+    @Test func codeTurnsTextButtonsOffButKeepsCodeImageFileAndTable() {
         let state = EditorStyleState(kind: .monospaced, canFormatText: false)
 
         #expect(FormatBarMapper.textButtons(for: state).allSatisfy { $0.isEnabled == false })
-        #expect(FormatBarMapper.blockButtons(for: state).filter(\.isEnabled).map(\.id) == ["image", "table"])
+        #expect(FormatBarMapper.blockButtons(for: state).filter(\.isEnabled).map(\.id) == ["code", "image", "file", "table"])
+        #expect(FormatBarMapper.blockButtons(for: state).filter(\.isActive).map(\.id) == ["code"])
     }
 
     @Test func hintsShowTheShortcut() {
         let hints = (FormatBarMapper.textButtons(for: EditorStyleState()) + FormatBarMapper.blockButtons(for: EditorStyleState())).map(\.hint)
 
-        #expect(hints == ["Bold  ⌘B", "Italic  ⌘I", "Strikethrough  ⇧⌘X", "Checklist  ⇧⌘L", "Bulleted list  ⇧⌘7", "Numbered list  ⇧⌘9", "Quote  ⌘'", "Link  ⌘K", "Image  ⇧⌘I", "Table  ⌥⌘T"])
+        #expect(hints == ["Bold  ⌘B", "Italic  ⌘I", "Strikethrough  ⇧⌘X", "Checklist  ⇧⌘L", "Bulleted list  ⇧⌘7", "Numbered list  ⇧⌘9", "Quote  ⌘'", "Code block  ⇧⌘M", "Link  ⌘K", "Image  ⇧⌘I", "Attach file  ⇧⌘A", "Table  ⌥⌘T"])
     }
 }

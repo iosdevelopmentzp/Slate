@@ -359,6 +359,12 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 67. Replace a PNG in a task folder with another picture, wait for a version, then "…" → Versions… on the file: Quick Look of the older version shows the old picture; Restore brings it back.
 68. In the Changes of a project, Clear History of MyApp… → Clear History: the list shows one version, the notes and files are still there, and the versions of notes in other folders are kept. Settings → General → Clear History…: each note has one version left.
 
+### Code blocks and attached files
+
+69. Copy one line of JSON such as `{"a":1,"b":[true]}` and paste it into a note: it shows as one code block with indented lines, and the file holds a ```` ```json ```` block. Paste a few lines of Swift: one code block. Paste two lines of plain text: two paragraphs.
+70. Select some lines and press the `</>` button: they become one code block. Put the caret in the block and press it again: the lines are paragraphs again.
+71. Press the paperclip button (or `⇧⌘A`), pick a PDF: the note gets a link with the file name, and ⌘-click on it opens the PDF.
+
 ## Known gaps
 
 - Tables, second round: a drag that starts in the text of the cell being edited selects text only; start the drag on another cell or use Shift-click.

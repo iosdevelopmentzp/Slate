@@ -7,6 +7,7 @@ package enum EditorCommand: Hashable, Sendable {
     case inline(InlineStyle)
     case link
     case image
+    case file
     case divider
     case screenshot
     case indent(Int)

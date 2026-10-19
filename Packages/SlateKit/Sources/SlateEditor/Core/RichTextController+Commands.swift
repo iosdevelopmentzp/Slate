@@ -40,6 +40,8 @@ extension RichTextController {
             editLink()
         case .image:
             chooseImage()
+        case .file:
+            chooseFiles()
         case .divider:
             insertDivider()
         case .screenshot:
@@ -193,11 +195,19 @@ extension RichTextController {
     }
 
     func chooseImage() {
+        choose([.image], message: "Choose images to add to the note.")
+    }
+
+    func chooseFiles() {
+        choose([], message: "Choose files to add to the note.")
+    }
+
+    private func choose(_ types: [UTType], message: String) {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
-        panel.allowedContentTypes = [.image]
-        panel.message = "Choose images to add to the note."
+        if types.isEmpty == false { panel.allowedContentTypes = types }
+        panel.message = message
         panel.prompt = "Add"
         let handlers = handlers
         panel.begin { response in

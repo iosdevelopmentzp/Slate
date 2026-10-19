@@ -57,7 +57,7 @@ struct FormatBar: View {
         .padding(.horizontal, 8)
         .frame(height: 26)
         .background(Theme.hover, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-        .disabled(state.canFormatText == false)
+        .disabled(state.canFormatText == false && state.kind != .monospaced)
         .hint("Paragraph style")
         .accessibilityLabel("Paragraph style")
     }

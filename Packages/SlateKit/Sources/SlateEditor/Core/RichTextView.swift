@@ -103,6 +103,7 @@ final class RichTextView: NSTextView {
     @objc func slateCode(_ sender: Any?) { controller?.perform(.inline(.code)) }
     @objc func slateLink(_ sender: Any?) { controller?.perform(.link) }
     @objc func slateImage(_ sender: Any?) { controller?.perform(.image) }
+    @objc func slateFile(_ sender: Any?) { controller?.perform(.file) }
     @objc func slateDivider(_ sender: Any?) { controller?.perform(.divider) }
     @objc func slateScreenshot(_ sender: Any?) { controller?.perform(.screenshot) }
     @objc func slateIndent(_ sender: Any?) { controller?.perform(.indent(1)) }
