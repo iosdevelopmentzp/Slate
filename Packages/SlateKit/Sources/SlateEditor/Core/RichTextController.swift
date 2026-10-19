@@ -22,6 +22,7 @@ final class RichTextController: NSObject {
     var imageTarget: TableImageTarget?
     let imageButton = ImageSaveButton()
     let imageHandle = ImageResizeHandle()
+    let multiCaret = MultiCaret()
     lazy var findClient = NoteFindClient(controller: self)
     lazy var finder: NSTextFinder = {
         let finder = NSTextFinder()
@@ -239,6 +240,7 @@ final class RichTextController: NSObject {
 
     func storageEdited(_ mask: NSTextStorageEditActions, range: NSRange, delta: Int) {
         guard isStyling == false else { return }
+        if multiCaret.isApplying == false { dropExtraCarets() }
         if var pending = pendingRange {
             if delta != 0, pending.location > range.location {
                 pending.location = max(range.location, pending.location + delta)
@@ -380,6 +382,7 @@ final class RichTextController: NSObject {
         let width = textView.textContainer?.size.width ?? 0
         guard abs(width - lastWidth) > 0.5 else { return }
         lastWidth = width
+        refreshCaretOverlay()
         guard let textLayout = textView.textLayoutManager else { return }
         var hasAttachments = false
         storage.enumerateAttribute(.attachment, in: NSRange(location: 0, length: storage.length)) { value, _, stop in

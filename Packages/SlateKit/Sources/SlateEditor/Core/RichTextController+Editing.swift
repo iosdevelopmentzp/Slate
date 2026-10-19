@@ -4,6 +4,9 @@ extension RichTextController {
     static let shortcuts: [String: BlockKind] = ["-": .bullet, "*": .bullet, "1.": .numbered, "[]": .checklist, "[ ]": .checklist, "#": .title, "##": .heading, "###": .subheading, ">": .quote]
 
     func handle(_ selector: Selector) -> Bool {
+        if multiCaret.isActive, let handled = handleAtCarets(selector) {
+            return handled
+        }
         let flags = NSApp.currentEvent?.modifierFlags.intersection(.deviceIndependentFlagsMask) ?? []
         switch selector {
         case #selector(NSResponder.insertNewline(_:)):

@@ -8,6 +8,7 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
 
     func textViewDidChangeSelection(_ notification: Notification) {
         guard isEditingInternally == false else { return }
+        if multiCaret.isApplying == false { dropExtraCarets() }
         pendingInline = nil
         updateTypingAttributes()
         updateState()

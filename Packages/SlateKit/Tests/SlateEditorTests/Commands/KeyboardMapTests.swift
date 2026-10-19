@@ -40,4 +40,11 @@ import Testing
         #expect(KeyboardMap.command(for: event("b", flags: [.command, .option])) == nil)
         #expect(KeyboardMap.command(for: event("b", flags: [])) == nil)
     }
+
+    @Test func controlShiftArrowsAddACaret() {
+        #expect(KeyboardMap.caretDirection(for: event("", keyCode: KeyboardMap.arrowUp, flags: [.control, .shift, .function, .numericPad])) == .up)
+        #expect(KeyboardMap.caretDirection(for: event("", keyCode: KeyboardMap.arrowDown, flags: [.control, .shift])) == .down)
+        #expect(KeyboardMap.caretDirection(for: event("", keyCode: KeyboardMap.arrowUp, flags: [.shift])) == nil)
+        #expect(KeyboardMap.caretDirection(for: event("", keyCode: KeyboardMap.arrowUp, flags: [.control, .shift, .command])) == nil)
+    }
 }

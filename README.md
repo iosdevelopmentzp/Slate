@@ -51,6 +51,7 @@ The owner takes these on a real screen and puts them in `docs/screenshots/`.
 | `⌘K` | Link |
 | `⇧⌘I`, `⇧⌘S` | Image, screenshot |
 | `⇧⌘A` | Attach a file |
+| `⌃⇧↑`, `⌃⇧↓` | Add a caret on the line above or below, then type at every caret. Esc leaves one caret |
 | `⌥⌘T` | Table |
 | `⌘,` | Settings |
 | `Esc` | Back, and closes the panel |

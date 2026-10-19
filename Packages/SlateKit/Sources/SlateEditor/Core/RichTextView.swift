@@ -12,6 +12,26 @@ final class RichTextView: NSTextView {
         return true
     }
 
+    override func keyDown(with event: NSEvent) {
+        if let direction = KeyboardMap.caretDirection(for: event), controller?.addCaret(direction) == true {
+            return
+        }
+        super.keyDown(with: event)
+    }
+
+    override func insertText(_ string: Any, replacementRange: NSRange) {
+        if let controller, controller.multiCaret.isActive, hasMarkedText() == false {
+            let text = (string as? NSAttributedString)?.string ?? string as? String ?? ""
+            if controller.typeAtCarets(text) { return }
+        }
+        super.insertText(string, replacementRange: replacementRange)
+    }
+
+    override func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
+        controller?.dropExtraCarets()
+        super.setMarkedText(string, selectedRange: selectedRange, replacementRange: replacementRange)
+    }
+
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         guard hoverArea == nil else { return }
@@ -54,6 +74,7 @@ final class RichTextView: NSTextView {
     }
 
     override func mouseDown(with event: NSEvent) {
+        controller?.dropExtraCarets()
         if controller?.handleMouseDown(event) == true { return }
         super.mouseDown(with: event)
     }
@@ -109,6 +130,8 @@ final class RichTextView: NSTextView {
     @objc func slateIndent(_ sender: Any?) { controller?.perform(.indent(1)) }
     @objc func slateOutdent(_ sender: Any?) { controller?.perform(.indent(-1)) }
     @objc func slateTable(_ sender: Any?) { controller?.perform(.table) }
+    @objc func slateCaretAbove(_ sender: Any?) { _ = controller?.addCaret(.up) }
+    @objc func slateCaretBelow(_ sender: Any?) { _ = controller?.addCaret(.down) }
     @objc func slatePasteTable(_ sender: Any?) { controller?.pasteAsTable(from: PasteboardBridge.general) }
 
     @objc func slateFind(_ sender: Any?) {

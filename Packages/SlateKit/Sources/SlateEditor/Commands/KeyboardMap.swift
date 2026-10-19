@@ -6,6 +6,17 @@ enum KeyboardMap {
     static let quote: UInt16 = 39
     static let leftBracket: UInt16 = 33
     static let rightBracket: UInt16 = 30
+    static let arrowUp: UInt16 = 126
+    static let arrowDown: UInt16 = 125
+
+    static func caretDirection(for event: NSEvent) -> CaretDirection? {
+        guard event.modifierFlags.intersection([.command, .shift, .option, .control]) == [.control, .shift] else { return nil }
+        switch event.keyCode {
+        case arrowUp: return .up
+        case arrowDown: return .down
+        default: return nil
+        }
+    }
 
     static func command(for event: NSEvent) -> EditorCommand? {
         let flags = event.modifierFlags.intersection([.command, .shift, .option, .control])

@@ -365,6 +365,12 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 70. Select some lines and press the `</>` button: they become one code block. Put the caret in the block and press it again: the lines are paragraphs again.
 71. Press the paperclip button (or `⇧⌘A`), pick a PDF: the note gets a link with the file name, and ⌘-click on it opens the PDF.
 
+### Several carets
+
+72. Write three lines `abc`, put the caret after `a` and press `⌃⇧↓` twice: two more carets blink under it. Type `XY`: every line is `aXYbc`. Press `⌘Z` once: all three are `abc` again.
+73. With three carets press `⌘→` and type `!`: each line ends with `!`. Press Backspace twice at the start of the lines: the lines are not joined. Press Esc: one caret is left, and Esc again goes back as before.
+74. With three carets click somewhere, or press Enter, or press `⇧⌘H`: one caret is left and the action works as with one caret.
+
 ## Known gaps
 
 - Tables, second round: a drag that starts in the text of the cell being edited selects text only; start the drag on another cell or use Shift-click.

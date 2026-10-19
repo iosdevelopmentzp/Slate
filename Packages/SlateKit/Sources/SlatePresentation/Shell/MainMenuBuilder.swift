@@ -47,6 +47,8 @@ struct MainMenuBuilder {
             standard("Paste", #selector(NSText.paste(_:)), key: "v"),
             standard("Paste as Table", EditorMenuActions.pasteTable),
             standard("Select All", #selector(NSText.selectAll(_:)), key: "a"),
+            standard("Add Caret Above", EditorMenuActions.caretAbove, key: String(UnicodeScalar(UInt16(NSUpArrowFunctionKey))!), modifiers: [.control, .shift]),
+            standard("Add Caret Below", EditorMenuActions.caretBelow, key: String(UnicodeScalar(UInt16(NSDownArrowFunctionKey))!), modifiers: [.control, .shift]),
             .separator(),
             standard("Find in Note", EditorMenuActions.find, key: "f", modifiers: [.command, .option]),
         ]))
