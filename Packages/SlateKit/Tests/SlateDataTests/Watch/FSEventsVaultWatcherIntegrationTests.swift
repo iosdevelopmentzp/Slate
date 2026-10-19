@@ -58,19 +58,21 @@ import Testing
         let folder = try TemporaryDirectory()
         try FileManager.default.createDirectory(at: folder.url.appendingPathComponent("Inbox"), withIntermediateDirectories: true)
         let ownWrites = OwnWrites()
-        let stream = FSEventsVaultWatcher(root: folder.url, ownWrites: ownWrites).changes()
+        let (changes, consumer) = record(FSEventsVaultWatcher(root: folder.url, ownWrites: ownWrites).changes())
+        defer { consumer.cancel() }
         let store = FileVaultStore(root: folder.url, ownWrites: ownWrites)
-        try await settle()
+        try await sync(folder, changes)
+        let settled = changes.values.count
 
         _ = try await store.create(VaultPath(rawValue: "Inbox/Own.md"), data: Data("mine".utf8))
         _ = try folder.write("theirs", to: "Inbox/Other.md")
+        try await wait { changes.values.dropFirst(settled).contains { $0 != .rescan } }
 
-        let change = await first(in: stream) { $0 != .rescan }
-        #expect(change == .paths([VaultPath(rawValue: "Inbox/Other.md")]))
+        #expect(changes.values.dropFirst(settled).first { $0 != .rescan } == .paths([VaultPath(rawValue: "Inbox/Other.md")]))
     }
 
-    private func reported(_ changes: CallbackRecorder<VaultChange>) -> Set<VaultPath> {
-        changes.values.reduce(into: Set<VaultPath>()) { result, change in
+    private func reported(_ changes: CallbackRecorder<VaultChange>, after settled: Int = 0) -> Set<VaultPath> {
+        changes.values.dropFirst(settled).reduce(into: Set<VaultPath>()) { result, change in
             if case .paths(let paths) = change { result.formUnion(paths) }
         }
     }
@@ -82,30 +84,43 @@ import Testing
         }
     }
 
-    @Test func renameReportsBothPathsAndDeleteReportsThePath() async throws {
-        let folder = try TemporaryDirectory()
-        _ = try folder.write("a", to: "Inbox/A.md")
-        let stream = FSEventsVaultWatcher(root: folder.url, ownWrites: OwnWrites()).changes()
+    private func record(_ stream: AsyncStream<VaultChange>) -> (CallbackRecorder<VaultChange>, Task<Void, Never>) {
         let changes = CallbackRecorder<VaultChange>()
         let consumer = Task {
             for await change in stream {
                 changes.append(change)
             }
         }
+        return (changes, consumer)
+    }
+
+    private func sync(_ folder: TemporaryDirectory, _ changes: CallbackRecorder<VaultChange>) async throws {
+        let marker = VaultPath(rawValue: "Inbox/Marker.md")
+        for attempt in 1...5 {
+            _ = try folder.write("marker \(attempt)", to: marker.rawValue)
+            try await wait { reported(changes).contains(marker) }
+            if reported(changes).contains(marker) { return }
+        }
+    }
+
+    @Test func renameReportsBothPathsAndDeleteReportsThePath() async throws {
+        let folder = try TemporaryDirectory()
+        _ = try folder.write("a", to: "Inbox/A.md")
+        let (changes, consumer) = record(FSEventsVaultWatcher(root: folder.url, ownWrites: OwnWrites()).changes())
         defer { consumer.cancel() }
-        try await settle()
+        try await sync(folder, changes)
         let settled = changes.values.count
         let old = VaultPath(rawValue: "Inbox/A.md")
         let new = VaultPath(rawValue: "Inbox/B.md")
 
         try FileManager.default.moveItem(at: folder.url.appendingPathComponent(old.rawValue), to: folder.url.appendingPathComponent(new.rawValue))
-        try await wait { reported(changes).isSuperset(of: [old, new]) }
+        try await wait { reported(changes, after: settled).isSuperset(of: [old, new]) }
         let afterRename = changes.values.count
         try FileManager.default.removeItem(at: folder.url.appendingPathComponent(new.rawValue))
         try await wait { changes.values.count > afterRename }
 
         #expect(Array(changes.values.dropFirst(settled).prefix(afterRename - settled)).allSatisfy { $0 != .rescan })
-        #expect(reported(changes).isSuperset(of: [old, new]))
+        #expect(reported(changes, after: settled).isSuperset(of: [old, new]))
         #expect(changes.values.last == .paths([new]))
     }
 }

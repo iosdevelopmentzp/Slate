@@ -242,6 +242,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 153. Table grips (`TableGrip`, `TableLayout+Grips`) are drawn inside the cell padding, because the table view has room only at its right and bottom edge (the "+" strips). Moves are `TableModel.moveRows` and `moveColumns`; `TableModel.position(of:moving:to:)` maps the edited cell and the selection to their new place. A table change now reloads the edited cell from the model instead of writing the editor text into the old index, which put the old cell text into the moved row.
 154. Slate activates itself with `NSApp.activate(ignoringOtherApps: true)` in `AppWindows` (the window, Settings, the return after a screenshot). The plain `NSApp.activate()` is a request that macOS refuses after a click on the status item, so the window opened behind the active app. The details are in `docs/PLAYBOOK.md` section 1.
 155. `Scripts/install.sh` signs the installed app and the `slate` command with the local certificate from `~/.config/slate/sign-identity` (ADR 0003 amendment). Ad-hoc builds asked for Documents access after every install, because macOS ties permissions to the signature. The hash lives outside the repository, so no name is in it (ADR 0006).
+156. Tests that wait for the file watcher first write a marker note and wait for its event (`sync` in `FSEventsVaultWatcherIntegrationTests`). FSEvents sends events in order, so a late event from the setup (the new `Inbox` folder, a `.rescan`) can no longer fall into the measured part. `waitUntil` waits up to 10 s instead of 2 s; it returns as soon as the condition holds, so a passing run is not slower. Before, these tests failed when `fseventsd` or a build kept the Mac busy.
 
 ## Next steps
 
@@ -414,12 +415,10 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 
 ## Known gaps
 
-- `FSEventsVaultWatcherIntegrationTests` fails about once in five full runs of `Scripts/test.sh` (`ownWriteDoesNotArrive`, `renameReportsBothPathsAndDeleteReportsThePath`): the FSEvents wait is too short when all suites run at once. Alone the suite passes. Seen since 2026-10-19; the watcher code did not change. Later on 2026-10-19 `renameReportsBothPathsAndDeleteReportsThePath` also failed alone, with and without the batch_edit change (checked with `git stash`): FSEvents sent `.rescan` instead of the two paths. Fix the test on its own.
 
 - Tables, second round: a drag that starts in the text of the cell being edited selects text only; start the drag on another cell or use Shift-click.
 
 - S2: a text file dropped on the list does not make a note yet (`UX.md` section 6). Folders reorder with Move up and Move down, not by drag.
-- `FSEventsVaultWatcherIntegrationTests.externalEditArrivesAsAPathChange` failed once in a full run before S1 started (timing under load) and passes alone. Watch it.
 - The agent did not run the manual checks. A scripted click opens the panel but does not make Slate the active app, so scripted keystrokes go to the frontmost app (a few of them went to the Terminal during this session). The borderless panel also hides its content from the Accessibility API.
 - No `⌘⇧M` move picker. Move to is in the card menu, and cards can be dragged onto a folder.
 - Esc closes the panel from the list and from the note text (S4); the search field clears on Esc first. The agent tested the editor part only in a test window.
@@ -446,6 +445,4 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - S6: accessibility shows the table as one element with a label ("Table, 3 rows, 2 columns"); rows and cells are not exposed yet.
 - S7: drop, paste and Quick Look in a cell were tested through the controller, not with a real drag or a real double-click. Thumbnails cannot be resized, and a thumbnail is not selected by a single click (use Shift-arrow in the cell).
 - S6: no manual column resize (ADR 0009 level 1). A wide table scrolls sideways (decision 138), but there is no drag on the scroll bar: it only shows the position.
-- S6: the full test run once more saw the known `FSEventsVaultWatcherIntegrationTests.externalEditArrivesAsAPathChange` failure (during the S5 commit); it passed alone and in the next full run.
-- `FSEventsVaultWatcherIntegrationTests` failed in three of four runs alone on 2026-10-17, with and without the ADR 0012 change (checked with `git stash`); the full run passed. The suite waits on FSEvents timing; it may be the Slate app that runs at the same time. Look at it on its own.
 - Sub-folders (ADR 0011): no drag of a folder into another folder, no colour, icon or manual order per sub-folder, no `⌘1`…`⌘9` for sub-folders. Esc does not go up to the parent folder yet; the back chevron does.
