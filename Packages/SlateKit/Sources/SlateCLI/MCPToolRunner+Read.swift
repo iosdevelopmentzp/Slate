@@ -23,7 +23,14 @@ extension MCPToolRunner {
         }
         let limit = arguments.int("limit", default: 50, maximum: 500)
         let sorted = summaries.sorted { $0.updated > $1.updated }.prefix(limit)
-        return json(sorted.map(summaryObject))
+        guard arguments.bool("headings") == true else { return json(sorted.map(summaryObject)) }
+        var objects: [[String: Any]] = []
+        for summary in sorted {
+            var object = summaryObject(summary)
+            object["headings"] = (try? await document(at: summary.path)).map { NoteSectionPolicy.headings(in: $0.body) } ?? []
+            objects.append(object)
+        }
+        return json(objects)
     }
 
     func searchNotes(_ arguments: MCPArguments) async throws -> String {

@@ -9,11 +9,15 @@ extension MCPToolRunner {
         let tasks = try await useCases.projectTasks.execute(in: match.space.folder)
         let current = tasks.first { $0.matches(branch: match.repository?.branch) }
         let notes = try await ports.index.summaries(space: match.space.folder).filter { $0.path.depth == 1 }
+        var taskObjects: [[String: Any]] = []
+        for task in tasks {
+            taskObjects.append(try await taskObject(task, withSteps: false))
+        }
         var object: [String: Any] = [
             "project": match.space.folder.rawValue,
             "folder": match.space.folder.rawValue,
             "absolutePath": root.appendingPathComponent(match.space.folder.rawValue, isDirectory: true).path,
-            "tasks": tasks.map(taskObject),
+            "tasks": taskObjects,
             "notes": notes.map { ["id": $0.id.rawValue, "title": $0.title, "path": $0.path.rawValue] },
             "rules": Self.projectRules,
         ]
@@ -23,7 +27,9 @@ extension MCPToolRunner {
             info["remote"] = repository.remote
             object["repository"] = info
         }
-        object["currentTask"] = current.map(taskObject)
+        if let current {
+            object["currentTask"] = try await taskObject(current, withSteps: true)
+        }
         return json(object)
     }
 
@@ -144,7 +150,7 @@ extension MCPToolRunner {
         return (renamed, true)
     }
 
-    private func taskObject(_ task: ProjectTask) -> [String: Any] {
+    private func taskObject(_ task: ProjectTask, withSteps: Bool) async throws -> [String: Any] {
         var object: [String: Any] = [
             "id": task.id.rawValue,
             "title": task.title,
@@ -156,12 +162,15 @@ extension MCPToolRunner {
         ]
         object["ticket"] = task.ticket
         object["branch"] = task.branch
+        let body = (try? await document(at: task.path))?.body ?? ""
+        object["plan"] = planObject(PlanPolicy.items(in: body), withSteps: withSteps)
         return object
     }
 
     static let projectRules = """
     Keep the documentation of a task in its task folder. The task note holds Context, Plan, Findings, Links, Questions and Log. \
     Put longer findings or decisions in more notes in the same folder (create_note with that folder). Add logs, screenshots and other files with add_file. \
+    Keep the Plan as a checklist (- [ ] 1. The step) and mark a step done with set_plan_item. \
     At the end of each session call log_progress with what was done, what is left and the next step, so the next session can go on. \
     Set the status with set_task_status: todo, active, review, done or dropped.
     """

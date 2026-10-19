@@ -4,9 +4,10 @@ import MCP
 enum MCPToolCatalog {
     static let tools: [Tool] = [
         tool("list_folders", "List the folders of the notes folder with the number of notes in each. writable says if agents may change notes there.", [:], required: [], readOnly: true),
-        tool("list_notes", "List notes, newest first: id, title, folder, path, updated, pinned and the first line of text.", [
+        tool("list_notes", "List notes, newest first: id, title, folder, path, updated, pinned, the start of the text, and type, status and ticket for task notes.", [
             "folder": text("Only notes in this folder and its sub-folders, like Notes or Work/Clients."),
             "limit": number("At most this many notes. Default 50."),
+            "headings": flag("true adds the headings of each note, to tell similar notes apart."),
         ], required: [], readOnly: true),
         tool("search_notes", "Search the titles and the text of the notes, like the search in Slate. Returns the notes with a short part of the matching text.", [
             "query": text("The words to search for."),
@@ -54,6 +55,9 @@ enum MCPToolCatalog {
             "body": text("The new Markdown body, without the header."),
             "expectedHash": text("The hash that read_note returned."),
         ], required: ["id", "body", "expectedHash"], destructive: true),
+        tool("batch_edit", "Make several small changes in one call, in one or more notes. Slate checks every operation first: when one fails, nothing is written. Each note is written once, and Slate keeps one version for the whole batch.", [
+            "operations": operations("The changes, in order. Each one has tool (replace_in_note, update_section, append_to_note or set_plan_item) and the arguments of that tool: id or task, and expectedHash if you want the check."),
+        ], required: ["operations"], destructive: true),
         tool("move_note", "Move a note to another folder. Links to images in the note keep working.", [
             "id": text("The note id."),
             "folder": text("The folder to move the note to."),
@@ -71,7 +75,7 @@ enum MCPToolCatalog {
         tool("open_in_slate", "Show a note in the Slate app.", [
             "id": text("The note id."),
         ], required: ["id"], readOnly: true),
-        tool("project_context", "Find the Slate project of a code repository and read its tasks: status, ticket, branch, folders, and the task of the current branch. Call it at the start of a session.", [
+        tool("project_context", "Find the Slate project of a code repository and read its tasks: status, ticket, branch, folders, plan progress, and the task of the current branch with every step of its plan. Call it at the start of a session.", [
             "path": text("The working directory of the repository. Default: the directory the server runs in."),
             "project": text("The project name in Slate, when the repository is not linked."),
         ], required: [], readOnly: true),
@@ -86,6 +90,11 @@ enum MCPToolCatalog {
             "task": text("The task: its note id, its folder like MyApp/ABC-123 Fix login, or its ticket."),
             "status": text("todo, active, review, done or dropped."),
         ], required: ["task", "status"]),
+        tool("set_plan_item", "Mark a step of the Plan of a task note done or not done. The Plan is a checklist: - [ ] 1. The step. Returns the plan with every step.", [
+            "task": text("The task: its note id, its folder, or its ticket."),
+            "item": text("The step number, like 2, or a part of its text that matches one step."),
+            "done": flag("true (default) marks the step done, false marks it open again."),
+        ], required: ["task", "item"]),
         tool("log_progress", "Add a dated entry to the Log section of a task note: what was done, what is left, the next step. Returns the entry as written.", [
             "task": text("The task: its note id, its folder, or its ticket."),
             "text": text("The Markdown text of the entry."),
@@ -119,6 +128,35 @@ enum MCPToolCatalog {
 
     private static func text(_ description: String) -> Value {
         ["type": "string", "description": .string(description)]
+    }
+
+    private static func flag(_ description: String) -> Value {
+        ["type": "boolean", "description": .string(description)]
+    }
+
+    private static func operations(_ description: String) -> Value {
+        [
+            "type": "array",
+            "description": .string(description),
+            "items": [
+                "type": "object",
+                "properties": [
+                    "tool": ["type": "string", "enum": ["replace_in_note", "update_section", "append_to_note", "set_plan_item"]],
+                    "id": ["type": "string"],
+                    "task": ["type": "string"],
+                    "old": ["type": "string"],
+                    "new": ["type": "string"],
+                    "heading": ["type": "string"],
+                    "text": ["type": "string"],
+                    "section": ["type": "string"],
+                    "position": ["type": "string"],
+                    "item": ["type": "string"],
+                    "done": ["type": "boolean"],
+                    "expectedHash": ["type": "string"],
+                ],
+                "required": ["tool"],
+            ],
+        ]
     }
 
     private static func number(_ description: String) -> Value {

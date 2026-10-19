@@ -19,7 +19,7 @@ Write to Slate only through the `slate` MCP tools, never with file tools. The to
    1. the task of the current branch from `project_context`;
    2. the task with the ticket the user named;
    3. no task yet: call `start_task` with a title like `ABC-123 Fix the login crash`. Take the ticket from the user's message or the branch name. Ask the user when neither has one.
-4. Read the task note once with `read_note`: the Plan, the Questions and the last two or three Log entries. Later in the session read one part with `read_section`.
+4. `project_context` shows the plan of the current task: how many steps are done and the next one. Read the task note once with `read_note`: the Plan, the Questions and the last two or three Log entries. Later in the session read one part with `read_section`.
 5. Tell the user in two or three lines where the last session stopped and what the next step is.
 6. If the status is `todo` and work starts now, call `set_task_status` with `active`.
 
@@ -29,12 +29,14 @@ Add text with `append_to_note` and its `section`. For a list that keeps the newe
 
 - `replace_in_note`: one line or one table row, like `- [ ] 2. Tests` to `- [x] 2. Tests`. Copy `old` exactly from the note. When it is in the note more than once, add more of the text around it.
 - `update_section`: the whole text under one heading, like Status or Plan.
+- `set_plan_item`: mark a step of the Plan done, by its number or a part of its text.
+- `batch_edit`: several of the changes above in one call. When one fails, nothing is written.
 - `update_note`: only when most of the note changes. Pass the hash from `read_note`.
 
 | Section | What goes there |
 |---|---|
 | Context | the ticket link, the MR link, what the task is, limits that the owner gave. Write it once at the start |
-| Plan | numbered checklist steps (`- [ ] 1. …`). Mark a step done with `replace_in_note`; change the plan with `update_section` |
+| Plan | numbered checklist steps (`- [ ] 1. …`). Mark a step done with `set_plan_item`; change the plan with `update_section` |
 | Findings | one bullet per fact: a cause, a measured number, a place in code as `path/File.swift:42` |
 | Links | MRs, docs, other tickets |
 | Questions | open questions to the owner or a team. When one is answered, remove it and write the answer in Findings |

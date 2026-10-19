@@ -75,6 +75,28 @@ import Testing
         #expect((context["repository"] as? [String: Any])?["branch"] as? String == "feature/ABC-123-fix-login")
     }
 
+    @Test func setPlanItemMarksAStepAndTheContextCountsThem() async throws {
+        try await makeRepository()
+        _ = try await useCases.createProject.execute(name: "MyApp", repositories: [repository.path])
+        let started = try object(await call("start_task", ["title": "ABC-123 Fix login", "path": .string(repository.path)]).text)
+        let id = try #require(started["id"] as? String)
+        let filled = await call("update_section", ["id": .string(id), "heading": "Plan", "text": "- [ ] 1. Read the code\n- [ ] 2. Write the fix"])
+        #expect(filled.isError == false, "\(filled.text)")
+
+        let marked = try object(await call("set_plan_item", ["task": "ABC-123", "item": "read"]).text)
+        let context = try object(await call("project_context", ["path": .string(repository.path)]).text)
+
+        let plan = try #require(marked["plan"] as? [String: Any])
+        #expect(plan["done"] as? Int == 1)
+        #expect(plan["next"] as? String == "2. Write the fix")
+        #expect(try file(try #require(started["path"] as? String)).contains("- [x] 1. Read the code\n- [ ] 2. Write the fix"))
+        let task = try #require((context["tasks"] as? [[String: Any]])?.first)
+        #expect((task["plan"] as? [String: Any])?["total"] as? Int == 2)
+        #expect((task["plan"] as? [String: Any])?["steps"] == nil)
+        let current = try #require(context["currentTask"] as? [String: Any])
+        #expect(((current["plan"] as? [String: Any])?["steps"] as? [[String: Any]])?.count == 2)
+    }
+
     @Test func aWorktreeAndAFreshCloneFindTheSameProject() async throws {
         try await makeRepository()
         _ = try await useCases.createProject.execute(name: "MyApp", repositories: [repository.path])

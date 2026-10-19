@@ -29,6 +29,21 @@ struct MCPArguments {
         return min(max(raw, 1), maximum)
     }
 
+    func bool(_ key: String) -> Bool? {
+        if let value = values[key]?.boolValue {
+            return value
+        }
+        return values[key]?.stringValue.flatMap { Bool($0.lowercased()) }
+    }
+
+    func objects(_ key: String) -> [MCPArguments] {
+        var items = values[key]?.arrayValue
+        if items == nil, let text = values[key]?.stringValue {
+            items = try? JSONDecoder().decode([Value].self, from: Data(text.utf8))
+        }
+        return (items ?? []).compactMap { $0.objectValue.map(MCPArguments.init) }
+    }
+
     func data(_ key: String) -> Data? {
         if let (_, data) = values[key]?.dataValue {
             return data

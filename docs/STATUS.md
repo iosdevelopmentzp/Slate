@@ -383,10 +383,11 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 ### Small changes by agents
 
 78. In Claude Code, in a repository with a task in Slate, ask the agent to mark one Plan step done and to change one row of a table. The agent uses `replace_in_note` or `update_section`, not `update_note`. Open the note in Slate: only those lines changed, and the versions show "Changed" with the agent badge. Ask it to add a line at the top of a changelog section: the line is first.
+79. Ask the agent to mark the first Plan step done: it calls `set_plan_item`, and the next `project_context` shows `done: 1` and the next step. Ask for three changes at once: one `batch_edit` call, and the versions of the note show one agent version, not three.
 
 ## Known gaps
 
-- `FSEventsVaultWatcherIntegrationTests` fails about once in five full runs of `Scripts/test.sh` (`ownWriteDoesNotArrive`, `renameReportsBothPathsAndDeleteReportsThePath`): the FSEvents wait is too short when all suites run at once. Alone the suite passes. Seen since 2026-10-19; the watcher code did not change.
+- `FSEventsVaultWatcherIntegrationTests` fails about once in five full runs of `Scripts/test.sh` (`ownWriteDoesNotArrive`, `renameReportsBothPathsAndDeleteReportsThePath`): the FSEvents wait is too short when all suites run at once. Alone the suite passes. Seen since 2026-10-19; the watcher code did not change. Later on 2026-10-19 `renameReportsBothPathsAndDeleteReportsThePath` also failed alone, with and without the batch_edit change (checked with `git stash`): FSEvents sent `.rescan` instead of the two paths. Fix the test on its own.
 
 - Tables, second round: a drag that starts in the text of the cell being edited selects text only; start the drag on another cell or use Shift-click.
 

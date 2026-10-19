@@ -7,6 +7,9 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- `batch_edit` makes several small changes in one call, in one or more notes. Slate checks all of them first, so when one fails nothing is written, and it keeps one version for the whole batch.
+- The Plan of a task note is a checklist that agents can read and change. `set_plan_item` marks a step done by its number or its text, and `project_context` shows for each task how many steps are done and the next step.
+- `list_notes` returns the type, status and ticket of task notes, and the headings of each note with `headings: true`.
 - Agents can change a small part of a note. `replace_in_note` replaces one exact piece of text, like one table row or `[ ]` to `[x]`. `update_section` replaces the text under one heading. `read_section` reads one section. Before, an agent had to read and write the whole note for every small change.
 - `append_to_note` takes `position: top`, for lists that keep the newest entry first, like a changelog.
 - `list_backlinks` lists the notes that link to a note with `[[its name]]`.

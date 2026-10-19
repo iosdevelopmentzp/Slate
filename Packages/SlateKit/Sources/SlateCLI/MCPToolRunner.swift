@@ -33,6 +33,8 @@ struct MCPToolRunner: Sendable {
         case "update_section": try await updateSection(arguments)
         case "replace_in_note": try await replaceInNote(arguments)
         case "list_backlinks": try await listBacklinks(arguments)
+        case "batch_edit": try await batchEdit(arguments)
+        case "set_plan_item": try await setPlanItem(arguments)
         case "move_note": try await moveNote(arguments)
         case "trash_note": try await trashNote(arguments)
         case "attach_image": try await attachImage(arguments)
@@ -110,8 +112,16 @@ struct MCPToolRunner: Sendable {
     }
 
     func afterWrite(_ tool: String, title: String, path: VaultPath) async {
+        await record(tool, title: title, path: path)
+        await snapshot("agent: \(tool) \(title)")
+    }
+
+    func record(_ tool: String, title: String, path: VaultPath) async {
         try? await ports.agentChanges.record(AgentChange(date: ports.clock.now(), tool: tool, title: title, path: path))
-        _ = try? await useCases.snapshot.execute(push: false, message: "agent: \(tool) \(title)")
+    }
+
+    func snapshot(_ message: String) async {
+        _ = try? await useCases.snapshot.execute(push: false, message: message)
     }
 
     func json(_ object: Any) -> String {
@@ -120,7 +130,7 @@ struct MCPToolRunner: Sendable {
     }
 
     func summaryObject(_ summary: NoteSummary) -> [String: Any] {
-        [
+        var object: [String: Any] = [
             "id": summary.id.rawValue,
             "title": summary.title,
             "folder": summary.path.folder,
@@ -129,5 +139,11 @@ struct MCPToolRunner: Sendable {
             "pinned": summary.pinned,
             "preview": summary.preview,
         ]
+        if summary.type != NoteType.defaultName {
+            object["type"] = summary.type
+        }
+        object["status"] = summary.status?.rawValue
+        object["ticket"] = summary.ticket
+        return object
     }
 }

@@ -60,11 +60,11 @@ import Testing
         return try object(answer.text)["id"] as? String ?? ""
     }
 
-    @Test func theCatalogHasTheTwentyTwoTools() {
+    @Test func theCatalogHasTheTwentyFourTools() {
         #expect(MCPToolCatalog.tools.map(\.name) == [
             "list_folders", "list_notes", "search_notes", "read_note", "read_section", "list_backlinks", "create_note", "append_to_note",
-            "replace_in_note", "update_section", "update_note", "move_note", "trash_note", "attach_image", "open_in_slate",
-            "project_context", "start_task", "set_task_status", "log_progress", "add_file", "list_files", "save_version",
+            "replace_in_note", "update_section", "update_note", "batch_edit", "move_note", "trash_note", "attach_image", "open_in_slate",
+            "project_context", "start_task", "set_task_status", "set_plan_item", "log_progress", "add_file", "list_files", "save_version",
         ])
         #expect(MCPToolCatalog.tools.allSatisfy { ($0.description ?? "").isEmpty == false })
     }
@@ -190,6 +190,62 @@ import Testing
 
         #expect(answer.isError)
         #expect(try file("Work/Plan.md").hasSuffix("---\na\n"))
+    }
+
+    @Test func batchEditChangesSeveralNotesAndKeepsOneVersion() async throws {
+        let plan = try await create("Plan", body: "## Status\n\nactive\n\n## Steps\n\n- [ ] a\n- [ ] b\n")
+        let log = try await create("Changelog", body: "## Changes\n\n- old\n")
+        let operations: Value = [
+            ["tool": "replace_in_note", "id": .string(plan), "old": "- [ ] a", "new": "- [x] a"],
+            ["tool": "update_section", "id": .string(plan), "heading": "Status", "text": "review"],
+            ["tool": "append_to_note", "id": .string(log), "section": "Changes", "text": "- new", "position": "top"],
+        ]
+
+        let answer = await call("batch_edit", ["operations": operations])
+
+        #expect(answer.isError == false, "\(answer.text)")
+        #expect(try object(answer.text)["operations"] as? Int == 3)
+        #expect(try file("Notes/Plan.md").hasSuffix("---\n## Status\n\nreview\n\n## Steps\n\n- [x] a\n- [ ] b\n"))
+        #expect(try file("Notes/Changelog.md").hasSuffix("## Changes\n\n- new\n- old\n"))
+        #expect(try await ports.agentChanges.changes(after: .distantPast).map(\.tool).suffix(2) == ["batch_edit", "batch_edit"])
+    }
+
+    @Test func batchEditWritesNothingWhenOneOperationFails() async throws {
+        let plan = try await create("Plan", body: "- [ ] a\n")
+        let before = try file("Notes/Plan.md")
+        let operations: Value = [
+            ["tool": "replace_in_note", "id": .string(plan), "old": "- [ ] a", "new": "- [x] a"],
+            ["tool": "replace_in_note", "id": .string(plan), "old": "- [ ] z", "new": "x"],
+        ]
+
+        let answer = await call("batch_edit", ["operations": operations])
+        let wrongTool = await call("batch_edit", ["operations": [["tool": "trash_note", "id": .string(plan)]]])
+
+        #expect(answer.isError)
+        #expect(answer.text.hasPrefix("Operation 2: The note does not have this text."))
+        #expect(answer.text.hasSuffix("Nothing was written."))
+        #expect(try file("Notes/Plan.md") == before)
+        #expect(wrongTool.text.hasPrefix("Operation 1: batch_edit takes replace_in_note"))
+    }
+
+    @Test func batchEditTakesTheOperationsAsAJSONString() async throws {
+        let plan = try await create("Plan", body: "- [ ] a\n")
+
+        let answer = await call("batch_edit", ["operations": .string("[{\"tool\": \"replace_in_note\", \"id\": \"\(plan)\", \"old\": \"[ ]\", \"new\": \"[x]\"}]")])
+
+        #expect(answer.isError == false, "\(answer.text)")
+        #expect(try file("Notes/Plan.md").hasSuffix("---\n- [x] a\n"))
+    }
+
+    @Test func listNotesGivesHeadingsWhenAsked() async throws {
+        try await create("Details A", body: "Same start\n\n## Login\n")
+        try await create("Details B", body: "Same start\n\n## Payments\n")
+
+        let plain = try array(await call("list_notes").text)
+        let detailed = try array(await call("list_notes", ["headings": true]).text)
+
+        #expect(plain.allSatisfy { $0["headings"] == nil })
+        #expect(detailed.compactMap { $0["headings"] as? [String] } == [["## Payments"], ["## Login"]])
     }
 
     @Test func listBacklinksFindsTheNotesThatLinkHere() async throws {

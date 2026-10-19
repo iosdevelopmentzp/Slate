@@ -33,7 +33,7 @@ Three layers, each useful on its own.
 | Tool | Input | Does |
 |---|---|---|
 | `list_folders` | — | folders with note counts |
-| `list_notes` | `folder?`, `limit?` | summaries: id, title, folder, updated, pinned, preview |
+| `list_notes` | `folder?`, `limit?`, `headings?` | summaries: id, title, folder, updated, pinned, preview, and type, status and ticket when set; `headings: true` adds the headings of each note |
 | `search_notes` | `query`, `folder?`, `limit?` | the app's search: titles and text, snippets |
 | `read_note` | `id` or `path` | the whole file (header and body) plus `hash` |
 | `read_section` | `id` or `path`, `heading` | the text under one heading (with its sub-sections) plus the `hash` of the note; a missing section names the headings that exist |
@@ -43,8 +43,10 @@ Three layers, each useful on its own.
 | `replace_in_note` | `id`, `old`, `new`, `expectedHash?` | replaces one exact piece of the body (`TextReplacePolicy`); text that is missing or found more than once is refused with a sentence |
 | `update_section` | `id`, `heading`, `text`, `expectedHash?` | replaces the text under one heading and keeps the rest (`NoteSectionPolicy.replacing`); a missing section is added at the end |
 | `update_note` | `id`, `body`, `expectedHash` | replaces the body through `SaveNoteUseCase`; refuses with "the note changed since you read it, read it again" when the hash differs |
+| `batch_edit` | `operations` | up to 50 operations of `replace_in_note`, `update_section`, `append_to_note` and `set_plan_item`, each with its own arguments. All are checked in memory first; one failure writes nothing. Each note is written once, and one version is kept for the batch |
 | `move_note` | `id`, `folder` | through `MoveNoteUseCase` |
 | `trash_note` | `id` | through `TrashNoteUseCase`; off by default (permissions below) |
+| `set_plan_item` | `task`, `item`, `done?` | marks one checklist step of the Plan section done or open (`PlanPolicy`); `item` is the step number or a part of its text. `project_context` gives each task `plan` (done, total, next) and the current task every step |
 | `attach_image` | `id`, `base64 or path`, `caption?`, `section?` | imports into `_attachments/` and appends the image block at the end of the note or of the section; `placedAt` in the answer says where |
 | `open_in_slate` | `id` | opens the note in the app through `slate://open` |
 
