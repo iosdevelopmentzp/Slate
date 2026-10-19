@@ -165,6 +165,7 @@ Copy `ShellRunner`, `ShellResult`, `LineBatcher`, `CommandFormatter` from `../De
 - "resource fork, Finder information, or similar detritus not allowed": `xattr -cr Slate/`.
 - Previews in package files render in Xcode through the `Slate` scheme.
 - Never `cp` a new binary over a signed binary that already exists. macOS keeps the code signature of the old file, so the new one is killed at start (exit 137, `Killed: 9`), and `codesign -v` still says it is valid. Copy to a new file and `mv` it over the old one. `install.sh` does this for `~/.local/bin/slate`.
+- Do not start a test copy of Slate with `--args -vault.path <folder>` to keep the real notes safe. The copy shares the settings of the installed Slate (`local.slate.app`), and `AppContainer` saves the folder it opened back to `vault.path`. The installed Slate and `slate mcp` then open the test folder. If it happens, restore it with `defaults write local.slate.app vault.path <real folder>` and restart Slate.
 
 ## 14. Performance measurement
 
