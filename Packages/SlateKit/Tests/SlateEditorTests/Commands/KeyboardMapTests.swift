@@ -47,4 +47,8 @@ import Testing
         #expect(KeyboardMap.caretDirection(for: event("", keyCode: KeyboardMap.arrowUp, flags: [.shift])) == nil)
         #expect(KeyboardMap.caretDirection(for: event("", keyCode: KeyboardMap.arrowUp, flags: [.control, .shift, .command])) == nil)
     }
+
+    @Test func optionShiftCommandJFormatsJSON() {
+        #expect(KeyboardMap.command(for: event("J", flags: [.command, .option, .shift])) == .formatJSON)
+    }
 }

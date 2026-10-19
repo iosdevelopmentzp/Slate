@@ -20,6 +20,14 @@ enum CodeText {
         return looksLikeCode(normalized) ? Block(code: trimmingBlankLines(normalized, leading: true), language: nil) : nil
     }
 
+    static func formattedJSON(_ text: String) -> String? {
+        let plain = text
+            .replacingOccurrences(of: RichText.lineBreakString, with: "\n")
+            .replacingOccurrences(of: RichText.attachmentString, with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return isJSON(plain) ? prettyJSON(plain) : nil
+    }
+
     static func isJSON(_ text: String) -> Bool {
         guard let first = text.first, first == "{" || first == "[", let data = text.data(using: .utf8) else { return false }
         return (try? JSONSerialization.jsonObject(with: data)) != nil

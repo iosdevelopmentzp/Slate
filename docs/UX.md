@@ -148,6 +148,7 @@ Rules for text: a sentence, not a label with a colon, wherever there is room. Ve
 | `⇧⌘A` | Attach file |
 | `⌃⇧↑`, `⌃⇧↓` | Add a caret on the line above or below (Edit menu). Typing, Backspace, Delete, Tab, ⇧Tab and the arrows then act at every caret; Tab indents a list item and puts a tab elsewhere; a deletion never joins two paragraphs. Esc, a click, Enter, paste, a format command or Undo leave one caret. While there are several carets Slate draws all of them, so they blink together; they do not work in table cells |
 | `⌥⌘T` | Table |
+| `⌥⇧⌘J` | Format JSON (also in the "…" menu of the format bar): the selection, or the code block at the caret, becomes a `json` code block with two-space indents. Text before and after the selection on the same line stays as its own paragraph. Text that is not JSON stays as it is, with the toast "The selection is not valid JSON" |
 | `⌘,` | Settings |
 | `Esc` | Back |
 

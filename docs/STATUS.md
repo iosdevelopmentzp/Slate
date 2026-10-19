@@ -372,6 +372,10 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 74. With three carets click somewhere, or press Enter, or press `⇧⌘H`: one caret is left and the action works as with one caret.
 75. Three carets blink together. In a list of three items put carets in the second and third items and press Tab: both move in; ⇧Tab moves them back. In plain lines Tab puts a tab at every caret.
 
+### Format JSON
+
+76. Open the note with the JSON that was pasted line by line, select from `{` to the last `}` and press `⌥⇧⌘J`: one JSON code block with indented lines; the lines above and below stay. `⌘Z` brings the old lines back. Select a word and press `⌥⇧⌘J`: the toast "The selection is not valid JSON".
+
 ## Known gaps
 
 - `FSEventsVaultWatcherIntegrationTests` fails about once in five full runs of `Scripts/test.sh` (`ownWriteDoesNotArrive`, `renameReportsBothPathsAndDeleteReportsThePath`): the FSEvents wait is too short when all suites run at once. Alone the suite passes. Seen since 2026-10-19; the watcher code did not change.

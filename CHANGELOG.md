@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Format JSON: select JSON (or put the caret in a code block) and press `⌥⇧⌘J`, or choose Format JSON in the "…" menu or the Format menu. The text becomes a JSON code block with indented lines, even when it was spread over many paragraphs. One Undo brings the old text back. When the text is not JSON, a toast says so and nothing changes.
 - Several carets, as in Xcode: `⌃⇧↑` and `⌃⇧↓` (or Edit → Add Caret Above, Add Caret Below) add a caret on the line above or below, in the same column. Typing, Backspace, Delete, Tab, ⇧Tab and the arrow keys then act at every caret, and one Undo takes back the typing at all of them. Tab indents each list item that has a caret and puts a tab at the other carets. All carets blink together. Backspace at the start of a line does not join it with the line above. Esc, a click, Enter, paste or a format command leave one caret. With one caret the editor works as before.
 - Paste JSON or code and it becomes a code block: one block in a monospaced font, with no space between the lines. JSON on one line is split into indented lines; JSON that already has lines keeps them. This also works for code copied from a web page. Plain text stays paragraphs as before.
 - A Code block button in the format bar. It turns the selected lines into one code block, and inside a code block it turns the block back into paragraphs. The style is now called Code block instead of Monospaced.

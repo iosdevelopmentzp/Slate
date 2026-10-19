@@ -53,6 +53,7 @@ The owner takes these on a real screen and puts them in `docs/screenshots/`.
 | `⇧⌘A` | Attach a file |
 | `⌃⇧↑`, `⌃⇧↓` | Add a caret on the line above or below, then type at every caret. Esc leaves one caret |
 | `⌥⌘T` | Table |
+| `⌥⇧⌘J` | Format the selected JSON, or the code block at the caret |
 | `⌘,` | Settings |
 | `Esc` | Back, and closes the panel |
 

@@ -48,6 +48,8 @@ extension RichTextController {
             handlers.requestScreenshot(.region)
         case .indent(let delta):
             _ = indentLists(by: delta)
+        case .formatJSON:
+            formatJSON()
         case .table:
             if textView.selectedRange().length == 0 || convertSelectionToTable() == false {
                 insertTable()

@@ -43,4 +43,9 @@ import Testing
         #expect(CodeText.block(from: "one line with {braces}") == nil)
         #expect(CodeText.block(from: "{not json") == nil)
     }
+
+    @Test func formattingJSONReadsLineBreaksAndSpacesAroundColons() {
+        #expect(CodeText.formattedJSON("{\u{2028}\"a\" : [ ]\u{2028}}") == "{\n  \"a\": []\n}")
+        #expect(CodeText.formattedJSON("not json") == nil)
+    }
 }

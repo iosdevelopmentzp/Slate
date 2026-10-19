@@ -41,6 +41,9 @@ enum KeyboardMap {
             default: return nil
             }
         }
+        if flags == [.command, .option, .shift], key == "j" {
+            return .formatJSON
+        }
         if flags == [.command, .option], key == "t" {
             return .table
         }

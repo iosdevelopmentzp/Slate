@@ -21,6 +21,7 @@ package enum EditorMenuActions {
     package static let screenshot = #selector(RichTextView.slateScreenshot(_:))
     package static let indent = #selector(RichTextView.slateIndent(_:))
     package static let outdent = #selector(RichTextView.slateOutdent(_:))
+    package static let formatJSON = #selector(RichTextView.slateFormatJSON(_:))
     package static let caretAbove = #selector(RichTextView.slateCaretAbove(_:))
     package static let caretBelow = #selector(RichTextView.slateCaretBelow(_:))
     package static let find = #selector(RichTextView.slateFind(_:))

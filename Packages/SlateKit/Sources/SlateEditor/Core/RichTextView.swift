@@ -130,6 +130,7 @@ final class RichTextView: NSTextView {
     @objc func slateIndent(_ sender: Any?) { controller?.perform(.indent(1)) }
     @objc func slateOutdent(_ sender: Any?) { controller?.perform(.indent(-1)) }
     @objc func slateTable(_ sender: Any?) { controller?.perform(.table) }
+    @objc func slateFormatJSON(_ sender: Any?) { controller?.perform(.formatJSON) }
     @objc func slateCaretAbove(_ sender: Any?) { _ = controller?.addCaret(.up) }
     @objc func slateCaretBelow(_ sender: Any?) { _ = controller?.addCaret(.down) }
     @objc func slatePasteTable(_ sender: Any?) { controller?.pasteAsTable(from: PasteboardBridge.general) }

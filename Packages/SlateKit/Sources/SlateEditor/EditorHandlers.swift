@@ -8,6 +8,7 @@ package struct EditorHandlers {
     package var pasteImage: (Data, String) -> Void
     package var pasteFiles: ([URL]) -> Void
     package var requestScreenshot: (ScreenshotKind) -> Void
+    package var notice: (String) -> Void
 
     package init(
         didEndEditing: @escaping () -> Void = {},
@@ -16,7 +17,8 @@ package struct EditorHandlers {
         attachment: @escaping (String, AttachmentAction) -> Void = { _, _ in },
         pasteImage: @escaping (Data, String) -> Void = { _, _ in },
         pasteFiles: @escaping ([URL]) -> Void = { _ in },
-        requestScreenshot: @escaping (ScreenshotKind) -> Void = { _ in }
+        requestScreenshot: @escaping (ScreenshotKind) -> Void = { _ in },
+        notice: @escaping (String) -> Void = { _ in }
     ) {
         self.didEndEditing = didEndEditing
         self.resolveImage = resolveImage
@@ -25,5 +27,6 @@ package struct EditorHandlers {
         self.pasteImage = pasteImage
         self.pasteFiles = pasteFiles
         self.requestScreenshot = requestScreenshot
+        self.notice = notice
     }
 }

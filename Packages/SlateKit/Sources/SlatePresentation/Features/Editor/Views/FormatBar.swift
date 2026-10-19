@@ -22,6 +22,7 @@ struct FormatBar: View {
             Menu {
                 Button("Divider") { commands.perform(.divider) }
                 Button("Screenshot  ⇧⌘S") { commands.perform(.screenshot) }
+                Button("Format JSON  ⌥⇧⌘J") { commands.perform(.formatJSON) }
             } label: {
                 Image(systemName: "ellipsis")
             }
