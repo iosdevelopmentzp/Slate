@@ -90,7 +90,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         }
         applyAppearance()
         NSApp.mainMenu = mainMenu()
-        NSApp.activate()
+        NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
         layout.isWindowOpen = true
     }
@@ -198,7 +198,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
     private func showWindowAfterCapture() {
         guard isCapturing else { return }
         isCapturing = false
-        NSApp.activate()
+        NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
     }
 
@@ -245,7 +245,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         let window = settingsWindow ?? makeSettingsWindow()
         settingsWindow = window
         applyAppearance()
-        NSApp.activate()
+        NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
     }
 

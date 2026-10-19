@@ -7,6 +7,8 @@ Read the section for a topic before writing code for it. Items marked **verified
 ## 1. Menu bar item and panel — verified (DevHub)
 
 > Slate no longer uses the panel (ADR 0016). The notes below stay for the Quick note panel and for history. The main window: `MainWindow` (`NSWindow`, `collectionBehavior` with `.moveToActiveSpace`), `windowShouldClose` returns `false` and hides the window, `applicationShouldHandleReopen` shows it, `LSUIElement = NO`. To bring a visible window from another desktop, `orderOut` it first, then `makeKeyAndOrderFront`.
+>
+> **Activate with `NSApp.activate(ignoringOtherApps: true)`, not `NSApp.activate()`.** From a status item click the system refuses the plain `activate()` (cooperative activation, macOS 14+): `NSApp.isActive` stays `false` and the window opens behind the active app. The Dock click works either way, because the Dock activates the app itself. `activate(ignoringOtherApps: true)` gives no deprecation warning with the macOS 26 SDK. `NSWorkspace.openApplication` on the own bundle also activates, but it calls `applicationShouldHandleReopen`, which calls `showWindow` again: an endless loop. An `orderFrontRegardless()` or a deferred `activate()` does not help. Checked on 2026-10-19 with a trace file and a `CGEvent` click on the icon.
 
 Copy `AppWindows`, `MenuBarPanel`, `WindowLayout`, the drag and resize views and `HintOverlay` from `../DevHub/Packages/DevHubKit/Sources/DevHubPresentation/Shell/` and rename.
 

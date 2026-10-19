@@ -157,6 +157,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 80. The Slate icon is in the Dock and in ⌘-Tab. Press Attach file and move to the file chooser: the Slate window stays. Choose a file: it is attached.
 81. Press the close button or `⌘W`: the window goes away, the previous app gets the focus, and Slate stays in the Dock. Click the Dock icon: the window comes back with the same folder and note.
 82. Leave the window on desktop 1, move to desktop 2 and click the menu bar icon (or press `⌥⌘N`): the window comes to desktop 2, and macOS does not switch back to desktop 1. Click the icon again: the window hides.
+90. Click in the Terminal, then click the menu bar icon: the Slate window opens in front of the Terminal and takes the keyboard. Do the same with Settings… from the right-click menu of the icon.
 83. Hide the window and quit Slate from the menu bar menu, then open Slate again: only the icons show. Show the window and quit: at the next launch the window opens.
 
 ### Links
