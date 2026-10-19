@@ -146,7 +146,7 @@ Rules for text: a sentence, not a label with a colon, wherever there is room. Ve
 | `⌘K` | Link |
 | `⇧⌘I` | Image |
 | `⇧⌘A` | Attach file |
-| `⌃⇧↑`, `⌃⇧↓` | Add a caret on the line above or below (Edit menu). Typing, Backspace, Delete and the arrows then act at every caret; a deletion never joins two paragraphs. Esc, a click, Enter, Tab, paste, a format command or Undo leave one caret. Extra carets are thin lines that blink; they do not work in table cells |
+| `⌃⇧↑`, `⌃⇧↓` | Add a caret on the line above or below (Edit menu). Typing, Backspace, Delete, Tab, ⇧Tab and the arrows then act at every caret; Tab indents a list item and puts a tab elsewhere; a deletion never joins two paragraphs. Esc, a click, Enter, paste, a format command or Undo leave one caret. While there are several carets Slate draws all of them, so they blink together; they do not work in table cells |
 | `⌥⌘T` | Table |
 | `⌘,` | Settings |
 | `Esc` | Back |

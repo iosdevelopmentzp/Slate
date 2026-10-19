@@ -39,7 +39,7 @@ extension RichTextController {
     func dropExtraCarets() {
         guard multiCaret.isActive else { return }
         multiCaret.extras = []
-        multiCaret.overlay.show([])
+        hideCaretOverlay()
     }
 
     func handleAtCarets(_ selector: Selector) -> Bool? {
@@ -52,6 +52,12 @@ extension RichTextController {
             return true
         case #selector(NSResponder.deleteForward(_:)):
             editAtCarets { self.deletion(after: $0) }
+            return true
+        case #selector(NSResponder.insertTab(_:)):
+            tabAtCarets(1)
+            return true
+        case #selector(NSResponder.insertBacktab(_:)):
+            tabAtCarets(-1)
             return true
         case let move where Self.caretMoves.contains(move):
             let positions = caretLocations.map { moved($0, by: move) }
@@ -77,13 +83,44 @@ extension RichTextController {
 
     func refreshCaretOverlay() {
         guard multiCaret.isActive else { return }
-        multiCaret.overlay.color = textView.insertionPointColor
+        if multiCaret.hiddenCaretColor == nil {
+            multiCaret.hiddenCaretColor = textView.insertionPointColor
+            multiCaret.overlay.color = textView.insertionPointColor
+            textView.insertionPointColor = .clear
+        }
         if multiCaret.overlay.superview !== textView {
             multiCaret.overlay.frame = textView.bounds
             multiCaret.overlay.autoresizingMask = [.width, .height]
             textView.addSubview(multiCaret.overlay)
         }
-        multiCaret.overlay.show(multiCaret.extras.compactMap(caretRect))
+        multiCaret.overlay.show(caretLocations.compactMap(caretRect))
+    }
+
+    private func hideCaretOverlay() {
+        multiCaret.overlay.show([])
+        guard let color = multiCaret.hiddenCaretColor else { return }
+        multiCaret.hiddenCaretColor = nil
+        textView.insertionPointColor = color
+    }
+
+    private func tabAtCarets(_ delta: Int) {
+        let lists = caretLocations.filter { block(at: $0).kind.isList }
+        let primary = textView.selectedRange()
+        textView.breakUndoCoalescing()
+        undoManager.beginUndoGrouping()
+        multiCaret.isApplying = true
+        var paragraphs = Set<Int>()
+        for location in lists where paragraphs.insert(paragraphRange(at: location).location).inserted {
+            textView.setSelectedRange(NSRange(location: location, length: 0))
+            _ = indentLists(by: delta)
+        }
+        textView.setSelectedRange(primary)
+        multiCaret.isApplying = false
+        editAtCarets { location in
+            guard delta > 0, self.block(at: location).kind.isList == false, self.block(at: location).kind.isAttachment == false else { return nil }
+            return (NSRange(location: location, length: 0), NSAttributedString(string: "\t", attributes: self.caretAttributes(at: location)))
+        }
+        undoManager.endUndoGrouping()
     }
 
     private func editAtCarets(_ edit: (Int) -> (NSRange, NSAttributedString)?) {
@@ -113,7 +150,7 @@ extension RichTextController {
         if multiCaret.isActive {
             refreshCaretOverlay()
         } else {
-            multiCaret.overlay.show([])
+            hideCaretOverlay()
         }
     }
 

@@ -370,8 +370,11 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 72. Write three lines `abc`, put the caret after `a` and press `⌃⇧↓` twice: two more carets blink under it. Type `XY`: every line is `aXYbc`. Press `⌘Z` once: all three are `abc` again.
 73. With three carets press `⌘→` and type `!`: each line ends with `!`. Press Backspace twice at the start of the lines: the lines are not joined. Press Esc: one caret is left, and Esc again goes back as before.
 74. With three carets click somewhere, or press Enter, or press `⇧⌘H`: one caret is left and the action works as with one caret.
+75. Three carets blink together. In a list of three items put carets in the second and third items and press Tab: both move in; ⇧Tab moves them back. In plain lines Tab puts a tab at every caret.
 
 ## Known gaps
+
+- `FSEventsVaultWatcherIntegrationTests` fails about once in five full runs of `Scripts/test.sh` (`ownWriteDoesNotArrive`, `renameReportsBothPathsAndDeleteReportsThePath`): the FSEvents wait is too short when all suites run at once. Alone the suite passes. Seen since 2026-10-19; the watcher code did not change.
 
 - Tables, second round: a drag that starts in the text of the cell being edited selects text only; start the drag on another cell or use Shift-click.
 

@@ -3,6 +3,7 @@ import AppKit
 final class MultiCaret {
     var extras: [Int] = []
     var isApplying = false
+    var hiddenCaretColor: NSColor?
     let overlay = CaretOverlay()
 
     var isActive: Bool {
