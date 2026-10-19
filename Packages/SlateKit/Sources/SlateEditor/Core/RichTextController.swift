@@ -380,7 +380,7 @@ final class RichTextController: NSObject {
         } else if selection.location > 0, selection.location <= storage.length, storage.length > 0 {
             isLink = storage.attribute(.slateHref, at: min(selection.location, storage.length - 1), effectiveRange: nil) != nil
         }
-        let state = EditorStyleState(kind: block.kind, inline: inline, isLink: isLink, canFormatText: block.kind.keepsLineBreaks == false && block.kind.isAttachment == false)
+        let state = EditorStyleState(kind: block.kind, inline: inline, isLink: isLink, canFormatText: block.kind.keepsLineBreaks == false && block.kind.isAttachment == false, isInCell: activeTable?.editing != nil)
         if commands.state != state { commands.state = state }
     }
 

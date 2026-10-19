@@ -415,7 +415,7 @@ final class TableBlockView: NSView, NSTextViewDelegate {
 
     func textDidEndEditing(_ notification: Notification) {
         Task { @MainActor [weak self] in
-            guard let self, editing != nil, keptSelection == nil, window != nil, window?.firstResponder !== editor else { return }
+            guard let self, editing != nil, keptSelection == nil, editor.isEditingLink == false, window != nil, window?.firstResponder !== editor else { return }
             endEditing()
         }
     }

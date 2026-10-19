@@ -103,6 +103,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - Note kinds and the New menu, tasks, ticket and branch chips, status, `⌘⇧D`, Today and daily notes (`⌥⌘T`, `⌘[`, `⌘]`), snippets, meetings, tags and tag chips, Insert Template, saved searches, Open TODOs, the palette (`⌘K`), actions, Copy for Slack, Copy as Markdown, Save as HTML and PDF, Float on Top and note windows, the outline, ticket details, the Links and History pages of Settings, the history and push state and the Activity button in the footer. The files and the command line keep working; the code for them is in commit `545e0d6`.
 
 ### Fixed
+- The link window opens and stays open in a table cell too. The cell stopped editing when the window took the keyboard, and the window closed with it. Bold, Italic, Strikethrough and Link in the format bar now work in a table cell.
 - The link window (`⌘K`) no longer closes when you start to type. It did not take the keyboard, so the first letter went into the note and the window closed.
 - `slate mcp` no longer stops working after an install. `install.sh` copied the new `slate` over the old file, and macOS killed the new file at start, so Claude Code showed "Failed to connect". The script now copies to a new file and moves it into place.
 - `⌘`-click on a link in a table cell opens it, like a link in the text: a web address in the browser, `[[Note]]` in Slate. Before, it only placed the cursor.

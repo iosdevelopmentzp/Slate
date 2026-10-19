@@ -8,6 +8,10 @@ final class TableCellEditor: NSTextView {
     var cellAlignment = TableAlignment.none
     private var linkPopover: LinkPopover?
 
+    var isEditingLink: Bool {
+        linkPopover != nil
+    }
+
     static func make() -> TableCellEditor {
         let editor = TableCellEditor(usingTextLayoutManager: true)
         editor.isRichText = true

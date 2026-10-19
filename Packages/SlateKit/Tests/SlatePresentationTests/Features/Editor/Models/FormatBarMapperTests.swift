@@ -40,4 +40,11 @@ import Testing
         #expect(models.map(\.hint) == ["Divider", "Screenshot  ⇧⌘S", "Format JSON  ⌥⇧⌘J"])
         #expect(models.allSatisfy { $0.isEnabled })
     }
+
+    @Test func inATableCellTheTextButtonsAndLinkWork() {
+        let state = EditorStyleState(kind: .table, canFormatText: false, isInCell: true)
+
+        #expect(FormatBarMapper.textButtons(for: state).allSatisfy { $0.isEnabled })
+        #expect(FormatBarMapper.blockButtons(for: state).filter(\.isEnabled).map(\.id) == ["link", "image", "file", "table"])
+    }
 }

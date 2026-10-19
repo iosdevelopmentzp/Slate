@@ -369,4 +369,20 @@ import Testing
 
         #expect(harness.markdown == "Intro\n\n| h2 | h1 |\n| --- | --- |\n| a2 | a1 |\n| b2 | b1 |\n")
     }
+
+    @Test func theCellKeepsEditingWhileTheLinkWindowIsOpen() async throws {
+        let harness = EditorHarness(markdown: "Intro\n\n| What | Where |\n| --- | --- |\n| Story | [TOP-1](https://example.com/1) |\n")
+        harness.window.orderFrontRegardless()
+        harness.layout()
+        let view = try #require(harness.table()?.view())
+        view.beginEditing(TableCellIndex(row: 1, column: 1))
+
+        harness.controller.perform(.link)
+        harness.window.makeFirstResponder(nil)
+        try await Task.sleep(for: .milliseconds(100))
+
+        #expect(view.cellEditor.isEditingLink)
+        #expect(view.editing == TableCellIndex(row: 1, column: 1))
+        harness.window.orderOut(nil)
+    }
 }

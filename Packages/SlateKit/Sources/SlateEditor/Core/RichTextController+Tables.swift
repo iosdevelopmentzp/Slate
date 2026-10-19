@@ -61,12 +61,14 @@ extension RichTextController: TableHost {
             activeTable.endEditing()
         }
         activeTable = view
+        updateState()
     }
 
     func tableEndedEditing(_ view: TableBlockView) {
         if activeTable === view {
             activeTable = nil
         }
+        updateState()
     }
 
     func insertTable(_ model: TableModel = .empty(), editing: Bool = true) {
