@@ -48,6 +48,14 @@ enum FormatBarMapper {
         ]
     }
 
+    static func moreButtons(for state: EditorStyleState) -> [FormatButtonModel] {
+        [
+            FormatButtonModel(id: "divider", systemImage: "minus", hint: "Divider", command: .divider, isActive: false, isEnabled: true),
+            FormatButtonModel(id: "screenshot", systemImage: "camera.viewfinder", hint: "Screenshot  ⇧⌘S", command: .screenshot, isActive: false, isEnabled: true),
+            FormatButtonModel(id: "formatJSON", systemImage: "curlybraces", hint: "Format JSON  ⌥⇧⌘J", command: .formatJSON, isActive: false, isEnabled: true),
+        ]
+    }
+
     private static func title(for kind: BlockKind) -> String {
         styleName(for: EditorStyleState(kind: kind))
     }

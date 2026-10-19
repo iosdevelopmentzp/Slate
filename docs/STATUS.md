@@ -376,6 +376,10 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 
 76. Open the note with the JSON that was pasted line by line, select from `{` to the last `}` and press `⌥⇧⌘J`: one JSON code block with indented lines; the lines above and below stay. `⌘Z` brings the old lines back. Select a word and press `⌥⇧⌘J`: the toast "The selection is not valid JSON".
 
+### Wide format bar
+
+77. Make the window wide: Divider, Screenshot and Format JSON are buttons at the end of the format bar, with no "…". Make the window narrow, or hide the folders and make the list column wide: the three buttons go back into the "…" menu, and nothing is cut off.
+
 ## Known gaps
 
 - `FSEventsVaultWatcherIntegrationTests` fails about once in five full runs of `Scripts/test.sh` (`ownWriteDoesNotArrive`, `renameReportsBothPathsAndDeleteReportsThePath`): the FSEvents wait is too short when all suites run at once. Alone the suite passes. Seen since 2026-10-19; the watcher code did not change.

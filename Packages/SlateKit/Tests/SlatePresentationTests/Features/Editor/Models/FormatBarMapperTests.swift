@@ -32,4 +32,12 @@ import Testing
 
         #expect(hints == ["Bold  ⌘B", "Italic  ⌘I", "Strikethrough  ⇧⌘X", "Checklist  ⇧⌘L", "Bulleted list  ⇧⌘7", "Numbered list  ⇧⌘9", "Quote  ⌘'", "Code block  ⇧⌘M", "Link  ⌘K", "Image  ⇧⌘I", "Attach file  ⇧⌘A", "Table  ⌥⌘T"])
     }
+
+    @Test func moreButtonsHoldDividerScreenshotAndFormatJSON() {
+        let models = FormatBarMapper.moreButtons(for: EditorStyleState(kind: .monospaced, canFormatText: false))
+
+        #expect(models.map(\.command) == [.divider, .screenshot, .formatJSON])
+        #expect(models.map(\.hint) == ["Divider", "Screenshot  ⇧⌘S", "Format JSON  ⌥⇧⌘J"])
+        #expect(models.allSatisfy { $0.isEnabled })
+    }
 }

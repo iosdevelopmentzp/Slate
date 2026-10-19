@@ -9,36 +9,55 @@ struct FormatBar: View {
 
     var body: some View {
         let state = commands.state
-        HStack(spacing: 2) {
-            styleMenu(for: state)
-            gap
-            ForEach(FormatBarMapper.textButtons(for: state)) { model in
-                FormatButton(model: model) { commands.perform(model.command) }
-            }
-            gap
-            ForEach(FormatBarMapper.blockButtons(for: state)) { model in
-                FormatButton(model: model) { commands.perform(model.command) }
-            }
-            Menu {
-                Button("Divider") { commands.perform(.divider) }
-                Button("Screenshot  ⇧⌘S") { commands.perform(.screenshot) }
-                Button("Format JSON  ⌥⇧⌘J") { commands.perform(.formatJSON) }
-            } label: {
-                Image(systemName: "ellipsis")
-            }
-            .menuStyle(.button)
-            .buttonStyle(.plain)
-            .menuIndicator(.hidden)
-            .foregroundStyle(.secondary)
-            .frame(width: 28, height: 26)
-            .hint("More")
-            .accessibilityLabel("More")
+        ViewThatFits(in: .horizontal) {
+            buttons(for: state, showsMore: true)
+            buttons(for: state, showsMore: false)
         }
         .padding(.horizontal, 6)
         .frame(height: Self.height)
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous).strokeBorder(Theme.border.opacity(0.6)))
         .shadow(color: Theme.shadow, radius: 4, y: 1)
+    }
+
+    private func buttons(for state: EditorStyleState, showsMore: Bool) -> some View {
+        HStack(spacing: 2) {
+            styleMenu(for: state)
+            gap
+            group(FormatBarMapper.textButtons(for: state))
+            gap
+            group(FormatBarMapper.blockButtons(for: state))
+            if showsMore {
+                gap
+                group(FormatBarMapper.moreButtons(for: state))
+            } else {
+                moreMenu(for: state)
+            }
+        }
+        .fixedSize()
+    }
+
+    private func group(_ models: [FormatButtonModel]) -> some View {
+        ForEach(models) { model in
+            FormatButton(model: model) { commands.perform(model.command) }
+        }
+    }
+
+    private func moreMenu(for state: EditorStyleState) -> some View {
+        Menu {
+            ForEach(FormatBarMapper.moreButtons(for: state)) { model in
+                Button(model.hint) { commands.perform(model.command) }
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .foregroundStyle(.secondary)
+        .frame(width: 28, height: 26)
+        .hint("More")
+        .accessibilityLabel("More")
     }
 
     private func styleMenu(for state: EditorStyleState) -> some View {

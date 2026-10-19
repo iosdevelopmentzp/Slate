@@ -64,6 +64,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - The width of the list is draggable (260 to 420 points, double-click for the default) and remembered, and so is the sidebar (`⌘0` in the panel too).
 
 ### Changed
+- The format bar shows Divider, Screenshot and Format JSON as buttons when the window is wide enough. In a narrow window they stay in the "…" menu.
 - The quick note field has the soft look: a rounded white card, the folder as a tinted chip on the left and "⏎ Save" on the right.
 - Settings → General follows the order of the design: notes folder, login and the quick note folder, appearance and text size, backup and Trash days, Check-up.
 - `⌘↑` and `⌘↓` move to the previous and next note when the note text is not being edited, also from the main menu. In the text they go to the start and the end.
