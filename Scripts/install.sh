@@ -8,7 +8,8 @@ BIN="$HOME/.local/bin"
 
 swift build --package-path "$ROOT/Packages/SlateKit" --scratch-path "$ROOT/DerivedData/InstallCLI" -c release --product slate -q
 mkdir -p "$BIN"
-cp "$ROOT/DerivedData/InstallCLI/release/slate" "$BIN/slate"
+cp "$ROOT/DerivedData/InstallCLI/release/slate" "$BIN/slate.new"
+mv -f "$BIN/slate.new" "$BIN/slate"
 
 "$ROOT/Scripts/quit.sh"
 rm -rf "$TARGET"

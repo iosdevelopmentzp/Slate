@@ -162,6 +162,7 @@ Copy `ShellRunner`, `ShellResult`, `LineBatcher`, `CommandFormatter` from `../De
 - `Scripts/test.sh`: `cd Packages/SlateKit && swift test -q`, one summary line, `--skip integration` filters suites whose name ends in `IntegrationTests`.
 - "resource fork, Finder information, or similar detritus not allowed": `xattr -cr Slate/`.
 - Previews in package files render in Xcode through the `Slate` scheme.
+- Never `cp` a new binary over a signed binary that already exists. macOS keeps the code signature of the old file, so the new one is killed at start (exit 137, `Killed: 9`), and `codesign -v` still says it is valid. Copy to a new file and `mv` it over the old one. `install.sh` does this for `~/.local/bin/slate`.
 
 ## 14. Performance measurement
 

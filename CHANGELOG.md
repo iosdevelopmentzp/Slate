@@ -89,6 +89,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - Note kinds and the New menu, tasks, ticket and branch chips, status, `⌘⇧D`, Today and daily notes (`⌥⌘T`, `⌘[`, `⌘]`), snippets, meetings, tags and tag chips, Insert Template, saved searches, Open TODOs, the palette (`⌘K`), actions, Copy for Slack, Copy as Markdown, Save as HTML and PDF, Float on Top and note windows, the outline, ticket details, the Links and History pages of Settings, the history and push state and the Activity button in the footer. The files and the command line keep working; the code for them is in commit `545e0d6`.
 
 ### Fixed
+- `slate mcp` no longer stops working after an install. `install.sh` copied the new `slate` over the old file, and macOS killed the new file at start, so Claude Code showed "Failed to connect". The script now copies to a new file and moves it into place.
 - `⌘`-click on a link in a table cell opens it, like a link in the text: a web address in the browser, `[[Note]]` in Slate. Before, it only placed the cursor.
 - Slate froze when a folder had thousands of sub-folders, for example after importing a code repository. The Move to menu of every note card walked the whole folder tree again and again; the tree is now built once.
 - Import Folder… of a git repository root copies only the notes (`.md`), not the code, and skips build folders such as `Pods`, `Carthage`, `node_modules` and `DerivedData`.
