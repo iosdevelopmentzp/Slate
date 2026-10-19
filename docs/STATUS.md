@@ -151,6 +151,13 @@ Numbered. What, then why. A later session must not undo these without a new numb
 77. A new folder starts as "New folder" (then "New folder 2", …) in an inline field with the name selected. Enter or leaving the field makes it; Esc cancels. A name that cannot be used keeps the field open and the toast says why.
 78. `Theme.base` and `Theme.surface` are own dynamic colours (light 0.955 / 1.0 white, dark 0.135 / 0.19 white). The system window and control background colours are too close on macOS 26 for cards to show. Every other colour stays a system colour.
 79. Accent buttons use `AccentButtonStyle` (own capsule in the accent colour), because `.borderedProminent` looks grey in a panel that is not the key window.
+
+### Slate as a window
+
+80. The Slate icon is in the Dock and in ⌘-Tab. Press Attach file and move to the file chooser: the Slate window stays. Choose a file: it is attached.
+81. Press the close button or `⌘W`: the window goes away, the previous app gets the focus, and Slate stays in the Dock. Click the Dock icon: the window comes back with the same folder and note.
+82. Leave the window on desktop 1, move to desktop 2 and click the menu bar icon (or press `⌥⌘N`): the window comes to desktop 2, and macOS does not switch back to desktop 1. Click the icon again: the window hides.
+83. Hide the window and quit Slate from the menu bar menu, then open Slate again: only the icons show. Show the window and quit: at the next launch the window opens.
 80. The sort order is fixed to "date changed" with pinned notes first; the stored `list.sort` is no longer read. `UX.md` has no sort control.
 81. The window uses `.fullSizeContentView` with a transparent title bar; the sidebar title and, with the sidebar hidden, the list title leave 80 pt for the window buttons.
 82. The agent checks the look by rendering views offscreen with `NSHostingView.cacheDisplay` from a throwaway test (not committed). This found the colour problem of decision 78.
@@ -236,6 +243,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 149. The own-write window of the watcher is 10 s, not 2 s. An event counts as Slate's own write only when the hash on disk equals the hash Slate wrote, so a longer window cannot hide an edit by another tool; under load FSEvents reported Slate's writes after more than 2 s. `externalEditArrivesAsAPathChange` writes the file up to three times, because under load the folder event of the setup can arrive with the first write and turn it into a rescan.
 
 150. The folder tree is a `FolderTree` index (parent → sorted children), built once in `VaultStore` when the folders change, together with the Move to targets. Before, `FolderTreeMapper.children` filtered every folder for every node, and every note card built the whole Move to list: with 2,238 folders one card took about 30 s. Now the tree and the menus of 60 cards take 0.13 s in a debug build. Import Folder… of a folder that holds `.git` copies only `.md` files; `Pods`, `Carthage`, `node_modules`, `DerivedData` and `build` folders are always skipped.
+151. Slate is one normal window with a Dock icon (ADR 0016). The close button and `⌘W` hide the window, the Dock icon, the menu bar icon and `⌥⌘N` show it on the current desktop (`moveToActiveSpace`), and the window is open or hidden at launch as it was at quit. The panel is gone; Quick note keeps its panel.
 
 ## Next steps
 
@@ -288,8 +296,8 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 29. `⌃⌥Space` from Xcode: the rounded field appears and Xcode keeps the focus after Esc. Pick a folder in the chip; Enter saves there and the toast says "Saved to …".
 30. Settings → General: enter a git address in "Back up to" and press "Back up now". With a reachable remote the toast says "Backed up"; with a wrong address it says the backup failed, and Activity has the reason.
 31. Move a note with the card menu: the toast offers Undo, and Undo moves it back. Move to Trash: the toast offers Undo, and Undo restores it.
-32. Every key of `UX.md` section 8 works in the window and in the panel, and appears in the main menu of the window (except `⌘F`, decision 96).
-33. Esc in the note text of the panel closes the panel.
+32. Every key of `UX.md` section 8 works in the window and appears in the main menu of the window (except `⌘F`, decision 96).
+33. Esc in the search field clears the search; Esc never hides the window (ADR 0016).
 34. Tab moves from the folders to the list, to the title, to the text, and the focus is visible.
 35. Take the four README screenshots.
 

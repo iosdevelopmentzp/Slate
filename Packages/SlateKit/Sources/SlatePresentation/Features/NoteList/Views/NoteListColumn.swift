@@ -6,7 +6,6 @@ struct NoteListColumn: View {
     @Environment(NoteListStore.self) private var store
     @Environment(SearchStore.self) private var search
     @Environment(WindowLayout.self) private var layout
-    @Environment(\.surface) private var surface
     @FocusState private var isSearchFocused: Bool
     @State private var showsChanges = false
 
@@ -44,10 +43,10 @@ struct NoteListColumn: View {
                 }
                 .disabled(store.source == .trash)
             }
-            .padding(.leading, surface == .window && layout.showsSidebar == false ? WindowLayout.trafficLightsWidth : 16)
+            .padding(.leading, layout.showsSidebar == false ? WindowLayout.trafficLightsWidth : 16)
             .padding(.trailing, Theme.columnPadding)
             .frame(height: 44)
-            .background(PanelDragArea())
+            .background(HeaderDragArea())
             SearchField(prompt: store.source == .trash ? "Search the Trash" : "Search", text: store.source == .trash ? $store.filterText : $search.query, focus: $isSearchFocused)
                 .onSubmit { search.openFirst() }
                 .hint("Search notes (⌘F). Enter opens the first result, Esc clears.")

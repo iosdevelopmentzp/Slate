@@ -72,6 +72,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - The width of the list is draggable (260 to 420 points, double-click for the default) and remembered, and so is the sidebar (`⌘0` in the panel too).
 
 ### Changed
+- Slate is a normal window app with a Dock icon, like Terminal or a browser. The window no longer closes when you click outside it, so a file chooser for Attach file or Image no longer closes Slate. The close button and `⌘W` hide the window and give the focus back to the previous app. The Dock icon, the menu bar icon and `⌥⌘N` show the window again on the desktop you are on, with the same note open; when the window is in front, the menu bar icon and `⌥⌘N` hide it. At launch the window is open or hidden as it was when Slate quit.
 - The format bar shows Divider, Screenshot and Format JSON as buttons when the window is wide enough. In a narrow window they stay in the "…" menu.
 - The quick note field has the soft look: a rounded white card, the folder as a tinted chip on the left and "⏎ Save" on the right.
 - Settings → General follows the order of the design: notes folder, login and the quick note folder, appearance and text size, backup and Trash days, Check-up.
@@ -93,6 +94,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - `slate://open` with a title or an id that matches no note says "Slate found no such note".
 
 ### Removed
+- The panel under the menu bar icon, the "Open as window" button and `⇧⌘O`. The window replaces them.
 - Editor: the Markdown marks on screen, code colours, `[[` completion, moving and duplicating lines (`⌥↑` `⌥↓` `⌘D`), commenting code (`⌘/`) and Find and Replace in the menu (the find bar still has Replace).
 - Note kinds and the New menu, tasks, ticket and branch chips, status, `⌘⇧D`, Today and daily notes (`⌥⌘T`, `⌘[`, `⌘]`), snippets, meetings, tags and tag chips, Insert Template, saved searches, Open TODOs, the palette (`⌘K`), actions, Copy for Slack, Copy as Markdown, Save as HTML and PDF, Float on Top and note windows, the outline, ticket details, the Links and History pages of Settings, the history and push state and the Activity button in the footer. The files and the command line keep working; the code for them is in commit `545e0d6`.
 

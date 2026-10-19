@@ -117,6 +117,8 @@ Each scenario is a test the finished app must pass.
 
 ### 3.1 Menu bar item
 
+> Sections 3.1 to 3.3 describe the first panel. ADR 0016 replaced it with one normal window, a Dock icon and a close button that hides the window.
+
 - Status item with a template SF Symbol (`note.text` or similar). Left click toggles the panel. Right click opens a menu: New Note, New Task, Quick Capture, Today, Open Window, Settings, Quit.
 - **P2**: a small badge in the icon with the count of open TODOs in Today. Off by default.
 

@@ -21,7 +21,7 @@ Reference points: Apple Notes (list and editor, calm), Bear (warm, rounded, one 
 
 ## 2. Layout
 
-Panel and window share one layout with three columns. The panel is what the menu bar icon opens; the window is the same content in a normal window ("Open as window", `⌘⇧O`). Both remember their size.
+Slate is one normal window with three columns (ADR 0016). It has a Dock icon and a menu bar icon. The close button and `⌘W` hide the window and give the focus back to the previous app; the Dock icon, a left click on the menu bar icon or `⌥⌘N` shows it again on the desktop you are on, with the same folder and note. When the window is already in front, the menu bar icon and `⌥⌘N` hide it. The window remembers its frame, and at launch it is open or hidden as it was when Slate quit.
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────┐
@@ -104,7 +104,7 @@ No hex values outside `Theme`. Both appearances checked in every preview.
 - Hover reveals actions with opacity, never with a layout change.
 - Every icon-only button has a hint and an accessibility label.
 - Keyboard focus is visible; Tab order is sidebar → list → title → text.
-- Esc goes one level back: hint → menu → search text → panel.
+- Esc goes one level back: hint → menu → search text. It never hides the window.
 - Drag and drop: a card onto a folder moves it; an image onto the text inserts it at the drop point; a text file onto the list makes a note.
 - Text never jumps: the format bar has a fixed height; the title grows to two lines at most.
 - Right-click menus mirror the hover actions and the main menu.
@@ -128,7 +128,7 @@ Rules for text: a sentence, not a label with a colon, wherever there is room. Ve
 
 | Keys | Action |
 |---|---|
-| `⌥⌘N` (global) | Open Slate (panel or window) |
+| `⌥⌘N` (global) | Show the Slate window on this desktop, or hide it when it is in front |
 | `⌃⌥Space` (global) | Quick note |
 | `⌘N` | New note in the current folder |
 | `⇧⌘N` | New folder |

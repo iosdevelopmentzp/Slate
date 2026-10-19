@@ -9,7 +9,7 @@ import Testing
         let layout = WindowLayout(store: InMemoryKeyValueStore())
 
         #expect(layout.size == WindowLayout.defaultSize)
-        #expect(layout.panelTopLeft == nil)
+        #expect(layout.isWindowOpen)
     }
 
     @Test func tooSmallStoredSizeGrowsToTheMinimum() {
@@ -21,16 +21,16 @@ import Testing
         #expect(layout.size == WindowLayout.minimumSize)
     }
 
-    @Test func sizeAndPositionAreRemembered() {
+    @Test func sizeAndAHiddenWindowAreRemembered() {
         let store = InMemoryKeyValueStore()
         let first = WindowLayout(store: store)
 
         first.size = CGSize(width: 900, height: 600)
-        first.panelTopLeft = CGPoint(x: 40, y: 800)
+        first.isWindowOpen = false
         let second = WindowLayout(store: store)
 
         #expect(second.size == CGSize(width: 900, height: 600))
-        #expect(second.panelTopLeft == CGPoint(x: 40, y: 800))
+        #expect(second.isWindowOpen == false)
     }
 
     @Test func listWidthAndSidebarAreRemembered() {

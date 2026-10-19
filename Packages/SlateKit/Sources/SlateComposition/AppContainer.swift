@@ -28,6 +28,12 @@ public final class AppContainer: NSObject, NSApplicationDelegate {
         }
     }
 
+    public func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        guard let windows else { return true }
+        windows.showWindow()
+        return false
+    }
+
     public func applicationWillTerminate(_ notification: Notification) {
         guard let job = assembly?.pendingSave() else { return }
         let done = DispatchSemaphore(value: 0)

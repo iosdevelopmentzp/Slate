@@ -1,6 +1,6 @@
 # Slate
 
-Notes in folders, in the macOS menu bar. Working name; rename by replacing `Slate`, `slate` and `SLATE_` in this folder.
+Notes in folders, in one macOS window that is one click away in the menu bar. Working name; rename by replacing `Slate`, `slate` and `SLATE_` in this folder.
 
 Slate is a small notes app. You keep notes in folders. You write in formatted text, with a format bar and shortcuts, and you put images in the text. Each note is a plain Markdown file in a folder you choose, so other apps (Obsidian, a text editor, scripts) can read and change it too.
 
@@ -39,7 +39,6 @@ The owner takes these on a real screen and puts them in `docs/screenshots/`.
 | `⌘N`, `⇧⌘N` | New note, new folder |
 | `⌘F` | Search |
 | `⌘0` | Show or hide the folders |
-| `⇧⌘O` | Open the panel as a window |
 | `⌘1` … `⌘9` | Folder by position |
 | `⌘↑`, `⌘↓` | Previous and next note |
 | `⇧⌘P` | Pin or unpin |
@@ -55,7 +54,8 @@ The owner takes these on a real screen and puts them in `docs/screenshots/`.
 | `⌥⌘T` | Table |
 | `⌥⇧⌘J` | Format the selected JSON, or the code block at the caret |
 | `⌘,` | Settings |
-| `Esc` | Back, and closes the panel |
+| `⌘W` | Hide the window. The Dock icon, the menu bar icon or `⌥⌘N` shows it again |
+| `Esc` | Back, and clears the search |
 
 ## Build and run
 
@@ -83,7 +83,7 @@ ln -s "$PWD/Skills/slate-task" ~/.claude/skills/slate-task
 
 The first line gives Claude Code the Slate tools in every folder. The second adds the `slate-task` skill: in a repository linked to a Slate project (Link Repository…), the agent finds its task at the start of a session, keeps Context, Plan, Findings and Log in the task note, and writes what is done and what is next at the end. The skill stays in this repository, so a change to it works in the next session. To use the tools without a question on each call, add `"mcp__slate"` to `permissions.allow` in `~/.claude/settings.json`.
 
-You need Xcode with the macOS 26.4 SDK. You do not need a developer account: the app is signed to run on this Mac only. After `Scripts/run.sh` a note icon appears in the menu bar. Click it to open the panel. Click outside the panel to close it. To see the first launch window again, run `defaults delete local.slate.app vault.path`.
+You need Xcode with the macOS 26.4 SDK. You do not need a developer account: the app is signed to run on this Mac only. After `Scripts/run.sh` the Slate window opens, with an icon in the Dock and a note icon in the menu bar. The close button hides the window; the Dock icon, the menu bar icon or `⌥⌘N` brings it back to the desktop you are on. To see the first launch window again, run `defaults delete local.slate.app vault.path`.
 
 ## Read in this order
 

@@ -6,6 +6,8 @@ Read the section for a topic before writing code for it. Items marked **verified
 
 ## 1. Menu bar item and panel — verified (DevHub)
 
+> Slate no longer uses the panel (ADR 0016). The notes below stay for the Quick note panel and for history. The main window: `MainWindow` (`NSWindow`, `collectionBehavior` with `.moveToActiveSpace`), `windowShouldClose` returns `false` and hides the window, `applicationShouldHandleReopen` shows it, `LSUIElement = NO`. To bring a visible window from another desktop, `orderOut` it first, then `makeKeyAndOrderFront`.
+
 Copy `AppWindows`, `MenuBarPanel`, `WindowLayout`, the drag and resize views and `HintOverlay` from `../DevHub/Packages/DevHubKit/Sources/DevHubPresentation/Shell/` and rename.
 
 - **Do not use `MenuBarExtra(.window)`.** It puts the panel back under the icon on every open and resize and cannot be moved. Use `NSStatusItem` plus an own borderless `NSPanel` subclass: `canBecomeKey` true, `isFloatingPanel`, `level = .statusBar`, `hidesOnDeactivate = false`, `isReleasedWhenClosed = false`, `collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]`, `animationBehavior = .none`, `isMovable = false`, clear background with an own rounded clip and shadow. The SwiftUI `App` body is `Settings { EmptyView() }` only.

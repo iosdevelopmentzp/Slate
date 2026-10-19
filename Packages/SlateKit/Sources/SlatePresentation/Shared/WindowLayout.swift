@@ -22,13 +22,10 @@ final class WindowLayout {
         }
     }
 
-    var panelTopLeft: CGPoint? {
+    var isWindowOpen: Bool {
         didSet {
-            if let panelTopLeft {
-                store.set([Double(panelTopLeft.x), Double(panelTopLeft.y)], forKey: Keys.panelTopLeft)
-            } else {
-                store.remove(forKey: Keys.panelTopLeft)
-            }
+            guard isWindowOpen != oldValue else { return }
+            store.set(isWindowOpen ? "open" : "hidden", forKey: Keys.windowOpen)
         }
     }
 
@@ -61,49 +58,7 @@ final class WindowLayout {
         let storedWidth = store.integer(forKey: Keys.listWidth)
         listWidth = storedWidth > 0 ? Self.clampedListWidth(CGFloat(storedWidth)) : Self.defaultListWidth
         showsSidebar = store.string(forKey: Keys.sidebar) != "hidden"
-        let point = store.doubles(forKey: Keys.panelTopLeft)
-        if let point, point.count == 2 {
-            panelTopLeft = CGPoint(x: point[0], y: point[1])
-        }
-    }
-
-    func panelFrame(anchor: CGPoint, anchorScreen: NSScreen?) -> NSRect {
-        let topLeft = panelTopLeft ?? anchor
-        guard let area = Self.usableArea(of: Self.screen(containing: topLeft) ?? anchorScreen ?? NSScreen.main) else {
-            return NSRect(x: topLeft.x, y: topLeft.y - size.height, width: size.width, height: size.height)
-        }
-        let fitted = Self.clamped(size, to: area.size)
-        if fitted != size {
-            size = fitted
-        }
-        let point = CGPoint(
-            x: min(max(topLeft.x, area.minX), area.maxX - fitted.width),
-            y: min(max(topLeft.y, area.minY + fitted.height), area.maxY)
-        )
-        if panelTopLeft != nil, point != panelTopLeft {
-            panelTopLeft = point
-        }
-        return NSRect(x: point.x, y: point.y - fitted.height, width: fitted.width, height: fitted.height)
-    }
-
-    func fit(_ window: NSWindow) {
-        let frame = panelFrame(anchor: CGPoint(x: window.frame.minX, y: window.frame.maxY), anchorScreen: window.screen)
-        if window.frame != frame {
-            window.setFrame(frame, display: true)
-        }
-    }
-
-    func resize(to proposed: CGSize, in window: NSWindow?) {
-        guard let window, let area = Self.usableArea(of: Self.screen(containing: CGPoint(x: window.frame.minX, y: window.frame.maxY)) ?? window.screen) else {
-            size = Self.clamped(proposed)
-            return
-        }
-        let room = CGSize(width: area.maxX - window.frame.minX, height: window.frame.maxY - area.minY)
-        size = Self.clamped(proposed, to: room)
-    }
-
-    func reset() {
-        size = Self.defaultSize
+        isWindowOpen = store.string(forKey: Keys.windowOpen) != "hidden"
     }
 
     static func clampedListWidth(_ proposed: CGFloat) -> CGFloat {
@@ -131,7 +86,7 @@ final class WindowLayout {
 
     private enum Keys {
         static let size = "window.size"
-        static let panelTopLeft = "window.panelTopLeft"
+        static let windowOpen = "window.open"
         static let listWidth = "window.listWidth"
         static let sidebar = "window.sidebar"
     }

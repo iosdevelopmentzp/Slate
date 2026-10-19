@@ -1,6 +1,6 @@
 # Slate
 
-Personal macOS menu bar notes app for an iOS developer. Markdown files in a local notes folder, a SQLite search index, task notes with ticket and branch, quick capture from a hotkey.
+Personal macOS notes app for an iOS developer: one normal window, a Dock icon and a menu bar icon (ADR 0016). Markdown files in a local notes folder, a SQLite search index, task notes with ticket and branch, quick capture from a hotkey.
 
 Current stage: **Phase 2 built and merged; Phase 3 S5 (agents, `slate mcp`, ADR 0010) and S6, S7 (tables with images in cells, ADR 0009) built**, the owner's manual checks are open (`docs/STATUS.md`, "Manual checks"). v1 shows only Folders and Notes (ADR 0007); the parked features keep their Domain and Data code, their views are gone (the list is in `docs/STATUS.md`). Folders can be made, renamed, coloured and deleted with Undo; the look is soft and rounded (`docs/UX.md` revision 2). The editor is a TextKit 2 rich text editor with a format bar; files stay Markdown (ADR 0008). The quick note field, Settings with backup, and Undo toasts for Move and Trash are done. Tables are block attachments in the editor. Next: the manual checks, then M8 ideas. `docs/STATUS.md` says what is real.
 
@@ -12,7 +12,7 @@ Read first, in this order: this file, `docs/STATUS.md`, `docs/ROADMAP.md`, then 
 - `Config/Slate-Info.plist` (`INFOPLIST_FILE`) holds the `slate://` URL scheme and the "Add to Slate" service; Xcode merges the generated keys into it (`GENERATE_INFOPLIST_FILE` stays on).
 - Local package `Packages/SlateKit` (tools 6.2, Swift 6). `project.pbxproj` holds the package reference.
 - No App Sandbox. Ad-hoc signing (`Sign to Run Locally`). No Apple Developer account. Keep it this way: the app shells out to `screencapture`, `git` and `open`.
-- `INFOPLIST_KEY_LSUIElement = YES`: no Dock icon, the app lives in the menu bar only.
+- `INFOPLIST_KEY_LSUIElement = NO`: Slate has a Dock icon and one main window; the close button hides the window (ADR 0016). The menu bar icon and `⌥⌘N` show the window on the current desktop.
 - `Slate/` is an Xcode synchronized folder. Edit `project.pbxproj` only for build settings, never for file lists. New code goes into the package, not into `Slate/`.
 
 ## Build & Run

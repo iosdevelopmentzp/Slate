@@ -6,8 +6,6 @@ struct SidebarView: View {
     @Environment(NoteListStore.self) private var store
     @Environment(VaultStore.self) private var vault
     @Environment(SearchStore.self) private var search
-    @Environment(\.surface) private var surface
-    @Environment(\.openAsWindow) private var openAsWindow
     @Environment(\.openSettings) private var openSettings
 
     @State private var dropTarget: FolderPath?
@@ -181,17 +179,13 @@ struct SidebarView: View {
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(.secondary)
             Spacer()
-            if surface == .panel {
-                IconButton(systemImage: "macwindow", help: "Open as window (⌘⇧O)") { openAsWindow() }
-                    .accessibilityLabel("Open as window")
-            }
             IconButton(systemImage: "gearshape", help: "Settings (⌘,)") { openSettings() }
                 .accessibilityLabel("Settings")
         }
-        .padding(.leading, surface == .window ? WindowLayout.trafficLightsWidth : 16)
+        .padding(.leading, WindowLayout.trafficLightsWidth)
         .padding(.trailing, 10)
         .frame(height: 44)
-        .background(PanelDragArea())
+        .background(HeaderDragArea())
     }
 
     @ViewBuilder
@@ -323,14 +317,14 @@ private struct SidebarFolder: Identifiable {
 
 #Preview("Light") {
     SidebarView()
-        .previewEnvironment(surface: .window)
+        .previewEnvironment()
         .frame(width: 200, height: 420)
         .preferredColorScheme(.light)
 }
 
 #Preview("Dark") {
     SidebarView()
-        .previewEnvironment(surface: .window)
+        .previewEnvironment()
         .frame(width: 200, height: 420)
         .preferredColorScheme(.dark)
 }

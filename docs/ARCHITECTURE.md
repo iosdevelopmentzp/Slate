@@ -440,7 +440,7 @@ As DevHub: `<Row>Model` is a plain struct with display strings, `Tint`, icon nam
 | `UseCases(ports:)` | Domain | builds every use case |
 | `PresentationAssembly(ports:useCases:kv:…)` | Presentation | builds shared objects and stores in dependency order |
 | `PresentationAssembly.preview()` | Presentation | mocks for previews |
-| `AppWindows(assembly:)` | Presentation | windows and panels |
+| `AppWindows(assembly:)` | Presentation | the main window, Settings, the Quick note panel and the menu bar icon |
 | `AppContainer` (app delegate) | Composition | `applicationDidFinishLaunching` launches; `application(_:open:)` takes URLs (queued until the windows exist); `applicationWillTerminate` runs the quit job. M1: reads `vault.path` from `UserDefaults`; without it shows `FirstLaunchWindow` (default `~/Documents/Slate`, Choose…, Start). Then runs `VaultBootstrap`, builds `Ports.live`, `UseCases`, `PresentationAssembly`, `AppWindows`, writes the default config and templates, and starts the change feed. On `willTerminate` (a selector observer, so it runs on the main actor) it runs `pendingSave()` off the main actor and waits up to 3 s. Later: `ShellRunner`, hotkeys (`KeyboardShortcuts`), `ServicesProvider`, `LoginItem`, `handle(urls:)` |
 | `URLCommandParser` | Domain (M6: pure, shared with the CLI and tested in `SlateDomainTests`) | `URL` → `URLCommand` enum (`new`, `open`, `append`, `capture`, `search`); rejects anything else, and folder names with `/`, a leading `.` or `_` |
 | URL handling | Composition, Presentation | `AppContainer.application(_:open:)` parses and passes the command to `AppWindows.handle(_:)`, which shows the panel and calls `NoteListStore.create/open/append`, `SearchStore` or the capture panel |
@@ -451,8 +451,8 @@ As DevHub: `<Row>Model` is a plain struct with display strings, `Tint`, icon nam
 
 ## 9. Data flows
 
-### 9.1 Open the panel
-Status item click → `AppWindows.togglePanel()` → frame from `WindowLayout`, `makeKeyAndOrderFront` → `RootView` `.task(id: openCount)` → `NoteListStore.refresh()` reads `SearchIndex.summaries` (fast, no file reads) → `EditorStore` keeps the last note.
+### 9.1 Show the window
+Status item click, Dock icon or `⌥⌘N` → `AppWindows.showWindow()` (or `toggleWindow()`) → `MainWindow` with `moveToActiveSpace`, `makeKeyAndOrderFront`; the close button calls `windowShouldClose`, which hides the window instead (ADR 0016) → `RootView` `.task(id: openCount)` → `NoteListStore.refresh()` reads `SearchIndex.summaries` (fast, no file reads) → `EditorStore` keeps the last note.
 
 ### 9.2 Create a note
 `⌘N` → `NoteListStore.createNote(type:)` → `CreateNoteUseCase` (config defaults, template, unique stem, `VaultFileStore.write`, `SearchIndex.upsert`) → event `noteCreated` → `Navigator.select(id)` → `EditorStore.open(id)` reads the file, keeps `loadedHash`, places the caret.

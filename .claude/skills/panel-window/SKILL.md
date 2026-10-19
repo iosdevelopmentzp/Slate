@@ -5,6 +5,8 @@ description: "How Slate's menu bar item, panel and window work: NSStatusItem plu
 
 # Panel and window
 
+> ADR 0016: the panel is gone. Slate has one `MainWindow` (`NSWindow` with `.moveToActiveSpace`), a Dock icon (`LSUIElement = NO`), a close button that hides the window (`windowShouldClose` returns `false`), and `applicationShouldHandleReopen` in `AppContainer`. `Surface`, `MenuBarPanel`, `ResizeGrip` and `openAsWindow` no longer exist. The sections below about the panel are history; the parts about hot keys, appearance, hints and the Quick note panel still apply.
+
 Matches the code of phase 2 (S2 to S4). Hot keys, the capture panel and the login item follow `docs/PLAYBOOK.md` sections 1 to 3.
 
 ## Why not `MenuBarExtra`

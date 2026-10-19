@@ -8,11 +8,8 @@ import SlateUI
 package final class AppWindows: NSObject, NSWindowDelegate {
     private let assembly: PresentationAssembly
     private let statusItem: NSStatusItem
-    private let panel: MenuBarPanel
-    private var window: NSWindow?
-    private var clickMonitor: Any?
-    private var resignObserver: NSObjectProtocol?
-    private var lastPanelTopLeft: CGPoint?
+    private var window: MainWindow?
+    private var activeObserver: NSObjectProtocol?
     private var isCapturing = false
     private let capturePanel = CapturePanel()
     private var captureMonitor: Any?
@@ -27,19 +24,17 @@ package final class AppWindows: NSObject, NSWindowDelegate {
     package init(assembly: PresentationAssembly) {
         self.assembly = assembly
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        panel = MenuBarPanel()
         super.init()
     }
 
     package func start() {
-        lastPanelTopLeft = layout.panelTopLeft
         assembly.panelVisibility.hideForCapture = { [weak self] in
             guard let self else { return }
-            hidePanelForCapture()
+            hideWindowForCapture()
         }
         assembly.panelVisibility.showAfterCapture = { [weak self] in
             guard let self else { return }
-            showPanelAfterCapture()
+            showWindowAfterCapture()
         }
         if let button = statusItem.button {
             let image = NSImage(systemSymbolName: "note.text", accessibilityDescription: "Slate")
@@ -49,7 +44,6 @@ package final class AppWindows: NSObject, NSWindowDelegate {
             button.action = #selector(statusItemClicked)
             button.sendAction(on: [.leftMouseDown, .rightMouseDown])
         }
-        observeLayout()
         observeAppearance()
         registerHotkeys()
         NSApp.mainMenu = mainMenu()
@@ -68,61 +62,61 @@ package final class AppWindows: NSObject, NSWindowDelegate {
             guard let self else { return }
             closeCapture()
         }
-        panel.onCancel = { [weak self] in
-            guard let self else { return }
-            if assembly.search.isActive {
-                assembly.search.clear()
-            } else {
-                closePanel()
-            }
-        }
-        resignObserver = NotificationCenter.default.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
+        activeObserver = NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                closePanel()
+                NSApp.mainMenu = mainMenu()
             }
         }
-    }
-
-    package func showWindowOrPanel() {
-        if let window, window.isVisible {
-            NSApp.activate()
-            window.makeKeyAndOrderFront(nil)
-            return
-        }
-        togglePanel()
-    }
-
-    func togglePanel() {
-        if panel.isVisible {
-            closePanel()
-        } else {
-            showPanel()
+        if layout.isWindowOpen {
+            showWindow()
         }
     }
 
-    func openWindow() {
-        closePanel()
-        if window != nil {
+    package func showWindow() {
+        let window: MainWindow
+        if let existing = self.window {
+            window = existing
             layout.openCount += 1
+        } else {
+            window = makeWindow()
+            self.window = window
         }
-        let window = window ?? makeWindow()
-        self.window = window
-        if window.setFrameUsingName(WindowLayout.windowAutosaveName) == false {
-            window.setContentSize(layout.size)
-            window.center()
+        if window.isMiniaturized {
+            window.deminiaturize(nil)
         }
-        window.setFrameAutosaveName(WindowLayout.windowAutosaveName)
-        NSApp.setActivationPolicy(.regular)
+        if window.isVisible, window.isOnActiveSpace == false {
+            window.orderOut(nil)
+        }
+        applyAppearance()
         NSApp.mainMenu = mainMenu()
         NSApp.activate()
         window.makeKeyAndOrderFront(nil)
+        layout.isWindowOpen = true
     }
 
-    package func windowWillClose(_ notification: Notification) {
+    func hideWindow() {
+        guard let window, window.isVisible else { return }
         Task { await assembly.flush() }
-        guard (notification.object as? NSWindow) === window else { return }
-        NSApp.setActivationPolicy(.accessory)
+        window.orderOut(nil)
+        layout.isWindowOpen = false
+        if settingsWindow?.isVisible != true {
+            NSApp.hide(nil)
+        }
+    }
+
+    func toggleWindow() {
+        if let window, NSApp.isActive, window.isKeyWindow, window.isOnActiveSpace {
+            hideWindow()
+        } else {
+            showWindow()
+        }
+    }
+
+    package func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard sender === window else { return true }
+        hideWindow()
+        return false
     }
 
     private func mainMenu() -> NSMenu {
@@ -195,35 +189,26 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         Task { await assembly.flush() }
     }
 
-    private func hidePanelForCapture() {
-        guard panel.isVisible else { return }
+    private func hideWindowForCapture() {
+        guard let window, window.isVisible else { return }
         isCapturing = true
-        removeClickMonitor()
-        panel.orderOut(nil)
+        window.orderOut(nil)
     }
 
-    private func showPanelAfterCapture() {
+    private func showWindowAfterCapture() {
         guard isCapturing else { return }
         isCapturing = false
         NSApp.activate()
-        panel.makeKeyAndOrderFront(nil)
-        installClickMonitor()
-    }
-
-    private func removeClickMonitor() {
-        guard let clickMonitor else { return }
-        NSEvent.removeMonitor(clickMonitor)
-        self.clickMonitor = nil
+        window?.makeKeyAndOrderFront(nil)
     }
 
     package func stop() {
         KeyboardShortcuts.removeAllHandlers()
-        closePanel()
         closeCapture()
         window?.close()
         settingsWindow?.close()
-        if let resignObserver {
-            NotificationCenter.default.removeObserver(resignObserver)
+        if let activeObserver {
+            NotificationCenter.default.removeObserver(activeObserver)
         }
         NSStatusBar.system.removeStatusItem(statusItem)
     }
@@ -239,13 +224,13 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         case .capture:
             showCapture()
         case .search(let text):
-            showPanelIfHidden()
+            showWindow()
             assembly.search.query = text
         case .new(let draft):
-            showPanelIfHidden()
+            showWindow()
             Task { await assembly.noteList.create(draft) }
         case .open(let target):
-            showPanelIfHidden()
+            showWindow()
             Task { await assembly.noteList.open(target) }
         case .append(let text, let target, let section):
             Task { await assembly.noteList.append(text, to: target, section: section) }
@@ -256,17 +241,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         Task { await assembly.capture.addFromService(text) }
     }
 
-    private func showPanelIfHidden() {
-        if window?.isVisible == true {
-            NSApp.activate()
-            window?.makeKeyAndOrderFront(nil)
-        } else if panel.isVisible == false {
-            showPanel()
-        }
-    }
-
     func openSettings() {
-        closePanel()
         let window = settingsWindow ?? makeSettingsWindow()
         settingsWindow = window
         applyAppearance()
@@ -283,9 +258,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
     }
 
     func newNoteFromHotkey() {
-        if window?.isVisible != true, panel.isVisible == false {
-            showPanel()
-        }
+        showWindow()
         Task { await assembly.noteList.createNote() }
     }
 
@@ -293,7 +266,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         KeyboardShortcuts.onKeyUp(for: .togglePanel) { [weak self] in
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                showWindowOrPanel()
+                toggleWindow()
             }
         }
         KeyboardShortcuts.onKeyUp(for: .capture) { [weak self] in
@@ -349,7 +322,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
             guard await assembly.capture.save(select: open) != nil else { return }
             closeCapture()
             if open {
-                showPanel()
+                showWindow()
             }
         }
     }
@@ -418,7 +391,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
 
     private func applyAppearance() {
         let appearance = currentAppearance
-        for target in [panel, capturePanel, window, settingsWindow].compactMap({ $0 }) {
+        for target in [capturePanel, window, settingsWindow].compactMap({ $0 }) {
             target.appearance = appearance
         }
     }
@@ -428,7 +401,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         menu.addItem(item("New Note", key: "n", action: #selector(menuNewNote)))
         menu.addItem(item("Quick Note", action: #selector(menuCapture)))
         menu.addItem(.separator())
-        menu.addItem(item("Open Window", key: "o", modifiers: [.command, .shift], action: #selector(menuOpenWindow)))
+        menu.addItem(item("Show Slate", action: #selector(menuShowWindow)))
         menu.addItem(item("Settings…", key: ",", action: #selector(menuSettings)))
         menu.addItem(appearanceMenuItem())
         menu.addItem(.separator())
@@ -444,7 +417,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
     }
 
     @objc private func menuNewNote() {
-        showPanel()
+        showWindow()
         Task { await assembly.noteList.createNote() }
     }
 
@@ -452,8 +425,8 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         showCapture()
     }
 
-    @objc private func menuOpenWindow() {
-        openWindow()
+    @objc private func menuShowWindow() {
+        showWindow()
     }
 
     private func appearanceMenuItem() -> NSMenuItem {
@@ -484,113 +457,38 @@ package final class AppWindows: NSObject, NSWindowDelegate {
 
     @objc private func statusItemClicked() {
         if NSApp.currentEvent?.type == .rightMouseDown {
-            closePanel()
             statusItem.menu = statusMenu()
             statusItem.button?.performClick(nil)
             statusItem.menu = nil
             return
         }
-        togglePanel()
+        toggleWindow()
     }
 
-    private func showPanel() {
-        if panel.contentViewController == nil {
-            panel.contentViewController = hostingController(surface: .panel)
-        } else {
-            layout.openCount += 1
-        }
-        panel.setFrame(layout.panelFrame(anchor: iconAnchor(), anchorScreen: statusItem.button?.window?.screen), display: false)
-        applyAppearance()
-        NSApp.mainMenu = mainMenu()
-        NSApp.activate()
-        panel.makeKeyAndOrderFront(nil)
-        panel.invalidateShadow()
-        statusItem.button?.highlight(true)
-        installClickMonitor()
-    }
-
-    private func closePanel() {
-        guard panel.isVisible, isCapturing == false else { return }
-        Task { await assembly.flush() }
-        panel.orderOut(nil)
-        statusItem.button?.highlight(false)
-        removeClickMonitor()
-    }
-
-    private func installClickMonitor() {
-        guard clickMonitor == nil else { return }
-        clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                closePanel()
-            }
-        }
-    }
-
-    private func iconAnchor() -> CGPoint {
-        guard let button = statusItem.button, let window = button.window else {
-            let visible = NSScreen.main?.visibleFrame ?? .zero
-            return CGPoint(x: visible.maxX - layout.size.width, y: visible.maxY)
-        }
-        let frame = window.convertToScreen(button.convert(button.bounds, to: nil))
-        return CGPoint(x: frame.midX - layout.size.width / 2, y: frame.minY - 4)
-    }
-
-    private func makeWindow() -> NSWindow {
-        let window = NSWindow(
-            contentRect: NSRect(origin: .zero, size: layout.size),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
-            backing: .buffered,
-            defer: false
-        )
-        window.title = "Slate"
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
-        window.isReleasedWhenClosed = false
-        window.contentMinSize = WindowLayout.minimumSize
+    private func makeWindow() -> MainWindow {
+        let window = MainWindow(size: layout.size)
         window.delegate = self
-        window.contentViewController = hostingController(surface: .window)
+        window.contentViewController = hostingController()
+        if window.setFrameUsingName(WindowLayout.windowAutosaveName) == false {
+            window.center()
+        }
+        window.setFrameAutosaveName(WindowLayout.windowAutosaveName)
+        window.onCancel = { [weak self] in
+            guard let self else { return }
+            assembly.search.clear()
+        }
         return window
     }
 
-    private func hostingController(surface: Surface) -> NSViewController {
+    private func hostingController() -> NSViewController {
         let root = RootView()
             .inject(assembly)
-            .environment(\.surface, surface)
-            .environment(\.openAsWindow, { [weak self] in
-                guard let self else { return }
-                openWindow()
-            })
             .environment(\.openSettings, { [weak self] in
                 guard let self else { return }
                 openSettings()
             })
         let controller = NSHostingController(rootView: root)
-        controller.sizingOptions = surface == .window ? [.minSize] : []
+        controller.sizingOptions = [.minSize]
         return controller
-    }
-
-    private func observeLayout() {
-        withObservationTracking {
-            _ = layout.size
-            _ = layout.panelTopLeft
-        } onChange: {
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                applyLayout()
-                observeLayout()
-            }
-        }
-    }
-
-    private func applyLayout() {
-        let returnsToIcon = lastPanelTopLeft != nil && layout.panelTopLeft == nil
-        lastPanelTopLeft = layout.panelTopLeft
-        guard panel.isVisible else { return }
-        if returnsToIcon {
-            panel.setFrame(layout.panelFrame(anchor: iconAnchor(), anchorScreen: statusItem.button?.window?.screen), display: true)
-            return
-        }
-        layout.fit(panel)
     }
 }

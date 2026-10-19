@@ -11,8 +11,6 @@ struct RootView: View {
     @Environment(VaultStore.self) private var vault
     @Environment(SearchStore.self) private var search
     @Environment(\.hintCenter) private var hintCenter
-    @Environment(\.surface) private var surface
-    @Environment(\.openAsWindow) private var openAsWindow
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
@@ -43,20 +41,13 @@ struct RootView: View {
             }
         }
         .animation(Theme.hoverAnimation, value: toaster.text)
-        .overlay(alignment: .bottomTrailing) {
-            if surface == .panel {
-                ResizeGrip()
-                    .padding(4)
-            }
-        }
         .background(shortcuts)
         .overlay {
             if let hintCenter {
                 HintOverlay(center: hintCenter)
             }
         }
-        .modifier(WindowFrame(layout: layout, surface: surface))
-        .clipShape(RoundedRectangle(cornerRadius: surface == .panel ? Theme.panelRadius : 0, style: .continuous))
+        .modifier(WindowFrame(layout: layout))
         .task(id: layout.openCount) {
             await noteList.refresh()
         }
@@ -95,9 +86,6 @@ struct RootView: View {
             ForEach(Array(vault.spaces.prefix(9).enumerated()), id: \.element.id) { position, space in
                 shortcut(KeyEquivalent(Character("\(position + 1)")), modifiers: .command) { noteList.show(.space(space.folder)) }
             }
-            if surface == .panel {
-                shortcut("o", modifiers: [.command, .shift]) { openAsWindow() }
-            }
         }
     }
 
@@ -119,20 +107,16 @@ struct RootView: View {
     }
 }
 
-#Preview("Panel, light") {
+#Preview("Light") {
     RootView()
         .previewEnvironment()
+        .frame(width: 1040, height: 680)
         .preferredColorScheme(.light)
 }
 
-#Preview("Panel, dark") {
+#Preview("Dark") {
     RootView()
         .previewEnvironment()
-        .preferredColorScheme(.dark)
-}
-
-#Preview("Window") {
-    RootView()
-        .previewEnvironment(surface: .window)
         .frame(width: 1040, height: 680)
+        .preferredColorScheme(.dark)
 }
