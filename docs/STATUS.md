@@ -380,6 +380,10 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 
 77. Make the window wide: Divider, Screenshot and Format JSON are buttons at the end of the format bar, with no "…". Make the window narrow, or hide the folders and make the list column wide: the three buttons go back into the "…" menu, and nothing is cut off.
 
+### Small changes by agents
+
+78. In Claude Code, in a repository with a task in Slate, ask the agent to mark one Plan step done and to change one row of a table. The agent uses `replace_in_note` or `update_section`, not `update_note`. Open the note in Slate: only those lines changed, and the versions show "Changed" with the agent badge. Ask it to add a line at the top of a changelog section: the line is first.
+
 ## Known gaps
 
 - `FSEventsVaultWatcherIntegrationTests` fails about once in five full runs of `Scripts/test.sh` (`ownWriteDoesNotArrive`, `renameReportsBothPathsAndDeleteReportsThePath`): the FSEvents wait is too short when all suites run at once. Alone the suite passes. Seen since 2026-10-19; the watcher code did not change.

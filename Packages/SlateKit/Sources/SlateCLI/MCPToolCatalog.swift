@@ -13,21 +13,43 @@ enum MCPToolCatalog {
             "folder": text("Only notes in this folder and its sub-folders."),
             "limit": number("At most this many results. Default 20."),
         ], required: ["query"], readOnly: true),
-        tool("read_note", "Read a whole note file: the header and the body. Keep the hash: update_note needs it.", [
+        tool("read_note", "Read a whole note file: the header and the body. Keep the hash for update_note. To read one part, use read_section.", [
             "id": text("The note id from list_notes or search_notes."),
             "path": text("The path inside the notes folder, like Notes/Groceries.md. Use id or path."),
         ], required: [], readOnly: true),
-        tool("create_note", "Make a new note in a folder. Slate writes the header and picks a free file name.", [
+        tool("read_section", "Read one section of a note: the text under a heading, up to the next heading of the same or a higher level. Returns the hash of the note.", [
+            "id": text("The note id."),
+            "path": text("The path inside the notes folder. Use id or path."),
+            "heading": text("The heading text without the # marks, like Status or Plan. Case does not matter."),
+        ], required: ["heading"], readOnly: true),
+        tool("list_backlinks", "List the notes that link to a note with [[its name]]. Use it before you rename or move a note.", [
+            "id": text("The note id."),
+            "path": text("The path inside the notes folder. Use id or path."),
+        ], required: [], readOnly: true),
+        tool("create_note", "Make a new note in a folder. Slate writes the header and picks a free file name. A missing folder is made, when agents may write there.", [
             "folder": text("The folder, like Notes or Work/Clients."),
             "title": text("The title of the note."),
             "body": text("The Markdown text of the note, without a header."),
         ], required: ["folder", "title"]),
-        tool("append_to_note", "Add text at the end of a note, or at the end of a section when section is given. A missing section is made as a ## heading.", [
+        tool("append_to_note", "Add text at the end of a note, or at the end of a section when section is given. With position top the text goes first: at the start of the note or right under the heading, for lists that keep the newest entry first. A missing section is made as a ## heading.", [
             "id": text("The note id."),
             "text": text("The Markdown text to add."),
             "section": text("The heading to add the text under."),
+            "position": text("end (default) or top."),
         ], required: ["id", "text"]),
-        tool("update_note", "Replace the body of a note. Slate keeps the header. Pass the hash from read_note: when the note changed after you read it, the change is refused.", [
+        tool("replace_in_note", "Replace one piece of text in the body of a note, like one table row or [ ] with [x] in one checklist line. old must be in the note exactly once: add more text around it when it is not.", [
+            "id": text("The note id."),
+            "old": text("The exact text to replace, copied from read_note or read_section."),
+            "new": text("The new text. Empty removes the old text."),
+            "expectedHash": text("Optional: the hash from read_note or read_section. When given, the change is refused if the note changed since."),
+        ], required: ["id", "old", "new"], destructive: true),
+        tool("update_section", "Replace the text of one section of a note and keep its heading and the other sections. A missing section is added at the end as a ## heading.", [
+            "id": text("The note id."),
+            "heading": text("The heading text without the # marks."),
+            "text": text("The new Markdown text of the section, without the heading."),
+            "expectedHash": text("Optional: the hash from read_note or read_section. When given, the change is refused if the note changed since."),
+        ], required: ["id", "heading", "text"], destructive: true),
+        tool("update_note", "Replace the whole body of a note. Slate keeps the header. Pass the hash from read_note: when the note changed after you read it, the change is refused. For a small change use replace_in_note or update_section.", [
             "id": text("The note id."),
             "body": text("The new Markdown body, without the header."),
             "expectedHash": text("The hash that read_note returned."),
@@ -39,8 +61,9 @@ enum MCPToolCatalog {
         tool("trash_note", "Move a note to the Trash of Slate. The owner can restore it for 30 days. Agents may do this only when the owner allows it.", [
             "id": text("The note id."),
         ], required: ["id"], destructive: true),
-        tool("attach_image", "Add an image at the end of a note. Slate copies the image into _attachments. PNG, JPEG, GIF, HEIC or WebP, at most 50 MB.", [
+        tool("attach_image", "Add an image at the end of a note, or at the end of a section when section is given. Slate copies the image into _attachments. PNG, JPEG, GIF, HEIC or WebP, at most 50 MB.", [
             "id": text("The note id."),
+            "section": text("The heading to add the image under."),
             "base64": text("The image data in base64. Use base64 or path."),
             "path": text("The absolute path of an image file on this Mac."),
             "caption": text("A short text that describes the image."),
@@ -63,7 +86,7 @@ enum MCPToolCatalog {
             "task": text("The task: its note id, its folder like MyApp/ABC-123 Fix login, or its ticket."),
             "status": text("todo, active, review, done or dropped."),
         ], required: ["task", "status"]),
-        tool("log_progress", "Add a dated entry to the Log section of a task note: what was done, what is left, the next step.", [
+        tool("log_progress", "Add a dated entry to the Log section of a task note: what was done, what is left, the next step. Returns the entry as written.", [
             "task": text("The task: its note id, its folder, or its ticket."),
             "text": text("The Markdown text of the entry."),
         ], required: ["task", "text"]),

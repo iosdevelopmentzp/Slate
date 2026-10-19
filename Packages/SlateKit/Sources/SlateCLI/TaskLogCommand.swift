@@ -13,7 +13,7 @@ struct TaskLogCommand: AsyncParsableCommand {
         let container = try CLIContainer(options: options)
         try await container.refreshIndex()
         guard let found = try await container.useCases.findTask.execute(task) else { throw CLIError.notFound(task) }
-        let document = try await container.useCases.logProgress.execute(text, to: found.path)
-        print(container.absolutePath(document.path))
+        let logged = try await container.useCases.logProgress.execute(text, to: found.path)
+        print(container.absolutePath(logged.document.path))
     }
 }

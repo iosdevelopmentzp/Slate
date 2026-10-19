@@ -3,25 +3,42 @@ import SlateDomain
 
 extension MCPToolRunner {
     func createNote(_ arguments: MCPArguments) async throws -> String {
-        let folder = try await existingFolder(try arguments.required("folder"))
+        let raw = try arguments.required("folder")
         let title = try arguments.required("title")
+        let found = try? await existingFolder(raw)
+        var folder = try AgentPathPolicy.folder(from: raw)
+        if let found {
+            folder = found
+        } else {
+            folder = try await knownCase(of: folder)
+        }
         try await permissions().checkCreate(in: folder)
+        if found == nil {
+            try await ports.files.createFolder(folder)
+        }
         let body = arguments.raw("body").map { $0.hasSuffix("\n") || $0.isEmpty ? $0 : $0 + "\n" }
         let created = try await useCases.create.execute(NoteDraft(title: title, body: body ?? "", folder: folder))
         let document = created.document
         await afterWrite("create_note", title: document.title, path: document.path)
-        return json(["id": document.id.rawValue, "title": document.title, "path": document.path.rawValue, "hash": document.hash.rawValue])
+        var answer: [String: Any] = ["id": document.id.rawValue, "title": document.title, "path": document.path.rawValue, "hash": document.hash.rawValue]
+        if found == nil {
+            answer["createdFolder"] = folder.rawValue
+        }
+        return json(answer)
     }
 
     func appendToNote(_ arguments: MCPArguments) async throws -> String {
         let id = try arguments.required("id")
         let text = try arguments.required("text")
+        if arguments.string("position")?.lowercased() == "top" {
+            return written(try await prependToNote(arguments))
+        }
         let path = try await notePath(id: id)
         try await permissions().checkWrite(path)
         await beforeWrite()
         let document = try await useCases.append.execute(text, to: .path(path), section: arguments.string("section"))
         await afterWrite("append_to_note", title: document.title, path: document.path)
-        return json(["id": document.id.rawValue, "path": document.path.rawValue, "hash": document.hash.rawValue])
+        return written(document)
     }
 
     func updateNote(_ arguments: MCPArguments) async throws -> String {
@@ -74,9 +91,30 @@ extension MCPToolRunner {
         let markdown = try await useCases.importAttachment.execute(data: data, fileExtension: fileExtension, source: "agent", for: path)
         let caption = (arguments.string("caption") ?? "").replacingOccurrences(of: "]", with: ")").replacingOccurrences(of: "\n", with: " ")
         let block = caption.isEmpty ? markdown : markdown.replacingOccurrences(of: "![](", with: "![\(caption)](")
-        let document = try await useCases.append.execute(block, to: .path(path), section: nil)
+        let section = arguments.string("section")
+        let document = try await useCases.append.execute(block, to: .path(path), section: section)
         await afterWrite("attach_image", title: document.title, path: document.path)
-        return json(["id": document.id.rawValue, "path": document.path.rawValue, "image": block, "hash": document.hash.rawValue])
+        return json([
+            "id": document.id.rawValue,
+            "path": document.path.rawValue,
+            "image": block,
+            "placedAt": section.map { "the end of the section \($0)" } ?? "the end of the note",
+            "hash": document.hash.rawValue,
+        ])
+    }
+
+    private func knownCase(of folder: FolderPath) async throws -> FolderPath {
+        let known = try await folders()
+        var parts = folder.components
+        var rest: [String] = []
+        while parts.isEmpty == false {
+            let candidate = parts.joined(separator: "/")
+            if let match = known.first(where: { StemPolicy.isSame($0.rawValue, candidate) }) {
+                return FolderPath(rawValue: ([match.rawValue] + rest).joined(separator: "/"))
+            }
+            rest.insert(parts.removeLast(), at: 0)
+        }
+        return folder
     }
 
     private func imageData(_ arguments: MCPArguments) async throws -> Data {

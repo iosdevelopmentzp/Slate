@@ -112,6 +112,7 @@ import Testing
         let listed = await call("list_files", ["folder": .string(folder)])
 
         #expect(logged.isError == false, "\(logged.text)")
+        #expect((try object(logged.text)["entry"] as? String)?.hasSuffix("** Found the leak. Next: write the fix.") == true)
         #expect(status.text == "ABC-7 Fix login is review now.")
         #expect(added.isError == false, "\(added.text)")
         #expect(pasted.isError == false, "\(pasted.text)")

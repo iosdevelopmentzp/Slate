@@ -65,6 +65,7 @@ package enum AgentGuide {
     1. At the start of a session call `project_context` (MCP) or run `slate project` in the repository. It names the project, its tasks with status, and the task of the current branch.
     2. No task yet: `start_task` with a title like `ABC-123 Fix login`, or `slate task new "ABC-123 Fix login"`. Slate makes the task folder and the task note with Context, Plan, Findings, Links, Questions and Log.
     3. Write what you learn into the task note or into more notes in the task folder. Add logs, screenshots, JSON and other files with `add_file`.
+       Change a few lines with `replace_in_note` (one row, `[ ]` to `[x]`) or `update_section` (one section). Read one section with `read_section`. For a list that keeps the newest entry first, use `append_to_note` with `position: top`.
     4. At the end of a session call `log_progress` (or `slate task log ABC-123 "…"`): what was done, what is left, the next step.
     5. Set the status with `set_task_status` (or `slate task status ABC-123 review`): `todo`, `active`, `review`, `done`, `dropped`.
 
@@ -85,7 +86,7 @@ package enum AgentGuide {
 
     ## MCP server
 
-    `slate mcp` is an MCP server over stdio. Add it to Claude Code with `\(registration)`. Its tools: `list_folders`, `list_notes`, `search_notes`, `read_note`, `create_note`, `append_to_note`, `update_note`, `move_note`, `trash_note`, `attach_image`, `open_in_slate`, and for projects `project_context`, `start_task`, `set_task_status`, `log_progress`, `add_file`, `list_files`, `save_version`. The resource `slate://note/<id>` gives the text of a note.
+    `slate mcp` is an MCP server over stdio. Add it to Claude Code with `\(registration)`. Its tools: `list_folders`, `list_notes`, `search_notes`, `read_note`, `read_section`, `list_backlinks`, `create_note`, `append_to_note`, `replace_in_note`, `update_section`, `update_note`, `move_note`, `trash_note`, `attach_image`, `open_in_slate`, and for projects `project_context`, `start_task`, `set_task_status`, `log_progress`, `add_file`, `list_files`, `save_version`. The resource `slate://note/<id>` gives the text of a note.
 
     The owner chooses in Slate which folders agents may change, and whether agents may create notes or move notes to the Trash. A tool that is not allowed answers with a sentence that says so. Slate keeps a version of the note before every change by an agent.
 

@@ -60,10 +60,10 @@ import Testing
         return try object(answer.text)["id"] as? String ?? ""
     }
 
-    @Test func theCatalogHasTheEighteenTools() {
+    @Test func theCatalogHasTheTwentyTwoTools() {
         #expect(MCPToolCatalog.tools.map(\.name) == [
-            "list_folders", "list_notes", "search_notes", "read_note", "create_note", "append_to_note",
-            "update_note", "move_note", "trash_note", "attach_image", "open_in_slate",
+            "list_folders", "list_notes", "search_notes", "read_note", "read_section", "list_backlinks", "create_note", "append_to_note",
+            "replace_in_note", "update_section", "update_note", "move_note", "trash_note", "attach_image", "open_in_slate",
             "project_context", "start_task", "set_task_status", "log_progress", "add_file", "list_files", "save_version",
         ])
         #expect(MCPToolCatalog.tools.allSatisfy { ($0.description ?? "").isEmpty == false })
@@ -100,8 +100,7 @@ import Testing
         #expect(try await ports.agentChanges.changes(after: .distantPast).isEmpty)
     }
 
-    @Test func createNoteNeedsTheCreateFlagAndAFolderThatExists() async throws {
-        #expect(await call("create_note", ["folder": "Nowhere", "title": "Plan"]).text == "There is no folder Nowhere. Use a name from list_folders.")
+    @Test func createNoteNeedsTheCreateFlag() async throws {
         try await allow(AgentPermissions(allowCreate: false))
 
         let answer = await call("create_note", ["folder": "Notes", "title": "Plan"])
@@ -116,6 +115,91 @@ import Testing
         try await create("Call notes", in: "Work/Clients")
 
         #expect(FileManager.default.fileExists(atPath: vault.path("Work/Clients/Call notes.md")))
+    }
+
+    @Test func createNoteMakesAMissingFolderWhereAgentsMayWrite() async throws {
+        let answer = await call("create_note", ["folder": "notes/ABC-1/Details", "title": "Plan"])
+
+        #expect(answer.isError == false, "\(answer.text)")
+        #expect(try object(answer.text)["createdFolder"] as? String == "Notes/ABC-1/Details")
+        #expect(FileManager.default.fileExists(atPath: vault.path("Notes/ABC-1/Details/Plan.md")))
+    }
+
+    @Test func createNoteDoesNotMakeAFolderWhereAgentsMayNotWrite() async throws {
+        let answer = await call("create_note", ["folder": "Nowhere", "title": "Plan"])
+
+        #expect(answer.isError)
+        #expect(answer.text.hasPrefix("Agents may not change notes in Nowhere."))
+        #expect(FileManager.default.fileExists(atPath: vault.path("Nowhere")) == false)
+    }
+
+    @Test func appendToNoteAtTheTopPutsTheNewestEntryFirst() async throws {
+        let id = try await create("Changelog", body: "Intro\n\n## Changes\n\n- old\n")
+
+        let answer = await call("append_to_note", ["id": .string(id), "text": "- new", "section": "Changes", "position": "top"])
+
+        #expect(answer.isError == false, "\(answer.text)")
+        #expect(try file("Notes/Changelog.md").hasSuffix("---\nIntro\n\n## Changes\n\n- new\n- old\n"))
+    }
+
+    @Test func readSectionGivesOneSectionAndTheHash() async throws {
+        let id = try await create("Task", body: "## Status\n\nactive\n\n## Log\n\n- a\n")
+        let hash = try object(await call("read_note", ["id": .string(id)]).text)["hash"] as? String
+
+        let section = try object(await call("read_section", ["id": .string(id), "heading": "status"]).text)
+        let missing = await call("read_section", ["id": .string(id), "heading": "Plan"])
+
+        #expect(section["text"] as? String == "active")
+        #expect(section["hash"] as? String == hash)
+        #expect(missing.isError)
+        #expect(missing.text == "The note has no section Plan. Sections: ## Status, ## Log.")
+    }
+
+    @Test func updateSectionChangesOnlyThatSection() async throws {
+        let id = try await create("Task", body: "## Status\n\nactive\n\n## Log\n\n- a\n")
+        let hash = try #require(try object(await call("read_section", ["id": .string(id), "heading": "Status"]).text)["hash"] as? String)
+
+        let answer = await call("update_section", ["id": .string(id), "heading": "Status", "text": "review", "expectedHash": .string(hash)])
+        let stale = await call("update_section", ["id": .string(id), "heading": "Status", "text": "done", "expectedHash": .string(hash)])
+
+        #expect(answer.isError == false, "\(answer.text)")
+        #expect(try file("Notes/Task.md").hasSuffix("---\n## Status\n\nreview\n\n## Log\n\n- a\n"))
+        #expect(stale.text == "The note changed since you read it, read it again.")
+        #expect(try await ports.agentChanges.changes(after: .distantPast).map(\.tool).last == "update_section")
+    }
+
+    @Test func replaceInNoteChangesOneLine() async throws {
+        let id = try await create("Plan", body: "- [ ] code\n- [ ] tests\n")
+
+        let answer = await call("replace_in_note", ["id": .string(id), "old": "- [ ] tests", "new": "- [x] tests"])
+        let twice = await call("replace_in_note", ["id": .string(id), "old": "- [", "new": "* ["])
+        let missing = await call("replace_in_note", ["id": .string(id), "old": "- [ ] docs", "new": "x"])
+
+        #expect(answer.isError == false, "\(answer.text)")
+        #expect(try file("Notes/Plan.md").hasSuffix("---\n- [ ] code\n- [x] tests\n"))
+        #expect(twice.text == "The note has this text 2 times. Add more of the text around it, so that it matches one place.")
+        #expect(missing.isError)
+    }
+
+    @Test func replaceInANoteInAForbiddenFolderIsRefused() async throws {
+        try await allow(AgentPermissions(writableFolders: ["Work"]))
+        let id = try await create("Plan", in: "Work", body: "a")
+        try await allow(AgentPermissions(writableFolders: ["Notes"]))
+
+        let answer = await call("replace_in_note", ["id": .string(id), "old": "a", "new": "b"])
+
+        #expect(answer.isError)
+        #expect(try file("Work/Plan.md").hasSuffix("---\na\n"))
+    }
+
+    @Test func listBacklinksFindsTheNotesThatLinkHere() async throws {
+        let id = try await create("Changelog", body: "text")
+        try await create("Release", body: "See [[Changelog]].")
+        try await create("Other", body: "nothing")
+
+        let links = try array(await call("list_backlinks", ["id": .string(id)]).text)
+
+        #expect(links.map { $0["title"] as? String } == ["Release"])
     }
 
     @Test func appendToNoteAddsUnderTheSection() async throws {
@@ -233,6 +317,16 @@ import Testing
         #expect(names.first?.hasSuffix("-agent.png") == true)
         #expect(try Data(contentsOf: vault.url.appendingPathComponent("_attachments/\(names[0])")) == Self.png)
         #expect(try file("Notes/Groceries.md").hasSuffix("Milk\n\n![The shelf](../_attachments/\(names[0]))\n"))
+        #expect(try object(answer.text)["placedAt"] as? String == "the end of the note")
+    }
+
+    @Test func attachImageUnderASection() async throws {
+        let id = try await create("Bug", body: "## Screens\n\n## Log\n\n- a\n")
+
+        let answer = await call("attach_image", ["id": .string(id), "base64": .string(Self.png.base64EncodedString()), "section": "Screens"])
+
+        #expect(try object(answer.text)["placedAt"] as? String == "the end of the section Screens")
+        #expect(try file("Notes/Bug.md").contains("## Screens\n\n![](../_attachments/"))
     }
 
     @Test func attachImageFromAPathAndRefusesOtherFiles() async throws {

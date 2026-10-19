@@ -7,6 +7,11 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Agents can change a small part of a note. `replace_in_note` replaces one exact piece of text, like one table row or `[ ]` to `[x]`. `update_section` replaces the text under one heading. `read_section` reads one section. Before, an agent had to read and write the whole note for every small change.
+- `append_to_note` takes `position: top`, for lists that keep the newest entry first, like a changelog.
+- `list_backlinks` lists the notes that link to a note with `[[its name]]`.
+- `create_note` makes a missing folder, when agents may write there.
+- `log_progress` returns the entry as it was written. `attach_image` takes `section` and says where the image went.
 - Format JSON: select JSON (or put the caret in a code block) and press `⌥⇧⌘J`, or choose Format JSON in the "…" menu or the Format menu. The text becomes a JSON code block with indented lines, even when it was spread over many paragraphs. One Undo brings the old text back. When the text is not JSON, a toast says so and nothing changes.
 - Several carets, as in Xcode: `⌃⇧↑` and `⌃⇧↓` (or Edit → Add Caret Above, Add Caret Below) add a caret on the line above or below, in the same column. Typing, Backspace, Delete, Tab, ⇧Tab and the arrow keys then act at every caret, and one Undo takes back the typing at all of them. Tab indents each list item that has a caret and puts a tab at the other carets. All carets blink together. Backspace at the start of a line does not join it with the line above. Esc, a click, Enter, paste or a format command leave one caret. With one caret the editor works as before.
 - Paste JSON or code and it becomes a code block: one block in a monospaced font, with no space between the lines. JSON on one line is split into indented lines; JSON that already has lines keeps them. This also works for code copied from a web page. Plain text stays paragraphs as before.
@@ -161,6 +166,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - `⌘Z` (Undo) and `⇧⌘Z` (Redo) work in the note text, in the panel and in the window. Before, the editor kept its own undo history but the Undo command did not reach it, and the panel had no Edit keys until the window was opened once.
 
 ### Infrastructure
+- The `slate-task` skill uses `replace_in_note`, `update_section` and `read_section` for small changes, and `update_note` only when most of a note changes.
 - Docs match the phase 2 code: the module tree, the store table and the test list in `docs/ARCHITECTURE.md`, the editor line in `CLAUDE.md` and `.claude/rules/layers.md`, the `panel-window` skill (three columns, sizes, column resizer) and the store rules without `ActionRunner`.
 - `README.md` describes v1: what Slate does, the keys, the build scripts and a table of the screenshots the owner takes. `docs/STATUS.md` has the manual checks of S1 to S4 as a numbered list.
 - `SlateEditor` is a new TextKit 2 rich text editor (`RichTextEditorView`, `RichTextController`, `RichTextStyler`, `RichLayoutFragment`, `EditorCommands`). The M2 Markdown editor, its highlighter and the `[[` completion are removed. Tests drive the editor in a window: commands, list keys, undo, images, copy and the 5,000-line note (about 1.3 ms per key).

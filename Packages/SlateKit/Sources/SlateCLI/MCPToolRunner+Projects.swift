@@ -61,9 +61,10 @@ extension MCPToolRunner {
         let text = try arguments.required("text")
         try await permissions().checkWrite(task.path)
         await beforeWrite()
-        let document = try await useCases.logProgress.execute(text, to: task.path)
+        let logged = try await useCases.logProgress.execute(text, to: task.path)
+        let document = logged.document
         await afterWrite("log_progress", title: document.title, path: document.path)
-        return json(["id": document.id.rawValue, "path": document.path.rawValue, "hash": document.hash.rawValue])
+        return json(["id": document.id.rawValue, "path": document.path.rawValue, "entry": logged.entry, "hash": document.hash.rawValue])
     }
 
     func addFile(_ arguments: MCPArguments) async throws -> String {

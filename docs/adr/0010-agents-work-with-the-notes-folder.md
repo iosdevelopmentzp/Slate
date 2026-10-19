@@ -36,14 +36,19 @@ Three layers, each useful on its own.
 | `list_notes` | `folder?`, `limit?` | summaries: id, title, folder, updated, pinned, preview |
 | `search_notes` | `query`, `folder?`, `limit?` | the app's search: titles and text, snippets |
 | `read_note` | `id` or `path` | the whole file (header and body) plus `hash` |
-| `create_note` | `folder`, `title`, `body?` | through `CreateNoteUseCase`: header, unique file name, index; returns id and path |
-| `append_to_note` | `id`, `text`, `section?` | through `AppendToNoteUseCase` (`STORAGE-FORMAT.md` section 4) |
+| `read_section` | `id` or `path`, `heading` | the text under one heading (with its sub-sections) plus the `hash` of the note; a missing section names the headings that exist |
+| `list_backlinks` | `id` or `path` | the notes that link to the note with `[[its name]]` |
+| `create_note` | `folder`, `title`, `body?` | through `CreateNoteUseCase`: header, unique file name, index; returns id and path. A missing folder is made when agents may write there (`createdFolder` in the answer) |
+| `append_to_note` | `id`, `text`, `section?`, `position?` | through `AppendToNoteUseCase` (`STORAGE-FORMAT.md` section 4); `position: top` puts the text first in the section (`NoteSectionPolicy.prepend`) |
+| `replace_in_note` | `id`, `old`, `new`, `expectedHash?` | replaces one exact piece of the body (`TextReplacePolicy`); text that is missing or found more than once is refused with a sentence |
+| `update_section` | `id`, `heading`, `text`, `expectedHash?` | replaces the text under one heading and keeps the rest (`NoteSectionPolicy.replacing`); a missing section is added at the end |
 | `update_note` | `id`, `body`, `expectedHash` | replaces the body through `SaveNoteUseCase`; refuses with "the note changed since you read it, read it again" when the hash differs |
 | `move_note` | `id`, `folder` | through `MoveNoteUseCase` |
 | `trash_note` | `id` | through `TrashNoteUseCase`; off by default (permissions below) |
-| `attach_image` | `id`, `base64 or path`, `caption?` | imports into `_attachments/` and appends the image block |
+| `attach_image` | `id`, `base64 or path`, `caption?`, `section?` | imports into `_attachments/` and appends the image block at the end of the note or of the section; `placedAt` in the answer says where |
 | `open_in_slate` | `id` | opens the note in the app through `slate://open` |
 
+- `replace_in_note` and `update_section` read the note again and retry when the file changed between the read and the write. With `expectedHash` they refuse instead. They keep a version before the change, like every other write (amendment, 2026-10-19).
 - Resources: `slate://note/<id>` returns the note text, so a client can attach a note as context without a tool call.
 - Every write goes through the same use cases as the app, so the header, the file name, the attachment name and the index are right by construction. The app's watcher shows the change within a second; an open editor reloads when it has no unsaved edits, else the banner appears.
 

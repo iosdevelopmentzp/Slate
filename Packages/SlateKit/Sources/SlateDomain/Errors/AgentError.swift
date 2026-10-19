@@ -17,6 +17,9 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
     case noTask(String)
     case notAFile(String)
     case fileTooLarge
+    case textNotFound
+    case textNotUnique(Int)
+    case noSection(String, headings: [String])
 
     private static let settingsHint = "The owner can change this in Slate: Settings → General → AI access."
 
@@ -54,6 +57,12 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
             "\(path) is not a file on this Mac. Pass an absolute path or base64 with a name."
         case .fileTooLarge:
             "The file is larger than 200 MB. Keep a link to it in a note instead."
+        case .textNotFound:
+            "The note does not have this text. Read the note or the section again and copy the text exactly."
+        case .textNotUnique(let count):
+            "The note has this text \(count) times. Add more of the text around it, so that it matches one place."
+        case .noSection(let heading, let headings):
+            "The note has no section \(heading). Sections: \(headings.isEmpty ? "none" : headings.joined(separator: ", "))."
         }
     }
 }

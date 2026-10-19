@@ -12,15 +12,7 @@ package enum SectionAppendPolicy {
             let base = trimmedEnd(body)
             return base + (base.isEmpty ? "" : "\n\n") + "## \(heading)\n\n" + insertion + "\n"
         }
-        let level = headingLevel(lines[start]) ?? 2
-        var end = lines.count
-        let prose = Set(MarkdownText.proseLines(of: body).map(\.index))
-        for index in (start + 1)..<lines.count where prose.contains(index) {
-            if let other = headingLevel(lines[index]), other <= level {
-                end = index
-                break
-            }
-        }
+        let end = sectionEnd(after: start, lines: lines, body: body)
         var last = end - 1
         while last > start, lines[last].trimmingCharacters(in: .whitespaces).isEmpty {
             last -= 1
@@ -50,7 +42,18 @@ package enum SectionAppendPolicy {
         return nil
     }
 
-    private static func headingLevel(_ line: String) -> Int? {
+    static func sectionEnd(after start: Int, lines: [String], body: String) -> Int {
+        let level = headingLevel(lines[start]) ?? 2
+        let prose = Set(MarkdownText.proseLines(of: body).map(\.index))
+        for index in (start + 1)..<lines.count where prose.contains(index) {
+            if let other = headingLevel(lines[index]), other <= level {
+                return index
+            }
+        }
+        return lines.count
+    }
+
+    static func headingLevel(_ line: String) -> Int? {
         let hashes = line.prefix { $0 == "#" }.count
         guard (1...6).contains(hashes) else { return nil }
         let rest = line.dropFirst(hashes)
@@ -58,7 +61,7 @@ package enum SectionAppendPolicy {
         return hashes
     }
 
-    private static func trimmedEnd(_ text: String) -> String {
+    static func trimmedEnd(_ text: String) -> String {
         var result = text
         while result.hasSuffix("\n") || result.hasSuffix(" ") { result.removeLast() }
         return result
