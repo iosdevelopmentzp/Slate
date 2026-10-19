@@ -12,9 +12,11 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
         pendingInline = nil
         updateTypingAttributes()
         updateState()
+        updateLinkBar()
     }
 
     func textDidEndEditing(_ notification: Notification) {
+        linkBar.hide()
         flush()
         handlers.didEndEditing()
     }
@@ -32,7 +34,7 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
     }
 
     func textView(_ view: NSTextView, menu: NSMenu, for event: NSEvent, at charIndex: Int) -> NSMenu? {
-        imageMenu(at: charIndex) ?? menu
+        imageMenu(at: charIndex) ?? linkMenu(at: charIndex, adding: menu) ?? menu
     }
 
     func textStorage(_ textStorage: NSTextStorage, willProcessEditing editedMask: NSTextStorageEditActions, range editedRange: NSRange, changeInLength delta: Int) {

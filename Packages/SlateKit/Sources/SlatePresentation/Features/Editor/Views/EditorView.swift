@@ -165,7 +165,8 @@ struct EditorView: View {
             pasteImage: { data, fileExtension in Task { await editor.pasteImage(data, fileExtension: fileExtension) } },
             pasteFiles: { urls in Task { await editor.pasteFiles(urls) } },
             requestScreenshot: { kind in Task { await editor.screenshot(kind == .region ? .region : .window) } },
-            notice: { editor.toaster.show($0) }
+            notice: { editor.toaster.show($0) },
+            noteNames: { await editor.linkTargets() }
         )
     }
 

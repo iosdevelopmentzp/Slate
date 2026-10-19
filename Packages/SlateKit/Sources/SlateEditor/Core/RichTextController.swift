@@ -22,6 +22,7 @@ final class RichTextController: NSObject {
     var imageTarget: TableImageTarget?
     let imageButton = ImageSaveButton()
     let imageHandle = ImageResizeHandle()
+    let linkBar = LinkBar()
     let multiCaret = MultiCaret()
     lazy var findClient = NoteFindClient(controller: self)
     lazy var finder: NSTextFinder = {
@@ -53,6 +54,10 @@ final class RichTextController: NSObject {
             return loadImage(path)
         }
         styler.tableHost = self
+        linkBar.onAction = { [weak self] action, range in
+            guard let self else { return }
+            performLinkAction(action, range: range)
+        }
         imageButton.onSave = { [weak self] path in
             guard let self else { return }
             handlers.attachment(path, .saveToDownloads)
@@ -115,6 +120,7 @@ final class RichTextController: NSObject {
         guard value != markdown || storage.length == 0 && value.isEmpty == false else { return }
         activeTable?.endEditing(commit: false)
         imageTarget = nil
+        linkBar.hide()
         publishTask?.cancel()
         publishTask = nil
         let text = MarkdownReader.read(value)

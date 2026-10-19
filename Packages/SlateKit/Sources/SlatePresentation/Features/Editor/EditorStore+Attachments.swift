@@ -65,6 +65,15 @@ extension EditorStore {
         await workspace.open(vaultRoot.appendingPathComponent(relative, isDirectory: false))
     }
 
+    func linkTargets() async -> [String] {
+        let summaries = (try? await index.summaries(space: nil)) ?? []
+        var seen = Set<String>()
+        return summaries
+            .map(\.path.stem)
+            .filter { seen.insert($0.lowercased()).inserted }
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    }
+
     func openWikilink(_ target: String) async {
         let parsed = WikilinkPolicy.parse(target)
         guard parsed.stem.isEmpty == false else { return }

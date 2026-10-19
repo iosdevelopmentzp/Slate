@@ -158,6 +158,12 @@ Numbered. What, then why. A later session must not undo these without a new numb
 81. Press the close button or `⌘W`: the window goes away, the previous app gets the focus, and Slate stays in the Dock. Click the Dock icon: the window comes back with the same folder and note.
 82. Leave the window on desktop 1, move to desktop 2 and click the menu bar icon (or press `⌥⌘N`): the window comes to desktop 2, and macOS does not switch back to desktop 1. Click the icon again: the window hides.
 83. Hide the window and quit Slate from the menu bar menu, then open Slate again: only the icons show. Show the window and quit: at the next launch the window opens.
+
+### Links
+
+84. Select a word, press `⌘K` and type an address at once: the letters go into the Link to field, not into the note. Enter makes the link.
+85. Click in a link: a small bar under it shows the address (or the note name) with Open, Edit, Copy and Remove. Edit opens the link window with the text and the address; change the text and press Enter: the link shows the new text.
+86. In the link window, type the start of a note name: the field completes it from the notes list. Save: the link is `[[Note|text]]` in the file and `⌘`-click opens the note. Right-click a link in the text and in a table cell: the menu starts with Open Link, Edit Link…, Copy Link Address and Remove Link.
 80. The sort order is fixed to "date changed" with pinned notes first; the stored `list.sort` is no longer read. `UX.md` has no sort control.
 81. The window uses `.fullSizeContentView` with a transparent title bar; the sidebar title and, with the sidebar hidden, the list title leave 80 pt for the window buttons.
 82. The agent checks the look by rendering views offscreen with `NSHostingView.cacheDisplay` from a throwaway test (not committed). This found the colour problem of decision 78.
@@ -244,6 +250,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 150. The folder tree is a `FolderTree` index (parent → sorted children), built once in `VaultStore` when the folders change, together with the Move to targets. Before, `FolderTreeMapper.children` filtered every folder for every node, and every note card built the whole Move to list: with 2,238 folders one card took about 30 s. Now the tree and the menus of 60 cards take 0.13 s in a debug build. Import Folder… of a folder that holds `.git` copies only `.md` files; `Pods`, `Carthage`, `node_modules`, `DerivedData` and `build` folders are always skipped.
 151. Slate is one normal window with a Dock icon (ADR 0016). The close button and `⌘W` hide the window, the Dock icon, the menu bar icon and `⌥⌘N` show it on the current desktop (`moveToActiveSpace`), and the window is open or hidden at launch as it was at quit. The panel is gone; Quick note keeps its panel.
+152. The link window (`LinkPopover`) has two fields: Text and Link to. `LinkAddress` turns the Link to value into the link: a note name from the list or any text that is not an address becomes `[[Note]]`, an address with a scheme or a path stays as it is, and `example.com/x` gets `https://`. The window takes the keyboard when it opens (`makeKeyAndOrderFront`, again after the run loop and in `popoverDidShow`): before, the first key went into the note, and the transient popover closed at once. The link bar (`LinkBar`) is a subview of the text view, like the image buttons.
 
 ## Next steps
 

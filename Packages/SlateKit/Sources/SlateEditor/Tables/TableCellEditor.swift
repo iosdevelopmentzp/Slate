@@ -88,6 +88,16 @@ final class TableCellEditor: NSTextView {
 
     override func menu(for event: NSEvent) -> NSMenu? {
         let menu = super.menu(for: event) ?? NSMenu()
+        let point = convert(event.locationInWindow, from: nil)
+        if let storage = textStorage, href(at: point) != nil {
+            let index = min(characterIndexForInsertion(at: point), storage.length - 1)
+            let candidates = [index, index - 1].filter { $0 >= 0 && storage.attribute(.slateHref, at: $0, effectiveRange: nil) != nil }
+            if let hit = candidates.first {
+                var range = NSRange(location: 0, length: 0)
+                _ = storage.attribute(.slateHref, at: hit, longestEffectiveRange: &range, in: NSRange(location: 0, length: storage.length))
+                LinkMenu.prepend(range: range, target: self, action: #selector(cellLinkAction(_:)), to: menu)
+            }
+        }
         guard let table, let path = imagePath(at: convert(event.locationInWindow, from: nil)) else { return menu }
         return ImageMenu.prepend(path: path, target: table, action: #selector(TableBlockView.cellImageAction(_:)), size: table.cellImageSizeItem(at: convert(event.locationInWindow, from: nil)), to: menu)
     }
@@ -152,7 +162,7 @@ final class TableCellEditor: NSTextView {
 
     override func validateUserInterfaceItem(_ item: any NSValidatedUserInterfaceItem) -> Bool {
         switch item.action {
-        case #selector(undo(_:)), #selector(redo(_:)), #selector(slateBold(_:)), #selector(slateItalic(_:)), #selector(slateStrikethrough(_:)), #selector(slateCode(_:)), #selector(slateLink(_:)):
+        case #selector(undo(_:)), #selector(redo(_:)), #selector(slateBold(_:)), #selector(slateItalic(_:)), #selector(slateStrikethrough(_:)), #selector(slateCode(_:)), #selector(slateLink(_:)), #selector(cellLinkAction(_:)):
             return true
         default:
             return super.validateUserInterfaceItem(item)
@@ -192,39 +202,81 @@ final class TableCellEditor: NSTextView {
         setSelectedRange(selection)
     }
 
-    private func editLink() {
-        let selection = selectedRange()
+    private func editLink(in target: NSRange? = nil) {
         guard let storage = textStorage else { return }
-        let current = selection.length > 0 ? storage.attribute(.slateHref, at: selection.location, effectiveRange: nil) as? String : nil
-        let selected = selection.length > 0 ? (storage.string as NSString).substring(with: selection) : ""
-        let suggestion = current ?? (selected.looksLikeURL ? selected : PasteboardReader.urlString() ?? "")
-        let popover = LinkPopover(url: suggestion, canRemove: current != nil) { [weak self] result in
+        let selection = selectedRange()
+        let range = target ?? (selection.length > 0 ? selection : linkRange(at: selection.location) ?? selection)
+        let current = range.length > 0 ? storage.attribute(.slateHref, at: range.location, effectiveRange: nil) as? String : nil
+        let selected = range.length > 0 ? (storage.string as NSString).substring(with: range) : ""
+        let suggestion = current == nil && selected.looksLikeURL ? selected : PasteboardReader.urlString() ?? ""
+        let popover = LinkPopover(text: LinkAddress.editableText(selected), href: current, suggestion: suggestion) { [weak self] result in
             guard let self else { return }
             linkPopover = nil
-            applyLink(result, to: selection)
+            applyLink(result, to: range)
             window?.makeFirstResponder(self)
         }
         linkPopover = popover
-        let rect = firstRect(forCharacterRange: selection, actualRange: nil)
+        let host = table?.host
+        Task { @MainActor [weak popover] in
+            let names = await host?.linkNotes() ?? []
+            popover?.setNotes(names)
+        }
+        let rect = firstRect(forCharacterRange: range, actualRange: nil)
         let local = window.map { convert($0.convertFromScreen(rect), from: nil) } ?? .zero
         popover.show(relativeTo: local.isEmpty ? NSRect(x: local.minX, y: local.minY, width: 2, height: 16) : local, of: self)
+    }
+
+    private func linkRange(at location: Int) -> NSRange? {
+        guard let storage = textStorage, storage.length > 0 else { return nil }
+        let whole = NSRange(location: 0, length: storage.length)
+        var range = NSRange(location: 0, length: 0)
+        for index in [min(location, storage.length - 1), location - 1] where index >= 0 {
+            if storage.attribute(.slateHref, at: index, longestEffectiveRange: &range, in: whole) != nil {
+                return range
+            }
+        }
+        return nil
     }
 
     private func applyLink(_ result: LinkPopover.Result, to range: NSRange) {
         guard let storage = textStorage else { return }
         switch result {
+        case .cancel:
+            return
         case .remove:
             guard range.length > 0 else { return }
             let text = NSMutableAttributedString(attributedString: storage.attributedSubstring(from: range))
             text.removeAttribute(.slateHref, range: NSRange(location: 0, length: text.length))
             replaceStyled(range, with: text)
-        case .set(let url):
-            let href = url.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard href.isEmpty == false else { return }
-            let text = range.length > 0 ? NSMutableAttributedString(attributedString: storage.attributedSubstring(from: range)) : NSMutableAttributedString(string: href)
+        case .set(let label, let href):
+            let current = range.length > 0 ? (storage.string as NSString).substring(with: range) : ""
+            let text: NSMutableAttributedString
+            if range.length > 0, label == nil || label == current {
+                text = NSMutableAttributedString(attributedString: storage.attributedSubstring(from: range))
+            } else {
+                let attributes = range.length > 0 ? storage.attributes(at: range.location, effectiveRange: nil) : typingAttributes
+                text = NSMutableAttributedString(string: label ?? LinkAddress.display(href), attributes: attributes)
+            }
             text.addAttribute(.slateHref, value: href, range: NSRange(location: 0, length: text.length))
             replaceStyled(range, with: text)
             setSelectedRange(NSRange(location: range.location + text.length, length: 0))
+        }
+    }
+
+    @objc func cellLinkAction(_ sender: NSMenuItem) {
+        guard let action = LinkAction(rawValue: sender.tag), let range = (sender.representedObject as? NSValue)?.rangeValue,
+              let storage = textStorage, NSMaxRange(range) <= storage.length,
+              let href = storage.attribute(.slateHref, at: range.location, effectiveRange: nil) as? String else { return }
+        switch action {
+        case .open:
+            table?.host?.openLink(href)
+        case .edit:
+            editLink(in: range)
+        case .copy:
+            PasteboardBridge.general.clearContents()
+            PasteboardBridge.general.setString(LinkAddress.copyText(href), forType: .string)
+        case .remove:
+            applyLink(.remove, to: range)
         }
     }
 

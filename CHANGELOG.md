@@ -7,6 +7,8 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- A click in a link shows a small bar under it with the address or the note name, and Open, Edit, Copy and Remove buttons. The right-click menu of a link has the same actions, in the text and in table cells.
+- The link window has a Text field next to the address, so you can change what a link shows. Link to takes a web address or the name of a note, and completes note names as you type. A note name makes a `[[Note|text]]` link.
 - `batch_edit` makes several small changes in one call, in one or more notes. Slate checks all of them first, so when one fails nothing is written, and it keeps one version for the whole batch.
 - The Plan of a task note is a checklist that agents can read and change. `set_plan_item` marks a step done by its number or its text, and `project_context` shows for each task how many steps are done and the next step.
 - `list_notes` returns the type, status and ticket of task notes, and the headings of each note with `headings: true`.
@@ -99,6 +101,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - Note kinds and the New menu, tasks, ticket and branch chips, status, `⌘⇧D`, Today and daily notes (`⌥⌘T`, `⌘[`, `⌘]`), snippets, meetings, tags and tag chips, Insert Template, saved searches, Open TODOs, the palette (`⌘K`), actions, Copy for Slack, Copy as Markdown, Save as HTML and PDF, Float on Top and note windows, the outline, ticket details, the Links and History pages of Settings, the history and push state and the Activity button in the footer. The files and the command line keep working; the code for them is in commit `545e0d6`.
 
 ### Fixed
+- The link window (`⌘K`) no longer closes when you start to type. It did not take the keyboard, so the first letter went into the note and the window closed.
 - `slate mcp` no longer stops working after an install. `install.sh` copied the new `slate` over the old file, and macOS killed the new file at start, so Claude Code showed "Failed to connect". The script now copies to a new file and moves it into place.
 - `⌘`-click on a link in a table cell opens it, like a link in the text: a web address in the browser, `[[Note]]` in Slate. Before, it only placed the cursor.
 - Slate froze when a folder had thousands of sub-folders, for example after importing a code repository. The Move to menu of every note card walked the whole folder tree again and again; the tree is now built once.

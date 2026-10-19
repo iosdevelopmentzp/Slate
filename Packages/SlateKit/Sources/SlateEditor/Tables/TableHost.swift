@@ -16,4 +16,5 @@ protocol TableHost: AnyObject {
     func copyTable(_ attachment: TableAttachment, asText: Bool)
     func imageAction(_ path: String, _ action: AttachmentAction)
     func openLink(_ href: String)
+    func linkNotes() async -> [String]
 }

@@ -1,65 +1,144 @@
 import AppKit
 
-final class LinkPopover: NSObject, NSTextFieldDelegate {
-    enum Result {
-        case set(String)
+final class LinkPopover: NSObject, NSPopoverDelegate, NSComboBoxDelegate {
+    enum Result: Equatable {
+        case set(text: String?, href: String)
         case remove
+        case cancel
     }
 
+    static let fieldWidth: CGFloat = 280
+
     private let popover = NSPopover()
-    private let field = NSTextField()
+    private let textField = NSTextField()
+    private let addressField = NSComboBox()
+    private let original: String?
+    private let editsText: Bool
     private let completion: (Result) -> Void
+    private var notes: [String] = []
     private var isDone = false
 
-    init(url: String, canRemove: Bool, completion: @escaping (Result) -> Void) {
+    init(text: String?, href: String?, suggestion: String, completion: @escaping (Result) -> Void) {
+        original = href
+        editsText = text != nil
         self.completion = completion
         super.init()
-        field.stringValue = url
-        field.placeholderString = "https://example.com"
-        field.delegate = self
-        field.bezelStyle = .roundedBezel
-        field.setAccessibilityLabel("Link address")
-        let apply = NSButton(title: "Add Link", target: self, action: #selector(applyLink))
-        apply.keyEquivalent = "\r"
-        apply.bezelStyle = .push
-        let label = NSTextField(labelWithString: "Link")
-        label.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
-        label.textColor = .secondaryLabelColor
-        var buttons: [NSView] = []
-        if canRemove {
-            apply.title = "Save"
-            let remove = NSButton(title: "Remove Link", target: self, action: #selector(removeLink))
-            remove.bezelStyle = .push
-            buttons.append(remove)
+        textField.stringValue = text ?? ""
+        textField.placeholderString = "Text to show"
+        textField.bezelStyle = .roundedBezel
+        textField.delegate = self
+        textField.setAccessibilityLabel("Link text")
+        addressField.stringValue = href.map(LinkAddress.display) ?? suggestion
+        addressField.placeholderString = "https://example.com or a note name"
+        addressField.completes = true
+        addressField.numberOfVisibleItems = 8
+        addressField.delegate = self
+        addressField.setAccessibilityLabel("Link address")
+        for field in [textField, addressField] as [NSTextField] {
+            field.widthAnchor.constraint(equalToConstant: Self.fieldWidth).isActive = true
         }
-        buttons.append(apply)
-        let row = NSStackView(views: buttons)
-        row.orientation = .horizontal
-        row.spacing = 8
-        let stack = NSStackView(views: [label, field, row])
+        let hint = NSTextField(wrappingLabelWithString: "A web address, or the name of a note in Slate.")
+        hint.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        hint.textColor = .secondaryLabelColor
+        let grid = NSGridView(views: [
+            [Self.label("Text"), textField],
+            [Self.label("Link to"), addressField],
+            [NSGridCell.emptyContentView, hint],
+        ])
+        grid.rowSpacing = 8
+        grid.columnSpacing = 8
+        grid.rowAlignment = .firstBaseline
+        grid.column(at: 0).xPlacement = .trailing
+        grid.row(at: 0).isHidden = editsText == false
+        let stack = NSStackView(views: [grid, buttons()])
         stack.orientation = .vertical
         stack.alignment = .trailing
-        stack.spacing = 8
-        stack.edgeInsets = NSEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
-        label.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        field.widthAnchor.constraint(equalToConstant: 300).isActive = true
+        stack.spacing = 12
+        stack.edgeInsets = NSEdgeInsets(top: 14, left: 14, bottom: 14, right: 14)
         let controller = NSViewController()
         controller.view = stack
         popover.contentViewController = controller
         popover.behavior = .transient
+        popover.delegate = self
+    }
+
+    private static func label(_ title: String) -> NSTextField {
+        let label = NSTextField(labelWithString: title)
+        label.textColor = .secondaryLabelColor
+        return label
+    }
+
+    private func buttons() -> NSStackView {
+        let save = NSButton(title: original == nil ? "Add Link" : "Save", target: self, action: #selector(saveLink))
+        save.keyEquivalent = "\r"
+        let cancel = NSButton(title: "Cancel", target: self, action: #selector(cancel))
+        var views: [NSView] = [cancel, save]
+        if original != nil {
+            let remove = NSButton(title: "Remove Link", target: self, action: #selector(removeLink))
+            views.insert(remove, at: 0)
+        }
+        let row = NSStackView(views: views)
+        row.orientation = .horizontal
+        row.spacing = 8
+        return row
+    }
+
+    func setNotes(_ names: [String]) {
+        notes = names
+        addressField.removeAllItems()
+        addressField.addItems(withObjectValues: names)
     }
 
     func show(relativeTo rect: NSRect, of view: NSView) {
+        popover.appearance = view.effectiveAppearance
+        popover.animates = false
         popover.show(relativeTo: rect, of: view, preferredEdge: .maxY)
-        popover.contentViewController?.view.window?.makeFirstResponder(field)
+        focusField()
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            focusField()
+        }
     }
 
-    @objc private func applyLink() {
-        finish(.set(field.stringValue))
+    private func focusField() {
+        guard isDone == false, let window = popover.contentViewController?.view.window else { return }
+        let first: NSTextField = editsText == false || addressField.stringValue.isEmpty || textField.stringValue.isEmpty == false ? addressField : textField
+        window.makeKeyAndOrderFront(nil)
+        if (window.firstResponder as? NSTextView)?.delegate as? NSTextField !== first {
+            window.makeFirstResponder(first)
+        }
+    }
+
+    func popoverDidShow(_ notification: Notification) {
+        focusField()
+    }
+
+    @objc private func saveLink() {
+        let raw = addressField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let href: String?
+        if let original, raw == LinkAddress.display(original) {
+            href = original
+        } else {
+            href = LinkAddress.href(for: raw, notes: notes)
+        }
+        guard let href else {
+            finish(original == nil ? .cancel : .remove)
+            return
+        }
+        guard editsText else {
+            finish(.set(text: nil, href: href))
+            return
+        }
+        let text = textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        finish(.set(text: text.isEmpty ? LinkAddress.display(href) : text, href: href))
     }
 
     @objc private func removeLink() {
         finish(.remove)
+    }
+
+    @objc private func cancel() {
+        finish(.cancel)
     }
 
     private func finish(_ result: Result) {
@@ -69,15 +148,20 @@ final class LinkPopover: NSObject, NSTextFieldDelegate {
         completion(result)
     }
 
+    func popoverDidClose(_ notification: Notification) {
+        finish(.cancel)
+    }
+
     func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
-        if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
-            popover.close()
+        switch commandSelector {
+        case #selector(NSResponder.cancelOperation(_:)):
+            finish(.cancel)
             return true
-        }
-        if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-            applyLink()
+        case #selector(NSResponder.insertNewline(_:)):
+            saveLink()
             return true
+        default:
+            return false
         }
-        return false
     }
 }

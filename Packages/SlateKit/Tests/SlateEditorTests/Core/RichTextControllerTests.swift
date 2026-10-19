@@ -191,9 +191,58 @@ import Testing
         let harness = EditorHarness(markdown: "see the map\n")
         harness.selectText("map")
 
-        harness.controller.applyLink(.set("https://example.com/map"), to: harness.textView.selectedRange())
+        harness.controller.applyLink(.set(text: nil, href: "https://example.com/map"), to: harness.textView.selectedRange())
 
         #expect(harness.markdown == "see the [map](https://example.com/map)\n")
+    }
+
+    @Test func savingNewTextChangesTheTextOfTheLink() {
+        let harness = EditorHarness(markdown: "see [map](https://example.com) now\n")
+        harness.select(5)
+
+        let range = harness.controller.linkRange(at: 5) ?? NSRange()
+        harness.controller.applyLink(.set(text: "the map", href: "https://example.com/b"), to: range)
+
+        #expect(harness.markdown == "see [the map](https://example.com/b) now\n")
+    }
+
+    @Test func aNoteLinkWithOtherTextIsWrittenWithAnAlias() {
+        let harness = EditorHarness(markdown: "see it\n")
+        harness.selectText("it")
+
+        harness.controller.applyLink(.set(text: "that note", href: "wiki:Other"), to: harness.textView.selectedRange())
+
+        #expect(harness.markdown == "see [[Other|that note]]\n")
+    }
+
+    @Test func aLinkWithoutSelectionInsertsItsText() {
+        let harness = EditorHarness(markdown: "see , now\n")
+        harness.select(4)
+
+        harness.controller.applyLink(.set(text: "Other", href: "wiki:Other"), to: harness.textView.selectedRange())
+
+        #expect(harness.markdown == "see [[Other]], now\n")
+    }
+
+    @Test func theCaretInALinkShowsTheLinkBarAndRemoveTakesTheLinkAway() {
+        let harness = EditorHarness(markdown: "see [map](https://example.com) now\n")
+        harness.select(5)
+
+        #expect(harness.controller.linkBar.isHidden == false)
+        let range = harness.controller.linkBar.range ?? NSRange()
+        harness.controller.performLinkAction(.remove, range: range)
+
+        #expect(harness.markdown == "see map now\n")
+        #expect(harness.controller.linkBar.isHidden)
+    }
+
+    @Test func theMenuOfALinkStartsWithTheLinkActions() {
+        let harness = EditorHarness(markdown: "see [map](https://example.com) now\n")
+
+        let menu = harness.controller.linkMenu(at: 5, adding: NSMenu())
+
+        #expect(menu?.items.prefix(4).map(\.title) == ["Open Link", "Edit Link…", "Copy Link Address", "Remove Link"])
+        #expect(harness.controller.linkMenu(at: 1, adding: NSMenu()) == nil)
     }
 
     @Test func dividerIsInsertedAfterTheParagraph() {
