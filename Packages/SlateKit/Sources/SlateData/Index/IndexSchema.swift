@@ -2,7 +2,7 @@ import Foundation
 import GRDB
 
 enum IndexSchema {
-    static let version = 1
+    static let version = 2
 
     static func migrator() -> DatabaseMigrator {
         var migrator = DatabaseMigrator()

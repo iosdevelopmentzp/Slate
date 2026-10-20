@@ -23,7 +23,7 @@ enum MCPToolCatalog {
             "path": text("The path inside the notes folder. Use id or path."),
             "heading": text("The heading text without the # marks, like Status or Plan. Case does not matter."),
         ], required: ["heading"], readOnly: true),
-        tool("list_backlinks", "List the notes that link to a note with [[its name]]. Use it before you rename or move a note.", [
+        tool("list_backlinks", "List the notes that link to a note with [[its name]] or with a Markdown link to its file. Use it before you rename or move a note.", [
             "id": text("The note id."),
             "path": text("The path inside the notes folder. Use id or path."),
         ], required: [], readOnly: true),

@@ -4,6 +4,7 @@ package struct IndexedLink: Hashable, Sendable {
     package enum Kind: String, Hashable, Sendable {
         case wiki
         case url
+        case note
     }
 
     package var kind: Kind

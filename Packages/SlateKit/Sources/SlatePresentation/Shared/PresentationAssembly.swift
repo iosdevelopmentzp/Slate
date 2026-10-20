@@ -21,6 +21,7 @@ package final class PresentationAssembly {
     let capture: CaptureStore
     let history: HistoryStore
     let versions: VersionsStore
+    let backlinks: BacklinksStore
 
     package init(ports: Ports, useCases: UseCases, activity: ActivityLog, vaultRoot: URL) {
         events = AppEvents()
@@ -115,6 +116,7 @@ package final class PresentationAssembly {
             toaster: toaster,
             events: events
         )
+        backlinks = BacklinksStore(load: useCases.backlinks, navigator: navigator, activity: activity, events: events)
         versions = VersionsStore(
             history: ports.history,
             files: ports.files,

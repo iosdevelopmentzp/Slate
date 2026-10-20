@@ -27,16 +27,17 @@ package enum IndexFactsPolicy {
             tags: TagPolicy.merged(header: header.tags, lines: lines)
         )
         let wikilinks = WikilinkPolicy.targets(in: lines).map { IndexedLink(kind: .wiki, target: $0) }
+        let noteLinks = MarkdownNoteLinkPolicy.targets(in: lines).map { IndexedLink(kind: .note, target: $0) }
         return IndexedNote(
             summary: summary,
             state: IndexedFileState(modified: document.meta.modified, size: document.meta.size, hash: document.hash),
             body: document.body,
             aliases: header.aliases ?? [],
-            links: wikilinks,
+            links: wikilinks + noteLinks,
             todos: todos,
             hasCode: document.body.contains("```"),
             hasImage: document.body.contains("!["),
-            hasLink: wikilinks.isEmpty == false || document.body.contains("://")
+            hasLink: wikilinks.isEmpty == false || noteLinks.isEmpty == false || document.body.contains("://")
         )
     }
 }

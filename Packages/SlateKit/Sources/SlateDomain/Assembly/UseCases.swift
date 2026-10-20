@@ -43,6 +43,7 @@ package struct UseCases: Sendable {
     package let runAction: RunActionUseCase
     package let openTarget: OpenTargetUseCase
     package let agentGuide: AgentGuideWriter
+    package let backlinks: BacklinksUseCase
 
     package init(ports: Ports) {
         create = CreateNoteUseCase(files: ports.files, index: ports.index, builder: ports.builder, templates: ports.templates, config: ports.config, keyValues: ports.keyValues, clock: ports.clock)
@@ -82,6 +83,7 @@ package struct UseCases: Sendable {
         runAction = RunActionUseCase(runner: ports.actions, append: append)
         openTarget = OpenTargetUseCase(index: ports.index, create: create)
         agentGuide = AgentGuideWriter(files: ports.files)
+        backlinks = BacklinksUseCase(files: ports.files, index: ports.index)
         findProject = FindProjectUseCase(config: ports.config, repositories: ports.repositories)
         projectTasks = ProjectTasksUseCase(files: ports.files, index: ports.index)
         findTask = FindTaskUseCase(config: ports.config, projectTasks: projectTasks)

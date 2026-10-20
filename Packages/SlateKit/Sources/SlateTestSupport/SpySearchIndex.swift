@@ -100,7 +100,13 @@ package final class SpySearchIndex: SearchIndex, @unchecked Sendable {
     package func notesLinking(to stem: String) async throws -> [NoteSummary] {
         lock.withLock {
             notes.values.filter { note in
-                note.links.contains { $0.kind == .wiki && StemPolicy.isSame(WikilinkPolicy.parse($0.target).stem, stem) }
+                note.links.contains { link in
+                    switch link.kind {
+                    case .wiki: StemPolicy.isSame(WikilinkPolicy.parse(link.target).stem, stem)
+                    case .note: StemPolicy.isSame(link.target, stem)
+                    case .url: false
+                    }
+                }
             }.map(\.summary)
         }
     }

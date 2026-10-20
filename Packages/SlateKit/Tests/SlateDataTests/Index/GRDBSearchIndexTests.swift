@@ -135,6 +135,14 @@ import Testing
         #expect(try await index.notesLinking(to: "Plan").map(\.id.rawValue) == ["r"])
     }
 
+    @Test func markdownLinksToANoteCountAsLinks() async throws {
+        try await index.upsert(note("Notes/Plan.md", id: "p", body: "x"))
+        try await index.upsert(note("Notes/Ref.md", id: "r", body: "read [the plan](Plan.md)"))
+        try await index.upsert(note("Notes/Web.md", id: "w", body: "[site](https://example.com/Plan.md)"))
+
+        #expect(try await index.notesLinking(to: "plan").map(\.id.rawValue) == ["r"])
+    }
+
     @Test func tagsAndTodos() async throws {
         try await index.upsert(note("Notes/A.md", id: "a", tags: ["b"], body: "#a\n- [ ] one\n- [x] two"))
         try await index.upsert(note("Notes/B.md", id: "b", body: "#a"))

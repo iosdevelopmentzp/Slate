@@ -129,6 +129,7 @@ struct EditorView: View {
                 .disabled(document.isHeaderOpaque)
                 .simultaneousGesture(TapGesture().modifiers(.option).onEnded { editor.copyPath() })
                 .accessibilityLabel("Title")
+            BacklinksButton(path: document.path)
             IconButton(systemImage: "list.bullet.indent", help: "Go to heading  ⇧⌘O") {
                 commands.perform(.outline)
             }

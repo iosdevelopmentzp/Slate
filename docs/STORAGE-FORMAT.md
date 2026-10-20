@@ -406,6 +406,9 @@ Moves and renames: `coordinate(writingItemAt: from, options: .forMoving, writing
 
 ## 9. Search index
 
+The `links` table keeps `wiki` links (`[[Note]]`), `note` links (a Markdown link whose destination is a `.md` file, stored by its stem) and `url` links. Backlinks and `list_backlinks` use `wiki` and `note`. Schema version 2 added `note`; an older index is rebuilt.
+
+
 SQLite through GRDB, file `~/Library/Application Support/Slate/<vault-id>/index.sqlite`, WAL mode, busy timeout 2 s. Derived data: deleting the file is always safe.
 
 ```sql

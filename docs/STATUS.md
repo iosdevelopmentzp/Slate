@@ -246,6 +246,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 157. Highlights and text colours are bits 8 to 11 and 12 to 15 of `InlineStyle`, not new attributes, so every place that keeps bold (typing attributes, cell editors, run merging, copy and paste) keeps colours with no extra code. The palettes are fixed (ADR 0017); a tag with another colour keeps the paragraph raw. `HighlightScanner` finds `==` pairs after the runs are read, using `SourceEscapes` to skip escaped `\=`. The writer opens the highlight first, then the text colour, then bold, italic and strikethrough. The display colours are cached, because a new dynamic `NSColor` is not equal to the old one and the styler would restyle the text on every pass.
 158. Code colours come back from the M2 highlighter (`Highlighting/`, restored from commit `ad3de36^`): line by line regular expressions, so a `/* … */` comment over several lines is coloured only on its first line. `RichTextStyler.style` splits each attribute run at token edges and changes only pieces whose colour differs, so typing in a block does not restyle the whole block. The language label is drawn by `RichLayoutFragment`, and a click on it is found by `codeLanguageHit` before the checkbox and link checks.
 159. Go to Heading is an AppKit menu built by the editor (`outlineMenu`), not a SwiftUI menu: it is fresh each time it opens and the same for the button and `⇧⌘O`. From the keyboard it opens under the caret, from the button near the top-right of the text. The jump scrolls the heading 16 pt under the top and calls `showFindIndicator`.
+160. Backlinks are a capsule with a count in the title row and a popover, not a block under the text: a block inside the `NSTextView` scroll view needs its own layout below the text container, for the same information. `BacklinksStore` refreshes on index and vault events and on a note switch, but not on `.noteSaved`, because every autosave of the open note posts it. Markdown links to `.md` files are indexed as kind `note` by stem (`MarkdownNoteLinkPolicy`); `IndexSchema.version` is 2, so the index is rebuilt once.
 
 ## Next steps
 
@@ -431,6 +432,11 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 ### Go to Heading
 
 98. In a long task note press `⇧⌘O`: the headings show under the caret, the current section is ticked. Pick Log: the view scrolls to it and it flashes. The list button next to the title opens the same menu.
+
+### Backlinks
+
+99. Open a note that other notes link to with `[[Name]]` or `[text](Name.md)`: a "↩ N" capsule shows next to the title. Click it: the notes and the line around each link show; a click opens that note.
+100. Add a link to this note in another app (for example in Obsidian): within a few seconds the count grows.
 
 ## Known gaps
 

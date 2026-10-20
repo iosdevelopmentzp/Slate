@@ -141,7 +141,7 @@ struct GRDBSearchIndex: SearchIndex {
         try await writer.read { db in
             let sql = """
                 SELECT DISTINCT \(Self.summaryColumns) FROM links l JOIN notes n ON n.id = l.from_id
-                WHERE l.kind = 'wiki' AND (lower(l.target) = lower(?) OR lower(l.target) LIKE '%/' || lower(?))
+                WHERE l.kind IN ('wiki', 'note') AND (lower(l.target) = lower(?) OR lower(l.target) LIKE '%/' || lower(?))
                 ORDER BY n.updated DESC
                 """
             return try Row.fetchAll(db, sql: sql, arguments: [stem, stem]).map(Self.summary)
