@@ -448,6 +448,8 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 
 102. Drag the right edge of the folder column to the right: the column grows up to 300 pt, and long folder names show in full. Quit and open Slate: the width stays. Double-click the edge: the column is 220 pt again. Rest the pointer on a name that ends in "…": a hint shows the full name. A name that fits shows no hint.
 
+103. Open a folder with a long name, for example a task folder, so that its title above the list ends in "…". Rest the pointer on the title: a hint shows the full name.
+
 ## Known gaps
 
 

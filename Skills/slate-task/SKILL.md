@@ -1,13 +1,13 @@
 ---
 name: slate-task
-description: Keep the documentation of a ticketed coding task in Slate through the slate MCP server. Use it at the start of a session in a code repository ("start ABC-123", "continue the task", "where did we stop"), when you find something worth keeping, after a commit, and at the end of a session ("wrap up", "done for today").
+description: Keep the documentation of a large coding task in Slate through the slate MCP server. Use it only for a story that adds a feature, or a task with many planned changes or several sessions, or when the task already has a Slate note ("continue the task", "where did we stop"). Do not use it for a bug fix or a small improvement in a few lines or files. Use it after a commit and at the end of a session ("wrap up", "done for today") of such a large task.
 ---
 
 # Task documentation in Slate
 
 Slate is the owner's notes app. A code repository can be linked to a Slate project. Each task of the project has a folder with a task note: a header with `ticket`, `branch` and `status`, and the sections Context, Plan, Findings, Links, Questions and Log. The next session reads this note and continues from it. The owner reads it in the app.
 
-Use this skill for a ticketed, multi-step task. Skip it for a short question or a one-line fix. When the user asks for another documentation mode, or the repository's own rules define one, follow that instead.
+Use this skill only for a large task: a story that adds a feature, or a task with many planned changes or several sessions of work. Skip it for a small task: a bug fix, a small improvement, or a change in a few lines or files. For a small task the session itself is the record. If the size is not clear at the start, start without Slate, and ask the user before you start a Slate task when the task grows. When the user asks for another documentation mode, or the repository's own rules define one, follow that instead.
 
 Write to Slate only through the `slate` MCP tools, never with file tools. The tools keep the header and the file names correct, and Slate saves a version before and after each change.
 

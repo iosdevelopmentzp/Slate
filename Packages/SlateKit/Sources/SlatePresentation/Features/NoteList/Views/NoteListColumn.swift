@@ -25,6 +25,7 @@ struct NoteListColumn: View {
                     .font(.title2.weight(.semibold))
                     .lineLimit(1)
                     .truncationMode(.tail)
+                    .hintWhenTruncated(title)
                 Spacer(minLength: 8)
                 if let folder = store.source.folder {
                     IconButton(systemImage: "clock.arrow.circlepath", help: "Changes in this folder") {
