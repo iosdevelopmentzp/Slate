@@ -60,6 +60,9 @@ extension RichTextController {
             _ = indentLists(by: delta)
         case .formatJSON:
             formatJSON()
+        case .outline:
+            showOutline()
+            return
         case .table:
             if textView.selectedRange().length == 0 || convertSelectionToTable() == false {
                 insertTable()

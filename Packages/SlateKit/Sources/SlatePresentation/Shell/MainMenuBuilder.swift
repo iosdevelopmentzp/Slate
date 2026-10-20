@@ -51,6 +51,7 @@ struct MainMenuBuilder {
             standard("Add Caret Below", EditorMenuActions.caretBelow, key: String(UnicodeScalar(UInt16(NSDownArrowFunctionKey))!), modifiers: [.control, .shift]),
             .separator(),
             standard("Find in Note", EditorMenuActions.find, key: "f", modifiers: [.command, .option]),
+            standard("Go to Heading…", EditorMenuActions.outline, key: "o", modifiers: [.command, .shift]),
         ]))
         main.addItem(submenu("Format", items: [
             standard("Title", EditorMenuActions.title, key: "t", modifiers: [.command, .shift]),

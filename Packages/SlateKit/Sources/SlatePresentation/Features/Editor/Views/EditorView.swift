@@ -129,6 +129,10 @@ struct EditorView: View {
                 .disabled(document.isHeaderOpaque)
                 .simultaneousGesture(TapGesture().modifiers(.option).onEnded { editor.copyPath() })
                 .accessibilityLabel("Title")
+            IconButton(systemImage: "list.bullet.indent", help: "Go to heading  ⇧⌘O") {
+                commands.perform(.outline)
+            }
+            .accessibilityLabel("Headings")
             IconButton(systemImage: "clock.arrow.circlepath", help: "Versions of this note") {
                 showsHistory.toggle()
             }

@@ -26,6 +26,7 @@ package enum EditorMenuActions {
     package static let formatJSON = #selector(RichTextView.slateFormatJSON(_:))
     package static let caretAbove = #selector(RichTextView.slateCaretAbove(_:))
     package static let caretBelow = #selector(RichTextView.slateCaretBelow(_:))
+    package static let outline = #selector(RichTextView.slateOutline(_:))
     package static let find = #selector(RichTextView.slateFind(_:))
     package static let table = #selector(RichTextView.slateTable(_:))
     package static let pasteTable = #selector(RichTextView.slatePasteTable(_:))

@@ -15,4 +15,5 @@ package enum EditorCommand: Hashable, Sendable {
     case indent(Int)
     case table
     case formatJSON
+    case outline
 }

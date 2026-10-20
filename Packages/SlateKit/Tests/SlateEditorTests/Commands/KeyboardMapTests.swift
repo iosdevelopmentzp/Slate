@@ -21,6 +21,7 @@ import Testing
         #expect(KeyboardMap.command(for: event("i", flags: [.command, .shift])) == .image)
         #expect(KeyboardMap.command(for: event("a", flags: [.command, .shift])) == .file)
         #expect(KeyboardMap.command(for: event("e", flags: [.command, .shift])) == .highlight(.yellow))
+        #expect(KeyboardMap.command(for: event("o", flags: [.command, .shift])) == .outline)
     }
 
     @Test func optionCommandTInsertsATable() {

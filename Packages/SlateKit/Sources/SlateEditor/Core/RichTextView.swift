@@ -170,6 +170,12 @@ final class RichTextView: NSTextView {
         controller?.performLinkAction(action, range: range)
     }
 
+    @objc func slateOutline(_ sender: Any?) { controller?.perform(.outline) }
+
+    @objc func slateJumpToHeading(_ sender: NSMenuItem) {
+        controller?.jumpToHeading(at: sender.tag)
+    }
+
     @objc func slateCodeLanguage(_ sender: NSMenuItem) {
         guard let choice = sender.representedObject as? CodeLanguageChoice else { return }
         controller?.setCodeLanguage(at: choice.location, fence: choice.fence)

@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Go to Heading: the list button next to the title, `⇧⌘O`, or Edit → Go to Heading… shows the headings of the note, indented by level, with the current section ticked. Pick one to jump there; the heading flashes once.
 - Code blocks have colours again: keywords, strings, comments, numbers and types for Swift, Objective-C, JSON, YAML and shell, added and removed lines for diff, and levels and times for logs. The language shows in the top-right corner of the block; click it to pick another language or Plain text. The language is the word after the opening ``` in the file.
 - Highlights and text colours. Select text and use the new colour button in the format bar, the Format menu or the right-click menu: Highlight in yellow, green, blue, pink or purple, or Text Colour in red, orange, green, blue or grey. `⇧⌘E` highlights in yellow. It works in table cells too. In the file a yellow highlight is `==text==`, as in Obsidian; other colours are `<mark>` and `<span>` tags in the format of the Obsidian plugin Highlightr (ADR 0017). Such tags from other tools no longer turn the paragraph into a raw block.
 - Tables: a round "+" on the line between two rows or two columns adds a row or a column there. Before, the "+" strips added only at the end, and a row in the middle needed the right-click menu.
