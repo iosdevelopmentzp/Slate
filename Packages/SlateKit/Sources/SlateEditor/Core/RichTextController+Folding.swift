@@ -28,6 +28,18 @@ extension RichTextController {
         unfold(foldedHeadings)
     }
 
+    func apply(collapsedSections keys: [String]) {
+        guard keys != syncedSections else { return }
+        syncedSections = keys
+        let headings = SectionKeys.headings(for: keys, in: storage)
+        guard headings != foldedHeadings else { return }
+        foldedHeadings = headings
+        updateHiddenSections()
+        needsFoldLayout = false
+        relayoutDocument()
+        keepCaretVisible()
+    }
+
     func reveal(_ location: Int) {
         let covering = foldedHeadings.filter { heading in
             HeadingSection.at(heading, in: storage).map { NSLocationInRange(location, $0.body) } ?? false
@@ -110,6 +122,7 @@ extension RichTextController {
     func refreshFoldsAfterEdit() {
         guard foldedHeadings.isEmpty == false || needsFoldLayout else { return }
         if updateHiddenSections() { needsFoldLayout = true }
+        reportSections()
         guard needsFoldLayout else { return }
         needsFoldLayout = false
         relayoutDocument()
@@ -132,6 +145,18 @@ extension RichTextController {
         updateHiddenSections()
         needsFoldLayout = false
         relayoutDocument()
+        keepCaretVisible()
+        reportSections()
+    }
+
+    private func reportSections() {
+        let keys = SectionKeys.keys(for: foldedHeadings, in: storage)
+        guard keys != syncedSections ?? [] else { return }
+        syncedSections = keys
+        handlers.collapsedSections(keys)
+    }
+
+    private func keepCaretVisible() {
         let selection = textView.selectedRange()
         if let section = hiddenSection(containing: selection.location) {
             textView.setSelectedRange(NSRange(location: NSMaxRange(contentRange(of: paragraphRange(at: section.heading))), length: 0))

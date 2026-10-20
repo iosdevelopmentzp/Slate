@@ -43,6 +43,7 @@ final class EditorStore {
     @ObservationIgnored let toaster: Toaster
     @ObservationIgnored let create: CreateNoteUseCase
     @ObservationIgnored let journal: any JournalStore
+    @ObservationIgnored let sectionFolds: SectionFolds
     @ObservationIgnored var journalTask: Task<Void, Never>?
     @ObservationIgnored var followsNavigator = true
     @ObservationIgnored var insertionCounter = 0
@@ -73,7 +74,8 @@ final class EditorStore {
         panel: PanelVisibility,
         toaster: Toaster,
         create: CreateNoteUseCase,
-        journal: any JournalStore
+        journal: any JournalStore,
+        sectionFolds: SectionFolds
     ) {
         self.files = files
         self.index = index
@@ -92,6 +94,7 @@ final class EditorStore {
         self.toaster = toaster
         self.create = create
         self.journal = journal
+        self.sectionFolds = sectionFolds
         subscription = events.subscribe { [weak self] event in
             guard let self else { return }
             handle(event)

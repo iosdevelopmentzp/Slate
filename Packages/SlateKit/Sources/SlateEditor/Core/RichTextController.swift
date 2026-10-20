@@ -28,6 +28,7 @@ final class RichTextController: NSObject {
     var hiddenSections: [NSRange] = []
     var hoveredHeading: Int?
     var needsFoldLayout = false
+    var syncedSections: [String]?
     lazy var findClient = NoteFindClient(controller: self)
     lazy var finder: NSTextFinder = {
         let finder = NSTextFinder()
@@ -139,6 +140,7 @@ final class RichTextController: NSObject {
         hiddenSections = []
         hoveredHeading = nil
         needsFoldLayout = false
+        syncedSections = nil
         undo.removeAllActions()
         pendingRange = nil
         textView.setSelectedRange(NSRange(location: 0, length: 0))

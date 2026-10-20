@@ -49,7 +49,8 @@ struct EditorView: View {
                     commands: commands,
                     focus: editor.bodyFocus.map { EditorFocusRequest(token: $0.token, atStart: $0.atStart, words: $0.words) },
                     insertion: editor.insertion.map { EditorInsertion(token: $0.token, markdown: $0.markdown) },
-                    handlers: handlers
+                    handlers: handlers,
+                    collapsedSections: editor.collapsedSections
                 )
                 .padding(.horizontal, Self.sidePadding - 4 - RichTextEditorView.sideMargin)
                 .frame(maxWidth: Self.textWidth + Self.sidePadding * 2)
@@ -184,7 +185,8 @@ struct EditorView: View {
             pasteFiles: { urls in Task { await editor.pasteFiles(urls) } },
             requestScreenshot: { kind in Task { await editor.screenshot(kind == .region ? .region : .window) } },
             notice: { editor.toaster.show($0) },
-            noteNames: { await editor.linkTargets() }
+            noteNames: { await editor.linkTargets() },
+            collapsedSections: { editor.setCollapsedSections($0) }
         )
     }
 

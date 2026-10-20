@@ -175,4 +175,33 @@ import Testing
 
         #expect(visibleParagraphs(harness) == ["One", "Two", "end"])
     }
+
+    @Test func collapsingReportsTheSectionsAndApplyingRestoresThem() {
+        let harness = EditorHarness(markdown: markdown)
+        var reported: [[String]] = []
+        harness.controller.handlers.collapsedSections = { reported.append($0) }
+
+        harness.controller.toggleSection(at: location(of: "Detail", in: harness))
+        harness.controller.toggleSection(at: location(of: "Detail", in: harness))
+        #expect(reported == [["2 Detail"], []])
+
+        harness.controller.setMarkdown("## Other\n\nx\n")
+        harness.controller.setMarkdown(markdown)
+        harness.controller.apply(collapsedSections: ["1 Context"])
+        harness.layout()
+        #expect(visibleParagraphs(harness) == ["Context", "Log", "end"])
+        #expect(reported == [["2 Detail"], []])
+    }
+
+    @Test func renamingACollapsedHeadingReportsTheNewKey() {
+        let harness = EditorHarness(markdown: markdown)
+        var reported: [[String]] = []
+        harness.controller.handlers.collapsedSections = { reported.append($0) }
+        harness.controller.toggleSection(at: 0)
+        harness.caret(after: "Context")
+
+        harness.type("s")
+
+        #expect(reported.last == ["1 Contexts"])
+    }
 }

@@ -84,7 +84,8 @@ final class StoreHarness {
         panel: panelVisibility,
         toaster: toaster,
         create: useCases.create,
-        journal: ports.journal
+        journal: ports.journal,
+        sectionFolds: SectionFolds(store: keyValues)
     )
     lazy var settings = SettingsStore(
         store: keyValues,

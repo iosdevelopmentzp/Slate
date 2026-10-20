@@ -91,7 +91,8 @@ package final class PresentationAssembly {
             panel: panelVisibility,
             toaster: toaster,
             create: useCases.create,
-            journal: ports.journal
+            journal: ports.journal,
+            sectionFolds: SectionFolds(store: ports.keyValues)
         )
         settings = SettingsStore(
             store: ports.keyValues,

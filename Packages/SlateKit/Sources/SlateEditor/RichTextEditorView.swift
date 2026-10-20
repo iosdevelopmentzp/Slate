@@ -10,6 +10,7 @@ package struct RichTextEditorView: NSViewRepresentable {
     private let focus: EditorFocusRequest?
     private let insertion: EditorInsertion?
     private let handlers: EditorHandlers
+    private let collapsedSections: [String]
 
     package init(
         markdown: Binding<String>,
@@ -17,7 +18,8 @@ package struct RichTextEditorView: NSViewRepresentable {
         commands: EditorCommands,
         focus: EditorFocusRequest? = nil,
         insertion: EditorInsertion? = nil,
-        handlers: EditorHandlers = EditorHandlers()
+        handlers: EditorHandlers = EditorHandlers(),
+        collapsedSections: [String] = []
     ) {
         _markdown = markdown
         self.configuration = configuration
@@ -25,6 +27,7 @@ package struct RichTextEditorView: NSViewRepresentable {
         self.focus = focus
         self.insertion = insertion
         self.handlers = handlers
+        self.collapsedSections = collapsedSections
     }
 
     package func makeCoordinator() -> Coordinator {
@@ -41,6 +44,7 @@ package struct RichTextEditorView: NSViewRepresentable {
         }
         context.coordinator.markdown = $markdown
         controller.setMarkdown(markdown)
+        controller.apply(collapsedSections: collapsedSections)
         return controller.scrollView
     }
 
@@ -51,6 +55,7 @@ package struct RichTextEditorView: NSViewRepresentable {
         if controller.commands !== commands { controller.commands = commands }
         controller.apply(configuration: configuration)
         controller.setMarkdown(markdown)
+        controller.apply(collapsedSections: collapsedSections)
         controller.apply(insertion: insertion)
         controller.apply(focus: focus)
     }

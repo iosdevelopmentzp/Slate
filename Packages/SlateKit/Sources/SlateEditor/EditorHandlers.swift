@@ -10,6 +10,7 @@ package struct EditorHandlers {
     package var requestScreenshot: (ScreenshotKind) -> Void
     package var notice: (String) -> Void
     package var noteNames: () async -> [String]
+    package var collapsedSections: ([String]) -> Void
 
     package init(
         didEndEditing: @escaping () -> Void = {},
@@ -20,7 +21,8 @@ package struct EditorHandlers {
         pasteFiles: @escaping ([URL]) -> Void = { _ in },
         requestScreenshot: @escaping (ScreenshotKind) -> Void = { _ in },
         notice: @escaping (String) -> Void = { _ in },
-        noteNames: @escaping () async -> [String] = { [] }
+        noteNames: @escaping () async -> [String] = { [] },
+        collapsedSections: @escaping ([String]) -> Void = { _ in }
     ) {
         self.didEndEditing = didEndEditing
         self.resolveImage = resolveImage
@@ -31,5 +33,6 @@ package struct EditorHandlers {
         self.requestScreenshot = requestScreenshot
         self.notice = notice
         self.noteNames = noteNames
+        self.collapsedSections = collapsedSections
     }
 }
