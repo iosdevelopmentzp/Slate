@@ -21,6 +21,12 @@ import Testing
         #expect(PreviewPolicy.preview(of: body) == "After")
     }
 
+    @Test func dropsHighlightsAndColourTags() {
+        let body = "A ==key point== and <mark style=\"background: #BBFABBA6;\">green</mark> <span style=\"color: #E5484D;\">red</span>, a == b"
+
+        #expect(PreviewPolicy.preview(of: body) == "A key point and green red, a == b")
+    }
+
     @Test func keepsSnakeCase() {
         #expect(PreviewPolicy.preview(of: "use snake_case_names") == "use snake_case_names")
     }

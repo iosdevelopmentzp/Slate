@@ -69,6 +69,8 @@ struct MainMenuBuilder {
             standard("Bold", EditorMenuActions.bold, key: "b"),
             standard("Italic", EditorMenuActions.italic, key: "i"),
             standard("Strikethrough", EditorMenuActions.strikethrough, key: "x", modifiers: [.command, .shift]),
+            ColorMenu.highlightItem(),
+            ColorMenu.textColorItem(),
             .separator(),
             standard("Link", EditorMenuActions.link, key: "k"),
             standard("Image", EditorMenuActions.image, key: "i", modifiers: [.command, .shift]),

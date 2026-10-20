@@ -34,7 +34,9 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
     }
 
     func textView(_ view: NSTextView, menu: NSMenu, for event: NSEvent, at charIndex: Int) -> NSMenu? {
-        imageMenu(at: charIndex) ?? linkMenu(at: charIndex, adding: menu) ?? menu
+        if let image = imageMenu(at: charIndex) { return image }
+        if commands?.state.canFormatInline == true { ColorMenu.prepend(to: menu) }
+        return linkMenu(at: charIndex, adding: menu) ?? menu
     }
 
     func textStorage(_ textStorage: NSTextStorage, willProcessEditing editedMask: NSTextStorageEditActions, range editedRange: NSRange, changeInLength delta: Int) {

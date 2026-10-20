@@ -4,7 +4,7 @@ import Testing
 
 @MainActor
 @Suite struct MarkdownWriterTests {
-    private static let words = ["plain", "a_b", "*", "_x_", "`tick`", "[box]", "#tag", "1.", "-", "&amp;", "C:\\path", "\\*", "<b>", "a>b", "~x~", "!", "|", "**", "end.", "(paren)", "snake_case", "x*y", "100%", "e-mail", "[[Note]]", "+1", "=="]
+    private static let words = ["plain", "a_b", "*", "_x_", "`tick`", "[box]", "#tag", "1.", "-", "&amp;", "C:\\path", "\\*", "<b>", "a>b", "~x~", "!", "|", "**", "end.", "(paren)", "snake_case", "x*y", "100%", "e-mail", "[[Note]]", "+1", "==", "a=b", "=", "x==y"]
     private static let kinds: [BlockKind] = [.title, .heading, .subheading, .body, .body, .body, .quote, .bullet, .numbered, .checklist, .monospaced]
 
     struct Generator {
@@ -30,7 +30,9 @@ import Testing
                 let word = words[random.next(words.count)]
                 var attributes: [NSAttributedString.Key: Any] = [:]
                 if kind != .monospaced {
-                    let style = InlineStyle(rawValue: random.next(16))
+                    var style = InlineStyle(rawValue: random.next(16))
+                    style.highlight = HighlightColor(rawValue: random.next(8))
+                    style.textColor = TextColor(rawValue: random.next(8))
                     if style.isEmpty == false { attributes[.slateInline] = style.rawValue }
                     if random.next(8) == 0 { attributes[.slateHref] = "https://example.com/\(word.count)" }
                 }

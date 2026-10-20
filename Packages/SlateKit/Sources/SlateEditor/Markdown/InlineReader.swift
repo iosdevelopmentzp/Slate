@@ -5,45 +5,59 @@ enum InlineReader {
 
     static func read(_ children: some Sequence<Markup>, source: SourceLines, inCell: Bool = false) -> NSAttributedString? {
         var runs: [InlineRun] = []
+        var colors = InlineColorState()
         for child in children {
-            guard collect(child, style: [], href: nil, source: source, inCell: inCell, into: &runs) else { return nil }
+            guard collect(child, style: [], href: nil, source: source, inCell: inCell, colors: &colors, into: &runs) else { return nil }
         }
-        return WikilinkScanner.expand(merge(runs)).reduce(into: NSMutableAttributedString()) { result, run in
+        guard colors.isClosed else { return nil }
+        return WikilinkScanner.expand(merge(HighlightScanner.apply(runs))).reduce(into: NSMutableAttributedString()) { result, run in
             result.append(run.attributed)
         }
     }
 
-    private static func collect(_ markup: Markup, style: InlineStyle, href: String?, source: SourceLines, inCell: Bool, into runs: inout [InlineRun]) -> Bool {
+    private static func collect(_ markup: Markup, style: InlineStyle, href: String?, source: SourceLines, inCell: Bool, colors: inout InlineColorState, into runs: inout [InlineRun]) -> Bool {
+        let colored = colors.applied(to: style)
         switch markup {
         case let text as Text:
-            runs.append(InlineRun(text: text.string, style: style, href: href, allowsWiki: source.slice(text.range) == text.string))
+            let slice = source.slice(text.range)
+            runs.append(InlineRun(text: text.string, style: colored, href: href, allowsWiki: slice == text.string, escapes: SourceEscapes.offsets(of: text.string, source: slice)))
         case let code as InlineCode:
-            runs.append(InlineRun(text: code.code, style: style.union(.code), href: href))
+            runs.append(InlineRun(text: code.code, style: colored.union(.code), href: href))
         case is SoftBreak:
             runs.append(InlineRun(text: RichText.lineBreakString, style: [], href: href))
         case is LineBreak:
             runs.append(InlineRun(text: RichText.lineBreakString, style: [], href: href, isHardBreak: true))
         case let emphasis as Emphasis:
-            return emphasis.children.allSatisfy { collect($0, style: style.union(.italic), href: href, source: source, inCell: inCell, into: &runs) }
+            return collect(emphasis.children, style: style.union(.italic), href: href, source: source, inCell: inCell, colors: &colors, into: &runs)
         case let strong as Strong:
-            return strong.children.allSatisfy { collect($0, style: style.union(.bold), href: href, source: source, inCell: inCell, into: &runs) }
+            return collect(strong.children, style: style.union(.bold), href: href, source: source, inCell: inCell, colors: &colors, into: &runs)
         case let strike as Strikethrough:
-            return strike.children.allSatisfy { collect($0, style: style.union(.strikethrough), href: href, source: source, inCell: inCell, into: &runs) }
+            return collect(strike.children, style: style.union(.strikethrough), href: href, source: source, inCell: inCell, colors: &colors, into: &runs)
         case let image as Image where inCell && href == nil:
             guard image.title == nil, let path = image.source, path.isEmpty == false else { return false }
             let alt = image.plainText
             runs.append(InlineRun(text: RichText.attachmentString, style: [], href: nil, imagePath: path, imageAlt: alt.isEmpty ? nil : alt))
         case let html as InlineHTML where inCell && isLineBreakTag(html.rawHTML):
             runs.append(InlineRun(text: RichText.lineBreakString, style: [], href: href))
+        case let html as InlineHTML:
+            guard let tag = InlineHTMLTag(html.rawHTML) else { return false }
+            return colors.take(tag)
         case let link as Link:
             guard href == nil, link.title == nil, let destination = link.destination, destination.isEmpty == false else { return false }
             let start = runs.count
-            guard link.children.allSatisfy({ collect($0, style: style, href: destination, source: source, inCell: inCell, into: &runs) }) else { return false }
+            guard collect(link.children, style: style, href: destination, source: source, inCell: inCell, colors: &colors, into: &runs) else { return false }
             if runs.count == start {
-                runs.append(InlineRun(text: destination, style: style, href: destination))
+                runs.append(InlineRun(text: destination, style: colored, href: destination))
             }
         default:
             return false
+        }
+        return true
+    }
+
+    private static func collect(_ children: some Sequence<Markup>, style: InlineStyle, href: String?, source: SourceLines, inCell: Bool, colors: inout InlineColorState, into runs: inout [InlineRun]) -> Bool {
+        for child in children {
+            guard collect(child, style: style, href: href, source: source, inCell: inCell, colors: &colors, into: &runs) else { return false }
         }
         return true
     }

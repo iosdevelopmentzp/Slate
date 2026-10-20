@@ -65,6 +65,9 @@ final class RichTextView: NSTextView {
             return controller?.undoManager.canUndo == true
         case #selector(redo(_:)):
             return controller?.undoManager.canRedo == true
+        case EditorMenuActions.highlight, EditorMenuActions.textColor:
+            guard let state = controller?.commands?.state else { return false }
+            return ColorMenu.validate(item, state: state)
         case #selector(performTextFinderAction(_:)), #selector(performFindPanelAction(_:)):
             guard let controller, let action = Self.finderAction(item) else { return false }
             return controller.finder.validateAction(action)
@@ -123,6 +126,8 @@ final class RichTextView: NSTextView {
     @objc func slateStrikethrough(_ sender: Any?) { controller?.perform(.inline(.strikethrough)) }
     @objc func slateCode(_ sender: Any?) { controller?.perform(.inline(.code)) }
     @objc func slateLink(_ sender: Any?) { controller?.perform(.link) }
+    @objc func slateHighlight(_ sender: Any?) { controller?.perform(.highlight(ColorMenu.highlight(from: sender))) }
+    @objc func slateTextColor(_ sender: Any?) { controller?.perform(.textColor(ColorMenu.textColor(from: sender))) }
     @objc func slateImage(_ sender: Any?) { controller?.perform(.image) }
     @objc func slateFile(_ sender: Any?) { controller?.perform(.file) }
     @objc func slateDivider(_ sender: Any?) { controller?.perform(.divider) }

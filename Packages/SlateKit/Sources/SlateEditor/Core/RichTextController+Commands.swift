@@ -9,6 +9,12 @@ extension RichTextController {
             case .inline(let style):
                 activeTable.cellEditor.toggle(style)
                 return
+            case .highlight(let color):
+                activeTable.cellEditor.setHighlight(color)
+                return
+            case .textColor(let color):
+                activeTable.cellEditor.setTextColor(color)
+                return
             case .link:
                 activeTable.cellEditor.slateLink(nil)
                 return
@@ -36,6 +42,10 @@ extension RichTextController {
             applyParagraph(.quote, toggles: true)
         case .inline(let style):
             toggleInline(style)
+        case .highlight(let color):
+            setHighlight(color)
+        case .textColor(let color):
+            setTextColor(color)
         case .link:
             editLink()
         case .image:

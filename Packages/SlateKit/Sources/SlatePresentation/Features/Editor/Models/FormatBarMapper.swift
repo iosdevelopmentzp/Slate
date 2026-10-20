@@ -1,3 +1,4 @@
+import AppKit
 import SlateEditor
 
 enum FormatBarMapper {
@@ -32,6 +33,22 @@ enum FormatBarMapper {
             inline(.italic, id: "italic", image: "italic", hint: "Italic  ⌘I", state: state),
             inline(.strikethrough, id: "strikethrough", image: "strikethrough", hint: "Strikethrough  ⇧⌘X", state: state),
         ]
+    }
+
+    static func highlightChoices(for state: EditorStyleState) -> [FormatColorModel] {
+        HighlightColor.allCases.map { color in
+            FormatColorModel(id: "highlight-\(color.rawValue)", title: color.title, swatch: color.swatch, command: .highlight(color), isCurrent: state.highlight == color)
+        } + [FormatColorModel(id: "highlight-none", title: "Remove Highlight", swatch: nil, command: .highlight(nil), isCurrent: false)]
+    }
+
+    static func textColorChoices(for state: EditorStyleState) -> [FormatColorModel] {
+        TextColor.allCases.map { color in
+            FormatColorModel(id: "text-\(color.rawValue)", title: color.title, swatch: color.swatch, command: .textColor(color), isCurrent: state.textColor == color)
+        } + [FormatColorModel(id: "text-none", title: "Default Colour", swatch: nil, command: .textColor(nil), isCurrent: false)]
+    }
+
+    static func colorBarTint(for state: EditorStyleState) -> NSColor {
+        state.highlight?.swatch ?? state.textColor?.swatch ?? HighlightColor.yellow.swatch
     }
 
     static func blockButtons(for state: EditorStyleState) -> [FormatButtonModel] {

@@ -28,7 +28,7 @@ Full guide with more examples: `/testing`.
 
 ## Rules
 
-- No `Task.sleep`. Await fire-and-forget work with `try await waitUntil { … }` (fails after 2 s).
+- No `Task.sleep`. Await fire-and-forget work with `try await waitUntil { … }` (fails after 10 s).
 - Assert on domain values, tints, icons, enabled flags and exact command lists. Never assert on locale or clock text
   (`relativeDescription`, `ByteFormat`, `ByteCountFormatter`) beyond nil or not empty.
 - Pin current behaviour. When a test shows a bug, write it down in `docs/STATUS.md` and fix it in its own change.

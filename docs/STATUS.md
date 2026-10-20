@@ -243,6 +243,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 154. Slate activates itself with `NSApp.activate(ignoringOtherApps: true)` in `AppWindows` (the window, Settings, the return after a screenshot). The plain `NSApp.activate()` is a request that macOS refuses after a click on the status item, so the window opened behind the active app. The details are in `docs/PLAYBOOK.md` section 1.
 155. `Scripts/install.sh` signs the installed app and the `slate` command with the local certificate from `~/.config/slate/sign-identity` (ADR 0003 amendment). Ad-hoc builds asked for Documents access after every install, because macOS ties permissions to the signature. The hash lives outside the repository, so no name is in it (ADR 0006).
 156. Tests that wait for the file watcher first write a marker note and wait for its event (`sync` in `FSEventsVaultWatcherIntegrationTests`). FSEvents sends events in order, so a late event from the setup (the new `Inbox` folder, a `.rescan`) can no longer fall into the measured part. `waitUntil` waits up to 10 s instead of 2 s; it returns as soon as the condition holds, so a passing run is not slower. Before, these tests failed when `fseventsd` or a build kept the Mac busy.
+157. Highlights and text colours are bits 8 to 11 and 12 to 15 of `InlineStyle`, not new attributes, so every place that keeps bold (typing attributes, cell editors, run merging, copy and paste) keeps colours with no extra code. The palettes are fixed (ADR 0017); a tag with another colour keeps the paragraph raw. `HighlightScanner` finds `==` pairs after the runs are read, using `SourceEscapes` to skip escaped `\=`. The writer opens the highlight first, then the text colour, then bold, italic and strikethrough. The display colours are cached, because a new dynamic `NSColor` is not equal to the old one and the styler would restyle the text on every pass.
 
 ## Next steps
 
@@ -412,6 +413,13 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 89. Move the pointer over a table: the row under it shows a small grip at its left edge, the column one at its top. Near the left edge, on the line between two rows, a round "+" shows; click it: an empty row appears there with the caret in it. The same at the top edge between two columns.
 90. Drag the grip of a body row up or down: an accent line shows the place, and the row moves there. Drag a column grip sideways: the column moves with its alignment. The header row has no grip.
 91. Click a grip: the row or the column is selected and the menu opens with Move Row Up and the other items. In a cell, `⌥⌘↑` and `⌥⌘↓` move the row and the caret stays in the same cell text; `⌥⌘←` and `⌥⌘→` move the column. Undo puts it back.
+
+### Highlights and text colours (ADR 0017)
+
+92. Select a word and press `⇧⌘E`: it gets a yellow background. Press `⇧⌘E` again: the background goes. Open the file in a text editor: `==word==`.
+93. Select a word, open the colour button in the format bar and pick Green under Highlight, then Red under Text Colour: the word is red on green. The right-click menu shows a check next to Green and Red.
+94. Do the same in a table cell, and in light and dark mode: the colours are readable in both.
+95. Open the note in Obsidian: the yellow, green and red show there too.
 
 ## Known gaps
 

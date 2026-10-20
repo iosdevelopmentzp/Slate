@@ -47,4 +47,21 @@ import Testing
         #expect(FormatBarMapper.textButtons(for: state).allSatisfy { $0.isEnabled })
         #expect(FormatBarMapper.blockButtons(for: state).filter(\.isEnabled).map(\.id) == ["link", "image", "file", "table"])
     }
+
+    @Test func theColourMenuMarksTheCurrentColours() {
+        var inline = InlineStyle.bold
+        inline.highlight = .green
+        inline.textColor = .red
+        let state = EditorStyleState(inline: inline)
+
+        #expect(FormatBarMapper.highlightChoices(for: state).map(\.title) == ["Yellow", "Green", "Blue", "Pink", "Purple", "Remove Highlight"])
+        #expect(FormatBarMapper.highlightChoices(for: state).filter(\.isCurrent).map(\.command) == [.highlight(.green)])
+        #expect(FormatBarMapper.textColorChoices(for: state).map(\.title) == ["Red", "Orange", "Green", "Blue", "Grey", "Default Colour"])
+        #expect(FormatBarMapper.textColorChoices(for: state).filter(\.isCurrent).map(\.command) == [.textColor(.red)])
+        #expect(FormatBarMapper.colorBarTint(for: state) == HighlightColor.green.swatch)
+    }
+
+    @Test func theColourBarIsYellowWithoutAColour() {
+        #expect(FormatBarMapper.colorBarTint(for: EditorStyleState()) == HighlightColor.yellow.swatch)
+    }
 }

@@ -369,13 +369,18 @@ final class RichTextController: NSObject {
         var inline = InlineStyle(rawValue: textView.typingAttributes[.slateInline] as? Int ?? 0)
         var isLink = false
         if selection.length > 0 {
-            inline = [.bold, .italic, .strikethrough, .code]
+            var styles: [InlineStyle] = []
             isLink = true
             storage.enumerateAttributes(in: selection) { attributes, range, _ in
                 let text = string.substring(with: range)
                 guard text.allSatisfy({ $0.isWhitespace || $0 == RichText.lineBreak }) == false else { return }
-                inline.formIntersection(InlineStyle(rawValue: attributes[.slateInline] as? Int ?? 0))
+                styles.append(InlineStyle(rawValue: attributes[.slateInline] as? Int ?? 0))
                 if attributes[.slateHref] == nil { isLink = false }
+            }
+            inline = styles.reduce([.bold, .italic, .strikethrough, .code]) { $0.intersection($1) }
+            if let first = styles.first {
+                inline.highlight = styles.allSatisfy { $0.highlight == first.highlight } ? first.highlight : nil
+                inline.textColor = styles.allSatisfy { $0.textColor == first.textColor } ? first.textColor : nil
             }
         } else if selection.location > 0, selection.location <= storage.length, storage.length > 0 {
             isLink = storage.attribute(.slateHref, at: min(selection.location, storage.length - 1), effectiveRange: nil) != nil

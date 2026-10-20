@@ -63,6 +63,7 @@ enum KeyboardMap {
             case "i": return .image
             case "a": return .file
             case "s": return .screenshot
+            case "e": return .highlight(.yellow)
             default: return nil
             }
         }

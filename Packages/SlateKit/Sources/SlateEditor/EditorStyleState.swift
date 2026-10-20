@@ -15,6 +15,14 @@ package struct EditorStyleState: Equatable, Sendable {
         self.isInCell = isInCell
     }
 
+    package var highlight: HighlightColor? {
+        inline.highlight
+    }
+
+    package var textColor: TextColor? {
+        inline.textColor
+    }
+
     package var canFormatInline: Bool {
         canFormatText || isInCell
     }

@@ -25,6 +25,7 @@ struct FormatBar: View {
             styleMenu(for: state)
             gap
             group(FormatBarMapper.textButtons(for: state))
+            FormatColorMenu(state: state) { commands.perform($0) }
             gap
             group(FormatBarMapper.blockButtons(for: state))
             if showsMore {

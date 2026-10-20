@@ -59,6 +59,12 @@ final class TableCellEditor: NSTextView {
         case .inline(let style):
             toggle(style)
             return true
+        case .highlight(let color):
+            setHighlight(color)
+            return true
+        case .textColor(let color):
+            setTextColor(color)
+            return true
         case .link:
             editLink()
             return true
@@ -72,6 +78,8 @@ final class TableCellEditor: NSTextView {
     @objc func slateStrikethrough(_ sender: Any?) { toggle(.strikethrough) }
     @objc func slateCode(_ sender: Any?) { toggle(.code) }
     @objc func slateLink(_ sender: Any?) { editLink() }
+    @objc func slateHighlight(_ sender: Any?) { setHighlight(ColorMenu.highlight(from: sender)) }
+    @objc func slateTextColor(_ sender: Any?) { setTextColor(ColorMenu.textColor(from: sender)) }
 
     override func paste(_ sender: Any?) {
         guard let table, let host = table.host else {
@@ -96,6 +104,7 @@ final class TableCellEditor: NSTextView {
 
     override func menu(for event: NSEvent) -> NSMenu? {
         let menu = super.menu(for: event) ?? NSMenu()
+        ColorMenu.prepend(to: menu)
         let point = convert(event.locationInWindow, from: nil)
         if let storage = textStorage, href(at: point) != nil {
             let index = min(characterIndexForInsertion(at: point), storage.length - 1)
@@ -172,6 +181,8 @@ final class TableCellEditor: NSTextView {
         switch item.action {
         case #selector(undo(_:)), #selector(redo(_:)), #selector(slateBold(_:)), #selector(slateItalic(_:)), #selector(slateStrikethrough(_:)), #selector(slateCode(_:)), #selector(slateLink(_:)), #selector(cellLinkAction(_:)):
             return true
+        case #selector(slateHighlight(_:)), #selector(slateTextColor(_:)):
+            return ColorMenu.validate(item, state: EditorStyleState(inline: currentInline, isInCell: true))
         default:
             return super.validateUserInterfaceItem(item)
         }
@@ -200,6 +211,58 @@ final class TableCellEditor: NSTextView {
         changed.enumerateAttribute(.slateInline, in: NSRange(location: 0, length: changed.length)) { value, range, _ in
             var inline = InlineStyle(rawValue: value as? Int ?? 0)
             if all { inline.remove(flag) } else { inline.insert(flag) }
+            if inline.isEmpty {
+                changed.removeAttribute(.slateInline, range: range)
+            } else {
+                changed.addAttribute(.slateInline, value: inline.rawValue, range: range)
+            }
+        }
+        replaceStyled(selection, with: changed)
+        setSelectedRange(selection)
+    }
+
+    private var currentInline: InlineStyle {
+        let selection = selectedRange()
+        guard let storage = textStorage, selection.length > 0 else {
+            return InlineStyle(rawValue: typingAttributes[.slateInline] as? Int ?? 0)
+        }
+        return InlineStyle(rawValue: storage.attribute(.slateInline, at: selection.location, effectiveRange: nil) as? Int ?? 0)
+    }
+
+    func setHighlight(_ color: HighlightColor?) {
+        recolor(isSet: { color != nil && $0.highlight == color }, change: { style, isSet in style.highlight = isSet ? nil : color })
+    }
+
+    func setTextColor(_ color: TextColor?) {
+        recolor(isSet: { color != nil && $0.textColor == color }, change: { style, isSet in style.textColor = isSet ? nil : color })
+    }
+
+    private func recolor(isSet: (InlineStyle) -> Bool, change: (inout InlineStyle, Bool) -> Void) {
+        guard let storage = textStorage else { return }
+        let selection = selectedRange()
+        if selection.length == 0 {
+            var current = InlineStyle(rawValue: typingAttributes[.slateInline] as? Int ?? 0)
+            change(&current, isSet(current))
+            var attributes = typingAttributes
+            attributes[.slateInline] = current.isEmpty ? nil : current.rawValue
+            attributes[.foregroundColor] = current.textColor?.displayColor ?? style.colors.text
+            attributes[.backgroundColor] = current.highlight?.displayColor
+            typingAttributes = attributes
+            return
+        }
+        var all = true
+        storage.enumerateAttributes(in: selection) { attributes, range, stop in
+            guard attributes[.slateImagePath] == nil, (storage.string as NSString).substring(with: range).allSatisfy({ $0.isWhitespace || $0 == RichText.lineBreak }) == false else { return }
+            if isSet(InlineStyle(rawValue: attributes[.slateInline] as? Int ?? 0)) == false {
+                all = false
+                stop.pointee = true
+            }
+        }
+        let changed = NSMutableAttributedString(attributedString: storage.attributedSubstring(from: selection))
+        changed.enumerateAttributes(in: NSRange(location: 0, length: changed.length)) { attributes, range, _ in
+            guard attributes[.slateImagePath] == nil else { return }
+            var inline = InlineStyle(rawValue: attributes[.slateInline] as? Int ?? 0)
+            change(&inline, all)
             if inline.isEmpty {
                 changed.removeAttribute(.slateInline, range: range)
             } else {

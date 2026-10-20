@@ -14,6 +14,8 @@ package enum EditorMenuActions {
     package static let italic = #selector(RichTextView.slateItalic(_:))
     package static let strikethrough = #selector(RichTextView.slateStrikethrough(_:))
     package static let code = #selector(RichTextView.slateCode(_:))
+    package static let highlight = #selector(RichTextView.slateHighlight(_:))
+    package static let textColor = #selector(RichTextView.slateTextColor(_:))
     package static let link = #selector(RichTextView.slateLink(_:))
     package static let image = #selector(RichTextView.slateImage(_:))
     package static let file = #selector(RichTextView.slateFile(_:))

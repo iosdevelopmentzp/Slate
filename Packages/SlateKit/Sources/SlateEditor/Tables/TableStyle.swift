@@ -31,6 +31,9 @@ nonisolated struct TableStyle: Equatable, Sendable {
         paragraph.lineBreakMode = .byWordWrapping
         let whole = NSRange(location: 0, length: result.length)
         result.addAttribute(.paragraphStyle, value: paragraph, range: whole)
+        for key in [NSAttributedString.Key.backgroundColor, .strikethroughStyle, .underlineStyle] {
+            result.removeAttribute(key, range: whole)
+        }
         result.enumerateAttributes(in: whole) { attributes, range, _ in
             let style = InlineStyle(rawValue: attributes[.slateInline] as? Int ?? 0)
             var added: [NSAttributedString.Key: Any] = [.font: font(inline: style, header: header)]
@@ -38,10 +41,11 @@ nonisolated struct TableStyle: Equatable, Sendable {
                 added[.foregroundColor] = colors.link
                 added[.underlineStyle] = NSUnderlineStyle.single.rawValue
             } else {
-                added[.foregroundColor] = colors.text
+                added[.foregroundColor] = style.textColor?.displayColor ?? colors.text
             }
             if style.contains(.strikethrough) { added[.strikethroughStyle] = NSUnderlineStyle.single.rawValue }
             if style.contains(.code) { added[.backgroundColor] = colors.codeBackground }
+            if let highlight = style.highlight { added[.backgroundColor] = highlight.displayColor }
             result.addAttributes(added, range: range)
         }
         return result

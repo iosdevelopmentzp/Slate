@@ -40,7 +40,7 @@ final class RichTextStyler {
     }
 
     func font(for kind: BlockKind, inline: InlineStyle) -> NSFont {
-        let key = FontKey(kind: kind, inline: inline)
+        let key = FontKey(kind: kind, inline: inline.formattingOnly)
         if let cached = fonts[key] { return cached }
         let size = size(for: kind)
         var font: NSFont
@@ -130,9 +130,11 @@ final class RichTextStyler {
             color = colors.link
             attributes[.underlineStyle] = NSUnderlineStyle.single.rawValue
         }
+        if href == nil, let textColor = effective.textColor { color = textColor.displayColor }
         attributes[.foregroundColor] = color
         if effective.contains(.strikethrough) { attributes[.strikethroughStyle] = NSUnderlineStyle.single.rawValue }
         if effective.contains(.code) { attributes[.backgroundColor] = colors.codeBackground }
+        if let highlight = effective.highlight { attributes[.backgroundColor] = highlight.displayColor }
         return attributes
     }
 

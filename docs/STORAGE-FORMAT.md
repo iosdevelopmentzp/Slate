@@ -116,6 +116,7 @@ CommonMark plus GitHub extensions as understood by Apple's `swift-markdown`: tas
 - Wikilinks `[[Stem]]`, `[[Stem|alias]]`, `[[Space/Stem]]`, `[[Stem#Heading]]`.
 - Inline tags `#tag` (a `#` followed by `[a-z0-9_/-]+`, not inside a code span or fence, not at the start of a line followed by a space, which is a heading).
 - Link patterns from `.slate/links.json` (section 7.2) apply to plain text outside code.
+- Highlights and text colours (ADR 0017): `==text==` is a yellow highlight, `<mark style="background: #RRGGBBAA;">text</mark>` a highlight in another colour, `<span style="color: #RRGGBB;">text</span>` a text colour. Only the colours of the palettes in ADR 0017 are read; any other inline HTML keeps the paragraph a raw block.
 
 The app never rewrites body text it did not type, except: checkbox toggles (`[ ]` ↔ `[x]` in place), wikilink rewrites on a rename (section 3.3), appends (section 4), and template insertion.
 

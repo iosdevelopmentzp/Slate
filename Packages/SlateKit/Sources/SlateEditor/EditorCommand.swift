@@ -5,6 +5,8 @@ package enum EditorCommand: Hashable, Sendable {
     case list(BlockKind)
     case quote
     case inline(InlineStyle)
+    case highlight(HighlightColor?)
+    case textColor(TextColor?)
     case link
     case image
     case file

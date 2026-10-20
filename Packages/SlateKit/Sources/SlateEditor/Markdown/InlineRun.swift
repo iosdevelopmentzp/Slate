@@ -8,6 +8,7 @@ struct InlineRun: Equatable {
     var allowsWiki = false
     var imagePath: String?
     var imageAlt: String?
+    var escapes: Set<Int>?
 
     var attributed: NSAttributedString {
         var attributes: [NSAttributedString.Key: Any] = [:]

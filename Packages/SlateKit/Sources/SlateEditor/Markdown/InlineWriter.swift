@@ -48,29 +48,35 @@ enum InlineWriter {
 
     private static func moveSpacesOutOfStyles(_ cells: [InlineCell]) -> [InlineCell] {
         var result = cells
-        for flag in [InlineStyle.bold, .italic, .strikethrough] {
-            var index = 0
-            while index < result.count {
-                guard result[index].style.contains(flag) else {
-                    index += 1
-                    continue
-                }
-                var end = index
-                while end < result.count, result[end].style.contains(flag) { end += 1 }
-                var left = index
-                while left < end, result[left].character.isWhitespace, result[left].isCode == false {
-                    result[left].style.remove(flag)
-                    left += 1
-                }
-                var right = end - 1
-                while right >= left, result[right].character.isWhitespace, result[right].isCode == false {
-                    result[right].style.remove(flag)
-                    right -= 1
-                }
-                index = end
-            }
+        for flag in InlineStyle.flags {
+            trimSpaces(in: &result, where: { $0.style.contains(flag) }, clear: { $0.style.remove(flag) })
         }
+        trimSpaces(in: &result, where: { $0.style.highlight != nil }, same: { $0.style.highlight == $1.style.highlight }, clear: { $0.style.highlight = nil })
+        trimSpaces(in: &result, where: { $0.style.textColor != nil }, same: { $0.style.textColor == $1.style.textColor }, clear: { $0.style.textColor = nil })
         return result
+    }
+
+    private static func trimSpaces(in cells: inout [InlineCell], where marked: (InlineCell) -> Bool, same: (InlineCell, InlineCell) -> Bool = { _, _ in true }, clear: (inout InlineCell) -> Void) {
+        var index = 0
+        while index < cells.count {
+            guard marked(cells[index]) else {
+                index += 1
+                continue
+            }
+            var end = index
+            while end < cells.count, marked(cells[end]), same(cells[index], cells[end]) { end += 1 }
+            var left = index
+            while left < end, cells[left].character.isWhitespace, cells[left].isCode == false {
+                clear(&cells[left])
+                left += 1
+            }
+            var right = end - 1
+            while right >= left, cells[right].character.isWhitespace, cells[right].isCode == false {
+                clear(&cells[right])
+                right -= 1
+            }
+            index = end
+        }
     }
 
     private static func link(_ segment: [InlineCell], href: String, context: [InlineCell], offset: Int) -> String {
@@ -85,20 +91,20 @@ enum InlineWriter {
 
     private static func styled(_ segment: [InlineCell], context: [InlineCell], offset: Int, inLabel: Bool) -> String {
         var output = ""
-        var open: [InlineStyle] = []
+        var open: [InlineMark] = []
         var index = 0
         while index < segment.count {
             let style = segment[index].style
             var end = index
             while end < segment.count, segment[end].style == style { end += 1 }
-            let wanted = [InlineStyle.bold, .italic, .strikethrough].filter { style.contains($0) }
+            let wanted = InlineMark.marks(of: style)
             var keep = 0
             while keep < open.count, keep < wanted.count, open[keep] == wanted[keep] { keep += 1 }
-            for flag in open[keep...].reversed() { output += delimiter(flag) }
+            for mark in open[keep...].reversed() { output += mark.closing }
             open = Array(open.prefix(keep))
-            for flag in wanted[keep...] {
-                output += delimiter(flag)
-                open.append(flag)
+            for mark in wanted[keep...] {
+                output += mark.opening
+                open.append(mark)
             }
             let run = Array(segment[index..<end])
             if style.contains(.code) {
@@ -114,16 +120,8 @@ enum InlineWriter {
             }
             index = end
         }
-        for flag in open.reversed() { output += delimiter(flag) }
+        for mark in open.reversed() { output += mark.closing }
         return output
-    }
-
-    private static func delimiter(_ flag: InlineStyle) -> String {
-        switch flag {
-        case .bold: "**"
-        case .italic: "*"
-        default: "~~"
-        }
     }
 
     static func codeSpan(_ code: String) -> String {
@@ -159,9 +157,34 @@ enum InlineWriter {
             return startsEntity(at: index + 1, in: cells) ? "\\&" : text
         case ".", ")":
             return endsListNumber(at: index, in: cells) ? "\\" + text : text
+        case "=":
+            return needsEqualsEscape(at: index, in: cells) ? "\\=" : text
         default:
             return text
         }
+    }
+
+    private static func needsEqualsEscape(at index: Int, in cells: [InlineCell]) -> Bool {
+        if touchesHighlightEdge(at: index, in: cells) { return true }
+        let yellow = cells[index].style.highlight == .yellow
+        let isPart = { (position: Int) in
+            cells.indices.contains(position) && cells[position].character == "=" && cells[position].isCode == false && (cells[position].style.highlight == .yellow) == yellow
+        }
+        var start = index
+        while isPart(start - 1) { start -= 1 }
+        var end = index + 1
+        while isPart(end) { end += 1 }
+        guard end - start - (start == 0 ? 1 : 0) == 2 else { return false }
+        let isBlank = { (position: Int) in
+            cells.indices.contains(position) == false || cells[position].character.isWhitespace || cells[position].character == RichText.lineBreak
+        }
+        return isBlank(start - 1) == false || isBlank(end) == false
+    }
+
+    private static func touchesHighlightEdge(at index: Int, in cells: [InlineCell]) -> Bool {
+        let isYellow = { (position: Int) in cells.indices.contains(position) && cells[position].style.highlight == .yellow }
+        let current = isYellow(index)
+        return isYellow(index - 1) != current || isYellow(index + 1) != current
     }
 
     private static func lineStartEscape(_ character: Character) -> String? {

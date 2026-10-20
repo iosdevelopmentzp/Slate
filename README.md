@@ -48,6 +48,7 @@ The owner takes these on a real screen and puts them in `docs/screenshots/`.
 | `⌘'` | Quote |
 | `⌘B`, `⌘I`, `⇧⌘X` | Bold, italic, strikethrough |
 | `⌘K` | Link |
+| `⇧⌘E` | Yellow highlight; more highlight and text colours in the colour button of the format bar |
 | `⇧⌘I`, `⇧⌘S` | Image, screenshot |
 | `⇧⌘A` | Attach a file |
 | `⌃⇧↑`, `⌃⇧↓` | Add a caret on the line above or below, then type at every caret. Esc leaves one caret |
