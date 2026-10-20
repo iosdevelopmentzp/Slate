@@ -249,6 +249,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 160. Backlinks are a capsule with a count in the title row and a popover, not a block under the text: a block inside the `NSTextView` scroll view needs its own layout below the text container, for the same information. `BacklinksStore` refreshes on index and vault events and on a note switch, but not on `.noteSaved`, because every autosave of the open note posts it. Markdown links to `.md` files are indexed as kind `note` by stem (`MarkdownNoteLinkPolicy`); `IndexSchema.version` is 2, so the index is rebuilt once.
 161. Export uses the Data code that S1 left (`HTMLExporter`, `NoteExporter`). The port now takes the note's folder, so images are read from disk and put into the HTML as `data:` URLs. `ExportMarkdownPolicy` turns `[[links]]` into their text and `==x==` into `<mark>` before the HTML, outside code. The PDF prints a TextKit 1 `NSTextView` with `jobDisposition = .save` into a temporary file: `NSPrintOperation.pdfOperation` gave one tall page. The HTML importer of AppKit ignores margins on `pre`, so `spacingCodeBlocks` adds them after the import.
 162. The folder column can be resized like the list (180 to 300 pt, default 220 pt, key `window.sidebarWidth`). The handle lies over the trailing 8 pt of the column, so the layout does not move. A folder name that does not fit shows the full name in the hint of the app (`hintWhenTruncated`), not in a system tooltip. The font stays the system size: a smaller font in only one column looks out of place next to the list, and the width now solves the problem.
+163. Collapsed sections (like Apple Notes) live only in the editor: the file, the Markdown and the storage format do not change, and a section opens again when the note is opened again. The text stays in the text storage; `NSTextContentStorageDelegate.textContentManager(_:shouldEnumerate:options:)` skips the paragraphs of a folded heading, so TextKit 2 does not lay them out. TextKit 2 does not make a new layout fragment for an invalidated range, so the arrow state is set on the existing `RichLayoutFragment` of a heading before the layout is invalidated. The text view has a 16 pt side inset for the arrow; `EditorView` has 16 pt less padding, so the text stays in the same place. An edit that touches a folded section (a new line after the heading, a deletion into the section) opens it; the caret skips hidden text, and a selection inside it (Find) opens it. The shortcuts follow Xcode (`⌥⌘←`, `⌥⌘→`); inside a table cell the cell editor keeps them for moving columns.
 
 ## Next steps
 
@@ -449,6 +450,12 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 102. Drag the right edge of the folder column to the right: the column grows up to 300 pt, and long folder names show in full. Quit and open Slate: the width stays. Double-click the edge: the column is 220 pt again. Rest the pointer on a name that ends in "…": a hint shows the full name. A name that fits shows no hint.
 
 103. Open a folder with a long name, for example a task folder, so that its title above the list ends in "…". Rest the pointer on the title: a hint shows the full name.
+
+### Collapsed sections
+
+104. In a note with a few headings, rest the pointer on a heading: a down arrow shows on its left. Click it: the text under the heading hides, up to the next heading of the same or a higher level, and the arrow points right. Click again: the text is back. The file on disk does not change.
+105. Put the caret in a section and press `⌥⌘←`, then `⌥⌘→`. Press `⇧⌥⌘←`: every section collapses; `⇧⌥⌘→` opens all. The same commands are in the Edit menu.
+106. Collapse a section, put the caret at the end of its heading and press Enter: the section opens. Collapse it again and press `→`: the caret jumps over the hidden text. Search in the note (`⌥⌘F`) for a word in a collapsed section: the section opens.
 
 ## Known gaps
 

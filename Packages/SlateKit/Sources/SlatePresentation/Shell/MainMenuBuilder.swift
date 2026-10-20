@@ -52,6 +52,10 @@ struct MainMenuBuilder {
             .separator(),
             standard("Find in Note", EditorMenuActions.find, key: "f", modifiers: [.command, .option]),
             standard("Go to Heading…", EditorMenuActions.outline, key: "o", modifiers: [.command, .shift]),
+            standard("Collapse Section", EditorMenuActions.collapseSection, key: String(UnicodeScalar(UInt16(NSLeftArrowFunctionKey))!), modifiers: [.command, .option]),
+            standard("Expand Section", EditorMenuActions.expandSection, key: String(UnicodeScalar(UInt16(NSRightArrowFunctionKey))!), modifiers: [.command, .option]),
+            standard("Collapse All Sections", EditorMenuActions.collapseAllSections, key: String(UnicodeScalar(UInt16(NSLeftArrowFunctionKey))!), modifiers: [.command, .option, .shift]),
+            standard("Expand All Sections", EditorMenuActions.expandAllSections, key: String(UnicodeScalar(UInt16(NSRightArrowFunctionKey))!), modifiers: [.command, .option, .shift]),
         ]))
         main.addItem(submenu("Format", items: [
             standard("Title", EditorMenuActions.title, key: "t", modifiers: [.command, .shift]),

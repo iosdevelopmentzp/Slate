@@ -1,6 +1,6 @@
 import AppKit
 
-extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextLayoutManagerDelegate {
+extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextLayoutManagerDelegate, NSTextContentStorageDelegate {
 
     func textDidChange(_ notification: Notification) {
         textChanged()
@@ -25,8 +25,13 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
         handle(commandSelector)
     }
 
+    func textView(_ textView: NSTextView, willChangeSelectionFromCharacterRange oldSelectedCharRange: NSRange, toCharacterRange newSelectedCharRange: NSRange) -> NSRange {
+        visibleSelection(from: oldSelectedCharRange, to: newSelectedCharRange)
+    }
+
     func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
-        shouldChange(affectedCharRange, replacement: replacementString)
+        unfoldSections(touching: affectedCharRange, replacement: replacementString)
+        return shouldChange(affectedCharRange, replacement: replacementString)
     }
 
     func undoManager(for view: NSTextView) -> UndoManager? {
@@ -49,6 +54,7 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
         imageHandle.hide()
         if editedMask.contains(.editedCharacters) {
             findClient.storageChanged()
+            shiftFolds(editedRange: editedRange, delta: delta)
         }
         storageEdited(editedMask, range: editedRange, delta: delta)
     }
@@ -59,16 +65,25 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
         }
         let attributes = paragraph.attributedString.attributes(at: 0, effectiveRange: nil)
         let decoration = ParagraphDecoration.of(attributes)
-        guard decoration != .none else {
+        let isHeading = BlockAttributes(attributes).kind.headingLevel != nil
+        guard decoration != .none || isHeading else {
             return NSTextLayoutFragment(textElement: textElement, range: textElement.elementRange)
         }
         let fragment = RichLayoutFragment(textElement: textElement, range: textElement.elementRange)
         fragment.decoration = decoration
+        if isHeading {
+            fragment.fold = foldMark(at: textLayoutManager.offset(from: textLayoutManager.documentRange.location, to: location))
+        }
         fragment.colors = styler.configuration.colors
         fragment.fontSize = (attributes[.font] as? NSFont)?.pointSize ?? styler.size(for: .body)
         if decoration == .block(raw: false) {
             fragment.languageLabel = CodeLanguage.label(for: attributes[.slateLanguage] as? String)
         }
         return fragment
+    }
+
+    func textContentManager(_ textContentManager: NSTextContentManager, shouldEnumerate textElement: NSTextElement, options: NSTextContentManager.EnumerationOptions) -> Bool {
+        guard hiddenSections.isEmpty == false, let start = textElement.elementRange?.location else { return true }
+        return isHidden(textContentManager.offset(from: textContentManager.documentRange.location, to: start)) == false
     }
 }

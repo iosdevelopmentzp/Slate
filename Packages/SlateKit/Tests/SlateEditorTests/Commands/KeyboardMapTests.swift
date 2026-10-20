@@ -24,6 +24,13 @@ import Testing
         #expect(KeyboardMap.command(for: event("o", flags: [.command, .shift])) == .outline)
     }
 
+    @Test func optionCommandArrowsCollapseAndExpandSections() {
+        #expect(KeyboardMap.command(for: event("", keyCode: KeyboardMap.arrowLeft, flags: [.command, .option])) == .collapseSection)
+        #expect(KeyboardMap.command(for: event("", keyCode: KeyboardMap.arrowRight, flags: [.command, .option])) == .expandSection)
+        #expect(KeyboardMap.command(for: event("", keyCode: KeyboardMap.arrowLeft, flags: [.command, .option, .shift])) == .collapseAllSections)
+        #expect(KeyboardMap.command(for: event("", keyCode: KeyboardMap.arrowRight, flags: [.command, .option, .shift])) == .expandAllSections)
+    }
+
     @Test func optionCommandTInsertsATable() {
         #expect(KeyboardMap.command(for: event("t", flags: [.command, .option])) == .table)
         #expect(KeyboardMap.command(for: event("t", flags: [.command])) == nil)

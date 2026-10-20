@@ -63,6 +63,14 @@ extension RichTextController {
         case .outline:
             showOutline()
             return
+        case .collapseSection:
+            collapseSection()
+        case .expandSection:
+            expandSection()
+        case .collapseAllSections:
+            collapseAllSections()
+        case .expandAllSections:
+            expandAllSections()
         case .table:
             if textView.selectedRange().length == 0 || convertSelectionToTable() == false {
                 insertTable()

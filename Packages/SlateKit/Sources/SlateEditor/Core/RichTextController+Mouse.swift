@@ -4,6 +4,10 @@ extension RichTextController {
 
     func handleMouseDown(_ event: NSEvent) -> Bool {
         let point = textView.convert(event.locationInWindow, from: nil)
+        if let heading = foldHit(at: point) {
+            toggleSection(at: heading)
+            return true
+        }
         if let location = codeLanguageHit(at: point) {
             showLanguageMenu(at: location, point: point)
             return true

@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Collapse a section of a note, like in Apple Notes: rest the pointer on a heading and click the arrow on its left. The text under the heading hides until the next heading of the same or a higher level. `⌥⌘←` and `⌥⌘→` collapse and expand the section of the caret; `⇧⌥⌘←` and `⇧⌥⌘→` do it for every section. The commands are in the Edit menu too. Only the view changes: the file stays the same, and a note opens with every section expanded.
 - Export a note as PDF or HTML: the share button next to the title, or Note → Export as PDF and Export as HTML. The file goes to Downloads and shows in Finder. Images are inside the file, so it works when you send it. `[[links]]` become their text, highlights stay yellow, tables have borders, and the PDF has pages.
 - Backlinks: when other notes link to the open note, a small "↩ 3" button shows next to the title. It lists those notes with the line around each link; a click opens the note. Markdown links to a note file, such as `[the plan](Plan.md)`, now count as links too, for backlinks and for `list_backlinks`. The search index is rebuilt once after the update to find them.
 - Go to Heading: the list button next to the title, `⇧⌘O`, or Edit → Go to Heading… shows the headings of the note, indented by level, with the current section ticked. Pick one to jump there; the heading flashes once.

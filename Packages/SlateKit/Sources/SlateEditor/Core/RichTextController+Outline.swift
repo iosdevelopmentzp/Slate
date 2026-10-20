@@ -38,6 +38,7 @@ extension RichTextController {
 
     func jumpToHeading(at location: Int) {
         guard location < storage.length else { return }
+        reveal(location)
         let paragraph = contentRange(of: paragraphRange(at: location))
         textView.window?.makeFirstResponder(textView)
         textView.setSelectedRange(NSRange(location: paragraph.location, length: 0))

@@ -23,6 +23,15 @@ nonisolated package enum BlockKind: String, CaseIterable, Sendable {
         self == .title || self == .heading || self == .subheading
     }
 
+    package var headingLevel: Int? {
+        switch self {
+        case .title: 0
+        case .heading: 1
+        case .subheading: 2
+        default: nil
+        }
+    }
+
     package var isAttachment: Bool {
         self == .image || self == .divider || self == .table
     }

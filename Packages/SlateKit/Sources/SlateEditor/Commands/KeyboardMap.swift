@@ -68,6 +68,20 @@ enum KeyboardMap {
             default: return nil
             }
         }
+        if flags == [.command, .option] {
+            switch event.keyCode {
+            case arrowLeft: return .collapseSection
+            case arrowRight: return .expandSection
+            default: break
+            }
+        }
+        if flags == [.command, .option, .shift] {
+            switch event.keyCode {
+            case arrowLeft: return .collapseAllSections
+            case arrowRight: return .expandAllSections
+            default: break
+            }
+        }
         if flags == [.command, .option, .shift], key == "j" {
             return .formatJSON
         }

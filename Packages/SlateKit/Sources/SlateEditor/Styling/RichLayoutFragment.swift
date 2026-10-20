@@ -1,7 +1,13 @@
 import AppKit
 
 nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
+    enum Fold {
+        case open
+        case closed
+    }
+
     var decoration: ParagraphDecoration = .none
+    var fold: Fold?
     var colors: EditorColors = .system
     var fontSize: CGFloat = 15
     var languageLabel: String?
@@ -20,6 +26,9 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
         case .none:
             break
         }
+        if fold != nil {
+            bounds = bounds.union(foldRect.insetBy(dx: -2, dy: -2))
+        }
         return bounds
     }
 
@@ -33,6 +42,7 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
         context.translateBy(x: point.x, y: point.y)
         drawMarker(in: context)
         drawLanguageLabel(in: context)
+        drawFold(in: context)
         context.restoreGState()
     }
 
@@ -51,6 +61,34 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
         context.fillPath()
         let text = NSAttributedString(string: languageLabel, attributes: [.font: Self.labelFont, .foregroundColor: colors.secondaryText])
         draw(text, at: CGPoint(x: rect.minX + 4, y: rect.minY + 1), in: context)
+    }
+
+    var foldRect: CGRect {
+        guard fold != nil, let line = textLineFragments.first else { return .zero }
+        let start = line.typographicBounds.minX + line.locationForCharacter(at: 0).x
+        let side: CGFloat = 12
+        let center = line.typographicBounds.minY + line.glyphOrigin.y - fontSize * 0.36
+        return CGRect(x: start - side - 4, y: center - side / 2, width: side, height: side)
+    }
+
+    private func drawFold(in context: CGContext) {
+        let rect = foldRect.insetBy(dx: 3, dy: 3)
+        guard let fold, rect.isEmpty == false else { return }
+        context.setStrokeColor(colors.secondaryText.cgColor)
+        context.setLineWidth(1.6)
+        context.setLineCap(.round)
+        context.setLineJoin(.round)
+        switch fold {
+        case .closed:
+            context.move(to: CGPoint(x: rect.minX + 1.5, y: rect.minY))
+            context.addLine(to: CGPoint(x: rect.maxX - 1.5, y: rect.midY))
+            context.addLine(to: CGPoint(x: rect.minX + 1.5, y: rect.maxY))
+        case .open:
+            context.move(to: CGPoint(x: rect.minX, y: rect.minY + 1.5))
+            context.addLine(to: CGPoint(x: rect.midX, y: rect.maxY - 1.5))
+            context.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + 1.5))
+        }
+        context.strokePath()
     }
 
     var markerRect: CGRect {

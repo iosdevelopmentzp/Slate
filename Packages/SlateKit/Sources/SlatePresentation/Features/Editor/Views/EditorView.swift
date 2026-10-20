@@ -51,7 +51,7 @@ struct EditorView: View {
                     insertion: editor.insertion.map { EditorInsertion(token: $0.token, markdown: $0.markdown) },
                     handlers: handlers
                 )
-                .padding(.horizontal, Self.sidePadding - 4)
+                .padding(.horizontal, Self.sidePadding - 4 - RichTextEditorView.sideMargin)
                 .frame(maxWidth: Self.textWidth + Self.sidePadding * 2)
                 .frame(maxWidth: .infinity)
             }

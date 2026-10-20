@@ -43,12 +43,14 @@ final class RichTextView: NSTextView {
     override func mouseMoved(with event: NSEvent) {
         super.mouseMoved(with: event)
         controller?.hoverImage(at: convert(event.locationInWindow, from: nil))
+        controller?.hoverHeading(at: convert(event.locationInWindow, from: nil))
     }
 
     override func mouseExited(with event: NSEvent) {
         super.mouseExited(with: event)
         guard event.trackingArea === hoverArea else { return }
         controller?.hoverImage(at: nil)
+        controller?.hoverHeading(at: nil)
     }
 
     @objc func undo(_ sender: Any?) {
@@ -171,6 +173,10 @@ final class RichTextView: NSTextView {
     }
 
     @objc func slateOutline(_ sender: Any?) { controller?.perform(.outline) }
+    @objc func slateCollapseSection(_ sender: Any?) { controller?.perform(.collapseSection) }
+    @objc func slateExpandSection(_ sender: Any?) { controller?.perform(.expandSection) }
+    @objc func slateCollapseAllSections(_ sender: Any?) { controller?.perform(.collapseAllSections) }
+    @objc func slateExpandAllSections(_ sender: Any?) { controller?.perform(.expandAllSections) }
 
     @objc func slateJumpToHeading(_ sender: NSMenuItem) {
         controller?.jumpToHeading(at: sender.tag)

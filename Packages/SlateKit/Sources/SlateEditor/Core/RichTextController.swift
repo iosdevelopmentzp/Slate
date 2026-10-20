@@ -24,6 +24,10 @@ final class RichTextController: NSObject {
     let imageHandle = ImageResizeHandle()
     let linkBar = LinkBar()
     let multiCaret = MultiCaret()
+    var foldedHeadings: Set<Int> = []
+    var hiddenSections: [NSRange] = []
+    var hoveredHeading: Int?
+    var needsFoldLayout = false
     lazy var findClient = NoteFindClient(controller: self)
     lazy var finder: NSTextFinder = {
         let finder = NSTextFinder()
@@ -96,7 +100,7 @@ final class RichTextController: NSObject {
         textView.isContinuousSpellCheckingEnabled = true
         textView.isGrammarCheckingEnabled = false
         textView.drawsBackground = false
-        textView.textContainerInset = NSSize(width: 0, height: 8)
+        textView.textContainerInset = NSSize(width: RichTextEditorView.sideMargin, height: 8)
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
@@ -106,6 +110,7 @@ final class RichTextController: NSObject {
         textView.delegate = self
         textView.textStorage?.delegate = self
         textView.textLayoutManager?.delegate = self
+        textView.textContentStorage?.delegate = self
         textView.postsFrameChangedNotifications = true
         textView.setAccessibilityLabel("Note text")
         NotificationCenter.default.addObserver(self, selector: #selector(frameChanged), name: NSView.frameDidChangeNotification, object: textView)
@@ -130,6 +135,10 @@ final class RichTextController: NSObject {
         isStyling = false
         markdown = value
         emptyTailBlock = BlockAttributes()
+        foldedHeadings = []
+        hiddenSections = []
+        hoveredHeading = nil
+        needsFoldLayout = false
         undo.removeAllActions()
         pendingRange = nil
         textView.setSelectedRange(NSRange(location: 0, length: 0))
@@ -177,6 +186,7 @@ final class RichTextController: NSObject {
         guard let focus, focus.token != focusToken else { return }
         focusToken = focus.token
         let location = focus.atStart ? 0 : firstMatch(of: focus.words) ?? storage.length
+        reveal(location)
         Task { @MainActor [weak self] in
             guard let self else { return }
             textView.window?.makeFirstResponder(textView)
@@ -239,6 +249,7 @@ final class RichTextController: NSObject {
             storage.endEditing()
             isStyling = false
         }
+        refreshFoldsAfterEdit()
         publish()
         updateTypingAttributes()
         updateState()
