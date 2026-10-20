@@ -2,11 +2,11 @@ import Foundation
 import SlateDomain
 
 struct MockExporter: NoteExporting {
-    func html(title: String, body: String) -> String {
+    func html(title: String, body: String, folder: URL?) -> String {
         "<h1>\(title)</h1><pre>\(body)</pre>"
     }
 
-    func pdf(title: String, body: String) async throws -> Data {
+    func pdf(title: String, body: String, folder: URL?) async throws -> Data {
         Data()
     }
 

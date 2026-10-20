@@ -134,6 +134,19 @@ struct EditorView: View {
                 commands.perform(.outline)
             }
             .accessibilityLabel("Headings")
+            Menu {
+                Button("Export as PDF") { Task { await editor.exportPDF() } }
+                Button("Export as HTML") { Task { await editor.exportHTML() } }
+            } label: {
+                Image(systemName: "square.and.arrow.up")
+            }
+            .menuStyle(.button)
+            .buttonStyle(.plain)
+            .menuIndicator(.hidden)
+            .foregroundStyle(.secondary)
+            .frame(width: 24, height: 24)
+            .hint("Export the note to Downloads")
+            .accessibilityLabel("Export")
             IconButton(systemImage: "clock.arrow.circlepath", help: "Versions of this note") {
                 showsHistory.toggle()
             }

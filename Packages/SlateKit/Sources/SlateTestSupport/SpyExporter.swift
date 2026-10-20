@@ -18,11 +18,11 @@ package final class SpyExporter: NoteExporting, @unchecked Sendable {
         lock.withLock { _copied }
     }
 
-    package func html(title: String, body: String) -> String {
+    package func html(title: String, body: String, folder: URL?) -> String {
         "<h1>\(title)</h1>\(body)"
     }
 
-    package func pdf(title: String, body: String) async throws -> Data {
+    package func pdf(title: String, body: String, folder: URL?) async throws -> Data {
         Data("%PDF \(title)".utf8)
     }
 

@@ -126,6 +126,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         let spaces = assembly.vault.spaces
         let vault = assembly.vault
         let settings = assembly.settings
+        let editor = assembly.editor
         let selectNeighbour: (Int) -> Void = { offset in
             noteList.selectNeighbour(offset, in: search.isActive ? search.results.map(\.summary) : nil)
         }
@@ -167,6 +168,8 @@ package final class AppWindows: NSObject, NSWindowDelegate {
                     guard let selected = noteList.selected else { return }
                     noteList.copyLink(selected)
                 },
+                Command(title: "Export as PDF", key: "", modifiers: []) { Task { await editor.exportPDF() } },
+                Command(title: "Export as HTML", key: "", modifiers: []) { Task { await editor.exportHTML() } },
                 Command(title: "Move to Trash", key: String(UnicodeScalar(NSBackspaceCharacter)!), modifiers: [.command]) {
                     if TextFocus.isEditingText {
                         TextFocus.send(#selector(NSResponder.deleteToBeginningOfLine(_:)))
