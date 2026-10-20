@@ -52,4 +52,21 @@ import Testing
         #expect(WindowLayout.clampedListWidth(900) == 420)
         #expect(WindowLayout.clampedListWidth(300.4) == 300)
     }
+
+    @Test func sidebarWidthIsRemembered() {
+        let store = InMemoryKeyValueStore()
+        let first = WindowLayout(store: store)
+        #expect(first.sidebarWidth == WindowLayout.defaultSidebarWidth)
+
+        first.sidebarWidth = 260
+        let second = WindowLayout(store: store)
+
+        #expect(second.sidebarWidth == 260)
+    }
+
+    @Test func sidebarWidthStaysInItsRange() {
+        #expect(WindowLayout.clampedSidebarWidth(100) == 180)
+        #expect(WindowLayout.clampedSidebarWidth(900) == 300)
+        #expect(WindowLayout.clampedSidebarWidth(240.4) == 240)
+    }
 }

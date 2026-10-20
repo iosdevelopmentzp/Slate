@@ -35,6 +35,7 @@ struct FolderRow: View {
             Text(title)
                 .lineLimit(1)
                 .truncationMode(.tail)
+                .hintWhenTruncated(title)
             Spacer(minLength: 4)
             if let count {
                 Text("\(count)")

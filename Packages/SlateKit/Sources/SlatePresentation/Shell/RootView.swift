@@ -17,13 +17,16 @@ struct RootView: View {
         HStack(spacing: 0) {
             if layout.showsSidebar {
                 SidebarView()
-                    .frame(width: WindowLayout.sidebarWidth)
+                    .frame(width: layout.sidebarWidth)
+                    .overlay(alignment: .trailing) {
+                        ColumnResizer(column: .sidebar)
+                    }
                     .transition(.move(edge: .leading).combined(with: .opacity))
             }
             NoteListColumn()
                 .frame(width: layout.listWidth)
                 .padding(.leading, layout.showsSidebar ? 0 : 4)
-            ColumnResizer()
+            ColumnResizer(column: .list)
                 .background(Theme.base)
             EditorView()
                 .frame(minWidth: 320, maxWidth: .infinity)

@@ -8,7 +8,8 @@ import SlateUI
 final class WindowLayout {
     static let minimumSize = CGSize(width: 820, height: 520)
     static let defaultSize = CGSize(width: 1040, height: 680)
-    static let sidebarWidth: CGFloat = 200
+    static let sidebarWidths: ClosedRange<CGFloat> = 180...300
+    static let defaultSidebarWidth: CGFloat = 220
     static let listWidths: ClosedRange<CGFloat> = 260...420
     static let defaultListWidth: CGFloat = 320
     static let trafficLightsWidth: CGFloat = 80
@@ -36,6 +37,13 @@ final class WindowLayout {
         }
     }
 
+    var sidebarWidth: CGFloat {
+        didSet {
+            guard sidebarWidth != oldValue else { return }
+            store.set(Int(sidebarWidth), forKey: Keys.sidebarWidth)
+        }
+    }
+
     var showsSidebar: Bool {
         didSet {
             guard showsSidebar != oldValue else { return }
@@ -57,12 +65,18 @@ final class WindowLayout {
         }
         let storedWidth = store.integer(forKey: Keys.listWidth)
         listWidth = storedWidth > 0 ? Self.clampedListWidth(CGFloat(storedWidth)) : Self.defaultListWidth
+        let storedSidebarWidth = store.integer(forKey: Keys.sidebarWidth)
+        sidebarWidth = storedSidebarWidth > 0 ? Self.clampedSidebarWidth(CGFloat(storedSidebarWidth)) : Self.defaultSidebarWidth
         showsSidebar = store.string(forKey: Keys.sidebar) != "hidden"
         isWindowOpen = store.string(forKey: Keys.windowOpen) != "hidden"
     }
 
     static func clampedListWidth(_ proposed: CGFloat) -> CGFloat {
         min(max(proposed, listWidths.lowerBound), listWidths.upperBound).rounded()
+    }
+
+    static func clampedSidebarWidth(_ proposed: CGFloat) -> CGFloat {
+        min(max(proposed, sidebarWidths.lowerBound), sidebarWidths.upperBound).rounded()
     }
 
     static func clamped(_ proposed: CGSize) -> CGSize {
@@ -88,6 +102,7 @@ final class WindowLayout {
         static let size = "window.size"
         static let windowOpen = "window.open"
         static let listWidth = "window.listWidth"
+        static let sidebarWidth = "window.sidebarWidth"
         static let sidebar = "window.sidebar"
     }
 }

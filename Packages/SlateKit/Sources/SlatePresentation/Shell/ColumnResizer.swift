@@ -3,6 +3,13 @@ import SwiftUI
 import SlateUI
 
 struct ColumnResizer: View {
+    enum Column {
+        case sidebar
+        case list
+    }
+
+    let column: Column
+
     @Environment(WindowLayout.self) private var layout
 
     @State private var startWidth: CGFloat?
@@ -21,16 +28,45 @@ struct ColumnResizer: View {
             .gesture(
                 DragGesture(minimumDistance: 1, coordinateSpace: .global)
                     .onChanged { value in
-                        let start = startWidth ?? layout.listWidth
+                        let start = startWidth ?? width
                         startWidth = start
-                        layout.listWidth = WindowLayout.clampedListWidth(start + value.translation.width)
+                        width = start + value.translation.width
                     }
                     .onEnded { _ in startWidth = nil }
             )
             .onTapGesture(count: 2) {
-                layout.listWidth = WindowLayout.defaultListWidth
+                width = defaultWidth
             }
-            .hint("Drag to change the width of the list. Double-click for the default width.")
+            .hint(hint)
             .accessibilityHidden(true)
+    }
+
+    private var width: CGFloat {
+        get {
+            switch column {
+            case .sidebar: layout.sidebarWidth
+            case .list: layout.listWidth
+            }
+        }
+        nonmutating set {
+            switch column {
+            case .sidebar: layout.sidebarWidth = WindowLayout.clampedSidebarWidth(newValue)
+            case .list: layout.listWidth = WindowLayout.clampedListWidth(newValue)
+            }
+        }
+    }
+
+    private var defaultWidth: CGFloat {
+        switch column {
+        case .sidebar: WindowLayout.defaultSidebarWidth
+        case .list: WindowLayout.defaultListWidth
+        }
+    }
+
+    private var hint: String {
+        switch column {
+        case .sidebar: "Drag to change the width of the folders. Double-click for the default width."
+        case .list: "Drag to change the width of the list. Double-click for the default width."
+        }
     }
 }
