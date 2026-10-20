@@ -244,6 +244,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 155. `Scripts/install.sh` signs the installed app and the `slate` command with the local certificate from `~/.config/slate/sign-identity` (ADR 0003 amendment). Ad-hoc builds asked for Documents access after every install, because macOS ties permissions to the signature. The hash lives outside the repository, so no name is in it (ADR 0006).
 156. Tests that wait for the file watcher first write a marker note and wait for its event (`sync` in `FSEventsVaultWatcherIntegrationTests`). FSEvents sends events in order, so a late event from the setup (the new `Inbox` folder, a `.rescan`) can no longer fall into the measured part. `waitUntil` waits up to 10 s instead of 2 s; it returns as soon as the condition holds, so a passing run is not slower. Before, these tests failed when `fseventsd` or a build kept the Mac busy.
 157. Highlights and text colours are bits 8 to 11 and 12 to 15 of `InlineStyle`, not new attributes, so every place that keeps bold (typing attributes, cell editors, run merging, copy and paste) keeps colours with no extra code. The palettes are fixed (ADR 0017); a tag with another colour keeps the paragraph raw. `HighlightScanner` finds `==` pairs after the runs are read, using `SourceEscapes` to skip escaped `\=`. The writer opens the highlight first, then the text colour, then bold, italic and strikethrough. The display colours are cached, because a new dynamic `NSColor` is not equal to the old one and the styler would restyle the text on every pass.
+158. Code colours come back from the M2 highlighter (`Highlighting/`, restored from commit `ad3de36^`): line by line regular expressions, so a `/* … */` comment over several lines is coloured only on its first line. `RichTextStyler.style` splits each attribute run at token edges and changes only pieces whose colour differs, so typing in a block does not restyle the whole block. The language label is drawn by `RichLayoutFragment`, and a click on it is found by `codeLanguageHit` before the checkbox and link checks.
 
 ## Next steps
 
@@ -421,6 +422,11 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 94. Do the same in a table cell, and in light and dark mode: the colours are readable in both.
 95. Open the note in Obsidian: the yellow, green and red show there too.
 
+### Code colours
+
+96. Paste Swift code into a code block, then click "Plain text" in its top-right corner and pick Swift: keywords, strings and comments get colours, and the file has ```` ```swift ````.
+97. Type in the block: the colours follow as you type. Pick Plain text: the colours go and the fence has no language.
+
 ## Known gaps
 
 
@@ -441,7 +447,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - Editor (S3): the agent checked the editor with tests in a window and with offscreen pictures, not by typing in the running app. Input methods (accents, Japanese), spell checking, drag and drop from Finder and the paste of web pages need a check by hand.
 - Editor (S3): in one offscreen picture of the whole window the list, quote and image buttons of the format bar looked faded while the others did not. The picture of the editor alone looked right. Check it on screen.
 - Editor (S3): typing latency was measured by a test on the 5,000-line fixture (1.3 ms median, open 120 ms), not with Instruments. Markdown for a long note is written 250 ms after the last key (decision 88).
-- Editor (S3): a code block has no language label and no colours; the language is kept in the file. Images have no resize handle; the right-click menu has no Remove (Backspace removes, Undo brings back).
+- Editor (S3): images have no resize handle; the right-click menu has no Remove (Backspace removes, Undo brings back).
 - Editor (S3): a pasted URL is not turned into a link with a title (P1). There is no hover preview of a link.
 - S5: the agent did not run Claude Code against `slate mcp`. A stdio test sent `initialize`, `tools/list`, `tools/call create_note` and `resources/list` and got the right answers; the tools are tested over a temporary notes folder.
 - S5: a card dropped into the note text of Slate now gives the editor a file, so the editor adds a link to a copy of the note file in `_attachments/` instead of the text `slate-note:<id>`. Neither is useful; a drop of a card into the text should make a link to the note.

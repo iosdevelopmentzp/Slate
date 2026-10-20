@@ -66,6 +66,9 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
         fragment.decoration = decoration
         fragment.colors = styler.configuration.colors
         fragment.fontSize = (attributes[.font] as? NSFont)?.pointSize ?? styler.size(for: .body)
+        if decoration == .block(raw: false) {
+            fragment.languageLabel = CodeLanguage.label(for: attributes[.slateLanguage] as? String)
+        }
         return fragment
     }
 }

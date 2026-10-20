@@ -170,6 +170,11 @@ final class RichTextView: NSTextView {
         controller?.performLinkAction(action, range: range)
     }
 
+    @objc func slateCodeLanguage(_ sender: NSMenuItem) {
+        guard let choice = sender.representedObject as? CodeLanguageChoice else { return }
+        controller?.setCodeLanguage(at: choice.location, fence: choice.fence)
+    }
+
     @objc func slateImageAction(_ sender: NSMenuItem) {
         guard let choice = sender.representedObject as? ImageMenuChoice else { return }
         controller?.handlers.attachment(choice.path, choice.action)

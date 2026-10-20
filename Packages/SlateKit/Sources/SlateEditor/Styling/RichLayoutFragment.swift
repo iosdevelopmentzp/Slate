@@ -4,6 +4,9 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
     var decoration: ParagraphDecoration = .none
     var colors: EditorColors = .system
     var fontSize: CGFloat = 15
+    var languageLabel: String?
+
+    static var labelFont: NSFont { .systemFont(ofSize: 10, weight: .medium) }
 
     override var renderingSurfaceBounds: CGRect {
         var bounds = super.renderingSurfaceBounds
@@ -29,7 +32,25 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
         context.saveGState()
         context.translateBy(x: point.x, y: point.y)
         drawMarker(in: context)
+        drawLanguageLabel(in: context)
         context.restoreGState()
+    }
+
+    var languageLabelRect: CGRect {
+        guard let languageLabel, decoration == .block(raw: false) else { return .zero }
+        let size = NSAttributedString(string: languageLabel, attributes: [.font: Self.labelFont]).size()
+        let block = blockRect
+        return CGRect(x: block.maxX - size.width - 14, y: block.minY + 4, width: size.width + 8, height: size.height + 2)
+    }
+
+    private func drawLanguageLabel(in context: CGContext) {
+        let rect = languageLabelRect
+        guard let languageLabel, rect.isEmpty == false else { return }
+        context.addPath(CGPath(roundedRect: rect, cornerWidth: 4, cornerHeight: 4, transform: nil))
+        context.setFillColor(colors.codeBackground.cgColor)
+        context.fillPath()
+        let text = NSAttributedString(string: languageLabel, attributes: [.font: Self.labelFont, .foregroundColor: colors.secondaryText])
+        draw(text, at: CGPoint(x: rect.minX + 4, y: rect.minY + 1), in: context)
     }
 
     var markerRect: CGRect {

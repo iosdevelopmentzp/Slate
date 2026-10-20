@@ -146,6 +146,7 @@ final class RichTextStyler {
             block = block.with(kind: .body)
         }
         var updates: [(NSRange, [NSAttributedString.Key: Any])] = []
+        let tokens = codeTokens(in: text, content: content, block: block)
         text.enumerateAttributes(in: range) { existing, run, _ in
             let inline = InlineStyle(rawValue: existing[.slateInline] as? Int ?? 0)
             var wanted = attributes(
@@ -158,13 +159,40 @@ final class RichTextStyler {
             if block.kind.isAttachment {
                 wanted[.attachment] = attachment(for: block, existing: existing[.attachment] as? NSTextAttachment)
             }
-            if (existing as NSDictionary).isEqual(to: wanted) == false {
-                updates.append((run, wanted))
+            for (piece, color) in Self.pieces(of: run, tokens: tokens) {
+                var colored = wanted
+                if let color { colored[.foregroundColor] = color }
+                if (existing as NSDictionary).isEqual(to: colored) == false {
+                    updates.append((piece, colored))
+                }
             }
         }
         for (run, wanted) in updates {
             text.setAttributes(wanted, range: run)
         }
+    }
+
+    private func codeTokens(in text: NSAttributedString, content: NSRange, block: BlockAttributes) -> [CodeToken] {
+        guard block.kind == .monospaced, let name = block.language, content.length > 0 else { return [] }
+        let source = (text.string as NSString).substring(with: content)
+        return CodeHighlighter.tokens(inBlock: source, language: CodeHighlighter.language(named: name)).map { token in
+            CodeToken(range: NSRange(location: token.range.location + content.location, length: token.range.length), kind: token.kind)
+        }
+    }
+
+    static func pieces(of run: NSRange, tokens: [CodeToken]) -> [(NSRange, NSColor?)] {
+        guard tokens.isEmpty == false else { return [(run, nil)] }
+        var pieces: [(NSRange, NSColor?)] = []
+        var position = run.location
+        for token in tokens where NSMaxRange(token.range) > run.location && token.range.location < NSMaxRange(run) {
+            let start = max(token.range.location, run.location)
+            let end = min(NSMaxRange(token.range), NSMaxRange(run))
+            if start > position { pieces.append((NSRange(location: position, length: start - position), nil)) }
+            pieces.append((NSRange(location: start, length: end - start), CodePalette.color(for: token.kind)))
+            position = end
+        }
+        if position < NSMaxRange(run) { pieces.append((NSRange(location: position, length: NSMaxRange(run) - position), nil)) }
+        return pieces
     }
 
     private func contentRange(of paragraph: NSRange, in text: NSAttributedString) -> NSRange {
