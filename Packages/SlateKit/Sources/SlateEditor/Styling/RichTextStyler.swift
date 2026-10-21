@@ -74,41 +74,41 @@ final class RichTextStyler {
         let style = NSMutableParagraphStyle()
         switch block.kind {
         case .title:
-            style.lineHeightMultiple = 1.1
-            style.paragraphSpacingBefore = 6 * scale
-            style.paragraphSpacing = 10 * scale
-        case .heading:
-            style.lineHeightMultiple = 1.15
-            style.paragraphSpacingBefore = 14 * scale
-            style.paragraphSpacing = 6 * scale
-        case .subheading:
-            style.lineHeightMultiple = 1.2
-            style.paragraphSpacingBefore = 10 * scale
-            style.paragraphSpacing = 4 * scale
-        case .body:
-            style.lineHeightMultiple = 1.4
+            style.lineHeightMultiple = 1.05
+            style.paragraphSpacingBefore = 4 * scale
             style.paragraphSpacing = 8 * scale
+        case .heading:
+            style.lineHeightMultiple = 1.1
+            style.paragraphSpacingBefore = 12 * scale
+            style.paragraphSpacing = 4 * scale
+        case .subheading:
+            style.lineHeightMultiple = 1.15
+            style.paragraphSpacingBefore = 8 * scale
+            style.paragraphSpacing = 3 * scale
+        case .body:
+            style.lineHeightMultiple = 1.25
+            style.paragraphSpacing = 5 * scale
         case .quote:
-            style.lineHeightMultiple = 1.4
+            style.lineHeightMultiple = 1.25
             style.firstLineHeadIndent = Self.quoteIndent
             style.headIndent = Self.quoteIndent
-            style.paragraphSpacing = 6 * scale
+            style.paragraphSpacing = 4 * scale
         case .bullet, .numbered, .checklist:
             let indent = Self.markerWidth + CGFloat(key.indent) * Self.listIndent
-            style.lineHeightMultiple = 1.35
+            style.lineHeightMultiple = 1.2
             style.firstLineHeadIndent = indent
             style.headIndent = indent
-            style.paragraphSpacing = 4 * scale
+            style.paragraphSpacing = 2 * scale
         case .monospaced, .raw:
-            style.lineHeightMultiple = 1.25
+            style.lineHeightMultiple = 1.2
             style.firstLineHeadIndent = Self.blockInset
             style.headIndent = Self.blockInset
             style.tailIndent = -Self.blockInset
             style.paragraphSpacingBefore = 8 * scale
-            style.paragraphSpacing = 14 * scale
+            style.paragraphSpacing = 12 * scale
         case .image, .divider, .table:
             style.paragraphSpacingBefore = 4 * scale
-            style.paragraphSpacing = 8 * scale
+            style.paragraphSpacing = 6 * scale
         }
         styles[key] = style
         return style

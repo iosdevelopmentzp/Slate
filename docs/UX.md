@@ -59,7 +59,7 @@ Slate is one normal window with three columns (ADR 0016). It has a Dock icon and
 | List card preview | `.subheadline` secondary, two lines |
 | List card date | `.caption` secondary, relative ("2 min", "Yesterday", "Oct 3") |
 | Editor title | 24 pt bold |
-| Editor styles | Title 24 bold, Heading 18 semibold, Subheading 15 semibold, Body 15 regular, Code block 13 SF Mono; body line height 1.4; paragraph spacing 8 |
+| Editor styles | Title 24 bold, Heading 18 semibold, Subheading 15 semibold, Body 15 regular, Code block 13 SF Mono; body line height 1.25 and paragraph spacing 5 (lists 1.2 and 2, headings 12 before and 4 after) |
 | Format bar | 36 pt high, 10 pt radius, surface colour, buttons 28 × 28 with 6 pt radius, active state in the accent at 14 % |
 | Accent | the system accent colour; selection, links, the Start button, the "+" buttons |
 | Folder colours | eight: red, orange, yellow, green, teal, blue, purple, pink, as system colours; default blue |
