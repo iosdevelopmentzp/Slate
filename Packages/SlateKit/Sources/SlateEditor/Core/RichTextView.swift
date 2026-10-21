@@ -143,8 +143,7 @@ final class RichTextView: NSTextView {
     @objc func slatePasteTable(_ sender: Any?) { controller?.pasteAsTable(from: PasteboardBridge.general) }
 
     @objc func slateFind(_ sender: Any?) {
-        controller?.findClient.refresh()
-        controller?.finder.performAction(.showFindInterface)
+        controller?.perform(.findInNote)
     }
 
     override func performTextFinderAction(_ sender: Any?) {

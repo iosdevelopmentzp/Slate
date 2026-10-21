@@ -54,6 +54,7 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
         imageHandle.hide()
         if editedMask.contains(.editedCharacters) {
             findClient.storageChanged()
+            clearMatchHighlights()
             shiftFolds(editedRange: editedRange, delta: delta)
         }
         storageEdited(editedMask, range: editedRange, delta: delta)

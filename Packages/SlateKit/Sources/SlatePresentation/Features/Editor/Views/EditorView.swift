@@ -131,6 +131,10 @@ struct EditorView: View {
                 .simultaneousGesture(TapGesture().modifiers(.option).onEnded { editor.copyPath() })
                 .accessibilityLabel("Title")
             BacklinksButton(path: document.path)
+            IconButton(systemImage: "text.magnifyingglass", help: "Find in this note  ⌥⌘F") {
+                commands.perform(.findInNote)
+            }
+            .accessibilityLabel("Find in note")
             IconButton(systemImage: "list.bullet.indent", help: "Go to heading  ⇧⌘O") {
                 commands.perform(.outline)
             }

@@ -22,6 +22,10 @@ extension RichTextController {
         case #selector(NSResponder.moveUp(_:)), #selector(NSResponder.moveDown(_:)), #selector(NSResponder.moveLeft(_:)), #selector(NSResponder.moveRight(_:)):
             return moveIntoTable(selector)
         case #selector(NSResponder.cancelOperation(_:)):
+            if matchHighlights.isEmpty == false {
+                clearMatchHighlights()
+                return true
+            }
             textView.window?.cancelOperation(nil)
             return true
         default:

@@ -63,6 +63,13 @@ extension RichTextController {
         case .outline:
             showOutline()
             return
+        case .findInNote:
+            if textView.window?.firstResponder !== textView {
+                textView.window?.makeFirstResponder(textView)
+            }
+            findClient.refresh()
+            finder.performAction(.showFindInterface)
+            return
         case .collapseSection:
             collapseSection()
         case .expandSection:

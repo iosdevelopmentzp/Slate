@@ -29,6 +29,7 @@ final class RichTextController: NSObject {
     var hoveredHeading: Int?
     var needsFoldLayout = false
     var syncedSections: [String]?
+    var matchHighlights: [NSRange] = []
     lazy var findClient = NoteFindClient(controller: self)
     lazy var finder: NSTextFinder = {
         let finder = NSTextFinder()
@@ -189,6 +190,7 @@ final class RichTextController: NSObject {
         focusToken = focus.token
         let location = focus.atStart ? 0 : firstMatch(of: focus.words) ?? storage.length
         reveal(location)
+        highlightMatches(of: focus.atStart ? [] : focus.words)
         Task { @MainActor [weak self] in
             guard let self else { return }
             textView.window?.makeFirstResponder(textView)

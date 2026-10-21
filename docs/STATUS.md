@@ -251,6 +251,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 162. The folder column can be resized like the list (180 to 300 pt, default 220 pt, key `window.sidebarWidth`). The handle lies over the trailing 8 pt of the column, so the layout does not move. A folder name that does not fit shows the full name in the hint of the app (`hintWhenTruncated`), not in a system tooltip. The font stays the system size: a smaller font in only one column looks out of place next to the list, and the width now solves the problem.
 163. Collapsed sections (like Apple Notes) live only in the editor: the file, the Markdown and the storage format do not change. Like Obsidian, Slate keeps them in its own settings (`editor.collapsedSections`: note id to a list of keys). A key is the heading level and title, with `#2` for the second heading of the same name (`SectionKeys`), so it survives edits and changes on disk; a key whose heading is gone is skipped. The editor reports keys through `EditorHandlers.collapsedSections` only after a fold, an unfold or an edit, never after it loads a note. The text stays in the text storage; `NSTextContentStorageDelegate.textContentManager(_:shouldEnumerate:options:)` skips the paragraphs of a folded heading, so TextKit 2 does not lay them out. TextKit 2 does not make a new layout fragment for an invalidated range, so the arrow state is set on the existing `RichLayoutFragment` of a heading before the layout is invalidated. The text view has a 16 pt side inset for the arrow; `EditorView` has 16 pt less padding, so the text stays in the same place. An edit that touches a folded section (a new line after the heading, a deletion into the section) opens it; the caret skips hidden text, and a selection inside it (Find) opens it. The shortcuts follow Xcode (`⌥⌘←`, `⌥⌘→`); inside a table cell the cell editor keeps them for moving columns.
 164. The editor is more compact on the owner's request: body line height 1.25 (was 1.4) and paragraph spacing 5 (was 8), lists 1.2 and 2 (were 1.35 and 4), quotes 1.25 and 4, headings and code blocks a little closer. A picture of the same note is 13 % shorter. Export to PDF and HTML has its own styles and does not change.
+165. Search marks are TextKit 2 rendering attributes (`addRenderingAttribute(.backgroundColor:)`), not text attributes: they never reach the file or Undo. Every search word of at least 2 letters is marked, case and accents ignored, like the first match that the caret goes to. Any edit, Esc and a new note remove them. Words inside table cells are not marked; Find in Note finds them. ⌘F stays the search of all notes; Find in Note keeps `⌥⌘F` and now has a button.
 
 ## Next steps
 
@@ -461,6 +462,11 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 ### Compact text
 
 107. Open a long note with paragraphs, lists, a quote and a code block: the lines and paragraphs are closer than before, the text is still easy to read, list markers and checkboxes sit on their lines, and the caret has the height of the line.
+
+### Search marks and Find in Note
+
+108. Search for two words, open a hit: both words are yellow everywhere in the text, and the caret is at the first one. Type a letter or press Esc: the marks go away. Check the colour in the dark theme too.
+109. Click the magnifier next to the note title: the find bar opens over the text with the caret in its field; type a word: every match is marked, and Enter goes to the next one.
 
 ## Known gaps
 

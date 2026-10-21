@@ -16,6 +16,7 @@ package enum EditorCommand: Hashable, Sendable {
     case table
     case formatJSON
     case outline
+    case findInNote
     case collapseSection
     case expandSection
     case collapseAllSections
