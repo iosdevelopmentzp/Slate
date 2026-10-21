@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Sort the notes of a list: the arrows button next to the folder title has Date Edited (newest first), Date Created (newest first) and Title (A to Z). Pinned notes stay on top. Slate remembers the choice, also after a restart, and uses it for every folder.
 - `⌘F` and `⌃F` find in the open note when the note text has the focus, and search all notes anywhere else. `⇧⌘F` always searches all notes. `⌥⌘F` still finds in the note.
 - A note opened from search marks every search word in its text in yellow, so you see where the words are. The marks go away when you type, press Esc or open another note.
 - Find in Note has a magnifier button next to the note title. It opens the find bar over the text (`⌥⌘F` as before).

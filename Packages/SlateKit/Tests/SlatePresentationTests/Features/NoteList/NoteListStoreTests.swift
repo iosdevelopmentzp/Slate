@@ -68,6 +68,18 @@ import Testing
         #expect(harness.keyValues.string(forKey: "list.sort") == "title")
     }
 
+    @Test func theChosenSortIsReadBackAfterARestart() {
+        harness.keyValues.set("created", forKey: "list.sort")
+
+        #expect(harness.noteList.sort == .created)
+    }
+
+    @Test func anUnknownStoredSortFallsBackToDateEdited() {
+        harness.keyValues.set("size", forKey: "list.sort")
+
+        #expect(harness.noteList.sort == .updated)
+    }
+
     @Test func showingASpaceFiltersAndMovesTheSelection() async throws {
         try await seedFour()
         await store.refresh()

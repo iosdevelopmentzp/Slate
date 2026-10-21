@@ -254,6 +254,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 165. Search marks are TextKit 2 rendering attributes (`addRenderingAttribute(.backgroundColor:)`), not text attributes: they never reach the file or Undo. Every search word of at least 2 letters is marked, case and accents ignored, like the first match that the caret goes to. Any edit, Esc and a new note remove them. Words inside table cells are not marked; Find in Note finds them. Find in Note keeps `⌥⌘F` and now has a button.
 166. `⌘F` and `⌃F` depend on the focus, like in Apple Notes: when the first responder is inside the editor's scroll view (the text, a table cell or the find bar), they open Find in Note; elsewhere they focus the search field. The hidden `⌘F` button of the list asks `EditorStore.findInBody`, a closure that `EditorView` sets to `EditorCommands.findIfFocused`; `KeyboardMap` maps both keys to `.findInNote` too, so the result is the same whichever view gets the key first. `⌃F` no longer moves the caret one letter forward in the note (the Emacs key). `⇧⌘F` always searches all notes.
 167. The find indicator of `NSTextFinder` (the yellow box over the current match) is empty unless the client draws the text: `NoteFindClient.drawCharacters(in:forContentView:)` draws each line piece of the match in black at its baseline (`TextSegmentRects.pieces`), without the paragraph style and the background, in the text view and in table cells.
+168. `NoteListStore.sort` was written to `list.sort` but never read back, so every launch started with Date Edited; the init now reads it. The sort menu in the list header is the first UI for it. The sort is one setting for all lists, not one per folder; search results keep their own order.
 
 ## Next steps
 
@@ -471,6 +472,10 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 109. Click the magnifier next to the note title: the find bar opens over the text with the caret in its field; type a word: every match is marked, and Enter goes to the next one.
 110. Click into the note text and press `⌘F`: the find bar of the note opens. Do the same with `⌃F`. Click a note card in the list and press `⌘F`: the caret goes to the search field above the list. In the note text press `⇧⌘F`: the search field too.
 111. Find a word in a code block and in normal text with the find bar: the yellow box over the current match shows the word in black, in the same place as the text under it.
+
+### Sort the list
+
+112. Open a folder, click the arrows next to its title and pick Title: the notes are in A to Z order, pinned notes first. Pick Date Created, then open another folder: it uses the same order. Quit Slate and open it again: the order stays.
 
 ## Known gaps
 

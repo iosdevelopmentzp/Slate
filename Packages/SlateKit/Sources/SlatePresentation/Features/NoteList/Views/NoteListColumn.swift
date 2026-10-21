@@ -28,6 +28,9 @@ struct NoteListColumn: View {
                     .truncationMode(.tail)
                     .hintWhenTruncated(title)
                 Spacer(minLength: 8)
+                if store.source != .trash {
+                    sortMenu
+                }
                 if let folder = store.source.folder {
                     IconButton(systemImage: "clock.arrow.circlepath", help: "Changes in this folder") {
                         showsChanges.toggle()
@@ -58,6 +61,27 @@ struct NoteListColumn: View {
             NoteListView()
         }
         .background(Theme.base)
+    }
+
+    private var sortMenu: some View {
+        @Bindable var store = store
+        return Menu {
+            Picker("Sort By", selection: $store.sort) {
+                ForEach(NoteSort.allCases, id: \.self) { sort in
+                    Text(NoteSortMapper.title(for: sort)).tag(sort)
+                }
+            }
+            .pickerStyle(.inline)
+        } label: {
+            Image(systemName: "arrow.up.arrow.down")
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .foregroundStyle(.secondary)
+        .frame(width: 24, height: 24)
+        .hint(NoteSortMapper.hint(for: store.sort))
+        .accessibilityLabel("Sort notes")
     }
 
     private var searchShortcuts: some View {

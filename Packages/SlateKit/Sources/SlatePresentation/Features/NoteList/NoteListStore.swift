@@ -72,7 +72,7 @@ final class NoteListStore: NoteLookup {
         self.events = events
         self.store = store
         self.vaultRoot = vaultRoot
-        sort = .updated
+        sort = store.string(forKey: Keys.sort).flatMap(NoteSort.init(rawValue:)) ?? .updated
         subscription = events.subscribe { [weak self] event in
             guard let self else { return }
             handle(event)
