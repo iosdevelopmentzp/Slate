@@ -203,6 +203,11 @@ final class RichTextController: NSObject {
         textView.window?.makeFirstResponder(textView)
     }
 
+    var isFocused: Bool {
+        guard let responder = scrollView.window?.firstResponder as? NSView else { return false }
+        return responder.isDescendant(of: scrollView)
+    }
+
     private func firstMatch(of words: [String]) -> Int? {
         let matches = words.filter { $0.isEmpty == false }.compactMap { word -> Int? in
             let found = string.range(of: word, options: [.caseInsensitive, .diacriticInsensitive])

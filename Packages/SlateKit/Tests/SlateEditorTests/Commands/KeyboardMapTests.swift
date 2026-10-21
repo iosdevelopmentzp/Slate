@@ -31,6 +31,12 @@ import Testing
         #expect(KeyboardMap.command(for: event("", keyCode: KeyboardMap.arrowRight, flags: [.command, .option, .shift])) == .expandAllSections)
     }
 
+    @Test func commandFAndControlFFindInTheNote() {
+        #expect(KeyboardMap.command(for: event("f", flags: [.command])) == .findInNote)
+        #expect(KeyboardMap.command(for: event("f", flags: [.control])) == .findInNote)
+        #expect(KeyboardMap.command(for: event("f", flags: [.command, .shift])) == nil)
+    }
+
     @Test func optionCommandTInsertsATable() {
         #expect(KeyboardMap.command(for: event("t", flags: [.command, .option])) == .table)
         #expect(KeyboardMap.command(for: event("t", flags: [.command])) == nil)

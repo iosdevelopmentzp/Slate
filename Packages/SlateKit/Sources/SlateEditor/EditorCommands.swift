@@ -20,4 +20,10 @@ package final class EditorCommands {
     package func focus() {
         controller?.focus()
     }
+
+    package func findIfFocused() -> Bool {
+        guard let controller, controller.isFocused else { return false }
+        controller.perform(.findInNote)
+        return true
+    }
 }

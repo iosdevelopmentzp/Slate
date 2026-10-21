@@ -68,6 +68,9 @@ enum KeyboardMap {
             default: return nil
             }
         }
+        if flags == [.control], key == "f" {
+            return .findInNote
+        }
         if flags == [.command, .option] {
             switch event.keyCode {
             case arrowLeft: return .collapseSection
@@ -99,6 +102,7 @@ enum KeyboardMap {
             case "b": return .inline(.bold)
             case "i": return .inline(.italic)
             case "k": return .link
+            case "f": return .findInNote
             default: return nil
             }
         }

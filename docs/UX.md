@@ -132,7 +132,8 @@ Rules for text: a sentence, not a label with a colon, wherever there is room. Ve
 | `⌃⌥Space` (global) | Quick note |
 | `⌘N` | New note in the current folder |
 | `⇧⌘N` | New folder |
-| `⌘F` | Search |
+| `⌘F`, `⌃F` | In the note text (or its find bar): Find in Note. Anywhere else: search all notes |
+| `⇧⌘F` | Search all notes, also from the note text |
 | `⌘0` | Show or hide the sidebar |
 | `⌘⇧O` | Open as window |
 | `⌘1` … `⌘9` | Folder by position |

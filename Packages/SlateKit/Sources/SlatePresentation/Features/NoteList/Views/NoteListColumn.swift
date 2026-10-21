@@ -6,6 +6,7 @@ struct NoteListColumn: View {
     @Environment(NoteListStore.self) private var store
     @Environment(SearchStore.self) private var search
     @Environment(WindowLayout.self) private var layout
+    @Environment(EditorStore.self) private var editor
     @FocusState private var isSearchFocused: Bool
     @State private var showsChanges = false
 
@@ -50,19 +51,34 @@ struct NoteListColumn: View {
             .background(HeaderDragArea())
             SearchField(prompt: store.source == .trash ? "Search the Trash" : "Search", text: store.source == .trash ? $store.filterText : $search.query, focus: $isSearchFocused)
                 .onSubmit { search.openFirst() }
-                .hint("Search notes (⌘F). Enter opens the first result, Esc clears.")
+                .hint("Search all notes (⌘F, or ⇧⌘F from a note). Enter opens the first result, Esc clears.")
                 .padding(.horizontal, Theme.columnPadding)
-                .background(
-                    Button("") { isSearchFocused = true }
-                        .keyboardShortcut("f", modifiers: .command)
-                        .opacity(0)
-                        .allowsHitTesting(false)
-                        .accessibilityHidden(true)
-                )
+                .background(searchShortcuts)
             progressLine
             NoteListView()
         }
         .background(Theme.base)
+    }
+
+    private var searchShortcuts: some View {
+        ZStack {
+            searchShortcut("f", modifiers: .command) { findHere() }
+            searchShortcut("f", modifiers: .control) { findHere() }
+            searchShortcut("f", modifiers: [.command, .shift]) { isSearchFocused = true }
+        }
+    }
+
+    private func findHere() {
+        guard editor.findInBody() == false else { return }
+        isSearchFocused = true
+    }
+
+    private func searchShortcut(_ key: KeyEquivalent, modifiers: EventModifiers, action: @escaping () -> Void) -> some View {
+        Button("", action: action)
+            .keyboardShortcut(key, modifiers: modifiers)
+            .opacity(0)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 
     private var title: String {

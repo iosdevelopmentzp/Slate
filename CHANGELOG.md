@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- `⌘F` and `⌃F` find in the open note when the note text has the focus, and search all notes anywhere else. `⇧⌘F` always searches all notes. `⌥⌘F` still finds in the note.
 - A note opened from search marks every search word in its text in yellow, so you see where the words are. The marks go away when you type, press Esc or open another note.
 - Find in Note has a magnifier button next to the note title. It opens the find bar over the text (`⌥⌘F` as before).
 - Collapse a section of a note, like in Apple Notes: rest the pointer on a heading and click the arrow on its left. The text under the heading hides until the next heading of the same or a higher level. `⌥⌘←` and `⌥⌘→` collapse and expand the section of the caret; `⇧⌥⌘←` and `⇧⌥⌘→` do it for every section. The commands are in the Edit menu too. Slate remembers the collapsed sections of each note, also after a restart. Only the view changes: the file stays the same.

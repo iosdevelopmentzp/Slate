@@ -64,6 +64,7 @@ struct EditorView: View {
             .background(Theme.surface)
             .onAppear {
                 editor.flushBody = { [commands] in commands.flush() }
+                editor.findInBody = { [commands] in commands.findIfFocused() }
             }
             .onChange(of: editor.titleFocusToken) {
                 isTitleFocused = true
