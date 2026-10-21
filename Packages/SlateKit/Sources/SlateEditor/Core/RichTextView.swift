@@ -4,6 +4,10 @@ final class RichTextView: NSTextView {
     weak var controller: RichTextController?
     private var hoverArea: NSTrackingArea?
 
+    override var textContainerOrigin: NSPoint {
+        NSPoint(x: super.textContainerOrigin.x, y: RichTextEditorView.topMargin)
+    }
+
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
         guard window?.firstResponder === self, let command = KeyboardMap.command(for: event), let controller else {
             return super.performKeyEquivalent(with: event)

@@ -340,4 +340,17 @@ private final class EscapeWindow: NSWindow {
     override func cancelOperation(_ sender: Any?) {
         cancelCount += 1
     }
+
+    @Test func theTextHasRoomBelowItsLastLine() throws {
+        let harness = EditorHarness(markdown: (1...40).map { "Line \($0)" }.joined(separator: "\n\n") + "\n")
+        let layout = try #require(harness.textView.textLayoutManager)
+        layout.ensureLayout(for: layout.documentRange)
+        harness.textView.scrollToEndOfDocument(nil)
+        harness.layout()
+
+        let bottom = layout.usageBoundsForTextContainer.maxY + harness.textView.textContainerOrigin.y
+
+        #expect(harness.textView.textContainerOrigin.y == RichTextEditorView.topMargin)
+        #expect(harness.textView.frame.height - bottom >= RichTextEditorView.bottomMargin - 1)
+    }
 }

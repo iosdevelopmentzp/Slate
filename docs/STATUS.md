@@ -256,6 +256,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 167. The find indicator of `NSTextFinder` (the yellow box over the current match) is empty unless the client draws the text: `NoteFindClient.drawCharacters(in:forContentView:)` draws each line piece of the match in black at its baseline (`TextSegmentRects.pieces`), without the paragraph style and the background, in the text view and in table cells.
 168. `NoteListStore.sort` was written to `list.sort` but never read back, so every launch started with Date Edited; the init now reads it. The sort menu in the list header is the first UI for it. The sort is one setting for all lists, not one per folder; search results keep their own order.
 169. A code block, a raw block or a quote is one paragraph that Enter does not leave, so at the edge of a note there was no place for the caret before or after it. The text storage has no trailing newline after the last block. `↑` on the first line and `←` at location 0 insert a body paragraph before such a block; `↓` on the last line and `→` at the end add a newline and make the empty tail a body paragraph. Tables, images and dividers already take typing before and after them, so they are left out.
+170. The editor has 8 pt above the text and 96 pt below it. `NSTextView` has one vertical inset for both edges, so the inset is half of 104 pt and `RichTextView.textContainerOrigin` returns 8 pt for the top; the view grows by the rest at the bottom. The space is part of the text view, so a click there puts the caret at the end, unlike a scroll view content inset.
 
 ## Next steps
 
@@ -481,6 +482,10 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 ### Leave a block at the edge of a note
 
 113. Make a note that starts with a code block. Put the caret on its first line and press `↑`: an empty line opens above the block; type there. Do the same at the end with `↓` on the last line of a code block that ends the note.
+
+### Space below the text
+
+114. Open a long note and scroll to the end: there is 96 pt of empty space under the last line. The first line still starts right under the format bar. Click in the empty space: the caret goes to the end.
 
 ## Known gaps
 

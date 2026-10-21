@@ -86,6 +86,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - The width of the list is draggable (260 to 420 points, double-click for the default) and remembered, and so is the sidebar (`⌘0` in the panel too).
 
 ### Changed
+- The note text has 96 pt of empty space below its last line, so the end of a note no longer sits at the bottom edge of the window. A click in that space puts the caret at the end.
 - The text of a note is more compact: less space between lines (1.25 instead of 1.4 for body text, 1.2 instead of 1.35 for lists) and between paragraphs. The same note takes about 13 % less height.
 - The folder column can be wider: drag its right edge (180 to 300 pt). Slate remembers the width; a double-click on the edge sets the default again. The default width is now 220 pt instead of 200 pt. A folder name that does not fit shows in full in a hint when you rest the pointer on it. The folder title above the list does the same.
 - `Scripts/install.sh` signs Slate and the `slate` command with a local certificate when `~/.config/slate/sign-identity` (or `SLATE_SIGN_IDENTITY`) holds its SHA-1 hash. macOS then keeps the access to the Documents folder and other permissions after each install, instead of asking again.

@@ -3,6 +3,8 @@ import SwiftUI
 
 package struct RichTextEditorView: NSViewRepresentable {
     package static let sideMargin: CGFloat = 16
+    static let topMargin: CGFloat = 8
+    static let bottomMargin: CGFloat = 96
 
     @Binding private var markdown: String
     private let configuration: EditorConfiguration

@@ -102,7 +102,7 @@ final class RichTextController: NSObject {
         textView.isContinuousSpellCheckingEnabled = true
         textView.isGrammarCheckingEnabled = false
         textView.drawsBackground = false
-        textView.textContainerInset = NSSize(width: RichTextEditorView.sideMargin, height: 8)
+        textView.textContainerInset = NSSize(width: RichTextEditorView.sideMargin, height: (RichTextEditorView.topMargin + RichTextEditorView.bottomMargin) / 2)
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
