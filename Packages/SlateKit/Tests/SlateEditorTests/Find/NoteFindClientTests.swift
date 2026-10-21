@@ -93,6 +93,29 @@ import Testing
         #expect(rects[0].width > 10)
     }
 
+    @Test func theFindIndicatorDrawsTheMatchedText() throws {
+        let harness = EditorHarness(markdown: note)
+        let client = harness.controller.findClient
+        let match = range(of: "Intro", in: client)
+        let rect = try #require(client.rects(forCharacterRange: match)?.first?.rectValue)
+        let bitmap = try #require(NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 400, pixelsHigh: 200, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
+
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: try #require(NSGraphicsContext(bitmapImageRep: bitmap)).cgContext, flipped: true)
+        let context = try #require(NSGraphicsContext.current).cgContext
+        context.translateBy(x: 0, y: 200)
+        context.scaleBy(x: 1, y: -1)
+        client.drawCharacters(in: match, forContentView: harness.textView)
+        NSGraphicsContext.restoreGraphicsState()
+
+        let inked = stride(from: Int(rect.minX), to: Int(rect.maxX), by: 1).contains { x in
+            stride(from: Int(rect.minY), to: Int(rect.maxY), by: 1).contains { y in
+                (bitmap.colorAt(x: x, y: y)?.alphaComponent ?? 0) > 0.5
+            }
+        }
+        #expect(inked)
+    }
+
     @Test func replacingInACellChangesOnlyThatCell() {
         let harness = EditorHarness(markdown: note)
         let client = harness.controller.findClient

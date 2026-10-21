@@ -253,6 +253,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 164. The editor is more compact on the owner's request: body line height 1.25 (was 1.4) and paragraph spacing 5 (was 8), lists 1.2 and 2 (were 1.35 and 4), quotes 1.25 and 4, headings and code blocks a little closer. A picture of the same note is 13 % shorter. Export to PDF and HTML has its own styles and does not change.
 165. Search marks are TextKit 2 rendering attributes (`addRenderingAttribute(.backgroundColor:)`), not text attributes: they never reach the file or Undo. Every search word of at least 2 letters is marked, case and accents ignored, like the first match that the caret goes to. Any edit, Esc and a new note remove them. Words inside table cells are not marked; Find in Note finds them. Find in Note keeps `⌥⌘F` and now has a button.
 166. `⌘F` and `⌃F` depend on the focus, like in Apple Notes: when the first responder is inside the editor's scroll view (the text, a table cell or the find bar), they open Find in Note; elsewhere they focus the search field. The hidden `⌘F` button of the list asks `EditorStore.findInBody`, a closure that `EditorView` sets to `EditorCommands.findIfFocused`; `KeyboardMap` maps both keys to `.findInNote` too, so the result is the same whichever view gets the key first. `⌃F` no longer moves the caret one letter forward in the note (the Emacs key). `⇧⌘F` always searches all notes.
+167. The find indicator of `NSTextFinder` (the yellow box over the current match) is empty unless the client draws the text: `NoteFindClient.drawCharacters(in:forContentView:)` draws each line piece of the match in black at its baseline (`TextSegmentRects.pieces`), without the paragraph style and the background, in the text view and in table cells.
 
 ## Next steps
 
@@ -469,6 +470,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 108. Search for two words, open a hit: both words are yellow everywhere in the text, and the caret is at the first one. Type a letter or press Esc: the marks go away. Check the colour in the dark theme too.
 109. Click the magnifier next to the note title: the find bar opens over the text with the caret in its field; type a word: every match is marked, and Enter goes to the next one.
 110. Click into the note text and press `⌘F`: the find bar of the note opens. Do the same with `⌃F`. Click a note card in the list and press `⌘F`: the caret goes to the search field above the list. In the note text press `⇧⌘F`: the search field too.
+111. Find a word in a code block and in normal text with the find bar: the yellow box over the current match shows the word in black, in the same place as the text under it.
 
 ## Known gaps
 

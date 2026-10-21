@@ -129,6 +129,33 @@ final class NoteFindClient: NSObject, NSTextFinderClient {
         }
     }
 
+    func drawCharacters(in range: NSRange, forContentView view: NSView) {
+        guard let controller, let (item, local) = segments.local(range) else { return }
+        switch item.place {
+        case .text(let text):
+            guard let layout = controller.textView.textLayoutManager else { return }
+            let storageRange = NSRange(location: text.location + local.location, length: local.length)
+            Self.draw(TextSegmentRects.pieces(of: storageRange, in: layout), of: controller.storage, at: controller.textView.textContainerOrigin)
+        case .cell(let table, let index):
+            guard let view = tableView(at: table), let attachment = view.attachment else { return }
+            let frame = view.currentLayout.textRect(index)
+            let text = attachment.text(index)
+            Self.draw(TextSegmentRects.pieces(of: local, in: text, width: frame.width), of: text, at: frame.origin)
+        }
+    }
+
+    private static func draw(_ pieces: [(range: NSRange, frame: CGRect, baseline: CGFloat)], of text: NSAttributedString, at origin: CGPoint) {
+        for piece in pieces where piece.range.length > 0 && NSMaxRange(piece.range) <= text.length {
+            let line = NSMutableAttributedString(attributedString: text.attributedSubstring(from: piece.range))
+            let whole = NSRange(location: 0, length: line.length)
+            line.removeAttribute(.paragraphStyle, range: whole)
+            line.removeAttribute(.backgroundColor, range: whole)
+            line.addAttribute(.foregroundColor, value: NSColor.black, range: whole)
+            let font = line.attribute(.font, at: 0, effectiveRange: nil) as? NSFont ?? .systemFont(ofSize: NSFont.systemFontSize)
+            line.draw(at: CGPoint(x: origin.x + piece.frame.minX, y: origin.y + piece.frame.minY + piece.baseline - font.ascender))
+        }
+    }
+
     var visibleCharacterRanges: [NSValue] {
         [NSValue(range: NSRange(location: 0, length: segments.length))]
     }

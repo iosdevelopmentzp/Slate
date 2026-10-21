@@ -115,6 +115,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - Note kinds and the New menu, tasks, ticket and branch chips, status, `⌘⇧D`, Today and daily notes (`⌥⌘T`, `⌘[`, `⌘]`), snippets, meetings, tags and tag chips, Insert Template, saved searches, Open TODOs, the palette (`⌘K`), actions, Copy for Slack, Copy as Markdown, Save as HTML and PDF, Float on Top and note windows, the outline, ticket details, the Links and History pages of Settings, the history and push state and the Activity button in the footer. The files and the command line keep working; the code for them is in commit `545e0d6`.
 
 ### Fixed
+- Find in Note: the yellow box over the current match hid the found text. The text now shows in the box, also in code blocks and table cells.
 - The file watcher tests and two editor save tests no longer fail when the Mac is busy, for example during an install. They wait for a marker file instead of a fixed second, and the wait limit is 10 s instead of 2 s.
 - A click on the menu bar icon brings the Slate window to the front again. Since Slate became a normal window, the window opened behind the active app, for example behind the Terminal. A click on the Dock icon was not affected. The same fix applies to Settings and to the window after a screenshot.
 - The link window opens and stays open in a table cell too. The cell stopped editing when the window took the keyboard, and the window closed with it. Bold, Italic, Strikethrough and Link in the format bar now work in a table cell.
