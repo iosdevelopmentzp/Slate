@@ -255,6 +255,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 166. `⌘F` and `⌃F` depend on the focus, like in Apple Notes: when the first responder is inside the editor's scroll view (the text, a table cell or the find bar), they open Find in Note; elsewhere they focus the search field. The hidden `⌘F` button of the list asks `EditorStore.findInBody`, a closure that `EditorView` sets to `EditorCommands.findIfFocused`; `KeyboardMap` maps both keys to `.findInNote` too, so the result is the same whichever view gets the key first. `⌃F` no longer moves the caret one letter forward in the note (the Emacs key). `⇧⌘F` always searches all notes.
 167. The find indicator of `NSTextFinder` (the yellow box over the current match) is empty unless the client draws the text: `NoteFindClient.drawCharacters(in:forContentView:)` draws each line piece of the match in black at its baseline (`TextSegmentRects.pieces`), without the paragraph style and the background, in the text view and in table cells.
 168. `NoteListStore.sort` was written to `list.sort` but never read back, so every launch started with Date Edited; the init now reads it. The sort menu in the list header is the first UI for it. The sort is one setting for all lists, not one per folder; search results keep their own order.
+169. A code block, a raw block or a quote is one paragraph that Enter does not leave, so at the edge of a note there was no place for the caret before or after it. The text storage has no trailing newline after the last block. `↑` on the first line and `←` at location 0 insert a body paragraph before such a block; `↓` on the last line and `→` at the end add a newline and make the empty tail a body paragraph. Tables, images and dividers already take typing before and after them, so they are left out.
 
 ## Next steps
 
@@ -476,6 +477,10 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 ### Sort the list
 
 112. Open a folder, click the arrows next to its title and pick Title: the notes are in A to Z order, pinned notes first. Pick Date Created, then open another folder: it uses the same order. Quit Slate and open it again: the order stays.
+
+### Leave a block at the edge of a note
+
+113. Make a note that starts with a code block. Put the caret on its first line and press `↑`: an empty line opens above the block; type there. Do the same at the end with `↓` on the last line of a code block that ends the note.
 
 ## Known gaps
 

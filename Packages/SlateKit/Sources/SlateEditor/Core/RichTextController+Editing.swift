@@ -20,7 +20,7 @@ extension RichTextController {
         case #selector(NSResponder.deleteBackward(_:)):
             return handleBackspace()
         case #selector(NSResponder.moveUp(_:)), #selector(NSResponder.moveDown(_:)), #selector(NSResponder.moveLeft(_:)), #selector(NSResponder.moveRight(_:)):
-            return moveIntoTable(selector)
+            return leaveBlockAtEdge(selector) || moveIntoTable(selector)
         case #selector(NSResponder.cancelOperation(_:)):
             if matchHighlights.isEmpty == false {
                 clearMatchHighlights()
