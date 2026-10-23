@@ -47,7 +47,7 @@ package enum AgentGuide {
 
     ## The Markdown that the app writes
 
-    Headings `#`, `##`, `###`; paragraphs separated by one blank line; `- item` lists, `1. item` lists and `- [ ] item` checklists, nested by two spaces; `> quote`; fenced code blocks; `---` dividers; `**bold**`, `*italic*`, `~~strikethrough~~`, `` `code` ``; `[text](url)` links and `[[Note name]]` links to other notes; `![](../_attachments/file.png)` images on their own line; GitHub pipe tables. Other Markdown stays in the file as it is, but the app shows it as plain text.
+    Headings `#`, `##`, `###`; paragraphs separated by one blank line; `- item` lists, `1. item` lists and `- [ ] item` checklists, nested by two spaces; `> quote`; fenced code blocks; `---` dividers; `**bold**`, `*italic*`, `~~strikethrough~~`, `` `code` ``; `[text](url)` links and `[[Note name]]` links to other notes; `![](../_attachments/file.png)` images on their own line; GitHub pipe tables. A list item holds one line of text and its nested items, nothing else: a table, a code block, a quote or a second paragraph indented under an item makes the app show the whole list as plain Markdown, so put them after the list, not inside it. Other Markdown stays in the file as it is, but the app shows it as plain text.
 
     ## Rules
 
