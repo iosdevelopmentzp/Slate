@@ -12,6 +12,8 @@ struct MCPToolRunner: Sendable {
 
     func call(_ name: String, arguments: [String: Value]?) async -> CallTool.Result {
         do {
+            guard let check = MCPArgumentCheck(named: name) else { throw AgentError.unknownTool(name) }
+            try check.check(arguments ?? [:])
             _ = try await useCases.reindex.execute(.all)
             let answer = try await run(name, MCPArguments(arguments))
             return CallTool.Result(content: [.text(text: answer, annotations: nil, _meta: nil)])

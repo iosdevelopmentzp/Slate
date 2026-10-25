@@ -21,6 +21,11 @@ extension MCPToolRunner {
         let document = created.document
         await afterWrite("create_note", title: document.title, path: document.path)
         var answer: [String: Any] = ["id": document.id.rawValue, "title": document.title, "path": document.path.rawValue, "hash": document.hash.rawValue]
+        let lines = Self.lineCount(document.body)
+        answer["lines"] = lines
+        if lines == 0 {
+            answer["warning"] = "The note has no text. Add it with update_note and the argument body."
+        }
         if found == nil {
             answer["createdFolder"] = folder.rawValue
         }
@@ -53,7 +58,7 @@ extension MCPToolRunner {
         let result = try await useCases.save.execute(current, header: current.header, body: Self.bodyWithoutHeader(body))
         guard let saved = result.document else { throw AgentError.staleNote }
         await afterWrite("update_note", title: saved.title, path: saved.path)
-        return json(["id": saved.id.rawValue, "path": saved.path.rawValue, "hash": saved.hash.rawValue])
+        return json(["id": saved.id.rawValue, "path": saved.path.rawValue, "hash": saved.hash.rawValue, "lines": Self.lineCount(saved.body)])
     }
 
     func moveNote(_ arguments: MCPArguments) async throws -> String {
@@ -126,6 +131,11 @@ extension MCPToolRunner {
         guard let size = await ports.attachments.externalSize(url) else { throw AgentError.notAnImage }
         guard size <= AttachmentPolicy.maxImportSize else { throw AgentError.imageTooLarge }
         return try Data(contentsOf: url)
+    }
+
+    static func lineCount(_ body: String) -> Int {
+        let text = body.trimmingCharacters(in: .whitespacesAndNewlines)
+        return text.isEmpty ? 0 : text.split(separator: "\n", omittingEmptySubsequences: false).count
     }
 
     static func bodyWithoutHeader(_ text: String) -> String {

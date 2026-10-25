@@ -433,8 +433,63 @@ import Testing
     }
 
     @Test func missingArgumentsAndUnknownToolsAnswerWithASentence() async throws {
-        #expect(await call("append_to_note", ["id": "x"]).text == "Pass text.")
+        #expect(await call("append_to_note", ["id": "x"]).text == "Missing: text. append_to_note takes id, text, position, section; required: id, text. Nothing was changed. Call it again with these names.")
         #expect(await call("append_to_note", ["id": "x", "text": "y"]).text.hasPrefix("No note has the id x."))
         #expect(await call("delete_everything").text.hasPrefix("Slate has no tool delete_everything."))
+    }
+
+    @Test func createNoteRefusesAnUnknownArgumentAndWritesNothing() async throws {
+        let answer = await call("create_note", ["folder": "Notes", "title": "Analysis", "text": "The whole analysis"])
+
+        #expect(answer.isError)
+        #expect(answer.text.hasPrefix("create_note has no argument text. create_note takes folder, title, body; required: folder, title."))
+        #expect(FileManager.default.fileExists(atPath: vault.url.appendingPathComponent("Notes/Analysis.md").path) == false)
+    }
+
+    @Test func createNoteSaysHowManyLinesItWroteAndWarnsAboutAnEmptyNote() async throws {
+        let full = try object(await call("create_note", ["folder": "Notes", "title": "Plan", "body": "One\nTwo\n"]).text)
+        let empty = try object(await call("create_note", ["folder": "Notes", "title": "Empty"]).text)
+
+        #expect(full["lines"] as? Int == 2)
+        #expect(full["warning"] == nil)
+        #expect(empty["lines"] as? Int == 0)
+        #expect(empty["warning"] as? String == "The note has no text. Add it with update_note and the argument body.")
+    }
+
+    @Test func updateNoteNamesEveryMissingArgumentAtOnce() async throws {
+        let id = try await create("Groceries", body: "Milk")
+
+        let answer = await call("update_note", ["id": .string(id), "text": "Bread"])
+        let written = await call("update_note", ["id": .string(id), "body": "Bread\nEggs", "expectedHash": .string(try object(await call("read_note", ["id": .string(id)]).text)["hash"] as? String ?? "")])
+
+        #expect(answer.text.hasPrefix("update_note has no argument text. Missing: body, expectedHash."))
+        #expect(try object(written.text)["lines"] as? Int == 2)
+    }
+
+    @Test func aValueOfTheWrongTypeIsRefused() async throws {
+        let answer = await call("list_notes", ["limit": "many", "headings": "yes"])
+
+        #expect(answer.isError)
+        #expect(answer.text.hasPrefix("Wrong type: headings (true or false), limit (a number)."))
+    }
+
+    @Test func batchEditRefusesAnUnknownArgumentInAnOperation() async throws {
+        let log = try await create("Changelog", body: "## Changes\n\n- old\n")
+        let before = try file("Notes/Changelog.md")
+
+        let answer = await call("batch_edit", ["operations": [["tool": "append_to_note", "id": .string(log), "heading": "Changes", "text": "- new"]]])
+
+        #expect(answer.text.hasPrefix("Operation 1: append_to_note has no argument heading."))
+        #expect(try file("Notes/Changelog.md") == before)
+    }
+
+    @Test func everyToolRefusesUnknownArgumentsInItsSchema() {
+        for tool in MCPToolCatalog.tools {
+            let schema = tool.inputSchema.objectValue ?? [:]
+            let properties = Set((schema["properties"]?.objectValue ?? [:]).keys)
+            let required = (schema["required"]?.arrayValue ?? []).compactMap(\.stringValue)
+            #expect(schema["additionalProperties"] == false, "\(tool.name)")
+            #expect(required.allSatisfy(properties.contains), "\(tool.name)")
+        }
     }
 }

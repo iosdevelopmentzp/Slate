@@ -121,6 +121,7 @@ enum MCPToolCatalog {
                 "type": "object",
                 "properties": .object(properties),
                 "required": .array(required.map { .string($0) }),
+                "additionalProperties": false,
             ],
             annotations: Tool.Annotations(readOnlyHint: readOnly, destructiveHint: destructive, openWorldHint: false)
         )
@@ -155,6 +156,7 @@ enum MCPToolCatalog {
                     "expectedHash": ["type": "string"],
                 ],
                 "required": ["tool"],
+                "additionalProperties": false,
             ],
         ]
     }

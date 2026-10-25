@@ -258,6 +258,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 169. A code block, a raw block or a quote is one paragraph that Enter does not leave, so at the edge of a note there was no place for the caret before or after it. The text storage has no trailing newline after the last block. `↑` on the first line and `←` at location 0 insert a body paragraph before such a block; `↓` on the last line and `→` at the end add a newline and make the empty tail a body paragraph. Tables, images and dividers already take typing before and after them, so they are left out.
 170. The editor has 8 pt above the text and 96 pt below it. `NSTextView` has one vertical inset for both edges, so the inset is half of 104 pt and `RichTextView.textContainerOrigin` returns 8 pt for the top; the view grows by the rest at the bottom. The space is part of the text view, so a click there puts the caret at the end, unlike a scroll view content inset.
 171. A list whose item has a child that is not a nested list (a table, a code block, a quote, a second paragraph) is read as one raw block, because the editor cannot write it back the same way (`ListReader` returns nil). An agent wrote a table indented under a numbered item with `batch_edit`, and the whole section showed as raw Markdown. The agent guide now forbids it; the reader stays strict, so the file never changes without a request.
+172. Every `slate mcp` tool call is checked against the input schema of the tool in `MCPToolCatalog` before it runs (`MCPArgumentCheck`): unknown names, missing required names and wrong types go into one `AgentError.badArguments`, and the tool does not run. The schemas say `additionalProperties: false`. Each `batch_edit` operation is checked against the schema of its tool plus `tool`, `id`, `task` and `expectedHash`. The reason: `create_note` read only `body`, an agent passed `text`, and the tool made an empty note and answered with success. The catalog is the one list of names, so a tool can no longer read a name the catalog does not declare without a test failing. `create_note` and `update_note` answer with `lines`, the number of lines of the body, and `create_note` adds a `warning` for an empty body.
 
 ## Next steps
 
@@ -487,6 +488,10 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 ### Space below the text
 
 114. Open a long note and scroll to the end: there is 96 pt of empty space under the last line. The first line still starts right under the format bar. Click in the empty space: the caret goes to the end.
+
+### Strict tool arguments
+
+115. In Claude Code, ask the agent to call `create_note` with the text under `text`. The tool answers with an error that names `body`, and no note appears in Slate. Then a correct `create_note` answers with `lines` equal to the number of lines of the text.
 
 ## Known gaps
 

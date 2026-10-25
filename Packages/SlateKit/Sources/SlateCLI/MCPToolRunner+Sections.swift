@@ -3,6 +3,7 @@ import SlateDomain
 
 extension MCPToolRunner {
     static let maxBatch = 50
+    static let batchKeys = ["tool", "id", "task", "expectedHash"]
 
     func readSection(_ arguments: MCPArguments) async throws -> String {
         let heading = try arguments.required("heading")
@@ -49,7 +50,9 @@ extension MCPToolRunner {
         var notes: [VaultPath: (document: NoteDocument, body: String)] = [:]
         for (offset, operation) in operations.enumerated() {
             do {
-                let change = try bodyChange(try operation.required("tool"), operation)
+                let tool = try operation.required("tool")
+                try MCPArgumentCheck(named: tool, alsoAllowed: Self.batchKeys)?.check(operation.values, requireAll: false)
+                let change = try bodyChange(tool, operation)
                 let path = try await target(of: operation)
                 try permissions.checkWrite(path)
                 if notes[path] == nil {

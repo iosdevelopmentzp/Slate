@@ -10,6 +10,7 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
     case noteNotFound(String)
     case staleNote
     case missingArgument(String)
+    case badArguments(String, unknown: [String], missing: [String], wrongType: [String], accepted: [String], required: [String])
     case notAnImage
     case imageTooLarge
     case unknownTool(String)
@@ -49,6 +50,8 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
             "The note changed since you read it, read it again."
         case .missingArgument(let name):
             "Pass \(name)."
+        case .badArguments(let tool, let unknown, let missing, let wrongType, let accepted, let required):
+            Self.argumentProblems(tool, unknown: unknown, missing: missing, wrongType: wrongType, accepted: accepted, required: required)
         case .notAnImage:
             "attach_image takes PNG, JPEG, GIF, HEIC or WebP images only."
         case .imageTooLarge:
@@ -84,5 +87,21 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
         case .batchConflict(let path, let written):
             "\(path) changed while the batch was written, so it was not changed. \(written.isEmpty ? "Nothing was written." : "Already written: \(written.joined(separator: ", ")).") Read the note again and repeat the rest."
         }
+    }
+
+    private static func argumentProblems(_ tool: String, unknown: [String], missing: [String], wrongType: [String], accepted: [String], required: [String]) -> String {
+        var parts: [String] = []
+        if unknown.isEmpty == false {
+            parts.append("\(tool) has no argument\(unknown.count == 1 ? "" : "s") \(unknown.joined(separator: ", ")).")
+        }
+        if missing.isEmpty == false {
+            parts.append("Missing: \(missing.joined(separator: ", ")).")
+        }
+        if wrongType.isEmpty == false {
+            parts.append("Wrong type: \(wrongType.joined(separator: ", ")).")
+        }
+        parts.append("\(tool) takes \(accepted.isEmpty ? "no arguments" : accepted.joined(separator: ", "))\(required.isEmpty ? "" : "; required: \(required.joined(separator: ", "))").")
+        parts.append("Nothing was changed. Call it again with these names.")
+        return parts.joined(separator: " ")
     }
 }
