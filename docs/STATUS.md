@@ -261,6 +261,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 172. Every `slate mcp` tool call is checked against the input schema of the tool in `MCPToolCatalog` before it runs (`MCPArgumentCheck`): unknown names, missing required names and wrong types go into one `AgentError.badArguments`, and the tool does not run. The schemas say `additionalProperties: false`. Each `batch_edit` operation is checked against the schema of its tool plus `tool`, `id`, `task` and `expectedHash`. The reason: `create_note` read only `body`, an agent passed `text`, and the tool made an empty note and answered with success. The catalog is the one list of names, so a tool can no longer read a name the catalog does not declare without a test failing. `create_note` and `update_note` answer with `lines`, the number of lines of the body, and `create_note` adds a `warning` for an empty body.
 173. A table cell is read as a Markdown document of its own. A cell that starts with a block mark (`#`, `-`, `>`, `1.`, three backticks) became a heading, a list or a code block, and the whole table stayed raw. GFM cells hold only inline text, so `TableCellText.inline` now reads such a cell again with the mark escaped (`\#`, `1\.`). The cell source in the file does not change.
 174. `slate mcp` runs as long as the agent session, and `install.sh` puts the new `slate` in place with `mv`, so an old server kept the old code. At start the server saves the file number and the date of its own file (`ExecutableStamp`, from `Bundle.main.executablePath`). Before each call it compares them with the file at the same path; a different file means a new install, and the call ends with `AgentError.serverOutdated`. All tools are refused, also the reading ones, so the agent sees the message at once. A version number was not used: a local build between installs has the same version.
+175. The notes list hides with `WindowLayout.showsList` (key `window.list`). The list column stays in the view tree with zero width, no opacity and no hit testing, because the search field and the `⌘F`, `⌃F` and `⇧⌘F` shortcuts live in it; a search of all notes shows the list first. A new source (`noteList.source` changes, or a click on a folder in the sidebar) shows the list, so a click on a folder never looks like nothing happened. The list button sits over the top left of the editor (`PanelToggles`), in the 28 pt above the title, so the editor layout does not move.
 
 ## Next steps
 
@@ -502,6 +503,10 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 ### Old MCP server
 
 117. Start a Claude Code session that uses Slate, then commit to `main` (the install runs). Ask the agent to read a note: it gets "Slate was updated after this session started…". Run `/mcp`, slate, Reconnect: the next call works.
+
+### Hide the columns
+
+118. Click the sidebar button in the Folders header: the folders hide, and the list header starts with the same button. Click the list button at the top left of the note: the list hides. With both hidden, both buttons sit after the window buttons. `⌘0` and `⌥⌘0` do the same, also from the View menu. Quit and open Slate: the columns stay as they were. Hide the list, press `⇧⌘F`: the list comes back with the search field active.
 
 ## Known gaps
 

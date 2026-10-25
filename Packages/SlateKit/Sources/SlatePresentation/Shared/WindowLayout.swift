@@ -51,6 +51,13 @@ final class WindowLayout {
         }
     }
 
+    var showsList: Bool {
+        didSet {
+            guard showsList != oldValue else { return }
+            store.set(showsList ? "shown" : "hidden", forKey: Keys.list)
+        }
+    }
+
     var openCount = 0
 
     @ObservationIgnored private let store: any KeyValueStore
@@ -68,6 +75,7 @@ final class WindowLayout {
         let storedSidebarWidth = store.integer(forKey: Keys.sidebarWidth)
         sidebarWidth = storedSidebarWidth > 0 ? Self.clampedSidebarWidth(CGFloat(storedSidebarWidth)) : Self.defaultSidebarWidth
         showsSidebar = store.string(forKey: Keys.sidebar) != "hidden"
+        showsList = store.string(forKey: Keys.list) != "hidden"
         isWindowOpen = store.string(forKey: Keys.windowOpen) != "hidden"
     }
 
@@ -104,5 +112,6 @@ final class WindowLayout {
         static let listWidth = "window.listWidth"
         static let sidebarWidth = "window.sidebarWidth"
         static let sidebar = "window.sidebar"
+        static let list = "window.list"
     }
 }

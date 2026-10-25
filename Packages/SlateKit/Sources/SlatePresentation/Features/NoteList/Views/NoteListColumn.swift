@@ -15,6 +15,10 @@ struct NoteListColumn: View {
         @Bindable var search = search
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
+                if layout.showsSidebar == false {
+                    IconButton(systemImage: "sidebar.left", help: "Show the folders (⌘0)") { layout.showsSidebar = true }
+                        .accessibilityLabel("Show the folders")
+                }
                 if case .folder(let folder) = store.source, let parent = folder.parent {
                     IconButton(systemImage: "chevron.left", help: "Back to \(parent.name)") {
                         search.clear()
@@ -88,12 +92,17 @@ struct NoteListColumn: View {
         ZStack {
             searchShortcut("f", modifiers: .command) { findHere() }
             searchShortcut("f", modifiers: .control) { findHere() }
-            searchShortcut("f", modifiers: [.command, .shift]) { isSearchFocused = true }
+            searchShortcut("f", modifiers: [.command, .shift]) { focusSearch() }
         }
     }
 
     private func findHere() {
         guard editor.findInBody() == false else { return }
+        focusSearch()
+    }
+
+    private func focusSearch() {
+        layout.showsList = true
         isSearchFocused = true
     }
 

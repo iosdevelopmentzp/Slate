@@ -6,6 +6,7 @@ struct SidebarView: View {
     @Environment(NoteListStore.self) private var store
     @Environment(VaultStore.self) private var vault
     @Environment(SearchStore.self) private var search
+    @Environment(WindowLayout.self) private var layout
     @Environment(\.openSettings) private var openSettings
 
     @State private var dropTarget: FolderPath?
@@ -179,6 +180,8 @@ struct SidebarView: View {
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(.secondary)
             Spacer()
+            IconButton(systemImage: "sidebar.left", help: "Hide the folders (⌘0)") { layout.showsSidebar = false }
+                .accessibilityLabel("Hide the folders")
             IconButton(systemImage: "gearshape", help: "Settings (⌘,)") { openSettings() }
                 .accessibilityLabel("Settings")
         }
@@ -291,6 +294,7 @@ struct SidebarView: View {
     private func show(_ source: ListSource) {
         search.clear()
         store.show(source)
+        layout.showsList = true
     }
 
     private func drop(_ items: [String], on folder: FolderPath) -> Bool {

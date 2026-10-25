@@ -179,7 +179,10 @@ package final class AppWindows: NSObject, NSWindowDelegate {
                 },
             ],
             go: go,
-            view: [Command(title: "Show or Hide the Sidebar", key: "0", modifiers: [.command]) { layout.showsSidebar.toggle() }],
+            view: [
+                Command(title: "Show or Hide the Folders", key: "0", modifiers: [.command]) { layout.showsSidebar.toggle() },
+                Command(title: "Show or Hide the Notes List", key: "0", modifiers: [.command, .option]) { layout.showsList.toggle() },
+            ],
             appearance: AppAppearance.allCases.map { choice in
                 Command(title: choice.title, key: "", modifiers: [], isOn: { settings.appearance == choice }) { settings.appearance = choice }
             },

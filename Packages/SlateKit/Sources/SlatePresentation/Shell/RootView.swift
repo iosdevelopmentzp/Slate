@@ -26,13 +26,25 @@ struct RootView: View {
             NoteListColumn()
                 .frame(width: layout.listWidth)
                 .padding(.leading, layout.showsSidebar ? 0 : 4)
-            ColumnResizer(column: .list)
-                .background(Theme.base)
+                .frame(width: layout.showsList ? nil : 0, alignment: .leading)
+                .clipped()
+                .opacity(layout.showsList ? 1 : 0)
+                .allowsHitTesting(layout.showsList)
+                .accessibilityHidden(layout.showsList == false)
+            if layout.showsList {
+                ColumnResizer(column: .list)
+                    .background(Theme.base)
+            }
             EditorView()
                 .frame(minWidth: 320, maxWidth: .infinity)
+                .overlay(alignment: .topLeading) {
+                    PanelToggles()
+                }
                 .clipShape(UnevenRoundedRectangle(topLeadingRadius: Theme.panelRadius, bottomLeadingRadius: Theme.panelRadius, style: .continuous))
+                .padding(.leading, layout.showsSidebar || layout.showsList ? 0 : 4)
         }
         .animation(Theme.sidebarAnimation, value: layout.showsSidebar)
+        .animation(Theme.sidebarAnimation, value: layout.showsList)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.base)
         .overlay(alignment: .bottom) {
@@ -54,6 +66,9 @@ struct RootView: View {
         .task(id: layout.openCount) {
             await noteList.refresh()
         }
+        .onChange(of: noteList.source) {
+            layout.showsList = true
+        }
         .onChange(of: navigator.selectedNote, initial: true) { _, id in
             Task { await editor.open(id) }
         }
@@ -69,6 +84,7 @@ struct RootView: View {
             }
             shortcut(",", modifiers: .command) { openSettings() }
             shortcut("0", modifiers: .command) { layout.showsSidebar.toggle() }
+            shortcut("0", modifiers: [.command, .option]) { layout.showsList.toggle() }
             shortcut("[", modifiers: [.command, .shift]) { noteList.show(ListSource.cycle(from: noteList.source, spaces: vault.spaces.map(\.folder), by: -1)) }
             shortcut("]", modifiers: [.command, .shift]) { noteList.show(ListSource.cycle(from: noteList.source, spaces: vault.spaces.map(\.folder), by: 1)) }
             shortcut(.upArrow, modifiers: [.command, .option]) { selectNeighbour(-1) }

@@ -47,6 +47,16 @@ import Testing
         #expect(second.showsSidebar == false)
     }
 
+    @Test func aHiddenNotesListIsRemembered() {
+        let store = InMemoryKeyValueStore()
+        let first = WindowLayout(store: store)
+        #expect(first.showsList)
+
+        first.showsList = false
+
+        #expect(WindowLayout(store: store).showsList == false)
+    }
+
     @Test func listWidthStaysInItsRange() {
         #expect(WindowLayout.clampedListWidth(100) == 260)
         #expect(WindowLayout.clampedListWidth(900) == 420)
