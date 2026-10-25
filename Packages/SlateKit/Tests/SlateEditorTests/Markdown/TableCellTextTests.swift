@@ -20,10 +20,21 @@ import Testing
         #expect(TableCellText.markdown(of: inline) == "see ![shelf](../_attachments/a%20b.png) here")
     }
 
-    @Test func emptyCellsAreEmptyAndBlocksAreRefused() {
+    @Test func emptyCellsAreEmpty() {
         #expect(TableCellText.inline("  ")?.length == 0)
-        #expect(TableCellText.inline("- item") == nil)
-        #expect(TableCellText.inline("> quote") == nil)
+    }
+
+    @Test func aBlockMarkerAtTheStartIsPlainText() {
+        let cells = ["#", "## Step", "- item", "+ item", "> quote", "1. first", "2) second", "---", "```", "=="]
+
+        #expect(cells.map { TableCellText.inline($0)?.string } == cells)
+        #expect(cells.map { TableCellText.inline(TableCellText.markdown(of: NSAttributedString(string: $0)))?.string } == cells)
+    }
+
+    @Test func aTableWithANumberSignInTheHeaderIsATable() {
+        let text = MarkdownReader.read("| # | Name |\n| --- | --- |\n| 1 | **One** |\n")
+
+        #expect(BlockAttributes(text.attributes(at: 0, effectiveRange: nil)).kind == .table)
     }
 
     @Test func imagesAreAllowedOnlyInCells() {

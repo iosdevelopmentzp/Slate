@@ -5,10 +5,21 @@ enum TableCellText {
     static func inline(_ markdown: String) -> NSAttributedString? {
         let trimmed = markdown.trimmingCharacters(in: .whitespaces)
         guard trimmed.isEmpty == false, trimmed.range(of: #"^(<br\s*/?>\s*)+$"#, options: [.regularExpression, .caseInsensitive]) == nil else { return NSAttributedString() }
-        let document = Document(parsing: trimmed, options: [.disableSmartOpts])
-        let children = Array(document.children)
-        guard children.count == 1, let paragraph = children.first as? Paragraph else { return nil }
+        guard let paragraph = paragraph(of: trimmed) ?? paragraph(of: withoutBlockMarker(trimmed)) else { return nil }
         return InlineReader.read(paragraph.children, source: SourceLines(lines: [trimmed]), inCell: true)
+    }
+
+    private static func paragraph(of text: String) -> Paragraph? {
+        let children = Array(Document(parsing: text, options: [.disableSmartOpts]).children)
+        guard children.count == 1 else { return nil }
+        return children.first as? Paragraph
+    }
+
+    private static func withoutBlockMarker(_ text: String) -> String {
+        if let number = text.range(of: #"^\d+(?=[.)])"#, options: .regularExpression) {
+            return text.replacingCharacters(in: number, with: text[number] + "\\")
+        }
+        return "\\" + text
     }
 
     static let lineBreakTag = "<br>"

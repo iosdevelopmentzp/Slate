@@ -60,10 +60,12 @@ import Testing
         #expect(harness.markdown == "| a | b |\n| --- | --- |\n| ![](../_attachments/x.png) | 3 |\n")
     }
 
-    @Test func aCellWithABlockStaysRaw() {
-        let source = "| a | b |\n|---|---|\n| # not inline | 2 |\n"
+    @Test func aCellThatStartsWithABlockMarkerIsText() {
+        let source = "| # | b |\n|---|---|\n| # not inline | - 2 |\n"
+        let text = MarkdownReader.read(source)
 
-        #expect(BlockAttributes(MarkdownReader.read(source).attributes(at: 0, effectiveRange: nil)).kind == .raw)
+        #expect(BlockAttributes(text.attributes(at: 0, effectiveRange: nil)).kind == .table)
+        #expect(MarkdownWriter.write(text) == source)
     }
 
     @Test func cellsKeepTheirInlineStyles() throws {
