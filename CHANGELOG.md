@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Agents: after an install of Slate, a `slate mcp` server that was started before it refuses every call and asks to reconnect it (`/mcp`, slate, Reconnect in Claude Code). Before, such a server kept running the old code until the agent session ended, so an agent could use old tool rules for days.
 - Sort the notes of a list: the arrows button next to the folder title has Date Edited (newest first), Date Created (newest first) and Title (A to Z). Pinned notes stay on top. Slate remembers the choice, also after a restart, and uses it for every folder.
 - `⌘F` and `⌃F` find in the open note when the note text has the focus, and search all notes anywhere else. `⇧⌘F` always searches all notes. `⌥⌘F` still finds in the note.
 - A note opened from search marks every search word in its text in yellow, so you see where the words are. The marks go away when you type, press Esc or open another note.

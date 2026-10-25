@@ -9,9 +9,11 @@ struct MCPToolRunner: Sendable {
     let ports: Ports
     let useCases: UseCases
     let open: @Sendable (URL) async throws -> Void
+    var executable: ExecutableStamp?
 
     func call(_ name: String, arguments: [String: Value]?) async -> CallTool.Result {
         do {
+            guard executable?.isReplaced != true else { throw AgentError.serverOutdated }
             guard let check = MCPArgumentCheck(named: name) else { throw AgentError.unknownTool(name) }
             try check.check(arguments ?? [:])
             _ = try await useCases.reindex.execute(.all)

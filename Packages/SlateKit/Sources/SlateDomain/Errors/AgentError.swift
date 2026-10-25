@@ -14,6 +14,7 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
     case notAnImage
     case imageTooLarge
     case unknownTool(String)
+    case serverOutdated
     case noProject(String, known: [String])
     case noTask(String)
     case notAFile(String)
@@ -58,6 +59,8 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
             "The image is larger than 50 MB. Make it smaller and try again."
         case .unknownTool(let name):
             "Slate has no tool \(name). Ask for the list of tools again."
+        case .serverOutdated:
+            "Slate was updated after this session started, and this slate mcp server still runs the old version. Nothing was changed. Ask the owner to reconnect the slate server: in Claude Code, /mcp, slate, Reconnect. Then call the tool again."
         case .noProject(let place, let known):
             "No Slate project belongs to \(place). Projects: \(known.isEmpty ? "none" : known.joined(separator: ", ")). Pass project with one of these names, or ask the owner to link the repository: right click the project in Slate, Link Repository…, or run slate project add <Name> --repo <path>."
         case .noTask(let task):

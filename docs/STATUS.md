@@ -260,6 +260,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 171. A list whose item has a child that is not a nested list (a table, a code block, a quote, a second paragraph) is read as one raw block, because the editor cannot write it back the same way (`ListReader` returns nil). An agent wrote a table indented under a numbered item with `batch_edit`, and the whole section showed as raw Markdown. The agent guide now forbids it; the reader stays strict, so the file never changes without a request.
 172. Every `slate mcp` tool call is checked against the input schema of the tool in `MCPToolCatalog` before it runs (`MCPArgumentCheck`): unknown names, missing required names and wrong types go into one `AgentError.badArguments`, and the tool does not run. The schemas say `additionalProperties: false`. Each `batch_edit` operation is checked against the schema of its tool plus `tool`, `id`, `task` and `expectedHash`. The reason: `create_note` read only `body`, an agent passed `text`, and the tool made an empty note and answered with success. The catalog is the one list of names, so a tool can no longer read a name the catalog does not declare without a test failing. `create_note` and `update_note` answer with `lines`, the number of lines of the body, and `create_note` adds a `warning` for an empty body.
 173. A table cell is read as a Markdown document of its own. A cell that starts with a block mark (`#`, `-`, `>`, `1.`, three backticks) became a heading, a list or a code block, and the whole table stayed raw. GFM cells hold only inline text, so `TableCellText.inline` now reads such a cell again with the mark escaped (`\#`, `1\.`). The cell source in the file does not change.
+174. `slate mcp` runs as long as the agent session, and `install.sh` puts the new `slate` in place with `mv`, so an old server kept the old code. At start the server saves the file number and the date of its own file (`ExecutableStamp`, from `Bundle.main.executablePath`). Before each call it compares them with the file at the same path; a different file means a new install, and the call ends with `AgentError.serverOutdated`. All tools are refused, also the reading ones, so the agent sees the message at once. A version number was not used: a local build between installs has the same version.
 
 ## Next steps
 
@@ -497,6 +498,10 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 ### Table cells with a mark
 
 116. Open a note with a table whose first column title is `#`, or type `# 1` or `- a` in a cell: the table shows as a table, not as raw text.
+
+### Old MCP server
+
+117. Start a Claude Code session that uses Slate, then commit to `main` (the install runs). Ask the agent to read a note: it gets "Slate was updated after this session started…". Run `/mcp`, slate, Reconnect: the next call works.
 
 ## Known gaps
 

@@ -492,4 +492,19 @@ import Testing
             #expect(required.allSatisfy(properties.contains), "\(tool.name)")
         }
     }
+
+    @Test func anOldServerRefusesEveryCallAfterAnInstall() async throws {
+        let tool = vault.url.appendingPathComponent(".slate/slate")
+        try Data("old".utf8).write(to: tool)
+        var old = runner
+        old.executable = ExecutableStamp(path: tool.path)
+        try Data("new".utf8).write(to: vault.url.appendingPathComponent(".slate/slate.new"))
+        _ = try FileManager.default.replaceItemAt(tool, withItemAt: vault.url.appendingPathComponent(".slate/slate.new"))
+
+        let answer = await old.call("create_note", arguments: ["folder": "Notes", "title": "Plan", "body": "One"])
+
+        #expect(answer.isError == true)
+        #expect(FileManager.default.fileExists(atPath: vault.url.appendingPathComponent("Notes/Plan.md").path) == false)
+        #expect(await call("list_folders").isError == false)
+    }
 }

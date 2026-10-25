@@ -10,9 +10,10 @@ struct MCPCommand: AsyncParsableCommand {
 
     func run() async throws {
         let container = try CLIContainer(options: options)
-        let runner = MCPToolRunner(root: container.root, ports: container.ports, useCases: container.useCases) { url in
+        var runner = MCPToolRunner(root: container.root, ports: container.ports, useCases: container.useCases) { url in
             _ = try await CLIShell.open(url)
         }
+        runner.executable = .current()
         let match = try? await container.useCases.findProject.execute(directory: runner.workingDirectory)
         let server = await MCPServerFactory.server(runner: runner, instructions: MCPServerFactory.instructions(for: match, root: container.root))
         try await server.start(transport: StdioTransport())
