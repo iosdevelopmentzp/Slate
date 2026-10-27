@@ -53,7 +53,7 @@ package enum NoteSectionPolicy {
         return (start + 1)..<SectionAppendPolicy.sectionEnd(after: start, lines: lines, body: body)
     }
 
-    private static func isListItem(_ line: String) -> Bool {
+    static func isListItem(_ line: String) -> Bool {
         line.range(of: #"^\s*(?:[-*+]|\d+[.)])\s"#, options: .regularExpression) != nil
     }
 }

@@ -19,8 +19,10 @@ package enum SectionAppendPolicy {
         }
         let isFirst = last == start
         let atEnd = end == lines.count
-        var replacement = isFirst ? [""] : []
-        replacement += insertion.components(separatedBy: "\n")
+        let inserted = insertion.components(separatedBy: "\n")
+        let joinsList = isFirst == false && NoteSectionPolicy.isListItem(inserted[0]) && endsInList(lines, last: last, after: start)
+        var replacement = joinsList ? [] : [""]
+        replacement += inserted
         if atEnd == false {
             replacement.append("")
         }
@@ -59,6 +61,14 @@ package enum SectionAppendPolicy {
         let rest = line.dropFirst(hashes)
         guard rest.isEmpty || rest.first == " " else { return nil }
         return hashes
+    }
+
+    private static func endsInList(_ lines: [String], last: Int, after start: Int) -> Bool {
+        var index = last
+        while index > start, NoteSectionPolicy.isListItem(lines[index]) == false, lines[index].first == " " || lines[index].first == "\t" {
+            index -= 1
+        }
+        return index > start && NoteSectionPolicy.isListItem(lines[index])
     }
 
     static func trimmedEnd(_ text: String) -> String {

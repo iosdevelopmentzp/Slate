@@ -16,7 +16,23 @@ import Testing
     }
 
     @Test func lastSectionEndsWithOneNewline() {
-        #expect(SectionAppendPolicy.append("found it", toSection: "Findings", in: "# T\n\n## Findings\nold") == "# T\n\n## Findings\nold\nfound it\n")
+        #expect(SectionAppendPolicy.append("found it", toSection: "Findings", in: "# T\n\n## Findings\nold") == "# T\n\n## Findings\nold\n\nfound it\n")
+    }
+
+    @Test func textAfterAParagraphStartsANewParagraph() {
+        let body = "## Backend\n\nQ3. Question\nAnswer:\n\n## Product\n"
+
+        #expect(SectionAppendPolicy.append("![Q2](a.png)", toSection: "Backend", in: body) == "## Backend\n\nQ3. Question\nAnswer:\n\n![Q2](a.png)\n\n## Product\n")
+    }
+
+    @Test func aListItemAfterAMultiLineListItemContinuesTheList() {
+        let body = "## Log\n\n- 09:00 first\n  more\n"
+
+        #expect(SectionAppendPolicy.append("- 10:42 second", toSection: "Log", in: body) == "## Log\n\n- 09:00 first\n  more\n- 10:42 second\n")
+    }
+
+    @Test func aListItemAfterAParagraphStartsANewList() {
+        #expect(SectionAppendPolicy.append("- c", toSection: "Plan", in: "## Plan\ntext\n") == "## Plan\ntext\n\n- c\n")
     }
 
     @Test func deeperHeadingsStayInsideTheSection() {

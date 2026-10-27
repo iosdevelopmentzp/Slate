@@ -96,11 +96,49 @@ package enum MarkdownReader {
         guard source.contains("[^") == false else { return nil }
         let children = Array(paragraph.children)
         if children.count == 1, let image = children.first as? Image {
-            guard image.title == nil, let path = image.source, path.isEmpty == false else { return nil }
-            let alt = image.plainText
-            return [ReadBlock(text: NSAttributedString(string: RichText.attachmentString), attributes: BlockAttributes(kind: .image, imagePath: path, imageAlt: alt.isEmpty ? nil : alt))]
+            return imageBlock(image).map { [$0] }
         }
-        guard let text = InlineReader.read(paragraph.children, source: lines) else { return nil }
+        if let text = InlineReader.read(children, source: lines) {
+            return [ReadBlock(text: text, attributes: BlockAttributes(kind: .body))]
+        }
+        return splitAtImageLines(children, lines: lines)
+    }
+
+    private static func imageBlock(_ image: Image) -> ReadBlock? {
+        guard image.title == nil, let path = image.source, path.isEmpty == false else { return nil }
+        let alt = image.plainText
+        return ReadBlock(text: NSAttributedString(string: RichText.attachmentString), attributes: BlockAttributes(kind: .image, imagePath: path, imageAlt: alt.isEmpty ? nil : alt))
+    }
+
+    private static func splitAtImageLines(_ children: [Markup], lines: SourceLines) -> [ReadBlock]? {
+        var blocks: [ReadBlock] = []
+        var pending: [Markup] = []
+        var line: [Markup] = []
+        var foundImage = false
+        for (offset, child) in children.enumerated() {
+            let isBreak = child is SoftBreak || child is LineBreak
+            if isBreak == false {
+                line.append(child)
+            }
+            guard isBreak || offset == children.count - 1 else { continue }
+            if line.count == 1, let image = line.first as? Image {
+                guard let text = bodyText(pending, lines: lines), let block = imageBlock(image) else { return nil }
+                blocks += text + [block]
+                pending = []
+                foundImage = true
+            } else {
+                pending += line + (isBreak ? [child] : [])
+            }
+            line = []
+        }
+        guard foundImage, let text = bodyText(pending, lines: lines) else { return nil }
+        return blocks + text
+    }
+
+    private static func bodyText(_ children: [Markup], lines: SourceLines) -> [ReadBlock]? {
+        let children = children.last.map { $0 is SoftBreak || $0 is LineBreak } == true ? Array(children.dropLast()) : children
+        guard children.isEmpty == false else { return [] }
+        guard let text = InlineReader.read(children, source: lines) else { return nil }
         return [ReadBlock(text: text, attributes: BlockAttributes(kind: .body))]
     }
 
