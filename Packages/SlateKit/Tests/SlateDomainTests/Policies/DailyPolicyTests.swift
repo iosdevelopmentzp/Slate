@@ -20,6 +20,7 @@ import Testing
     @Test func logLineHasTheTimeAndIndentsMoreLines() {
         #expect(DailyPolicy.logLine("Fixed it", at: now, timeZone: zone) == "- 11:00 Fixed it")
         #expect(DailyPolicy.logLine("one\ntwo", at: now, timeZone: zone) == "- 11:00 one\n  two")
+        #expect(DailyPolicy.logLine("one\n\ntwo", at: now, timeZone: zone) == "- 11:00 one\n  two")
     }
 
     @Test func carryOverTakesOpenItemsOutsideCode() {

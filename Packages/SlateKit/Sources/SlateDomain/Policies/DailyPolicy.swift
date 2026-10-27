@@ -27,7 +27,7 @@ package enum DailyPolicy {
     package static func logLine(_ text: String, at date: Date, timeZone: TimeZone) -> String {
         let parts = calendar(timeZone).dateComponents([.hour, .minute], from: date)
         let time = String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
-        let lines = text.trimmingCharacters(in: .whitespacesAndNewlines).components(separatedBy: "\n")
+        let lines = text.trimmingCharacters(in: .whitespacesAndNewlines).components(separatedBy: "\n").filter { $0.trimmingCharacters(in: .whitespaces).isEmpty == false }
         let first = "- \(time) \(lines.first ?? "")"
         let rest = lines.dropFirst().map { "  \($0)" }
         return ([first] + rest).joined(separator: "\n")

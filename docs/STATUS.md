@@ -263,6 +263,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 174. `slate mcp` runs as long as the agent session, and `install.sh` puts the new `slate` in place with `mv`, so an old server kept the old code. At start the server saves the file number and the date of its own file (`ExecutableStamp`, from `Bundle.main.executablePath`). Before each call it compares them with the file at the same path; a different file means a new install, and the call ends with `AgentError.serverOutdated`. All tools are refused, also the reading ones, so the agent sees the message at once. A version number was not used: a local build between installs has the same version.
 175. The notes list hides with `WindowLayout.showsList` (key `window.list`). The list column stays in the view tree with zero width, no opacity and no hit testing, because the search field and the `⌘F`, `⌃F` and `⇧⌘F` shortcuts live in it; a search of all notes shows the list first. A new source (`noteList.source` changes, or a click on a folder in the sidebar) shows the list, so a click on a folder never looks like nothing happened. The list button sits over the top left of the editor (`PanelToggles`), in the 28 pt above the title, so the editor layout does not move.
 176. Text that `append_to_note`, `attach_image` or `log_progress` adds at the end of a section starts after a blank line (`SectionAppendPolicy`). The only exception is a list item after a list, so a Log list stays one list. Before, the text was glued to the last line of the section, and an image after an `Answer:` line became part of that paragraph. Separately, the editor reads a paragraph with an image alone on one of its lines as text, image and text blocks (`MarkdownReader`), so a file written so by another tool shows the image and not a raw block. An image in the middle of a line still makes the paragraph raw.
+177. A Log entry from `log_progress` or the daily log drops the blank lines of its text (`TaskLogPolicy`, `DailyPolicy`). An agent wrote "Done", "Left" and "Next step" as paragraphs with blank lines between them, so the list item had several paragraphs, and the editor showed the whole Log as a raw block (decision 171). Now the parts are lines of one item.
 
 ## Next steps
 
@@ -512,6 +513,8 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 ### Text added to a section
 
 119. Ask an agent to add an image to a section whose last line is text (`attach_image` with `section`). The image shows under the text as an image, with a blank line before it in the file. Ask it to add a line to a Log list with `log_progress`: the list stays one list. Open a note where an image line follows a text line with no blank line: the text and the image show, not a pink raw block.
+
+120. Ask an agent to call `log_progress` with a text of several paragraphs. The Log shows each entry as one list item with several lines, not as a pink raw block.
 
 ## Known gaps
 

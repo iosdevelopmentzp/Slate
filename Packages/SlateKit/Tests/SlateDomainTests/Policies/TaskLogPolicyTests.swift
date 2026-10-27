@@ -12,6 +12,15 @@ import Testing
         #expect(entry == "- **2027-01-15 10:00** Found the leak.\n  Next: fix it.")
     }
 
+    @Test func blankLinesDoNotSplitTheEntry() throws {
+        let zone = try #require(TimeZone(identifier: "Europe/Kyiv"))
+        let date = Date(timeIntervalSince1970: 1_800_000_000)
+
+        let entry = TaskLogPolicy.entry("**Done:** read.\n\n**Left:** review.\n  \n**Next step:** update.", at: date, timeZone: zone)
+
+        #expect(entry == "- **2027-01-15 10:00** **Done:** read.\n  **Left:** review.\n  **Next step:** update.")
+    }
+
     @Test func aTaskMatchesItsBranchOrABranchWithItsTicket() {
         let task = ProjectTask(id: NoteID(rawValue: "a"), path: VaultPath(rawValue: "MyApp/ABC-1 Fix/ABC-1 Fix.md"), title: "ABC-1 Fix", status: .active, ticket: "ABC-1", branch: "feature/ABC-1-fix", updated: .now)
 

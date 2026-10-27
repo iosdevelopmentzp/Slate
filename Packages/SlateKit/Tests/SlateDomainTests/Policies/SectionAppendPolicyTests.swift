@@ -35,6 +35,12 @@ import Testing
         #expect(SectionAppendPolicy.append("- c", toSection: "Plan", in: "## Plan\ntext\n") == "## Plan\ntext\n\n- c\n")
     }
 
+    @Test func anImageAfterAListIsNotPartOfTheLastItem() {
+        let body = "## Conflicts\n\n1. first\n2. second\n"
+
+        #expect(SectionAppendPolicy.append("![c](a.png)", toSection: "Conflicts", in: body) == "## Conflicts\n\n1. first\n2. second\n\n![c](a.png)\n")
+    }
+
     @Test func deeperHeadingsStayInsideTheSection() {
         let body = "## Plan\n- a\n### Detail\n- b\n## Next\n"
 

@@ -35,4 +35,10 @@ import Testing
 
         #expect(Self.kinds(text) == [.image, .image])
     }
+
+    @Test func aLogEntryWithSeveralLinesIsOneItem() {
+        let text = MarkdownReader.read("- **2026-10-27 07:44** **Done:** read.\n  **Left:** review.\n- **2026-10-27 08:07** **Done:** added.")
+
+        #expect(Self.kinds(text) == [.bullet, .bullet])
+    }
 }
