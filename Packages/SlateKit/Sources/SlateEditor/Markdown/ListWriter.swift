@@ -8,6 +8,17 @@ enum ListWriter {
         var numbers: [Int] = []
         var kinds: [BlockKind] = []
         for item in items {
+            if item.block.kind == .image {
+                let level = min(item.block.indent, contentStarts.count)
+                contentStarts = Array(contentStarts.prefix(level))
+                numbers = Array(numbers.prefix(level))
+                kinds = Array(kinds.prefix(level))
+                guard let image = MarkdownWriter.image(item.block) else { continue }
+                if lines.isEmpty == false, lines.last?.isEmpty == false { lines.append("") }
+                lines.append(String(repeating: " ", count: contentStarts.last ?? 0) + image)
+                lines.append("")
+                continue
+            }
             let level = min(item.block.indent, contentStarts.count)
             contentStarts = Array(contentStarts.prefix(level))
             numbers = Array(numbers.prefix(level + 1))
@@ -40,6 +51,7 @@ enum ListWriter {
             }
             contentStarts.append(indent + markerWidth)
         }
+        while lines.last?.isEmpty == true { lines.removeLast() }
         return lines.map { $0.trailingSpacesRemoved }.joined(separator: "\n")
     }
 }

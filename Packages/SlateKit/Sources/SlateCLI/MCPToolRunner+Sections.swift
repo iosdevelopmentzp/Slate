@@ -136,11 +136,14 @@ extension MCPToolRunner {
     }
 
     private func rewrite(_ tool: String, _ arguments: MCPArguments) async throws -> NoteDocument {
-        let change = try bodyChange(tool, arguments)
+        try await rewrite(tool, arguments, change: try bodyChange(tool, arguments))
+    }
+
+    func rewrite(_ tool: String, _ arguments: MCPArguments, snapshotTaken: Bool = false, change: (String) throws -> String) async throws -> NoteDocument {
         let path = try await target(of: arguments)
         try await permissions().checkWrite(path)
         let expected = arguments.string("expectedHash")
-        var didSnapshot = false
+        var didSnapshot = snapshotTaken
         for _ in 0..<3 {
             let current = try await document(at: path)
             if let expected, current.hash.rawValue != expected { throw AgentError.staleNote }

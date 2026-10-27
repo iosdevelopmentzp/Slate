@@ -205,7 +205,7 @@ extension RichTextController {
         }
         let current = block(at: caret)
         let insertion = NSMutableAttributedString(attributedString: styled("\n", block: current))
-        insertion.append(styledFragment)
+        insertion.append(current.continuesList ? listImages(styledFragment, under: current) : styledFragment)
         let end = NSMaxRange(content)
         let isLast = NSMaxRange(paragraph) == storage.length && content.length == paragraph.length
         if isLast {
@@ -213,6 +213,21 @@ extension RichTextController {
         }
         replace(NSRange(location: end, length: 0), with: insertion, selection: NSRange(location: end + insertion.length + (isLast ? 0 : 1), length: 0))
         if isLast { setTailBlock(BlockAttributes()) }
+    }
+
+    private func listImages(_ fragment: NSAttributedString, under item: BlockAttributes) -> NSAttributedString {
+        let paragraphs = MarkdownWriter.paragraphs(of: fragment)
+        guard paragraphs.allSatisfy({ $0.block.kind == .image }) else { return fragment }
+        let result = NSMutableAttributedString()
+        for (index, paragraph) in paragraphs.enumerated() {
+            var block = paragraph.block
+            block.indent = item.isListImage ? item.indent : item.indent + 1
+            block.group = item.group
+            if index > 0 { result.append(styled("\n", block: block)) }
+            result.append(styled(RichText.attachmentString, block: block))
+        }
+        restyle(result, range: NSRange(location: 0, length: result.length))
+        return result
     }
 
     func toggleCheckbox(at location: Int) {

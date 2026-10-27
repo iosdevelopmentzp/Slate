@@ -385,6 +385,26 @@ import Testing
         #expect(try file("Notes/Bug.md").contains("## Screens\n\n![](../_attachments/"))
     }
 
+    @Test func attachImageUnderAListItemKeepsTheList() async throws {
+        let id = try await create("Steps", body: "1. Open the app\n2. Tap Delete\n")
+
+        let answer = await call("attach_image", ["id": .string(id), "base64": .string(Self.png.base64EncodedString()), "after": "Open the app"])
+
+        #expect(try object(answer.text)["placedAt"] as? String == "under the line with Open the app")
+        let names = try FileManager.default.contentsOfDirectory(atPath: vault.path("_attachments"))
+        #expect(try file("Notes/Steps.md").hasSuffix("1. Open the app\n\n   ![](../_attachments/\(names[0]))\n\n2. Tap Delete\n"))
+    }
+
+    @Test func attachImageAfterMissingTextWritesNothing() async throws {
+        let id = try await create("Steps", body: "1. Open the app\n")
+
+        let answer = await call("attach_image", ["id": .string(id), "base64": .string(Self.png.base64EncodedString()), "after": "Close"])
+
+        #expect(answer.isError)
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: vault.path("_attachments"))) ?? []
+        #expect(names.isEmpty)
+    }
+
     @Test func attachImageFromAPathAndRefusesOtherFiles() async throws {
         let id = try await create("Groceries")
         let image = support.url.appendingPathComponent("photo.png")

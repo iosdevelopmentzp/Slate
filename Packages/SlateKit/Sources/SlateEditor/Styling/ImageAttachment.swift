@@ -42,7 +42,8 @@ nonisolated final class ImageAttachment: NSTextAttachment {
 
     override func attachmentBounds(for attributes: [NSAttributedString.Key: Any], location: any NSTextLocation, textContainer: NSTextContainer?, proposedLineFragment: CGRect, position: CGPoint) -> CGRect {
         let padding = textContainer?.lineFragmentPadding ?? 5
-        let available = (textContainer?.size.width ?? proposedLineFragment.width) - padding * 2
+        let indent = (attributes[.paragraphStyle] as? NSParagraphStyle)?.firstLineHeadIndent ?? 0
+        let available = (textContainer?.size.width ?? proposedLineFragment.width) - padding * 2 - indent
         return CGRect(origin: .zero, size: displaySize(width: available))
     }
 

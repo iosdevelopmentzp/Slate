@@ -92,18 +92,27 @@ extension MCPToolRunner {
         let data = try await imageData(arguments)
         guard data.count <= AttachmentPolicy.maxImportSize else { throw AgentError.imageTooLarge }
         guard let fileExtension = ImageTypePolicy.fileExtension(of: data) else { throw AgentError.notAnImage }
+        let after = arguments.string("after")
+        if let after {
+            _ = try ImagePlacementPolicy.insert("![]()", after: after, in: try await document(at: path).body)
+        }
         await beforeWrite()
         let markdown = try await useCases.importAttachment.execute(data: data, fileExtension: fileExtension, source: "agent", for: path)
         let caption = (arguments.string("caption") ?? "").replacingOccurrences(of: "]", with: ")").replacingOccurrences(of: "\n", with: " ")
         let block = caption.isEmpty ? markdown : markdown.replacingOccurrences(of: "![](", with: "![\(caption)](")
         let section = arguments.string("section")
-        let document = try await useCases.append.execute(block, to: .path(path), section: section)
-        await afterWrite("attach_image", title: document.title, path: document.path)
+        let document: NoteDocument
+        if let after {
+            document = try await rewrite("attach_image", arguments, snapshotTaken: true) { try ImagePlacementPolicy.insert(block, after: after, in: $0) }
+        } else {
+            document = try await useCases.append.execute(block, to: .path(path), section: section)
+            await afterWrite("attach_image", title: document.title, path: document.path)
+        }
         return json([
             "id": document.id.rawValue,
             "path": document.path.rawValue,
             "image": block,
-            "placedAt": section.map { "the end of the section \($0)" } ?? "the end of the note",
+            "placedAt": after.map { "under the line with \($0)" } ?? section.map { "the end of the section \($0)" } ?? "the end of the note",
             "hash": document.hash.rawValue,
         ])
     }

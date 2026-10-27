@@ -286,13 +286,13 @@ final class RichTextController: NSObject {
         var lower = string.paragraphRange(for: NSRange(location: start, length: 0)).location
         while lower > 0 {
             let previous = string.paragraphRange(for: NSRange(location: lower - 1, length: 0))
-            guard BlockAttributes(text.attributes(at: previous.location, effectiveRange: nil)).kind.isList else { break }
+            guard BlockAttributes(text.attributes(at: previous.location, effectiveRange: nil)).continuesList else { break }
             lower = previous.location
         }
         var upper = NSMaxRange(string.paragraphRange(for: NSRange(location: min(NSMaxRange(range), text.length - 1), length: 0)))
         while upper < text.length {
             let next = string.paragraphRange(for: NSRange(location: upper, length: 0))
-            guard BlockAttributes(text.attributes(at: next.location, effectiveRange: nil)).kind.isList else { break }
+            guard BlockAttributes(text.attributes(at: next.location, effectiveRange: nil)).continuesList else { break }
             upper = NSMaxRange(next)
         }
         var counters: [Int?] = []
@@ -312,6 +312,8 @@ final class RichTextController: NSObject {
                 } else {
                     counters[level] = nil
                 }
+            } else if block.isListImage {
+                counters = Array(counters.prefix(block.indent))
             } else {
                 counters = []
             }

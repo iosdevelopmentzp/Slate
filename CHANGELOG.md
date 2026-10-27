@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Images inside lists: an image can sit under a list item, and the numbers of the list go on after it. Add an image while the caret is in a list item, and it goes under that item. Agents use `attach_image` with `after`, the text of the line to put the image under. In the file, the image is indented under the item, with a blank line before and after it, so Obsidian and GitHub show it the same way (ADR 0018).
 - Hide the folders and the notes list to give the note more room. The folders column has a button in its header (`⌘0`, as before); the notes list has a button at the top left of the note (`⌥⌘0`). Both are in the View menu too. A hidden column gets a button to show it again, and Slate remembers both choices. Picking a folder or searching all notes shows the list again.
 - Agents: after an install of Slate, a `slate mcp` server that was started before it refuses every call and asks to reconnect it (`/mcp`, slate, Reconnect in Claude Code). Before, such a server kept running the old code until the agent session ended, so an agent could use old tool rules for days.
 - Sort the notes of a list: the arrows button next to the folder title has Date Edited (newest first), Date Created (newest first) and Title (A to Z). Pinned notes stay on top. Slate remembers the choice, also after a restart, and uses it for every folder.

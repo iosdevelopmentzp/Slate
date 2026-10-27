@@ -94,6 +94,20 @@ extension RichTextController {
         return BlockAttributes()
     }
 
+    private func itemAbove(_ location: Int, level: Int) -> BlockAttributes {
+        var start = location
+        while start > 0 {
+            let previous = paragraphRange(at: start - 1)
+            let above = block(at: previous.location)
+            guard above.continuesList else { break }
+            if above.kind.isList, above.indent == level {
+                return BlockAttributes(kind: above.kind, indent: above.indent, group: above.group)
+            }
+            start = previous.location
+        }
+        return BlockAttributes()
+    }
+
     func handleReturn() -> Bool {
         let selection = textView.selectedRange()
         guard selection.length == 0 else { return false }
@@ -131,7 +145,7 @@ extension RichTextController {
             if caret == content.location {
                 replace(NSRange(location: caret, length: 0), with: styled("\n", block: BlockAttributes()), selection: NSRange(location: caret + 1, length: 0))
             } else {
-                splitParagraph(at: NSMaxRange(content), paragraph: paragraph, next: BlockAttributes())
+                splitParagraph(at: NSMaxRange(content), paragraph: paragraph, next: block.isListImage ? itemAbove(paragraph.location, level: block.indent - 1) : BlockAttributes())
             }
             return true
         case .body:

@@ -65,9 +65,10 @@ enum MCPToolCatalog {
         tool("trash_note", "Move a note to the Trash of Slate. The owner can restore it for 30 days. Agents may do this only when the owner allows it.", [
             "id": text("The note id."),
         ], required: ["id"], destructive: true),
-        tool("attach_image", "Add an image at the end of a note, or at the end of a section when section is given. Slate copies the image into _attachments. PNG, JPEG, GIF, HEIC or WebP, at most 50 MB.", [
+        tool("attach_image", "Add an image to a note: under the line that has the text in after, at the end of a section when section is given, or else at the end of the note. With after, an image under a list item stays inside the list, and the numbers go on after it. Slate copies the image into _attachments. PNG, JPEG, GIF, HEIC or WebP, at most 50 MB.", [
             "id": text("The note id."),
-            "section": text("The heading to add the image under."),
+            "after": text("A piece of text from one line of the note, for example the start of a list item. The image goes under that line, or under its paragraph or list item. The text must be in the note exactly once."),
+            "section": text("The heading to add the image under, at the end of the section. Not used when after is given."),
             "base64": text("The image data in base64. Use base64 or path."),
             "path": text("The absolute path of an image file on this Mac."),
             "caption": text("A short text that describes the image."),

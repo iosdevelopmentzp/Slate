@@ -22,8 +22,9 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
     }
 
     package init(_ attributes: [NSAttributedString.Key: Any]) {
-        kind = (attributes[.slateBlock] as? String).flatMap(BlockKind.init(rawValue:)) ?? .body
-        indent = min(max(attributes[.slateIndent] as? Int ?? 0, 0), RichText.maxIndent)
+        let kind = (attributes[.slateBlock] as? String).flatMap(BlockKind.init(rawValue:)) ?? .body
+        self.kind = kind
+        indent = min(max(attributes[.slateIndent] as? Int ?? 0, 0), kind == .image ? RichText.maxIndent + 1 : RichText.maxIndent)
         isDone = attributes[.slateDone] as? Bool ?? false
         language = attributes[.slateLanguage] as? String
         imagePath = attributes[.slateImagePath] as? String
@@ -34,14 +35,22 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
 
     package var attributes: [NSAttributedString.Key: Any] {
         var result: [NSAttributedString.Key: Any] = [.slateBlock: kind.rawValue]
-        if kind.isList, indent > 0 { result[.slateIndent] = indent }
+        if kind.isList || kind == .image, indent > 0 { result[.slateIndent] = indent }
         if kind == .checklist, isDone { result[.slateDone] = true }
         if kind == .monospaced, let language { result[.slateLanguage] = language }
         if kind == .image, let imagePath { result[.slateImagePath] = imagePath }
         if kind == .image, let imageAlt, imageAlt.isEmpty == false { result[.slateImageAlt] = imageAlt }
-        if kind == .quote || kind.isList, group != 0 { result[.slateGroup] = group }
+        if kind == .quote || kind.isList || isListImage, group != 0 { result[.slateGroup] = group }
         if kind == .table, let table { result[.slateTable] = table }
         return result
+    }
+
+    package var isListImage: Bool {
+        kind == .image && indent > 0
+    }
+
+    package var continuesList: Bool {
+        kind.isList || isListImage
     }
 
     package func with(kind: BlockKind) -> BlockAttributes {

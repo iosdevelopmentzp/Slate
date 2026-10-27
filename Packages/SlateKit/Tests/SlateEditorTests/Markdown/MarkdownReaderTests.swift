@@ -41,4 +41,25 @@ import Testing
 
         #expect(Self.kinds(text) == [.bullet, .bullet])
     }
+
+    @Test func anImageUnderAListItemKeepsTheListAndComesBackTheSame() {
+        let markdown = "1. First\n\n   ![shot](a.png)\n\n2. Second\n   - nested\n\n     ![](b.png)\n"
+        let text = MarkdownReader.read(markdown)
+
+        #expect(Self.kinds(text) == [.numbered, .image, .numbered, .bullet, .image])
+        #expect(MarkdownWriter.write(text) == markdown)
+    }
+
+    @Test func anImageLineGluedToAListItemGoesUnderTheItem() {
+        let text = MarkdownReader.read("- a\n- b\n  more\n![x](a.png)\n- c")
+
+        #expect(Self.kinds(text) == [.bullet, .bullet, .image, .bullet])
+        #expect(MarkdownWriter.write(text) == "- a\n- b\n  more\n\n  ![x](a.png)\n\n- c\n")
+    }
+
+    @Test func textAfterAnImageInAListItemStaysRaw() {
+        let text = MarkdownReader.read("- a\n\n  ![x](a.png)\n\n  more text\n")
+
+        #expect(Self.kinds(text) == [.raw])
+    }
 }

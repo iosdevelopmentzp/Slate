@@ -273,6 +273,25 @@ import Testing
         #expect(pasteboard.string(forType: .string) == "b c")
     }
 
+    @Test func anImageAddedInAListItemGoesUnderTheItemAndTheNumbersGoOn() {
+        let harness = EditorHarness(markdown: "1. First\n2. Second\n")
+        harness.selectText("First")
+
+        harness.controller.insertMarkdownBlocks("![](a.png)\n")
+
+        #expect(harness.markdown == "1. First\n\n   ![](a.png)\n\n2. Second\n")
+    }
+
+    @Test func returnAfterAnImageInAListStartsTheNextItem() {
+        let harness = EditorHarness(markdown: "1. First\n\n   ![](a.png)\n")
+        let image = (harness.text as NSString).range(of: RichText.attachmentString)
+        harness.controller.textView.setSelectedRange(NSRange(location: NSMaxRange(image), length: 0))
+
+        harness.type("\nSecond")
+
+        #expect(harness.markdown == "1. First\n\n   ![](a.png)\n\n2. Second\n")
+    }
+
     @Test func theRoadmapScenarioWritesOnlyTheSubsetAndReadsBackTheSame() {
         let harness = EditorHarness(markdown: "")
 
@@ -286,7 +305,7 @@ import Testing
         harness.type("tickets")
         harness.controller.insertMarkdownBlocks("![](../_attachments/map.png)\n")
 
-        let expected = "# Trip\n\nPack **light**\n\n- [ ] tickets\n\n![](../_attachments/map.png)\n"
+        let expected = "# Trip\n\nPack **light**\n\n- [ ] tickets\n\n  ![](../_attachments/map.png)\n"
         #expect(harness.markdown == expected)
         let reopened = EditorHarness(markdown: expected)
         #expect(harness.text.hasSuffix("\n"))

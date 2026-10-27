@@ -6,10 +6,9 @@ package enum MarkdownWriter {
         var rendered: [String] = []
         var previousList: ListFamily?
         for block in group(paragraphs(of: text)) {
-            guard let first = block.first else { continue }
             let output: String?
-            if first.block.kind.isList {
-                let family = ListFamily.family(of: first.block.kind)
+            if let item = block.first(where: { $0.block.kind.isList }) {
+                let family = ListFamily.family(of: item.block.kind)
                 let alternate = previousList.map { $0.kind == family && $0.alternate == false } ?? false
                 output = ListWriter.write(block, alternate: alternate)
                 previousList = output == nil ? previousList : ListFamily(kind: family, alternate: alternate)
@@ -65,7 +64,7 @@ package enum MarkdownWriter {
     }
 
     private static func belongTogether(_ previous: BlockAttributes, _ next: BlockAttributes) -> Bool {
-        if previous.kind.isList, next.kind.isList { return previous.group == next.group || next.indent > 0 }
+        if previous.continuesList, next.continuesList { return previous.group == next.group || next.indent > 0 }
         return previous.kind == .quote && next.kind == .quote && previous.group == next.group
     }
 
@@ -124,7 +123,7 @@ package enum MarkdownWriter {
         return longest
     }
 
-    private static func image(_ block: BlockAttributes) -> String? {
+    static func image(_ block: BlockAttributes) -> String? {
         guard let path = block.imagePath, path.isEmpty == false else { return nil }
         let alt = InlineWriter.escapeLabel(block.imageAlt ?? "")
         return "![\(alt)](\(InlineWriter.destination(path)))"

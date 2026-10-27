@@ -68,7 +68,7 @@ final class RichTextStyler {
     }
 
     func paragraphStyle(for block: BlockAttributes) -> NSParagraphStyle {
-        let key = StyleKey(kind: block.kind, indent: block.kind.isList ? block.indent : 0)
+        let key = StyleKey(kind: block.kind, indent: block.continuesList ? block.indent : 0)
         if let cached = styles[key] { return cached }
         let scale = configuration.scale
         let style = NSMutableParagraphStyle()
@@ -109,6 +109,10 @@ final class RichTextStyler {
         case .image, .divider, .table:
             style.paragraphSpacingBefore = 4 * scale
             style.paragraphSpacing = 6 * scale
+            if key.indent > 0 {
+                style.firstLineHeadIndent = Self.markerWidth + CGFloat(key.indent - 1) * Self.listIndent
+                style.headIndent = style.firstLineHeadIndent
+            }
         }
         styles[key] = style
         return style
