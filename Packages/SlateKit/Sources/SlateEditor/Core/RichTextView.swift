@@ -1,8 +1,13 @@
 import AppKit
+import QuickLookUI
 
 final class RichTextView: NSTextView {
     weak var controller: RichTextController?
     private var hoverArea: NSTrackingArea?
+
+    nonisolated override func acceptsPreviewPanelControl(_ panel: QLPreviewPanel!) -> Bool {
+        false
+    }
 
     override var textContainerOrigin: NSPoint {
         NSPoint(x: super.textContainerOrigin.x, y: RichTextEditorView.topMargin)

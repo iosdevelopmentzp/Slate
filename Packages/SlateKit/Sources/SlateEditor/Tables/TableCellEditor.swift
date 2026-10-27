@@ -1,4 +1,5 @@
 import AppKit
+import QuickLookUI
 
 final class TableCellEditor: NSTextView {
     weak var table: TableBlockView?
@@ -10,6 +11,10 @@ final class TableCellEditor: NSTextView {
 
     var isEditingLink: Bool {
         linkPopover != nil
+    }
+
+    nonisolated override func acceptsPreviewPanelControl(_ panel: QLPreviewPanel!) -> Bool {
+        false
     }
 
     static func make() -> TableCellEditor {
