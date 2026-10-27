@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Drag a folder in the sidebar onto another folder to move it inside, with its notes, files and sub-folders. Drop it on the "Folders" header to make it a top-level folder. The toast has Undo. A top-level folder that moves inside loses its colour and icon, and Undo brings them back. The folder for quick notes and projects stay at the top level.
 - Images inside lists: an image can sit under a list item, and the numbers of the list go on after it. Add an image while the caret is in a list item, and it goes under that item. Agents use `attach_image` with `after`, the text of the line to put the image under. In the file, the image is indented under the item, with a blank line before and after it, so Obsidian and GitHub show it the same way (ADR 0018).
 - Hide the folders and the notes list to give the note more room. The folders column has a button in its header (`⌘0`, as before); the notes list has a button at the top left of the note (`⌥⌘0`). Both are in the View menu too. A hidden column gets a button to show it again, and Slate remembers both choices. Picking a folder or searching all notes shows the list again.
 - Agents: after an install of Slate, a `slate mcp` server that was started before it refuses every call and asks to reconnect it (`/mcp`, slate, Reconnect in Claude Code). Before, such a server kept running the old code until the agent session ended, so an agent could use old tool rules for days.

@@ -44,6 +44,33 @@ import Testing
         #expect(harness.posted.suffix(2) == [.indexUpdated, .vaultRescanned])
     }
 
+    @Test func aFolderDroppedOnAnotherFolderMovesFollowsTheListAndCanBeUndone() async throws {
+        harness.spies.files.seedFolder(FolderPath(rawValue: "Notes/Clients"))
+        await vault.refresh()
+        harness.navigator.show(.folder(FolderPath(rawValue: "Notes/Clients")))
+
+        await vault.move(folder: FolderPath(rawValue: "Notes/Clients"), into: FolderPath(rawValue: "Tasks"))
+
+        #expect(harness.navigator.source == .folder(FolderPath(rawValue: "Tasks/Clients")))
+        #expect(vault.isExpanded(FolderPath(rawValue: "Tasks")))
+        #expect(harness.toaster.text == "Moved Clients into Tasks")
+        #expect(harness.toaster.actionTitle == "Undo")
+
+        harness.toaster.performAction()
+
+        try await waitUntil { harness.toaster.text == "Clients is back" }
+        #expect(harness.navigator.source == .folder(FolderPath(rawValue: "Notes/Clients")))
+    }
+
+    @Test func aFolderThatCannotMoveSaysWhy() async {
+        await vault.refresh()
+
+        await vault.move(folder: FolderPath(rawValue: "Inbox"), into: FolderPath(rawValue: "Notes"))
+
+        #expect(harness.activity.events.map(\.title) == ["Cannot move the folder"])
+        #expect(harness.toaster.text == "Inbox keeps new and quick notes, so it stays at the top level. Choose another folder for quick notes first.")
+    }
+
     @Test func moveAndIconAreSaved() async {
         await vault.refresh()
 

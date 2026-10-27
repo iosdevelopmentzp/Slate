@@ -6,6 +6,8 @@ package enum VaultError: LocalizedError, Hashable, Sendable {
     case notText(VaultPath)
     case invalidName(String)
     case defaultFolder(String)
+    case defaultFolderMove(String)
+    case projectMove(String)
 
     package var errorDescription: String? {
         switch self {
@@ -19,6 +21,10 @@ package enum VaultError: LocalizedError, Hashable, Sendable {
             "\"\(name)\" cannot be a folder name. Use letters, numbers and spaces."
         case .defaultFolder(let name):
             "\(name) keeps new and quick notes, so it cannot be deleted. Choose another folder for quick notes first."
+        case .defaultFolderMove(let name):
+            "\(name) keeps new and quick notes, so it stays at the top level. Choose another folder for quick notes first."
+        case .projectMove(let name):
+            "\(name) is a project, so it stays at the top level. Make it a folder first to move it."
         }
     }
 }

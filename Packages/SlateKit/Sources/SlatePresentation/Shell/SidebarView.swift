@@ -11,6 +11,7 @@ struct SidebarView: View {
 
     @State private var dropTarget: FolderPath?
     @State private var isProjectDropTarget = false
+    @State private var isTopDropTarget = false
 
     var body: some View {
         @Bindable var vault = vault
@@ -188,7 +189,11 @@ struct SidebarView: View {
         .padding(.leading, WindowLayout.trafficLightsWidth)
         .padding(.trailing, 10)
         .frame(height: 44)
+        .background(isTopDropTarget ? Theme.selection.opacity(0.18) : .clear)
         .background(HeaderDragArea())
+        .dropDestination(for: String.self) { items, _ in
+            drop(items, on: nil)
+        } isTargeted: { isTopDropTarget = $0 }
     }
 
     @ViewBuilder
@@ -220,6 +225,7 @@ struct SidebarView: View {
                 .onTapGesture { show(.showing(model.id)) }
                 .simultaneousGesture(TapGesture(count: 2).onEnded { vault.startRename(folder: model.id) })
                 .contextMenu { menu(for: model) }
+                .onDrag { FolderDragPayload.provider(for: model.id) }
                 .dropDestination(for: String.self) { items, _ in
                     drop(items, on: model.id)
                 } isTargeted: { isTargeted in
@@ -297,9 +303,14 @@ struct SidebarView: View {
         layout.showsList = true
     }
 
-    private func drop(_ items: [String], on folder: FolderPath) -> Bool {
+    private func drop(_ items: [String], on folder: FolderPath?) -> Bool {
+        if let moved = items.lazy.compactMap(FolderDragPayload.folder(from:)).first {
+            guard FolderMovePolicy.target(of: moved, into: folder) != nil else { return false }
+            Task { await vault.move(folder: moved, into: folder) }
+            return true
+        }
         let ids = items.compactMap(NoteDragPayload.noteID(from:))
-        guard ids.isEmpty == false else { return false }
+        guard let folder, ids.isEmpty == false else { return false }
         Task {
             for id in ids {
                 await store.moveNote(id: id, toFolder: folder)

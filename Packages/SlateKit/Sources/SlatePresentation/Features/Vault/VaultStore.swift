@@ -31,6 +31,7 @@ final class VaultStore {
     @ObservationIgnored private let createFolder: CreateFolderUseCase
     @ObservationIgnored private let renameFolder: RenameFolderUseCase
     @ObservationIgnored private let deleteFolder: DeleteFolderUseCase
+    @ObservationIgnored private let moveFolder: MoveFolderUseCase
     @ObservationIgnored private let restoreFolder: RestoreFolderUseCase
     @ObservationIgnored private let setProject: SetProjectUseCase
     @ObservationIgnored private let createProject: CreateProjectUseCase
@@ -56,6 +57,7 @@ final class VaultStore {
         createFolder: CreateFolderUseCase,
         renameFolder: RenameFolderUseCase,
         deleteFolder: DeleteFolderUseCase,
+        moveFolder: MoveFolderUseCase,
         restoreFolder: RestoreFolderUseCase,
         setProject: SetProjectUseCase,
         createProject: CreateProjectUseCase,
@@ -77,6 +79,7 @@ final class VaultStore {
         self.createFolder = createFolder
         self.renameFolder = renameFolder
         self.deleteFolder = deleteFolder
+        self.moveFolder = moveFolder
         self.restoreFolder = restoreFolder
         self.setProject = setProject
         self.createProject = createProject
@@ -372,6 +375,46 @@ final class VaultStore {
             report("Cannot rename the folder", error)
             return false
         }
+    }
+
+    func move(folder: FolderPath, into parent: FolderPath?) async {
+        do {
+            guard let done = try await moveFolder.execute(folder, into: parent) else { return }
+            await show(done.from, movedTo: done.to)
+            if let parent { setExpanded(parent, true) }
+            toaster.show(Self.movedMessage(done), action: ToastAction(title: "Undo") { [weak self] in
+                guard let self else { return }
+                Task { await self.undoMove(done) }
+            })
+        } catch {
+            report("Cannot move the folder", error)
+        }
+    }
+
+    func undoMove(_ done: FolderMove) async {
+        do {
+            try await moveFolder.undo(done)
+            await show(done.to, movedTo: done.from)
+            toaster.show("\(done.from.name) is back")
+        } catch {
+            report("Cannot move the folder back", error)
+        }
+    }
+
+    static func movedMessage(_ done: FolderMove) -> String {
+        guard let parent = done.to.parent else { return "Moved \(done.from.name) to the top level" }
+        return "Moved \(done.from.name) into \(parent.name)"
+    }
+
+    private func show(_ old: FolderPath, movedTo new: FolderPath) async {
+        expanded = Set(expanded.map { $0.moved(from: old, to: new) })
+        saveExpanded()
+        await refresh()
+        if let shown = navigator.source.folder, shown == old || old.contains(shown) {
+            navigator.show(.showing(shown.moved(from: old, to: new)))
+        }
+        events.post(.indexUpdated)
+        events.post(.vaultRescanned)
     }
 
     func requestDelete(_ space: SpaceName) {

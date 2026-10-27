@@ -28,6 +28,7 @@ package struct UseCases: Sendable {
     package let createFolder: CreateFolderUseCase
     package let renameFolder: RenameFolderUseCase
     package let deleteFolder: DeleteFolderUseCase
+    package let moveFolder: MoveFolderUseCase
     package let restoreFolder: RestoreFolderUseCase
     package let importAttachment: ImportAttachmentUseCase
     package let attachScreenshot: AttachScreenshotUseCase
@@ -68,6 +69,7 @@ package struct UseCases: Sendable {
         createFolder = CreateFolderUseCase(files: ports.files)
         renameFolder = RenameFolderUseCase(files: ports.files, reindex: reindex)
         deleteFolder = DeleteFolderUseCase(files: ports.files, move: move)
+        moveFolder = MoveFolderUseCase(files: ports.files, config: ports.config, reindex: reindex)
         restoreFolder = RestoreFolderUseCase(files: ports.files, move: move)
         importAttachment = ImportAttachmentUseCase(attachments: ports.attachments, clock: ports.clock)
         attachScreenshot = AttachScreenshotUseCase(capture: ports.capture, attachments: ports.attachments, clock: ports.clock)
