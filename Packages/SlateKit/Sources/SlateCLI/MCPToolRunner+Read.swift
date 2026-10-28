@@ -40,12 +40,23 @@ extension MCPToolRunner {
         let parsed = SearchQueryParser.parse(query, now: ports.clock.now(), timeZone: ports.clock.timeZone)
         let hits = try await ports.index.search(parsed, limit: folder == nil ? limit : 200)
         let kept = hits.filter { hit in folder.map { $0.contains(hit.summary.path) } ?? true }.prefix(limit)
-        return json(kept.map { hit in
+        let notes: [[String: Any]] = kept.map { hit in
             var object = summaryObject(hit.summary)
             object["snippet"] = hit.excerpt
             object["preview"] = nil
             return object
-        })
+        }
+        let fileHits = try await ports.index.searchFiles(parsed, limit: 200)
+        let files: [[String: Any]] = fileHits.filter { hit in folder.map { $0.contains(hit.path) } ?? true }.prefix(max(0, limit - notes.count)).map { hit in
+            [
+                "kind": "file",
+                "name": hit.path.fileName,
+                "folder": hit.path.folder,
+                "path": hit.path.rawValue,
+                "snippet": hit.excerpt,
+            ]
+        }
+        return json(notes + files)
     }
 
     func readNote(_ arguments: MCPArguments) async throws -> String {

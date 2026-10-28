@@ -49,6 +49,9 @@ struct MCPToolRunner: Sendable {
         case "log_progress": try await logProgress(arguments)
         case "add_file": try await addFile(arguments)
         case "list_files": try await listFiles(arguments)
+        case "read_file": try await readFile(arguments)
+        case "replace_in_file": try await replaceInFile(arguments)
+        case "update_file": try await updateFile(arguments)
         case "save_version": try await saveVersion(arguments)
         default: throw AgentError.unknownTool(name)
         }

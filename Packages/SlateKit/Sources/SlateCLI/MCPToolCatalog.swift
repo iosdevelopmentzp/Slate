@@ -9,9 +9,9 @@ enum MCPToolCatalog {
             "limit": number("At most this many notes. Default 50."),
             "headings": flag("true adds the headings of each note, to tell similar notes apart."),
         ], required: [], readOnly: true),
-        tool("search_notes", "Search the titles and the text of the notes, like the search in Slate. Returns the notes with a short part of the matching text.", [
+        tool("search_notes", "Search the titles and the text of the notes, like the search in Slate. Returns the notes with a short part of the matching text, then the other files that match by name or text (kind file: text files and PDFs); read those with read_file.", [
             "query": text("The words to search for."),
-            "folder": text("Only notes in this folder and its sub-folders."),
+            "folder": text("Only notes and files in this folder and its sub-folders."),
             "limit": number("At most this many results. Default 20."),
         ], required: ["query"], readOnly: true),
         tool("read_note", "Read a whole note file: the header and the body. Keep the hash for update_note. To read one part, use read_section.", [
@@ -107,9 +107,23 @@ enum MCPToolCatalog {
             "base64": text("The file data in base64. Needs name."),
             "name": text("The file name in Slate, like crash.log."),
         ], required: ["folder"]),
-        tool("list_files", "List the files of a folder that are not notes: name, path, size, date.", [
+        tool("list_files", "List the files of a folder that are not notes: name, path, size, date. Read one with read_file.", [
             "folder": text("The folder, like MyApp/ABC-123 Fix login."),
         ], required: ["folder"], readOnly: true),
+        tool("read_file", "Read a file of a folder that is not a note. A text file (code, log, JSON, plain text) returns its whole text and a hash for update_file and replace_in_file. A PDF returns its text, read only. Other files return only name, size and date.", [
+            "path": text("The path inside the notes folder from list_files or search_notes, like MyApp/ABC-123 Fix login/crash.log."),
+        ], required: ["path"], readOnly: true),
+        tool("replace_in_file", "Replace one piece of text in a text file that is not a note. old must be in the file exactly once: add more text around it when it is not.", [
+            "path": text("The path inside the notes folder."),
+            "old": text("The exact text to replace, copied from read_file."),
+            "new": text("The new text. Empty removes the old text."),
+            "expectedHash": text("Optional: the hash from read_file. When given, the change is refused if the file changed since."),
+        ], required: ["path", "old", "new"], destructive: true),
+        tool("update_file", "Replace the whole text of a text file that is not a note. Pass the hash from read_file: when the file changed after you read it, the change is refused. For a small change use replace_in_file.", [
+            "path": text("The path inside the notes folder."),
+            "text": text("The new text of the file."),
+            "expectedHash": text("The hash that read_file returned."),
+        ], required: ["path", "text", "expectedHash"], destructive: true),
         tool("save_version", "Save a named version of the notes folder, like a checkpoint at the end of a session. The owner sees it in the versions of each note.", [
             "name": text("A short name, like end of session 3."),
         ], required: ["name"]),

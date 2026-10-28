@@ -12,7 +12,8 @@ Since ADR 0014 a folder lists its other files, like `crash.log`, `App.swift` or 
 2. A file is text when its name has no document, media or archive extension (`FileKindPolicy`), it is at most 4 MB, it has no zero byte in its first 8 KB and it is valid UTF-8. A text file opens in a plain text editor: one monospaced font, no format bar, no Markdown, saved 0.6 s after the last key as UTF-8, byte for byte what was typed. Find works with `⌘F`. A byte order mark is dropped on save.
 3. Every other file shows as a Quick Look preview inside the column (`QLPreviewView`): PDF, images, Office and iWork files, HTML, audio and video. Quick Look shows a big icon and the name for a type it cannot read. The preview cannot change the file; Open starts its app.
 4. A change on disk reloads a text file that has no unsaved edit. With an unsaved edit the column shows "Changed on disk" with Keep mine and Take theirs, as for a note.
-5. Search finds text files and PDF files by their content and by their name, after the notes. The index keeps them in its own tables (`files`, `files_fts`), so the note tables and their queries do not change. At most the first 1 MB of text of a file is indexed. Files in `_attachments/`, `.slate/` and `.trash/` are not indexed.
+5. Search finds text files and PDF files by their content, and every file by its name, after the notes. The index keeps them in its own tables (`files`, `files_fts`), so the note tables and their queries do not change. At most the first 1 MB of text of a file is indexed. Files in `_attachments/`, `.slate/` and `.trash/` are not indexed.
+6. Agents get the same through `slate mcp`: `read_file` returns the text and a hash of a text file, the text of a PDF, or only the name, size and date of another file; `replace_in_file` and `update_file` change a text file in a folder agents may write, with the same hash check as notes (`WriteTextFileUseCase`); `search_notes` adds the matching files after the notes, with `kind: file`. A note path is refused with a pointer to the note tools.
 
 ## Consequences
 
@@ -20,4 +21,4 @@ Since ADR 0014 a folder lists its other files, like `crash.log`, `App.swift` or 
 - Formatting, tables, images and links exist only in notes. A text file is plain text, without colours for code.
 - The search index schema version goes up, so the index is rebuilt once after the update.
 - A file over 4 MB or with another encoding than UTF-8 shows only as a preview.
-- `search_notes` of `slate mcp` still finds only notes. Agents read files with their own tools.
+- Agents never change a document, an image or a binary file in place. They add a new file with `add_file`.

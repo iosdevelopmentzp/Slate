@@ -28,6 +28,10 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
     case batchTooLarge
     case batchStep(Int, String)
     case batchConflict(String, written: [String])
+    case outsideFiles(String)
+    case isNote(String)
+    case notText(String)
+    case staleFile
 
     private static let settingsHint = "The owner can change this in Slate: Settings → General → AI access."
 
@@ -89,6 +93,14 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
             "Operation \(step): \(reason) Nothing was written."
         case .batchConflict(let path, let written):
             "\(path) changed while the batch was written, so it was not changed. \(written.isEmpty ? "Nothing was written." : "Already written: \(written.joined(separator: ", ")).") Read the note again and repeat the rest."
+        case .outsideFiles(let path):
+            "\(path) is not a file in a folder of the notes folder. Use a path from list_files, like MyApp/ABC-123 Fix login/crash.log."
+        case .isNote(let path):
+            "\(path) is a note. Use read_note, replace_in_note or update_note for notes."
+        case .notText(let path):
+            "\(path) is not a text file, so it cannot be changed here. Add a new file with add_file instead."
+        case .staleFile:
+            "The file changed since you read it, read it again."
         }
     }
 

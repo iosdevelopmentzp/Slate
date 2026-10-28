@@ -20,6 +20,18 @@ package enum AgentPathPolicy {
         return VaultPath(rawValue: relative)
     }
 
+    package static func filePath(from raw: String, root: URL) throws -> VaultPath {
+        guard let relative = relative(raw, root: root) else { throw AgentError.outsideFiles(raw) }
+        let components = relative.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
+        guard components.count > 1,
+              components.allSatisfy({ $0.isEmpty == false && $0 != ".." && $0 != "." }),
+              isProtected(components) == false
+        else { throw AgentError.outsideFiles(raw) }
+        let path = VaultPath(rawValue: relative)
+        guard path.isNote == false else { throw AgentError.isNote(relative) }
+        return path
+    }
+
     package static func folder(from raw: String) throws -> FolderPath {
         let relative = trimmed(raw)
         let components = relative.split(separator: "/", omittingEmptySubsequences: false).map(String.init)

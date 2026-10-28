@@ -60,13 +60,100 @@ import Testing
         return try object(answer.text)["id"] as? String ?? ""
     }
 
-    @Test func theCatalogHasTheTwentyFourTools() {
+    @Test func theCatalogHasTheTwentySevenTools() {
         #expect(MCPToolCatalog.tools.map(\.name) == [
             "list_folders", "list_notes", "search_notes", "read_note", "read_section", "list_backlinks", "create_note", "append_to_note",
             "replace_in_note", "update_section", "update_note", "batch_edit", "move_note", "trash_note", "attach_image", "open_in_slate",
-            "project_context", "start_task", "set_task_status", "set_plan_item", "log_progress", "add_file", "list_files", "save_version",
+            "project_context", "start_task", "set_task_status", "set_plan_item", "log_progress", "add_file", "list_files",
+            "read_file", "replace_in_file", "update_file", "save_version",
         ])
         #expect(MCPToolCatalog.tools.allSatisfy { ($0.description ?? "").isEmpty == false })
+    }
+
+    private func put(_ text: String, at path: String) throws {
+        let url = vault.url.appendingPathComponent(path)
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(text.utf8).write(to: url)
+    }
+
+    @Test func readFileGivesTheTextAndAHashOfATextFile() async throws {
+        try put("let a = 1\n", at: "Notes/App.swift")
+
+        let answer = try object(await call("read_file", ["path": "Notes/App.swift"]).text)
+
+        #expect(answer["kind"] as? String == "text")
+        #expect(answer["text"] as? String == "let a = 1\n")
+        #expect((answer["hash"] as? String)?.isEmpty == false)
+        #expect(answer["size"] as? Int == 10)
+    }
+
+    @Test func readFileOfAnotherFileGivesOnlyItsFacts() async throws {
+        try put("png", at: "Notes/shot.png")
+
+        let answer = try object(await call("read_file", ["path": "Notes/shot.png"]).text)
+
+        #expect(answer["kind"] as? String == "other")
+        #expect(answer["text"] == nil)
+    }
+
+    @Test func readFileRefusesNotesAndPathsOutside() async throws {
+        try await create("Plan")
+
+        let note = await call("read_file", ["path": "Notes/Plan.md"])
+        let outside = await call("read_file", ["path": "../secret.txt"])
+        let missing = await call("read_file", ["path": "Notes/gone.txt"])
+
+        #expect(note.isError)
+        #expect(note.text.contains("read_note"))
+        #expect(outside.isError)
+        #expect(missing.isError)
+    }
+
+    @Test func replaceInFileChangesOnePlace() async throws {
+        try put("let a = 1\nlet b = 2\n", at: "Notes/App.swift")
+
+        let answer = await call("replace_in_file", ["path": "Notes/App.swift", "old": "a = 1", "new": "a = 3"])
+
+        #expect(answer.isError == false, "\(answer.text)")
+        #expect(try file("Notes/App.swift") == "let a = 3\nlet b = 2\n")
+    }
+
+    @Test func updateFileNeedsTheCurrentHash() async throws {
+        try put("old", at: "Notes/a.txt")
+        let hash = try object(await call("read_file", ["path": "Notes/a.txt"]).text)["hash"] as? String ?? ""
+        try put("changed outside", at: "Notes/a.txt")
+
+        let stale = await call("update_file", ["path": "Notes/a.txt", "text": "mine", "expectedHash": .string(hash)])
+        let fresh = try object(await call("read_file", ["path": "Notes/a.txt"]).text)["hash"] as? String ?? ""
+        let written = await call("update_file", ["path": "Notes/a.txt", "text": "mine", "expectedHash": .string(fresh)])
+
+        #expect(stale.isError)
+        #expect(written.isError == false, "\(written.text)")
+        #expect(try file("Notes/a.txt") == "mine")
+    }
+
+    @Test func fileWritesKeepToTheAllowedFoldersAndToText() async throws {
+        try put("x", at: "Work/a.txt")
+        try put("png", at: "Notes/shot.png")
+
+        let locked = await call("replace_in_file", ["path": "Work/a.txt", "old": "x", "new": "y"])
+        let image = await call("replace_in_file", ["path": "Notes/shot.png", "old": "png", "new": "y"])
+
+        #expect(locked.isError)
+        #expect(image.isError)
+        #expect(image.text.contains("not a text file"))
+        #expect(try file("Work/a.txt") == "x")
+    }
+
+    @Test func searchNotesFindsFilesAfterTheNotes() async throws {
+        try await create("Player", body: "the audio player")
+        try put("crash in the player", at: "Notes/crash.log")
+
+        let results = try array(await call("search_notes", ["query": "player"]).text)
+
+        #expect(results.first?["title"] as? String == "Player")
+        #expect(results.last?["kind"] as? String == "file")
+        #expect(results.last?["path"] as? String == "Notes/crash.log")
     }
 
     @Test func listFoldersCountsNotesAndSaysWhereAgentsMayWrite() async throws {

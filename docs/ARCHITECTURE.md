@@ -496,7 +496,7 @@ Keystroke → `SearchStore` debounce 80 ms → title matches from the in-memory 
 | A code language | one file in `SlateEditor/Highlighting/languages/` and a fixture test |
 | A new source of data (another tracker, a web clipper) | a port in Domain, a live type in Data, a mock, a spy, a use case when two ports meet, a store or an action |
 | A CLI command | one file in `SlateCLI`, reuse a use case; never new file logic in the CLI |
-| An MCP tool | a schema in `MCPToolCatalog`, a method in `MCPToolRunner+Read` or `+Write`; every write checks `AgentPermissions`, goes through a use case, and ends with `afterWrite` (an `AgentChange` and a snapshot `agent: <tool> <title>`); a test in `MCPToolTests` over a temporary notes folder |
+| An MCP tool | a schema in `MCPToolCatalog`, a method in `MCPToolRunner+Read`, `+Write` or `+Files` (files that are not notes, ADR 0020); every write checks `AgentPermissions`, goes through a use case, and ends with `afterWrite` (an `AgentChange` and a snapshot `agent: <tool> <title>`); a test in `MCPToolTests` over a temporary notes folder |
 | A URL route | `URLCommandParser`, `URLCommandHandler`, tests |
 | A screen | `/add-feature` skill (copied from DevHub): store, models, views, assembly line, tests |
 

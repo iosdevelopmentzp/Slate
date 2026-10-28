@@ -34,7 +34,7 @@ Three layers, each useful on its own.
 |---|---|---|
 | `list_folders` | — | folders with note counts |
 | `list_notes` | `folder?`, `limit?`, `headings?` | summaries: id, title, folder, updated, pinned, preview, and type, status and ticket when set; `headings: true` adds the headings of each note |
-| `search_notes` | `query`, `folder?`, `limit?` | the app's search: titles and text, snippets |
+| `search_notes` | `query`, `folder?`, `limit?` | the app's search: titles and text, snippets; since ADR 0020 also the matching files after the notes, with `kind: file` |
 | `read_note` | `id` or `path` | the whole file (header and body) plus `hash` |
 | `read_section` | `id` or `path`, `heading` | the text under one heading (with its sub-sections) plus the `hash` of the note; a missing section names the headings that exist |
 | `list_backlinks` | `id` or `path` | the notes that link to the note with `[[its name]]` |
@@ -49,6 +49,9 @@ Three layers, each useful on its own.
 | `set_plan_item` | `task`, `item`, `done?` | marks one checklist step of the Plan section done or open (`PlanPolicy`); `item` is the step number or a part of its text. `project_context` gives each task `plan` (done, total, next) and the current task every step |
 | `attach_image` | `id`, `base64 or path`, `caption?`, `section?` | imports into `_attachments/` and appends the image block at the end of the note or of the section; `placedAt` in the answer says where |
 | `open_in_slate` | `id` | opens the note in the app through `slate://open` |
+| `read_file` | `path` | ADR 0020: a file that is not a note: the text and `hash` of a text file, the text of a PDF, or only name, size and date |
+| `replace_in_file` | `path`, `old`, `new`, `expectedHash?` | ADR 0020: one exact piece of a text file (`TextReplacePolicy`, `WriteTextFileUseCase`) |
+| `update_file` | `path`, `text`, `expectedHash` | ADR 0020: the whole text of a text file; refused when the file changed since `read_file` |
 
 - `replace_in_note` and `update_section` read the note again and retry when the file changed between the read and the write. With `expectedHash` they refuse instead. They keep a version before the change, like every other write (amendment, 2026-10-19).
 - Resources: `slate://note/<id>` returns the note text, so a client can attach a note as context without a tool call.
