@@ -162,9 +162,77 @@ struct GRDBSearchIndex: SearchIndex {
         }
     }
 
+    func fileStamps() async throws -> [VaultPath: FileStamp] {
+        try await writer.read { db in
+            var stamps: [VaultPath: FileStamp] = [:]
+            for row in try Row.fetchAll(db, sql: "SELECT path, mtime, size FROM files") {
+                stamps[VaultPath(rawValue: row["path"])] = FileStamp(modified: Date(timeIntervalSince1970: row["mtime"]), size: row["size"])
+            }
+            return stamps
+        }
+    }
+
+    func upsert(files: [IndexedFile]) async throws {
+        guard files.isEmpty == false else { return }
+        try await writer.write { db in
+            for file in files {
+                try Self.deleteFile(file.path, in: db)
+                try db.execute(
+                    sql: "INSERT INTO files (path, space, mtime, size) VALUES (?, ?, ?, ?)",
+                    arguments: [file.path.rawValue, file.path.space?.rawValue ?? "", file.stamp.modified.timeIntervalSince1970, file.stamp.size]
+                )
+                try db.execute(
+                    sql: "INSERT INTO files_fts (rowid, path, name, body) VALUES (?, ?, ?, ?)",
+                    arguments: [db.lastInsertedRowID, file.path.rawValue, file.path.fileName, file.text]
+                )
+            }
+        }
+    }
+
+    func removeFile(path: VaultPath) async throws {
+        try await writer.write { db in
+            try Self.deleteFile(path, in: db)
+        }
+    }
+
+    func searchFiles(_ query: SearchQuery, limit: Int) async throws -> [FileHit] {
+        guard FileIndexPolicy.searchable(query) else { return [] }
+        let match = FTSMatchBuilder.match(terms: query.terms, phrases: query.phrases)
+        guard match.isEmpty == false else { return [] }
+        var clauses: [String] = []
+        var arguments: [DatabaseValue] = [match.databaseValue]
+        let spaces = query.filters.compactMap { filter -> String? in if case .space(let name) = filter { name } else { nil } }
+        for space in spaces {
+            clauses.append("f.space = ? COLLATE NOCASE")
+            arguments.append(space.databaseValue)
+        }
+        let excluded = query.excludedTerms.compactMap { term -> String? in
+            let match = FTSMatchBuilder.match(terms: [term], phrases: [])
+            return match.isEmpty ? nil : match
+        }
+        if excluded.isEmpty == false {
+            clauses.append("f.rowid NOT IN (SELECT rowid FROM files_fts WHERE files_fts MATCH ?)")
+            arguments.append(excluded.joined(separator: " OR ").databaseValue)
+        }
+        arguments.append(limit.databaseValue)
+        let filter = clauses.isEmpty ? "" : " AND " + clauses.joined(separator: " AND ")
+        let sql = """
+            SELECT f.path, files_fts.rank AS rank, snippet(files_fts, 2, '', '', '…', 12) AS snippet
+            FROM files_fts JOIN files f ON f.rowid = files_fts.rowid
+            WHERE files_fts MATCH ?\(filter)
+            ORDER BY files_fts.rank LIMIT ?
+            """
+        let values = StatementArguments(arguments)
+        return try await writer.read { db in
+            try Row.fetchAll(db, sql: sql, arguments: values).map { row in
+                FileHit(path: VaultPath(rawValue: row["path"]), excerpt: row["snippet"] ?? "", rank: row["rank"] ?? 0)
+            }
+        }
+    }
+
     func reset() async throws {
         try await writer.write { db in
-            for table in ["notes", "tags", "links", "todos", "attachments", "notes_fts"] {
+            for table in ["notes", "tags", "links", "todos", "attachments", "notes_fts", "files", "files_fts"] {
                 try db.execute(sql: "DELETE FROM \(table)")
             }
         }
@@ -208,6 +276,12 @@ struct GRDBSearchIndex: SearchIndex {
             sql: "INSERT INTO notes_fts (rowid, note_id, title, body, tags, ticket) VALUES (?, ?, ?, ?, ?, ?)",
             arguments: [rowID, id, summary.title, note.body, summary.tags.joined(separator: " "), summary.ticket ?? ""]
         )
+    }
+
+    private static func deleteFile(_ path: VaultPath, in db: Database) throws {
+        guard let rowID = try Int64.fetchOne(db, sql: "SELECT rowid FROM files WHERE path = ?", arguments: [path.rawValue]) else { return }
+        try db.execute(sql: "DELETE FROM files_fts WHERE rowid = ?", arguments: [rowID])
+        try db.execute(sql: "DELETE FROM files WHERE rowid = ?", arguments: [rowID])
     }
 
     private static func delete(where condition: String, _ arguments: [any DatabaseValueConvertible], in db: Database) throws {

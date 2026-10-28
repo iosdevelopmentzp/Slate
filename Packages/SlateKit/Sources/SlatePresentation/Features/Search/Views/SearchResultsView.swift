@@ -8,6 +8,7 @@ struct SearchResultsView: View {
 
     var body: some View {
         let results = search.results
+        let fileResults = search.fileResults
         let now = Date.now
         VStack(spacing: 0) {
             if let scope = search.scopeName {
@@ -23,9 +24,9 @@ struct SearchResultsView: View {
                 .padding(.horizontal, Theme.columnPadding + 4)
                 .padding(.bottom, 6)
             }
-            if results.isEmpty, search.isSearching == false {
+            if results.isEmpty, fileResults.isEmpty, search.isSearching == false {
                 VStack(spacing: 8) {
-                    Text("No notes match.")
+                    Text("No notes or files match.")
                         .foregroundStyle(.secondary)
                     Button("Clear search") { search.clear() }
                         .buttonStyle(.link)
@@ -40,6 +41,16 @@ struct SearchResultsView: View {
                                 isSelected: hit.id == navigator.selectedNote
                             )
                             .onTapGesture { search.open(hit) }
+                        }
+                        if fileResults.isEmpty == false {
+                            ListSectionHeader("Files", detail: "\(fileResults.count)")
+                            ForEach(fileResults) { hit in
+                                FileSearchRow(
+                                    model: SearchResultMapper.model(for: hit, words: search.words),
+                                    isSelected: hit.path == navigator.selectedFile
+                                )
+                                .onTapGesture { search.open(hit) }
+                            }
                         }
                     }
                     .padding(.horizontal, Theme.columnPadding)

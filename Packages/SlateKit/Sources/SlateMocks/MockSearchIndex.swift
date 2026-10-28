@@ -3,6 +3,7 @@ import SlateDomain
 
 actor MockSearchIndex: SearchIndex {
     private var notes: [VaultPath: IndexedNote]
+    private var files: [VaultPath: IndexedFile] = [:]
 
     init(documents: [NoteDocument] = MockVault.documents) {
         let builder = MockIndexedNoteBuilder()
@@ -64,7 +65,26 @@ actor MockSearchIndex: SearchIndex {
         notes.values.flatMap(\.todos).filter { $0.isDone == isDone }
     }
 
+    func fileStamps() -> [VaultPath: FileStamp] {
+        files.mapValues(\.stamp)
+    }
+
+    func upsert(files: [IndexedFile]) {
+        for file in files {
+            self.files[file.path] = file
+        }
+    }
+
+    func removeFile(path: VaultPath) {
+        files[path] = nil
+    }
+
+    func searchFiles(_ query: SearchQuery, limit: Int) -> [FileHit] {
+        FileIndexPolicy.hits(in: Array(files.values), query: query, limit: limit)
+    }
+
     func reset() {
         notes.removeAll()
+        files.removeAll()
     }
 }

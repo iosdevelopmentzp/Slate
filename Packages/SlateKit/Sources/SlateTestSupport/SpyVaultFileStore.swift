@@ -75,6 +75,12 @@ package final class SpyVaultFileStore: VaultFileStore, @unchecked Sendable {
         }
     }
 
+    package func enumerateFiles() async throws -> [FileMeta] {
+        lock.withLock {
+            files.values.map(\.meta).filter { $0.path.isNote == false && $0.path.space != nil }
+        }
+    }
+
     package func read(_ path: VaultPath) async throws -> FileContents {
         try lock.withLock {
             _calls.append(.read(path))

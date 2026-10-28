@@ -2,6 +2,7 @@ import Foundation
 
 package protocol VaultFileStore: Sendable {
     func enumerate() async throws -> [FileMeta]
+    func enumerateFiles() async throws -> [FileMeta]
     func read(_ path: VaultPath) async throws -> FileContents
     func meta(_ path: VaultPath) async throws -> FileMeta?
     func write(_ path: VaultPath, data: Data, expected: ContentHash?) async throws -> WriteResult

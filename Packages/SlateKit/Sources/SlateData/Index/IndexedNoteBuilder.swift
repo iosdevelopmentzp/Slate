@@ -1,5 +1,6 @@
 import Foundation
 import Markdown
+import PDFKit
 import SlateDomain
 
 struct IndexedNoteBuilder: IndexedNoteBuilding {
@@ -15,6 +16,14 @@ struct IndexedNoteBuilder: IndexedNoteBuilding {
         note.hasImage = walker.hasImage
         note.hasLink = note.hasLink || walker.urls.isEmpty == false
         return note
+    }
+
+    func text(ofFile path: VaultPath, data: Data) -> String? {
+        if FileIndexPolicy.isPDF(path) {
+            return PDFDocument(data: data)?.string
+        }
+        guard FileKindPolicy.mayBeText(path, size: data.count) else { return nil }
+        return FileKindPolicy.text(from: data)
     }
 
     func headingCount(in body: String) -> Int {

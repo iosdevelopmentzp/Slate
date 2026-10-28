@@ -53,7 +53,7 @@ struct IndexPerformanceTests {
             })
         }
         let sorted = searches.sorted()
-        print("index timing: notes=\(report.indexed.count) full=\(full) unchanged=\(again) search median=\(sorted[10]) worst=\(sorted[19]) hits=\(count)")
+        print("index timing: notes=\(report.indexed.count) files=\(report.files.count) full=\(full) unchanged=\(again) search median=\(sorted[10]) worst=\(sorted[19]) hits=\(count)")
         #expect(full < .seconds(20))
         #expect(sorted[10] < .milliseconds(50))
     }

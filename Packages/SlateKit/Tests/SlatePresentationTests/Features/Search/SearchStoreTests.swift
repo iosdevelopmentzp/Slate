@@ -31,6 +31,24 @@ import Testing
         #expect(search.isSearching == false)
     }
 
+    @Test func filesMatchAfterTheNotesAndOpenInTheViewer() async throws {
+        try await seed()
+        let log = VaultPath(rawValue: "Tasks/crash.log")
+        harness.spies.files.seed(log, "a retain cycle in the player")
+        try await harness.index()
+
+        search.query = "retain"
+        await search.waitForResults()
+
+        #expect(search.fileResults.map(\.path) == [log])
+        search.open(try #require(search.fileResults.first))
+        #expect(harness.navigator.selectedFile == log)
+        #expect(harness.navigator.selectedNote == nil)
+
+        search.clear()
+        #expect(search.fileResults.isEmpty)
+    }
+
     @Test func searchStaysInTheCurrentFolder() async throws {
         try await seed()
         harness.navigator.show(.space(SpaceName(rawValue: "Tasks")))

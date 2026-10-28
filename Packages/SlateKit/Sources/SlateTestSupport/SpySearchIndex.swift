@@ -8,12 +8,16 @@ package final class SpySearchIndex: SearchIndex, @unchecked Sendable {
         case updateState(VaultPath)
         case remove(VaultPath)
         case search(SearchQuery)
+        case upsertFile(VaultPath)
+        case removeFile(VaultPath)
+        case searchFiles(SearchQuery)
         case reset
     }
 
     private let lock = NSLock()
     private var _calls: [Call] = []
     private var notes: [VaultPath: IndexedNote] = [:]
+    private var files: [VaultPath: IndexedFile] = [:]
     private var _summariesError: TestError?
 
     package init() {}
@@ -29,6 +33,10 @@ package final class SpySearchIndex: SearchIndex, @unchecked Sendable {
 
     package var indexed: [VaultPath: NoteSummary] {
         lock.withLock { notes.mapValues(\.summary) }
+    }
+
+    package var indexedFiles: [VaultPath: IndexedFile] {
+        lock.withLock { files }
     }
 
     package func seed(_ summaries: [NoteSummary]) {
@@ -122,10 +130,38 @@ package final class SpySearchIndex: SearchIndex, @unchecked Sendable {
         lock.withLock { notes.values.flatMap(\.todos).filter { $0.isDone == isDone }.sorted { ($0.noteID.rawValue, $0.line) < ($1.noteID.rawValue, $1.line) } }
     }
 
+    package func fileStamps() async throws -> [VaultPath: FileStamp] {
+        lock.withLock { files.mapValues(\.stamp) }
+    }
+
+    package func upsert(files: [IndexedFile]) async throws {
+        lock.withLock {
+            for file in files {
+                _calls.append(.upsertFile(file.path))
+                self.files[file.path] = file
+            }
+        }
+    }
+
+    package func removeFile(path: VaultPath) async throws {
+        lock.withLock {
+            _calls.append(.removeFile(path))
+            files[path] = nil
+        }
+    }
+
+    package func searchFiles(_ query: SearchQuery, limit: Int) async throws -> [FileHit] {
+        lock.withLock {
+            _calls.append(.searchFiles(query))
+            return FileIndexPolicy.hits(in: Array(files.values), query: query, limit: limit)
+        }
+    }
+
     package func reset() async throws {
         lock.withLock {
             _calls.append(.reset)
             notes.removeAll()
+            files.removeAll()
         }
     }
 }

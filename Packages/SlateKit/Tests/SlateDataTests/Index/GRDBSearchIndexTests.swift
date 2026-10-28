@@ -170,4 +170,55 @@ import Testing
         let other = try GRDBSearchIndex.open(at: url, vaultPath: "/b")
         #expect(try await other.summaries(space: nil).isEmpty)
     }
+
+    private func file(_ path: String, _ text: String, size: Int = 1) -> IndexedFile {
+        IndexedFile(path: VaultPath(rawValue: path), stamp: FileStamp(modified: Date(timeIntervalSince1970: 5), size: size), text: text)
+    }
+
+    private func searchFiles(_ text: String) async throws -> [String] {
+        try await index.searchFiles(SearchQueryParser.parse(text, now: Date(timeIntervalSince1970: 2_000), timeZone: .gmt), limit: 20).map(\.path.rawValue)
+    }
+
+    @Test func filesAreFoundByTextAndByName() async throws {
+        try await index.upsert(files: [
+            file("Work/crash.log", "Fatal error in the player"),
+            file("Work/App.swift", "let engine = Engine()"),
+            file("Home/shot.png", ""),
+        ])
+
+        #expect(try await searchFiles("fatal") == ["Work/crash.log"])
+        #expect(try await searchFiles("shot") == ["Home/shot.png"])
+        #expect(try await searchFiles("eng") == ["Work/App.swift"])
+        #expect(try await searchFiles("player -fatal").isEmpty)
+        #expect(try await searchFiles("tag:ios fatal").isEmpty)
+        #expect(try await index.searchFiles(SearchQuery(terms: ["fatal"]), limit: 5).first?.excerpt.contains("Fatal") == true)
+        #expect(try await search("fatal").isEmpty)
+    }
+
+    @Test func fileSearchKeepsToTheFolder() async throws {
+        try await index.upsert(files: [file("Work/a.txt", "milk"), file("Home/b.txt", "milk")])
+
+        #expect(try await searchFiles("milk space:Home") == ["Home/b.txt"])
+    }
+
+    @Test func fileUpsertReplacesAndRemoveDeletes() async throws {
+        try await index.upsert(files: [file("Work/a.txt", "first")])
+        try await index.upsert(files: [file("Work/a.txt", "second", size: 7)])
+
+        #expect(try await searchFiles("first").isEmpty)
+        #expect(try await searchFiles("second") == ["Work/a.txt"])
+        #expect(try await index.fileStamps()[VaultPath(rawValue: "Work/a.txt")]?.size == 7)
+
+        try await index.removeFile(path: VaultPath(rawValue: "Work/a.txt"))
+        #expect(try await searchFiles("second").isEmpty)
+        #expect(try await index.fileStamps().isEmpty)
+    }
+
+    @Test func resetClearsTheFilesToo() async throws {
+        try await index.upsert(files: [file("Work/a.txt", "first")])
+
+        try await index.reset()
+
+        #expect(try await index.fileStamps().isEmpty)
+    }
 }

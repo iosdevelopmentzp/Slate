@@ -29,6 +29,19 @@ import Testing
         #expect(paths == [VaultPath(rawValue: "Inbox/A.md"), VaultPath(rawValue: "Notes/Swift/B.md")])
     }
 
+    @Test func enumerateFilesListsOtherFilesInSpacesAtAnyDepth() async throws {
+        _ = try folder.write("a", to: "Inbox/A.md")
+        _ = try folder.write("b", to: "MyApp/Task/crash.log")
+        _ = try folder.write("c", to: "MyApp/Task/Logs/old.log")
+        _ = try folder.write("d", to: "_attachments/shot.png")
+        _ = try folder.write("e", to: "MyApp/.hidden.txt")
+        _ = try folder.write("f", to: "MyApp/Task/a.log.slate-tmp")
+
+        let paths = Set(try await store.enumerateFiles().map(\.path))
+
+        #expect(paths == [VaultPath(rawValue: "MyApp/Task/crash.log"), VaultPath(rawValue: "MyApp/Task/Logs/old.log")])
+    }
+
     @Test func filesListsOnlyTheOtherFilesDirectlyInTheFolder() async throws {
         _ = try folder.write("a", to: "MyApp/Task/Task.md")
         _ = try folder.write("log", to: "MyApp/Task/crash.log")

@@ -13,13 +13,21 @@ actor FileVaultStore: VaultFileStore {
     }
 
     func enumerate() throws -> [FileMeta] {
+        try enumerateSpaces { $0.pathExtension == VaultPath.noteExtension }
+    }
+
+    func enumerateFiles() throws -> [FileMeta] {
+        try enumerateSpaces { $0.pathExtension != VaultPath.noteExtension && $0.lastPathComponent.hasSuffix(".slate-tmp") == false }
+    }
+
+    private func enumerateSpaces(including wanted: (URL) -> Bool) throws -> [FileMeta] {
         var metas: [FileMeta] = []
         let keys: [URLResourceKey] = [.isRegularFileKey, .creationDateKey, .contentModificationDateKey, .fileSizeKey]
         for space in try folder.spaceFolders() {
             let base = folder.url(folder: space.rawValue)
             guard let enumerator = FileManager.default.enumerator(at: base, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles, .skipsPackageDescendants]) else { continue }
             for case let url as URL in enumerator {
-                guard url.pathExtension == VaultPath.noteExtension,
+                guard wanted(url),
                       (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true,
                       let relative = folder.relativePath(of: url, under: base)
                 else { continue }

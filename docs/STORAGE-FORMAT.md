@@ -451,6 +451,13 @@ CREATE VIRTUAL TABLE notes_fts USING fts5(
   note_id UNINDEXED, title, body, tags, ticket,
   tokenize = "unicode61 remove_diacritics 2 tokenchars '_-'"
 );
+
+-- schema version 3 (ADR 0020): the other files of the folders
+CREATE TABLE files (path TEXT PRIMARY KEY, space TEXT NOT NULL, mtime REAL NOT NULL, size INTEGER NOT NULL);
+CREATE VIRTUAL TABLE files_fts USING fts5(
+  path UNINDEXED, name, body,
+  tokenize = "unicode61 remove_diacritics 2 tokenchars '_-'"
+);
 ```
 
 Rules:
@@ -459,7 +466,8 @@ Rules:
 - Incremental: the watcher delivers paths; each path goes through the same compare-and-replace.
 - Parsing for the index uses `swift-markdown` on the body: headings, task list items (`todos`), links and images (`links`, `attachments`, `has_*`), code blocks (`has_code`), inline `#tags` from text nodes, and the preview text from the first paragraphs.
 - Search: `notes_fts MATCH ?` with a MATCH string built by the app, never raw user input: each word becomes `"word"*` (quotes doubled inside), a quoted phrase becomes `"phrase"`, joined with spaces (AND). Rank: `bm25(notes_fts, 0, 10.0, 1.0, 4.0, 8.0)`. Snippet: `snippet(notes_fts, 2, '', '', '…', 12)` with the match range recomputed in the app for highlighting. Filters from `SPEC.md` 6.1 become `WHERE` clauses on `notes`, `tags`, `todos`.
-- `schema_version` differs from the app's constant → delete the index file and rebuild.
+- Files (ADR 0020): every file that is not a note, at any depth inside a top-level folder, not hidden and not in `_attachments/`, `.slate/` or `.trash/`, has a `files` row and a `files_fts` row. `(mtime, size)` decides whether it is read again. `body` is the UTF-8 text of a text file (at most 4 MB, no zero byte, not a document or media extension) or the text of a PDF (at most 50 MB), cut to 1,000,000 characters; for every other file it is empty, so it is found by its name only. Rank: `bm25(files_fts, 0, 10.0, 1.0)`. A query with a filter other than the folder finds no files.
+- `schema_version` differs from the app's constant → delete the index file and rebuild. Version 3 added the files tables.
 
 ---
 

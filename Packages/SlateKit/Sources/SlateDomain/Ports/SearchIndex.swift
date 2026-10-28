@@ -14,5 +14,9 @@ package protocol SearchIndex: Sendable {
     func notesLinking(to stem: String) async throws -> [NoteSummary]
     func tags() async throws -> [TagCount]
     func todos(isDone: Bool) async throws -> [TodoItem]
+    func fileStamps() async throws -> [VaultPath: FileStamp]
+    func upsert(files: [IndexedFile]) async throws
+    func removeFile(path: VaultPath) async throws
+    func searchFiles(_ query: SearchQuery, limit: Int) async throws -> [FileHit]
     func reset() async throws
 }

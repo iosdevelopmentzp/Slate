@@ -14,6 +14,15 @@ enum SearchResultMapper {
         )
     }
 
+    static func model(for hit: FileHit, words: [String]) -> FileSearchRowModel {
+        FileSearchRowModel(
+            id: hit.path,
+            name: highlighted(hit.path.fileName, words: words),
+            excerpt: highlighted(hit.excerpt, words: words),
+            folder: hit.path.folder
+        )
+    }
+
     static func highlighted(_ text: String, words: [String]) -> AttributedString {
         let ns = text as NSString
         var result = AttributedString()

@@ -17,6 +17,10 @@ actor MockVaultFileStore: VaultFileStore {
         files.values.map(\.meta).filter { $0.path.isNote }
     }
 
+    func enumerateFiles() -> [FileMeta] {
+        files.values.map(\.meta).filter { $0.path.isNote == false && $0.path.space != nil }
+    }
+
     func read(_ path: VaultPath) throws -> FileContents {
         guard let file = files[path] else { throw VaultError.notFound(path) }
         return FileContents(data: file.data, hash: .of(file.data), meta: file.meta)

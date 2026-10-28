@@ -2,7 +2,7 @@ import Foundation
 import GRDB
 
 enum IndexSchema {
-    static let version = 2
+    static let version = 3
 
     static func migrator() -> DatabaseMigrator {
         var migrator = DatabaseMigrator()
@@ -45,6 +45,21 @@ enum IndexSchema {
                 """)
             try db.execute(sql: "INSERT INTO notes_fts (notes_fts, rank) VALUES ('rank', 'bm25(0.0, 10.0, 1.0, 4.0, 8.0)')")
             try db.execute(sql: "INSERT INTO meta (key, value) VALUES ('schema_version', ?)", arguments: [String(version)])
+        }
+        migrator.registerMigration("v2-files") { db in
+            try db.execute(sql: """
+                CREATE TABLE files (
+                  path TEXT PRIMARY KEY,
+                  space TEXT NOT NULL,
+                  mtime REAL NOT NULL,
+                  size INTEGER NOT NULL
+                );
+                CREATE VIRTUAL TABLE files_fts USING fts5(
+                  path UNINDEXED, name, body,
+                  tokenize = "unicode61 remove_diacritics 2 tokenchars '_-'"
+                );
+                """)
+            try db.execute(sql: "INSERT INTO files_fts (files_fts, rank) VALUES ('rank', 'bm25(0.0, 10.0, 1.0)')")
         }
         return migrator
     }

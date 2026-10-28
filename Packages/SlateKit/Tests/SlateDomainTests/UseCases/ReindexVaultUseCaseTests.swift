@@ -29,6 +29,52 @@ import Testing
         #expect(Set(spies.index.indexed.keys) == [a, b])
     }
 
+    @Test func otherFilesAreIndexedWithTheirTextOrOnlyTheirName() async throws {
+        let code = VaultPath(rawValue: "Work/App.swift")
+        let image = VaultPath(rawValue: "Work/shot.png")
+        spies.files.seed(code, "let player = 1")
+        spies.files.seed(image, "png")
+        spies.files.seed(VaultPath(rawValue: "_attachments/a.txt"), "hidden")
+
+        let report = try await UseCases(ports: ports).reindex.execute(.all)
+
+        #expect(Set(report.files) == [code, image])
+        #expect(spies.index.indexedFiles[code]?.text == "let player = 1")
+        #expect(spies.index.indexedFiles[image]?.text == "")
+        #expect(spies.files.calls.contains(.read(image)) == false)
+    }
+
+    @Test func unchangedOtherFilesAreSkippedAndMissingOnesRemoved() async throws {
+        let code = VaultPath(rawValue: "Work/App.swift")
+        let log = VaultPath(rawValue: "Work/crash.log")
+        spies.files.seed(code, "let a = 1")
+        spies.files.seed(log, "boom")
+        let useCase = UseCases(ports: ports).reindex
+        _ = try await useCase.execute(.all)
+        _ = try await spies.files.trashFile(log)
+
+        let report = try await useCase.execute(.all)
+
+        #expect(report.files == [log])
+        #expect(spies.index.calls.contains(.removeFile(log)))
+        #expect(Set(spies.index.indexedFiles.keys) == [code])
+    }
+
+    @Test func changedPathsIndexAndRemoveOtherFiles() async throws {
+        let code = VaultPath(rawValue: "Work/App.swift")
+        let gone = VaultPath(rawValue: "Work/old.txt")
+        spies.files.seed(gone, "old")
+        let useCase = UseCases(ports: ports).reindex
+        _ = try await useCase.execute(.all)
+        _ = try await spies.files.trashFile(gone)
+        spies.files.seed(code, "let a = 1")
+
+        let report = try await useCase.execute(.paths([code, gone, VaultPath(rawValue: "Work/Sub")]))
+
+        #expect(Set(report.files) == [code, gone])
+        #expect(Set(spies.index.indexedFiles.keys) == [code])
+    }
+
     @Test func unchangedFilesAreSkipped() async throws {
         let a = VaultPath(rawValue: "Inbox/A.md")
         spies.files.seed(a, NoteText.make(id: "a", title: "A", body: ""))

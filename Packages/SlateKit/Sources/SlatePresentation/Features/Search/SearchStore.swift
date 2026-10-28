@@ -15,6 +15,7 @@ final class SearchStore {
         }
     }
     private(set) var results: [SearchHit] = []
+    private(set) var fileResults: [FileHit] = []
     private(set) var isSearching = false
     private(set) var parsed = SearchQuery()
     private(set) var scope: SpaceName?
@@ -72,6 +73,10 @@ final class SearchStore {
         events.post(.searchOpened(hit.id, words: words))
     }
 
+    func open(_ hit: FileHit) {
+        navigator.select(file: hit.path)
+    }
+
     func openFirst() {
         guard let first = results.first else { return }
         open(first)
@@ -88,6 +93,7 @@ final class SearchStore {
             scope = nil
             scopeFolder = nil
             results = []
+            fileResults = []
             isSearching = false
             return
         }
@@ -107,8 +113,10 @@ final class SearchStore {
             guard Task.isCancelled == false, let self else { return }
             do {
                 let hits = try await index.search(query, limit: Self.limit)
+                let fileHits = try await index.searchFiles(query, limit: Self.limit)
                 guard Task.isCancelled == false else { return }
                 results = folder.map { folder in hits.filter { folder.contains($0.summary.path) } } ?? hits
+                fileResults = folder.map { folder in fileHits.filter { folder.contains($0.path) } } ?? fileHits
             } catch {
                 activity.log("Search failed", detail: error.localizedDescription, outcome: .failure)
             }

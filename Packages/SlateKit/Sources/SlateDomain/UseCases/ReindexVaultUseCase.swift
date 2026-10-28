@@ -6,6 +6,7 @@ package struct ReindexVaultUseCase: Sendable {
     let builder: any IndexedNoteBuilding
 
     static let batchSize = 200
+    static let fileBatchSize = 16
 
     private enum Outcome: Sendable {
         case indexed(IndexedNote)
@@ -58,7 +59,71 @@ package struct ReindexVaultUseCase: Sendable {
                 try await index.upsert(contentsOf: batch)
             }
         }
+        report.files = try await reindexFiles(scope)
         return report
+    }
+
+    private func reindexFiles(_ scope: ReindexScope) async throws -> [VaultPath] {
+        let stamps = try await index.fileStamps()
+        var changed: [VaultPath] = []
+        var metas: [FileMeta] = []
+        switch scope {
+        case .all:
+            metas = try await files.enumerateFiles().filter { FileIndexPolicy.isIndexed($0.path) }
+            let present = Set(metas.map(\.path))
+            for path in stamps.keys where present.contains(path) == false {
+                try await index.removeFile(path: path)
+                changed.append(path)
+            }
+        case .paths(let paths):
+            let wanted = paths.filter(FileIndexPolicy.isIndexed)
+            var listed: [VaultPath: FileMeta] = [:]
+            for folder in Set(wanted.map(\.folder)) {
+                for meta in try await files.files(in: FolderPath(rawValue: folder)) {
+                    listed[meta.path] = meta
+                }
+            }
+            for path in wanted {
+                if let meta = listed[path] {
+                    metas.append(meta)
+                } else if stamps[path] != nil {
+                    try await index.removeFile(path: path)
+                    changed.append(path)
+                }
+            }
+        }
+        let stale = metas.filter { meta in stamps[meta.path].map { $0.matches(meta) == false } ?? true }
+        var start = 0
+        while start < stale.count {
+            try Task.checkCancellation()
+            let chunk = Array(stale[start..<min(start + Self.fileBatchSize, stale.count)])
+            start += Self.fileBatchSize
+            try await index.upsert(files: try await extract(chunk))
+            changed += chunk.map(\.path)
+        }
+        return changed
+    }
+
+    private func extract(_ chunk: [FileMeta]) async throws -> [IndexedFile] {
+        let files = files
+        let builder = builder
+        return try await withThrowingTaskGroup(of: (Int, IndexedFile).self) { group in
+            for (position, meta) in chunk.enumerated() {
+                group.addTask {
+                    try Task.checkCancellation()
+                    var text = ""
+                    if FileIndexPolicy.readsContent(meta.path, size: meta.size), let contents = try? await files.read(meta.path) {
+                        text = builder.text(ofFile: meta.path, data: contents.data).map(FileIndexPolicy.trimmed) ?? ""
+                    }
+                    return (position, IndexedFile(path: meta.path, stamp: FileStamp(meta), text: text))
+                }
+            }
+            var indexed: [(Int, IndexedFile)] = []
+            for try await item in group {
+                indexed.append(item)
+            }
+            return indexed.sorted { $0.0 < $1.0 }.map(\.1)
+        }
     }
 
     private func process(_ chunk: [FileMeta], states: [VaultPath: IndexedFileState]) async throws -> [Outcome] {
