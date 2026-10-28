@@ -78,6 +78,19 @@ extension MCPToolRunner {
         return json(answer)
     }
 
+    func renameNote(_ arguments: MCPArguments) async throws -> String {
+        let path = try await notePath(id: try arguments.required("id"))
+        let title = try arguments.required("title").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard title.isEmpty == false else { throw AgentError.missingArgument("title") }
+        try await permissions().checkWrite(path)
+        let current = try await document(at: path)
+        await beforeWrite()
+        let report = try await useCases.rename.execute(current, title: title, body: current.body)
+        guard let saved = report.result.document else { throw AgentError.staleNote }
+        await afterWrite("rename_note", title: saved.title, path: saved.path)
+        return json(["id": saved.id.rawValue, "title": saved.title, "path": saved.path.rawValue, "hash": saved.hash.rawValue, "changedLinks": report.rewritten.map(\.rawValue)])
+    }
+
     func trashNote(_ arguments: MCPArguments) async throws -> String {
         let path = try await notePath(id: try arguments.required("id"))
         try await permissions().checkTrash(path)
@@ -119,7 +132,7 @@ extension MCPToolRunner {
         ])
     }
 
-    private func resolvedFolder(_ raw: String) async throws -> (folder: FolderPath, exists: Bool) {
+    func resolvedFolder(_ raw: String) async throws -> (folder: FolderPath, exists: Bool) {
         if let found = try? await existingFolder(raw) {
             return (found, true)
         }

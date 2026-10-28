@@ -4,6 +4,7 @@ package enum PlanPolicy {
     package static let heading = "Plan"
 
     private static let checkbox = try! NSRegularExpression(pattern: #"^(\s*[-*+]\s+\[)([ xX])(\].*)$"#)
+    private static let escapedNumber = try! NSRegularExpression(pattern: #"^(\d+)\\\."#)
 
     package static func items(in body: String) -> [PlanItem] {
         lines(in: body).map(\.item)
@@ -30,7 +31,8 @@ package enum PlanPolicy {
         for index in bounds {
             let line = all[index] as NSString
             guard let result = checkbox.firstMatch(in: all[index], range: NSRange(location: 0, length: line.length)) else { continue }
-            let text = String(line.substring(with: result.range(at: 3)).dropFirst()).trimmingCharacters(in: .whitespaces)
+            let raw = String(line.substring(with: result.range(at: 3)).dropFirst()).trimmingCharacters(in: .whitespaces)
+            let text = escapedNumber.stringByReplacingMatches(in: raw, range: NSRange(location: 0, length: (raw as NSString).length), withTemplate: "$1.")
             guard text.isEmpty == false else { continue }
             let isDone = line.substring(with: result.range(at: 2)) != " "
             found.append((index, PlanItem(number: found.count + 1, text: text, isDone: isDone)))

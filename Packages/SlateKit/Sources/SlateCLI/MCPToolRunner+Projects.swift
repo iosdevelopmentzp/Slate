@@ -75,14 +75,22 @@ extension MCPToolRunner {
     }
 
     func addFile(_ arguments: MCPArguments) async throws -> String {
-        let folder = try await existingFolder(try arguments.required("folder"))
+        let target = AgentPathPolicy.fileTarget(folder: try arguments.required("folder"), name: arguments.string("name"))
+        let (folder, exists) = try await resolvedFolder(target.folder)
         let permissions = try await permissions()
         guard permissions.canWrite(in: folder) else { throw AgentError.folderNotAllowed(folder.rawValue, allowed: permissions.writableFolders) }
-        let source = try fileSource(arguments)
+        let source = try fileSource(arguments, name: target.name)
         defer { if source.isTemporary { try? FileManager.default.removeItem(at: source.url.deletingLastPathComponent()) } }
+        if exists == false {
+            try await ports.files.createFolder(folder)
+        }
         let path = try await ports.files.importFile(source.url, into: folder)
         await afterWrite("add_file", title: path.fileName, path: path)
-        return json(["path": path.rawValue, "absolutePath": root.appendingPathComponent(path.rawValue).path])
+        var answer: [String: Any] = ["path": path.rawValue, "absolutePath": root.appendingPathComponent(path.rawValue).path]
+        if exists == false {
+            answer["createdFolder"] = folder.rawValue
+        }
+        return json(answer)
     }
 
     func listFiles(_ arguments: MCPArguments) async throws -> String {
@@ -138,10 +146,11 @@ extension MCPToolRunner {
         return found
     }
 
-    private func fileSource(_ arguments: MCPArguments) throws -> (url: URL, isTemporary: Bool) {
+    private func fileSource(_ arguments: MCPArguments, name wanted: String?) throws -> (url: URL, isTemporary: Bool) {
         if let data = arguments.data("base64") {
             guard data.count <= Self.maxFileSize else { throw AgentError.fileTooLarge }
-            let name = FileNamePolicy.cleaned(try arguments.required("name")) ?? "file"
+            guard let wanted else { throw AgentError.missingArgument("name") }
+            let name = FileNamePolicy.cleaned(wanted) ?? "file"
             let folder = FileManager.default.temporaryDirectory.appendingPathComponent("slate-\(UUID().uuidString)", isDirectory: true)
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             let url = folder.appendingPathComponent(name)
@@ -153,7 +162,7 @@ extension MCPToolRunner {
         let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
         guard values?.isRegularFile == true else { throw AgentError.notAFile(raw) }
         guard (values?.fileSize ?? 0) <= Self.maxFileSize else { throw AgentError.fileTooLarge }
-        guard let name = arguments.string("name").flatMap(FileNamePolicy.cleaned), name != url.lastPathComponent else { return (url, false) }
+        guard let name = wanted.flatMap(FileNamePolicy.cleaned), name != url.lastPathComponent else { return (url, false) }
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("slate-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let renamed = folder.appendingPathComponent(name)

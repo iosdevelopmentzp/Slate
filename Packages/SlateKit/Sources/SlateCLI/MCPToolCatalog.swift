@@ -4,7 +4,7 @@ import MCP
 enum MCPToolCatalog {
     static let tools: [Tool] = [
         tool("list_folders", "List the folders of the notes folder with the number of notes in each. writable says if agents may change notes there.", [:], required: [], readOnly: true),
-        tool("list_notes", "List notes, newest first: id, title, folder, path, updated, pinned, the start of the text, and type, status and ticket for task notes.", [
+        tool("list_notes", "List notes, newest first: id, title, folder, path, updated, pinned, the start of the text, and type, status and ticket for task notes. plainFile: true marks a Markdown file without a Slate header, like a copied README or a report kept as a resource.", [
             "folder": text("Only notes in this folder and its sub-folders, like Notes or Work/Clients."),
             "limit": number("At most this many notes. Default 50."),
             "headings": flag("true adds the headings of each note, to tell similar notes apart."),
@@ -27,7 +27,7 @@ enum MCPToolCatalog {
             "id": text("The note id."),
             "path": text("The path inside the notes folder. Use id or path."),
         ], required: [], readOnly: true),
-        tool("create_note", "Make a new note in a folder. Slate writes the header and picks a free file name. A missing folder is made, when agents may write there.", [
+        tool("create_note", "Make a new note in a folder. Slate writes the header and picks a free file name. A missing folder is made, when agents may write there. A note has no size limit, so a long body can go in one call.", [
             "folder": text("The folder, like Notes or Work/Clients."),
             "title": text("The title of the note."),
             "body": text("The Markdown text of the note, without a header."),
@@ -62,6 +62,10 @@ enum MCPToolCatalog {
             "id": text("The note id."),
             "folder": text("The folder to move the note to."),
         ], required: ["id", "folder"]),
+        tool("rename_note", "Change the title of a note. The file name follows the title, and [[links]] to the note in other notes are changed too. The folder keeps its name.", [
+            "id": text("The note id."),
+            "title": text("The new title."),
+        ], required: ["id", "title"]),
         tool("trash_note", "Move a note to the Trash of Slate. The owner can restore it for 30 days. Agents may do this only when the owner allows it.", [
             "id": text("The note id."),
         ], required: ["id"], destructive: true),
@@ -101,11 +105,11 @@ enum MCPToolCatalog {
             "task": text("The task: its note id, its folder, or its ticket."),
             "text": text("The Markdown text of the entry."),
         ], required: ["task", "text"]),
-        tool("add_file", "Copy a file into a folder of the notes folder, like a log, a screenshot, a PDF or JSON. A taken name gets a number. At most 200 MB.", [
+        tool("add_file", "Copy a file into a folder of the notes folder, like a log, a screenshot, a PDF or JSON. A name with / puts the file into sub-folders, like Resources/run.log. Missing folders are made, when agents may write there. A taken name gets a number. At most 200 MB.", [
             "folder": text("The folder, like MyApp/ABC-123 Fix login."),
             "path": text("The absolute path of the file on this Mac. Use path or base64."),
             "base64": text("The file data in base64. Needs name."),
-            "name": text("The file name in Slate, like crash.log."),
+            "name": text("The file name in Slate, like crash.log, or a path below folder, like Resources/Runs/crash.log."),
         ], required: ["folder"]),
         tool("list_files", "List the files of a folder that are not notes: name, path, size, date. Read one with read_file.", [
             "folder": text("The folder, like MyApp/ABC-123 Fix login."),
@@ -124,6 +128,9 @@ enum MCPToolCatalog {
             "text": text("The new text of the file."),
             "expectedHash": text("The hash that read_file returned."),
         ], required: ["path", "text", "expectedHash"], destructive: true),
+        tool("trash_file", "Move a file that is not a note to the macOS Trash. Agents may do this only when the owner allows them to move notes to the Trash.", [
+            "path": text("The path inside the notes folder, from list_files."),
+        ], required: ["path"], destructive: true),
         tool("save_version", "Save a named version of the notes folder, like a checkpoint at the end of a session. The owner sees it in the versions of each note.", [
             "name": text("A short name, like end of session 3."),
         ], required: ["name"]),

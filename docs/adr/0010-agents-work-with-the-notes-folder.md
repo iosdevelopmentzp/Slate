@@ -45,12 +45,14 @@ Three layers, each useful on its own.
 | `update_note` | `id`, `body`, `expectedHash` | replaces the body through `SaveNoteUseCase`; refuses with "the note changed since you read it, read it again" when the hash differs |
 | `batch_edit` | `operations` | up to 50 operations of `replace_in_note`, `update_section`, `append_to_note` and `set_plan_item`, each with its own arguments. All are checked in memory first; one failure writes nothing. Each note is written once, and one version is kept for the batch |
 | `move_note` | `id`, `folder` | through `MoveNoteUseCase`. A missing folder is made when agents may write there (`createdFolder`); a folder that the move leaves empty is removed (`removedFolder`, ADR 0019) |
+| `rename_note` | `id`, `title` | through `RenameNoteUseCase`: the title, the file name and the `[[links]]` in other notes; the folder keeps its name |
 | `trash_note` | `id` | through `TrashNoteUseCase`; off by default (permissions below) |
 | `set_plan_item` | `task`, `item`, `done?` | marks one checklist step of the Plan section done or open (`PlanPolicy`); `item` is the step number or a part of its text. `project_context` gives each task `plan` (done, total, next) and the current task every step |
 | `attach_image` | `id`, `base64 or path`, `caption?`, `section?` | imports into `_attachments/` and appends the image block at the end of the note or of the section; `placedAt` in the answer says where |
 | `open_in_slate` | `id` | opens the note in the app through `slate://open` |
 | `read_file` | `path` | ADR 0020: a file that is not a note: the text and `hash` of a text file, the text of a PDF, or only name, size and date |
 | `replace_in_file` | `path`, `old`, `new`, `expectedHash?` | ADR 0020: one exact piece of a text file (`TextReplacePolicy`, `WriteTextFileUseCase`) |
+| `trash_file` | `path` | ADR 0020: a file that is not a note to the macOS Trash; needs `allowTrash` |
 | `update_file` | `path`, `text`, `expectedHash` | ADR 0020: the whole text of a text file; refused when the file changed since `read_file` |
 
 - `replace_in_note` and `update_section` read the note again and retry when the file changed between the read and the write. With `expectedHash` they refuse instead. They keep a version before the change, like every other write (amendment, 2026-10-19).

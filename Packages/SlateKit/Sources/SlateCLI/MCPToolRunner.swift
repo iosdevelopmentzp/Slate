@@ -40,6 +40,7 @@ struct MCPToolRunner: Sendable {
         case "batch_edit": try await batchEdit(arguments)
         case "set_plan_item": try await setPlanItem(arguments)
         case "move_note": try await moveNote(arguments)
+        case "rename_note": try await renameNote(arguments)
         case "trash_note": try await trashNote(arguments)
         case "attach_image": try await attachImage(arguments)
         case "open_in_slate": try await openInSlate(arguments)
@@ -52,6 +53,7 @@ struct MCPToolRunner: Sendable {
         case "read_file": try await readFile(arguments)
         case "replace_in_file": try await replaceInFile(arguments)
         case "update_file": try await updateFile(arguments)
+        case "trash_file": try await trashFile(arguments)
         case "save_version": try await saveVersion(arguments)
         default: throw AgentError.unknownTool(name)
         }
@@ -148,6 +150,9 @@ struct MCPToolRunner: Sendable {
         ]
         if summary.type != NoteType.defaultName {
             object["type"] = summary.type
+        }
+        if summary.id.isPathBased {
+            object["plainFile"] = true
         }
         object["status"] = summary.status?.rawValue
         object["ticket"] = summary.ticket

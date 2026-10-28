@@ -42,6 +42,15 @@ extension MCPToolRunner {
         return try await writeFile("update_file", arguments, expected: expected) { _ in text }
     }
 
+    func trashFile(_ arguments: MCPArguments) async throws -> String {
+        let path = try AgentPathPolicy.filePath(from: try arguments.required("path"), root: root)
+        try await permissions().checkTrash(path)
+        await beforeWrite()
+        _ = try await ports.files.trashFile(path)
+        await afterWrite("trash_file", title: path.fileName, path: path)
+        return "Moved \(path.fileName) to the macOS Trash. The owner can put it back from there."
+    }
+
     private func writeFile(_ tool: String, _ arguments: MCPArguments, expected: String?, change: (String) throws -> String) async throws -> String {
         let path = try AgentPathPolicy.filePath(from: try arguments.required("path"), root: root)
         try await permissions().checkWrite(path)

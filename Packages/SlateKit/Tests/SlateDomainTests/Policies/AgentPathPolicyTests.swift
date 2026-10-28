@@ -17,6 +17,18 @@ import Testing
         #expect(throws: AgentError.outsideFiles(".slate/spaces.json")) { try AgentPathPolicy.filePath(from: ".slate/spaces.json", root: root) }
     }
 
+    @Test func aFileNameWithSlashesNamesSubFolders() {
+        let nested = AgentPathPolicy.fileTarget(folder: "Work/Task", name: "Resources/Runs/01 Cold/X.swift")
+        let plain = AgentPathPolicy.fileTarget(folder: "Work/Task", name: "X.swift")
+        let none = AgentPathPolicy.fileTarget(folder: "Work/Task", name: nil)
+
+        #expect(nested.folder == "Work/Task/Resources/Runs/01 Cold")
+        #expect(nested.name == "X.swift")
+        #expect(plain.folder == "Work/Task")
+        #expect(plain.name == "X.swift")
+        #expect(none.name == nil)
+    }
+
     @Test func aNoteIsNotAFile() {
         #expect(throws: AgentError.isNote("Work/Plan.md")) { try AgentPathPolicy.filePath(from: "Work/Plan.md", root: root) }
     }

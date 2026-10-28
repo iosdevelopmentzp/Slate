@@ -60,12 +60,12 @@ import Testing
         return try object(answer.text)["id"] as? String ?? ""
     }
 
-    @Test func theCatalogHasTheTwentySevenTools() {
+    @Test func theCatalogHasTheTwentyNineTools() {
         #expect(MCPToolCatalog.tools.map(\.name) == [
             "list_folders", "list_notes", "search_notes", "read_note", "read_section", "list_backlinks", "create_note", "append_to_note",
-            "replace_in_note", "update_section", "update_note", "batch_edit", "move_note", "trash_note", "attach_image", "open_in_slate",
+            "replace_in_note", "update_section", "update_note", "batch_edit", "move_note", "rename_note", "trash_note", "attach_image", "open_in_slate",
             "project_context", "start_task", "set_task_status", "set_plan_item", "log_progress", "add_file", "list_files",
-            "read_file", "replace_in_file", "update_file", "save_version",
+            "read_file", "replace_in_file", "update_file", "trash_file", "save_version",
         ])
         #expect(MCPToolCatalog.tools.allSatisfy { ($0.description ?? "").isEmpty == false })
     }
@@ -154,6 +154,63 @@ import Testing
         #expect(results.first?["title"] as? String == "Player")
         #expect(results.last?["kind"] as? String == "file")
         #expect(results.last?["path"] as? String == "Notes/crash.log")
+    }
+
+    @Test func addFileWithSlashesInTheNameMakesTheSubFolders() async throws {
+        let answer = await call("add_file", ["folder": "Notes", "base64": .string(Data("let a = 1".utf8).base64EncodedString()), "name": "Resources/Runs/01 Cold/X.swift"])
+
+        #expect(answer.isError == false, "\(answer.text)")
+        #expect(try object(answer.text)["path"] as? String == "Notes/Resources/Runs/01 Cold/X.swift")
+        #expect(try object(answer.text)["createdFolder"] as? String == "Notes/Resources/Runs/01 Cold")
+        #expect(try file("Notes/Resources/Runs/01 Cold/X.swift") == "let a = 1")
+    }
+
+    @Test func addFileMakesAMissingFolderOnlyWhereAgentsMayWrite() async throws {
+        let data = Value.string(Data("x".utf8).base64EncodedString())
+
+        let made = await call("add_file", ["folder": "Notes/New", "base64": data, "name": "a.txt"])
+        let locked = await call("add_file", ["folder": "Work/New", "base64": data, "name": "a.txt"])
+        let escaping = await call("add_file", ["folder": "Notes", "base64": data, "name": "../../a.txt"])
+
+        #expect(made.isError == false, "\(made.text)")
+        #expect(try file("Notes/New/a.txt") == "x")
+        #expect(locked.isError)
+        #expect(escaping.isError)
+        #expect(FileManager.default.fileExists(atPath: vault.url.appendingPathComponent("Work/New").path) == false)
+    }
+
+    @Test func aMarkdownFileWithoutAHeaderIsMarkedAsAPlainFile() async throws {
+        try await create("Plan")
+        try put("# Report\n\nRun 1", at: "Notes/report.md")
+
+        let notes = try array(await call("list_notes").text)
+
+        #expect(notes.first { $0["title"] as? String == "Plan" }?["plainFile"] == nil)
+        #expect(notes.first { ($0["path"] as? String) == "Notes/report.md" }?["plainFile"] as? Bool == true)
+    }
+
+    @Test func renameNoteChangesTheTitleTheFileAndTheLinks() async throws {
+        let id = try await create("Figma to UI")
+        try await create("Index", body: "See [[Figma to UI]]")
+
+        let answer = await call("rename_note", ["id": .string(id), "title": "Design to code"])
+
+        #expect(answer.isError == false, "\(answer.text)")
+        #expect(try object(answer.text)["path"] as? String == "Notes/Design to code.md")
+        #expect(try file("Notes/Index.md").contains("[[Design to code]]"))
+        #expect(FileManager.default.fileExists(atPath: vault.url.appendingPathComponent("Notes/Figma to UI.md").path) == false)
+    }
+
+    @Test func trashFileNeedsTheOwnersPermission() async throws {
+        try put("x", at: "Notes/extra.swift")
+
+        let refused = await call("trash_file", ["path": "Notes/extra.swift"])
+        try await allow(AgentPermissions(allowTrash: true))
+        let note = await call("trash_file", ["path": "Notes/Plan.md"])
+
+        #expect(refused.isError)
+        #expect(note.isError)
+        #expect(FileManager.default.fileExists(atPath: vault.url.appendingPathComponent("Notes/extra.swift").path))
     }
 
     @Test func listFoldersCountsNotesAndSaysWhereAgentsMayWrite() async throws {

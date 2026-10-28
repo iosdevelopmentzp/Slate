@@ -87,7 +87,7 @@ package enum AgentGuide {
 
     ## MCP server
 
-    `slate mcp` is an MCP server over stdio. Add it to Claude Code with `\(registration)`. Its tools: `list_folders`, `list_notes`, `search_notes`, `read_note`, `read_section`, `list_backlinks`, `create_note`, `append_to_note`, `replace_in_note`, `update_section`, `batch_edit`, `update_note`, `move_note`, `trash_note`, `attach_image`, `open_in_slate`, and for projects `project_context`, `start_task`, `set_task_status`, `set_plan_item`, `log_progress`, `add_file`, `list_files`, `save_version`, and for other files of a folder `read_file`, `replace_in_file`, `update_file`. The resource `slate://note/<id>` gives the text of a note.
+    `slate mcp` is an MCP server over stdio. Add it to Claude Code with `\(registration)`. Its tools: `list_folders`, `list_notes`, `search_notes`, `read_note`, `read_section`, `list_backlinks`, `create_note`, `append_to_note`, `replace_in_note`, `update_section`, `batch_edit`, `update_note`, `move_note`, `rename_note`, `trash_note`, `attach_image`, `open_in_slate`, and for projects `project_context`, `start_task`, `set_task_status`, `set_plan_item`, `log_progress`, `add_file`, `list_files`, `save_version`, and for other files of a folder `read_file`, `replace_in_file`, `update_file`, `trash_file`. The resource `slate://note/<id>` gives the text of a note.
 
     The owner chooses in Slate which folders agents may change, and whether agents may create notes or move notes to the Trash. A tool that is not allowed answers with a sentence that says so. Slate keeps a version of the note before every change by an agent.
 

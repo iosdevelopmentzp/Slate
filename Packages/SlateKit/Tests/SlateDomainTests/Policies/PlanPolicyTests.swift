@@ -24,6 +24,14 @@ import Testing
         #expect(reopened == body.replacingOccurrences(of: "- [x] 1.", with: "- [ ] 1."))
     }
 
+    @Test func anEscapedNumberFromTheEditorReadsAsAPlainNumber() throws {
+        let escaped = "## Plan\n\n- [x] 1\\. Find the cause\n- [ ] 3\\. Build\n"
+
+        #expect(PlanPolicy.items(in: escaped).map(\.label) == ["1. Find the cause", "2. 3. Build"])
+        #expect(PlanPolicy.items(in: escaped)[1].text == "3. Build")
+        #expect(try PlanPolicy.setting("Build", done: true, in: escaped) == escaped.replacingOccurrences(of: "- [ ] 3", with: "- [x] 3"))
+    }
+
     @Test func theLabelAddsTheNumberOnlyWhenTheTextHasNone() {
         #expect(PlanItem(number: 2, text: "2. Fix", isDone: false).label == "2. Fix")
         #expect(PlanItem(number: 2, text: "Fix", isDone: false).label == "2. Fix")

@@ -32,6 +32,15 @@ package enum AgentPathPolicy {
         return path
     }
 
+    package static func fileTarget(folder: String, name: String?) -> (folder: String, name: String?) {
+        guard let name, name.contains("/") else { return (folder, name) }
+        let parts = name.split(separator: "/").map(String.init)
+        guard let last = parts.last else { return (folder, nil) }
+        let base = trimmed(folder)
+        let inner = parts.dropLast().joined(separator: "/")
+        return (inner.isEmpty ? base : "\(base)/\(inner)", last)
+    }
+
     package static func folder(from raw: String) throws -> FolderPath {
         let relative = trimmed(raw)
         let components = relative.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
