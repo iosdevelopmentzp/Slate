@@ -1,6 +1,7 @@
 import Foundation
 
 struct FileRowActions {
+    let select: () -> Void
     let quickLook: () -> Void
     let open: () -> Void
     let reveal: () -> Void
@@ -14,6 +15,7 @@ struct FileRowActions {
 
 extension FileRowActions {
     static let preview = FileRowActions(
+        select: {},
         quickLook: {},
         open: {},
         reveal: {},

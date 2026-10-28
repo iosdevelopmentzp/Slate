@@ -13,6 +13,7 @@ final class FolderFilesStore {
     @ObservationIgnored private let store: any VaultFileStore
     @ObservationIgnored private let workspace: any WorkspaceOpening
     @ObservationIgnored private let exporter: any NoteExporting
+    @ObservationIgnored private let navigator: Navigator
     @ObservationIgnored private let toaster: Toaster
     @ObservationIgnored private let activity: ActivityLog
     @ObservationIgnored private let events: AppEvents
@@ -20,10 +21,11 @@ final class FolderFilesStore {
     @ObservationIgnored private let refreshTask = RefreshTask()
     @ObservationIgnored private var subscription: SubscriptionToken?
 
-    init(files: any VaultFileStore, workspace: any WorkspaceOpening, exporter: any NoteExporting, toaster: Toaster, activity: ActivityLog, events: AppEvents, vaultRoot: URL) {
+    init(files: any VaultFileStore, workspace: any WorkspaceOpening, exporter: any NoteExporting, navigator: Navigator, toaster: Toaster, activity: ActivityLog, events: AppEvents, vaultRoot: URL) {
         store = files
         self.workspace = workspace
         self.exporter = exporter
+        self.navigator = navigator
         self.toaster = toaster
         self.activity = activity
         self.events = events
@@ -60,6 +62,10 @@ final class FolderFilesStore {
 
     func url(for path: VaultPath) -> URL {
         vaultRoot.appendingPathComponent(path.rawValue, isDirectory: false)
+    }
+
+    func select(_ path: VaultPath) {
+        navigator.select(file: path)
     }
 
     func quickLook(_ path: VaultPath) async {
@@ -130,6 +136,9 @@ final class FolderFilesStore {
         let target = VaultPath(rawValue: path.folder.isEmpty ? name : "\(path.folder)/\(name)")
         do {
             try await store.move(from: path, to: target)
+            if navigator.selectedFile == path {
+                navigator.select(file: target)
+            }
             await refresh()
             return true
         } catch {
@@ -141,6 +150,9 @@ final class FolderFilesStore {
     func trash(_ path: VaultPath) async {
         do {
             let trashed = try await store.trashFile(path)
+            if navigator.selectedFile == path {
+                navigator.select(file: nil)
+            }
             await refresh()
             toaster.show("Moved \(path.fileName) to the Trash", action: ToastAction(title: "Undo") { [weak self] in
                 guard let self else { return }

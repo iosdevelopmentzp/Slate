@@ -63,11 +63,13 @@ final class StoreHarness {
         files: ports.files,
         workspace: ports.workspace,
         exporter: ports.exporter,
+        navigator: navigator,
         toaster: toaster,
         activity: activity,
         events: events,
         vaultRoot: URL(fileURLWithPath: "/vault", isDirectory: true)
     )
+    lazy var fileViewer = FileViewerStore(files: ports.files, activity: activity, events: events, vaultRoot: URL(fileURLWithPath: "/vault", isDirectory: true))
     lazy var editor = EditorStore(
         files: ports.files,
         index: ports.index,

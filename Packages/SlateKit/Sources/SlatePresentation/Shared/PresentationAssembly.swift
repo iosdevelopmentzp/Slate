@@ -14,6 +14,7 @@ package final class PresentationAssembly {
     let vault: VaultStore
     let noteList: NoteListStore
     let files: FolderFilesStore
+    let fileViewer: FileViewerStore
     let editor: EditorStore
     let panelVisibility: PanelVisibility
     let search: SearchStore
@@ -73,7 +74,8 @@ package final class PresentationAssembly {
             store: ports.keyValues,
             vaultRoot: vaultRoot
         )
-        files = FolderFilesStore(files: ports.files, workspace: ports.workspace, exporter: ports.exporter, toaster: toaster, activity: activity, events: events, vaultRoot: vaultRoot)
+        files = FolderFilesStore(files: ports.files, workspace: ports.workspace, exporter: ports.exporter, navigator: navigator, toaster: toaster, activity: activity, events: events, vaultRoot: vaultRoot)
+        fileViewer = FileViewerStore(files: ports.files, activity: activity, events: events, vaultRoot: vaultRoot)
         search = SearchStore(index: ports.index, notes: noteList, navigator: navigator, clock: ports.clock, activity: activity, events: events)
         editor = EditorStore(
             files: ports.files,
@@ -148,14 +150,17 @@ package final class PresentationAssembly {
 
     package func flush() async {
         await editor.flush()
+        await fileViewer.flush()
     }
 
     package func pendingSave() -> (@Sendable () async -> Void)? {
         let save = editor.pendingSave()
+        let fileSave = fileViewer.pendingSave()
         let snapshot = history.quitJob()
-        guard save != nil || snapshot != nil else { return nil }
+        guard save != nil || fileSave != nil || snapshot != nil else { return nil }
         return {
             await save?()
+            await fileSave?()
             await snapshot?()
         }
     }

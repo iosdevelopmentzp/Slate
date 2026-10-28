@@ -5,6 +5,7 @@ import SlateUI
 struct FileRow: View {
     let model: FileRowModel
     let url: URL
+    let isSelected: Bool
     let actions: FileRowActions
 
     @State private var isHovered = false
@@ -31,29 +32,30 @@ struct FileRow: View {
         }
         .padding(.horizontal, Theme.cardPadding)
         .padding(.vertical, 6)
-        .softPill(isSelected: false, isHovered: isHovered, radius: Theme.cardRadius, base: Theme.surface)
+        .softPill(isSelected: isSelected, isHovered: isHovered, radius: Theme.cardRadius, base: Theme.surface)
         .contentShape(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
         .onHover { isHovered = $0 }
         .onTapGesture(count: 2, perform: actions.quickLook)
+        .simultaneousGesture(TapGesture().onEnded(actions.select))
         .contextMenu {
             FileRowMenu(actions: actions)
         }
         .onDrag(actions.drag)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(model.name)
-        .accessibilityHint("Double click to look at the file")
+        .accessibilityHint("Click to read the file, double click to look at it")
     }
 }
 
 #Preview("Light") {
-    FileRow(model: .preview, url: URL(fileURLWithPath: "/tmp/crash.log"), actions: .preview)
+    FileRow(model: .preview, url: URL(fileURLWithPath: "/tmp/crash.log"), isSelected: false, actions: .preview)
         .padding()
         .frame(width: 320)
         .preferredColorScheme(.light)
 }
 
 #Preview("Dark") {
-    FileRow(model: .preview, url: URL(fileURLWithPath: "/tmp/crash.log"), actions: .preview)
+    FileRow(model: .preview, url: URL(fileURLWithPath: "/tmp/crash.log"), isSelected: false, actions: .preview)
         .padding()
         .frame(width: 320)
         .preferredColorScheme(.dark)

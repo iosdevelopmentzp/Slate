@@ -17,6 +17,27 @@ import Testing
         #expect(second.selectedNote == NoteID(rawValue: "c"))
     }
 
+    @Test func selectingAFileClearsTheNoteAndTheOtherWayRound() {
+        let navigator = Navigator(store: InMemoryKeyValueStore())
+        let file = VaultPath(rawValue: "Work/App.swift")
+        navigator.select(NoteID(rawValue: "c"))
+
+        navigator.select(file: file)
+        #expect(navigator.selectedNote == nil)
+        #expect(navigator.selectedFile == file)
+
+        navigator.select(NoteID(rawValue: "d"))
+        #expect(navigator.selectedFile == nil)
+        #expect(navigator.selectedNote == NoteID(rawValue: "d"))
+    }
+
+    @Test func theSelectedFileIsRestored() {
+        let store = InMemoryKeyValueStore()
+        Navigator(store: store).select(file: VaultPath(rawValue: "Work/App.swift"))
+
+        #expect(Navigator(store: store).selectedFile == VaultPath(rawValue: "Work/App.swift"))
+    }
+
     @Test func trashAndAllAreRestoredToo() {
         let store = InMemoryKeyValueStore()
         Navigator(store: store).show(.trash)

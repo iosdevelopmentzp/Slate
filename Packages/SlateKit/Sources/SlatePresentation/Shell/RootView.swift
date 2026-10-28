@@ -5,6 +5,7 @@ import SlateUI
 struct RootView: View {
     @Environment(NoteListStore.self) private var noteList
     @Environment(EditorStore.self) private var editor
+    @Environment(FileViewerStore.self) private var fileViewer
     @Environment(Navigator.self) private var navigator
     @Environment(Toaster.self) private var toaster
     @Environment(WindowLayout.self) private var layout
@@ -35,7 +36,7 @@ struct RootView: View {
                 ColumnResizer(column: .list)
                     .background(Theme.base)
             }
-            EditorView()
+            detail
                 .frame(minWidth: 320, maxWidth: .infinity)
                 .overlay(alignment: .topLeading) {
                     PanelToggles()
@@ -71,6 +72,18 @@ struct RootView: View {
         }
         .onChange(of: navigator.selectedNote, initial: true) { _, id in
             Task { await editor.open(id) }
+        }
+        .onChange(of: navigator.selectedFile, initial: true) { _, path in
+            Task { await fileViewer.open(path) }
+        }
+    }
+
+    @ViewBuilder
+    private var detail: some View {
+        if navigator.selectedFile != nil {
+            FileViewerView()
+        } else {
+            EditorView()
         }
     }
 

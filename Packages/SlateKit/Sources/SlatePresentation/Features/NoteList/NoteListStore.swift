@@ -164,6 +164,9 @@ final class NoteListStore: NoteLookup {
         if let selected, source.shows(selected.path) {
             return
         }
+        if let file = navigator.selectedFile, source.folder != nil, source.shows(file) {
+            return
+        }
         navigator.select(visibleNotes.first?.id)
     }
 

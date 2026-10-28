@@ -11,4 +11,13 @@ enum FileRowMapper {
             isImage: AttachmentPolicy.isImage(meta.path.fileName)
         )
     }
+
+    static func viewerDetail(for meta: FileMeta, content: FileViewerStore.Content, now: Date) -> String {
+        let base = model(for: meta, now: now).detail
+        switch content {
+        case .text: return "\(base) · Plain text"
+        case .preview: return "\(base) · Preview only, open the file to change it"
+        case .loading, .missing: return base
+        }
+    }
 }

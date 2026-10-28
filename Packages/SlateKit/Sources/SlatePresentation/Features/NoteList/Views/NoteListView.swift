@@ -8,6 +8,7 @@ struct NoteListView: View {
     @Environment(Navigator.self) private var navigator
     @Environment(SearchStore.self) private var search
     @Environment(FolderFilesStore.self) private var files
+    @Environment(FileViewerStore.self) private var fileViewer
 
     @State private var dropTarget: FolderPath?
     @State private var isFileDropTarget = false
@@ -93,11 +94,16 @@ struct NoteListView: View {
             @Bindable var files = files
             FileNameField(
                 name: $files.draftName,
-                onCommit: { Task { await files.commitRename() } },
+                onCommit: {
+                    Task {
+                        await fileViewer.flush()
+                        await files.commitRename()
+                    }
+                },
                 onCancel: { files.cancelRename() }
             )
         } else {
-            FileRow(model: FileRowMapper.model(for: meta, now: now), url: files.url(for: meta.path), actions: fileActions(for: meta.path))
+            FileRow(model: FileRowMapper.model(for: meta, now: now), url: files.url(for: meta.path), isSelected: navigator.selectedFile == meta.path, actions: fileActions(for: meta.path))
                 .popover(isPresented: Binding(get: { versionsOf == meta.path }, set: { if $0 == false { versionsOf = nil } }), arrowEdge: .trailing) {
                     FileVersionsView(path: meta.path)
                 }
@@ -106,13 +112,19 @@ struct NoteListView: View {
 
     private func fileActions(for path: VaultPath) -> FileRowActions {
         FileRowActions(
+            select: { files.select(path) },
             quickLook: { Task { await files.quickLook(path) } },
             open: { Task { await files.open(path) } },
             reveal: { Task { await files.reveal(path) } },
             saveToDownloads: { Task { await files.saveToDownloads(path) } },
             copyPath: { files.copyPath(path) },
             rename: { files.startRename(path) },
-            trash: { Task { await files.trash(path) } },
+            trash: {
+                Task {
+                    await fileViewer.flush()
+                    await files.trash(path)
+                }
+            },
             versions: { versionsOf = path },
             drag: { files.dragProvider(for: path) }
         )

@@ -99,6 +99,37 @@ import Testing
         #expect(harness.spies.exporter.copied == [URL(fileURLWithPath: "/vault/Tasks/ABC-123 Login/crash.log")])
     }
 
+    @Test func selectShowsTheFileInsteadOfTheNote() {
+        harness.navigator.select(NoteID(rawValue: "n1"))
+
+        files.select(log)
+
+        #expect(harness.navigator.selectedFile == log)
+        #expect(harness.navigator.selectedNote == nil)
+    }
+
+    @Test func renamingTheSelectedFileKeepsItSelected() async {
+        harness.spies.files.seed(log, "boom")
+        await files.show(folder)
+        files.select(log)
+
+        files.startRename(log)
+        files.draftName = "first.log"
+        await files.commitRename()
+
+        #expect(harness.navigator.selectedFile == VaultPath(rawValue: "Tasks/ABC-123 Login/first.log"))
+    }
+
+    @Test func trashingTheSelectedFileClearsTheSelection() async {
+        harness.spies.files.seed(log, "boom")
+        await files.show(folder)
+        files.select(log)
+
+        await files.trash(log)
+
+        #expect(harness.navigator.selectedFile == nil)
+    }
+
     @Test func aChangeInTheFolderRefreshes() async throws {
         await files.show(folder)
         harness.spies.files.seed(log, "boom")

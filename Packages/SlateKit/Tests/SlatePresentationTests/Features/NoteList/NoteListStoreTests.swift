@@ -93,6 +93,20 @@ import Testing
         #expect(store.count(in: nil) == 4)
     }
 
+    @Test func showingTheFolderOfTheSelectedFileKeepsTheFile() async throws {
+        try await seedFour()
+        await store.refresh()
+        let file = VaultPath(rawValue: "Tasks/App.swift")
+        harness.navigator.select(file: file)
+
+        store.show(.space(SpaceName(rawValue: "Tasks")))
+        #expect(harness.navigator.selectedFile == file)
+
+        store.show(.space(SpaceName(rawValue: "Inbox")))
+        #expect(harness.navigator.selectedFile == nil)
+        #expect(harness.navigator.selectedNote == store.visibleNotes.first?.id)
+    }
+
     @Test func showingAllNotesKeepsTheSelection() async throws {
         try await seedFour()
         await store.refresh()

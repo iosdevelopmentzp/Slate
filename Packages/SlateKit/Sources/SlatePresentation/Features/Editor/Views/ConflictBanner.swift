@@ -4,7 +4,7 @@ import SlateUI
 struct ConflictBanner: View {
     let onKeepMine: () -> Void
     let onTakeTheirs: () -> Void
-    let onOpenBoth: () -> Void
+    var onOpenBoth: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -14,8 +14,10 @@ struct ConflictBanner: View {
             Spacer(minLength: 8)
             Button("Keep mine", action: onKeepMine)
             Button("Take theirs", action: onTakeTheirs)
-            Button("Open both", action: onOpenBoth)
-                .help("Keeps your text as a new note and shows the version on disk")
+            if let onOpenBoth {
+                Button("Open both", action: onOpenBoth)
+                    .help("Keeps your text as a new note and shows the version on disk")
+            }
         }
         .controlSize(.small)
         .padding(.horizontal, 12)
