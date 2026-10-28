@@ -10,6 +10,7 @@ package final class SpyHistoryRepository: HistoryRepository, @unchecked Sendable
         case push(String)
         case changes(FolderPath?)
         case clear(FolderPath?)
+        case rename(String)
     }
 
     private let lock = NSLock()
@@ -20,6 +21,7 @@ package final class SpyHistoryRepository: HistoryRepository, @unchecked Sendable
     private var _contents: [String: Data] = [:]
     private var _pushError: TestError?
     private var _changes: [SnapshotChange] = []
+    private var _pushedHash: String?
 
     package init() {}
 
@@ -40,6 +42,11 @@ package final class SpyHistoryRepository: HistoryRepository, @unchecked Sendable
     package var pushError: TestError? {
         get { lock.withLock { _pushError } }
         set { lock.withLock { _pushError = newValue } }
+    }
+
+    package var pushedHash: String? {
+        get { lock.withLock { _pushedHash } }
+        set { lock.withLock { _pushedHash = newValue } }
     }
 
     package func seed(_ snapshot: Snapshot, of path: VaultPath, text: String) {
@@ -117,5 +124,13 @@ package final class SpyHistoryRepository: HistoryRepository, @unchecked Sendable
 
     package func lastSnapshot() async throws -> Snapshot? {
         lock.withLock { _snapshots.values.flatMap { $0 }.max { $0.date < $1.date } }
+    }
+
+    package func renameLastSnapshot(to message: String) async throws {
+        lock.withLock { _calls.append(.rename(message)) }
+    }
+
+    package func lastPushedHash() async -> String? {
+        pushedHash
     }
 }

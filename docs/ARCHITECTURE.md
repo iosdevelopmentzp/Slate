@@ -227,7 +227,7 @@ Protocols with `async throws` methods. Long work returns `AsyncStream`. A port n
 | `VaultConfigRepository` | S5 adds `agentPermissions()` and `saveAgentPermissions(_:)` (`.slate/agents.json`). M1: `spaces() -> SpacesConfig` (folders on disk merged with `spaces.json`), `saveSpaces(SpacesConfig)`, `types() -> [NoteType]` (built-ins plus `.slate/types/`), `ensureDefaults()`. M4 adds `linkPatterns()`, `views()`, `actions()` and tracker settings for the defaults | `FileVaultConfigRepository` |
 | `JournalStore` | `save(JournalEntry)`, `entry(for:)`, `clear(_:)`; one JSON file per note in `<support>/journal/` | `FileJournalStore` |
 | `ScreenCapturing` | `capture(CaptureMode, to: URL)`; success is a file larger than zero bytes, checked by `AttachScreenshotUseCase` | `ScreencaptureTool` |
-| `HistoryRepository` | `isAvailable()`, `ensureRepository()`, `snapshot(message:) -> Bool`, `history(of:) -> [Snapshot]`, `contents(of:at:) -> Data` (raw bytes), `push(to:)` (with `--force` once after a clear), `lastSnapshot()`, `changes(in: FolderPath?, limit:) -> [SnapshotChange]`, `clear(FolderPath?)` (ADR 0015) | `GitHistoryRepository` (an actor, `<support>/history.git`) |
+| `HistoryRepository` | `isAvailable()`, `ensureRepository()`, `snapshot(message:) -> Bool`, `history(of:) -> [Snapshot]`, `contents(of:at:) -> Data` (raw bytes), `push(to:)` (with `--force` once after a clear; stores the pushed commit), `lastSnapshot()`, `renameLastSnapshot(to:)`, `lastPushedHash()`, `changes(in: FolderPath?, limit:) -> [SnapshotChange]`, `clear(FolderPath?)` (ADR 0015) | `GitHistoryRepository` (an actor, `<support>/history.git`) |
 | `CloudStatusProviding` | `status(of: VaultPath) -> CloudStatus`, `startDownload(VaultPath)`, `conflictVersions(VaultPath) -> [ConflictVersion]`, `keep(version:, for:)`, `isCloudFolder(URL) -> Bool` | `UbiquityStatusProvider` |
 | `LinkTitleFetching` | `title(for: URL) -> String?` (2 s timeout) | `URLSessionLinkTitleFetcher` |
 | `IssueTrackerClient` | `issue(_:) -> IssueDetails`, `currentUser()` | `JiraIssueClient` (REST v3, basic auth, 5 s) with `JiraIssueParser` |
@@ -290,12 +290,12 @@ Every policy has a test file with fixtures.
 | `RestoreFolderUseCase` | files, move | Undo: makes the folders again and moves the notes back to their old paths |
 | `SetProjectUseCase` | config | ADR 0014: sets or removes the `project` object of a top-level folder, switches between the plain folder icon and `shippingbox.fill`, makes a new project writable for agents |
 | `CreateProjectUseCase` | createSpace, setProject | A new top-level folder that is a project from the start |
-| `StartTaskUseCase` | files, config, create, keyValues | ADR 0014: in a project only; splits the ticket from the title, makes the task folder (a taken name gets a number) and an active task note with ticket and branch |
+| `StartTaskUseCase` | files, config, create, keyValues | ADR 0014: in a project only; splits the ticket from the title, makes the task folder (a taken name gets a number) and an active task note with ticket and branch; ADR 0019: an optional sub-folder of the project to make the task folder in, a folder outside the project is refused |
 | `SetTaskStatusUseCase` | files, updateHeader | Sets `status` of a task note; refuses a note without `type: task` |
 | `ImportFolderUseCase` | files, config, createProject, setProject, reindex | ADR 0014: copies a folder from outside into a new project (a hidden folder such as `<repo>/.slate` is named after its parent), links the git repository that holds it, reads the index again; the source does not change |
 | `LinkRepositoryUseCase` | config, repositories, setProject | Stores the main checkout of a repository (first in the list) and its remote in the project |
 | `FindProjectUseCase` | config, repositories | The project of a directory: a linked path that holds it, the main checkout of its worktree, or the same remote (`ProjectLookupPolicy`); or a project by name |
-| `ProjectTasksUseCase` | files, index | The task notes directly in the task folders of a project, with status, ticket and branch, newest first |
+| `ProjectTasksUseCase` | files, index | The task notes of a project at any depth below its root (ADR 0019), with status, ticket and branch, newest first |
 | `FindTaskUseCase` | config, projectTasks | A task by note id, note path, folder, ticket or title, across all projects |
 | `LogProgressUseCase` | append, clock | A `- **yyyy-MM-dd HH:mm** text` entry under `## Log` of a task note (`TaskLogPolicy`) |
 | `ClearHistoryUseCase` | history | ADR 0015: clears the history of a folder or of everything; refuses without git |
@@ -310,6 +310,7 @@ Every policy has a test file with fixtures.
 | `ReindexVaultUseCase` | files, index, builder, cloud | full or paths; compare `(mtime, size)` then hash; reports progress through an `AsyncStream<IndexProgress>` |
 | `ToggleTodoUseCase` | files, index, builder | edit one line in a file by number, coordinated |
 | `SnapshotHistoryUseCase` | history, clock, kv | throttle, snapshot when dirty, optional push, an optional message (`agent: <tool> <title>`) |
+| `SaveVersionUseCase` | history, kv, snapshot | ADR 0015: a snapshot with `version: <name>`; with nothing new, renames the last agent version that is not pushed yet |
 | `AgentGuideWriter` | files | S5: writes the agent block into `CLAUDE.md` and `AGENTS.md`, keeps the text outside the markers, writes only on a change |
 | `RestoreVersionUseCase` | history, save | write the old content through `SaveNoteUseCase` |
 | `RunActionUseCase` | actions, files, index | environment from the note, output routing |

@@ -6,6 +6,7 @@ actor GitHistoryRepository: HistoryRepository {
     static let identity = ["-c", "user.name=Slate", "-c", "user.email=slate@localhost"]
     static let largeFileLimit = 50 * 1024 * 1024
     static let forcePushMarker = "slate-force-push"
+    static let pushedMarker = "slate-pushed"
 
     let shell: ShellRunner
     let gitDirectory: URL
@@ -98,10 +99,22 @@ actor GitHistoryRepository: HistoryRepository {
     func push(to remote: String) async throws {
         let marker = gitDirectory.appendingPathComponent(Self.forcePushMarker)
         let force = FileManager.default.fileExists(atPath: marker.path)
-        try await git(["push", "-q"] + (force ? ["--force"] : []) + [remote, "HEAD:refs/heads/main"])
+        let head = try await git(["rev-parse", "HEAD"]).stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        try await git(["push", "-q"] + (force ? ["--force"] : []) + [remote, "\(head):refs/heads/main"])
+        try? Data(head.utf8).write(to: gitDirectory.appendingPathComponent(Self.pushedMarker))
         if force {
             try? FileManager.default.removeItem(at: marker)
         }
+    }
+
+    func renameLastSnapshot(to message: String) async throws {
+        try await git(Self.identity + ["commit", "--amend", "--only", "-q", "-m", message])
+    }
+
+    func lastPushedHash() async -> String? {
+        guard let data = try? Data(contentsOf: gitDirectory.appendingPathComponent(Self.pushedMarker)) else { return nil }
+        let hash = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+        return hash.isEmpty ? nil : hash
     }
 
     func changes(in folder: FolderPath?, limit: Int) async throws -> [SnapshotChange] {

@@ -42,6 +42,19 @@ import Testing
         #expect(created.document.header.ticket == nil)
     }
 
+    @Test func makesTheTaskFolderInsideAFolderOfTheProject() async throws {
+        let created = try await UseCases(ports: ports).startTask.execute(in: project, title: "ABC-123 Fix login", under: FolderPath(rawValue: "Notes/Features"))
+
+        #expect(created.document.path.rawValue == "Notes/Features/ABC-123 Fix login/ABC-123 Fix login.md")
+        #expect(spies.files.folderNames.contains(FolderPath(rawValue: "Notes/ABC-123 Fix login")) == false)
+    }
+
+    @Test func aFolderOutsideTheProjectIsRefused() async throws {
+        await #expect(throws: TaskError.outsideProject("Inbox/Features", project: "Notes")) {
+            try await UseCases(ports: ports).startTask.execute(in: project, title: "ABC-1 Fix", under: FolderPath(rawValue: "Inbox/Features"))
+        }
+    }
+
     @Test func aFolderThatIsNotAProjectIsRefused() async throws {
         await #expect(throws: TaskError.notAProject("Inbox")) {
             try await UseCases(ports: ports).startTask.execute(in: SpaceName(rawValue: "Inbox"), title: "ABC-1 Fix")

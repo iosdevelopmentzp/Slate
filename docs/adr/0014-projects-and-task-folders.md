@@ -24,7 +24,7 @@ The owner chose to keep this documentation in the notes folder, not inside each 
 
 ### 2. A task is a sub-folder with one task note
 
-- A task folder sits directly in a project: `<Project>/<ABC-123 Short title>/`.
+- A task folder sits directly in a project: `<Project>/<ABC-123 Short title>/`. Since ADR 0019 it can also sit in a sub-folder of the project, like `<Project>/Features/<ABC-123 Short title>/`.
 - Its task note has the same name as the folder and `type: task` in the header, with `ticket`, `branch` and `status` (`todo`, `active`, `review`, `done`, `dropped`). The body starts from the task template with a `## Log` section at the end.
 - Other notes and files of the task live in the same folder.
 - Inside a project, the list shows a task folder with its status, ticket and branch, and the editor shows them in one line under the title of a task note. Outside projects nothing changes: rule 9 of `UX.md` section 9 still holds there.

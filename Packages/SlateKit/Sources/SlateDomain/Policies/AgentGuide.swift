@@ -63,7 +63,7 @@ package enum AgentGuide {
     A project belongs to a code repository. When you work on a task in a repository, keep its documentation in Slate, so the next session can go on where this one stopped:
 
     1. At the start of a session call `project_context` (MCP) or run `slate project` in the repository. It names the project, its tasks with status, and the task of the current branch.
-    2. No task yet: `start_task` with a title like `ABC-123 Fix login`, or `slate task new "ABC-123 Fix login"`. Slate makes the task folder and the task note with Context, Plan, Findings, Links, Questions and Log.
+    2. No task yet: `start_task` with a title like `ABC-123 Fix login`, or `slate task new "ABC-123 Fix login"`. Slate makes the task folder and the task note with Context, Plan, Findings, Links, Questions and Log. To put the task folder in a folder of the project, like `Features`, pass it as `folder`.
     3. Write what you learn into the task note or into more notes in the task folder. Add logs, screenshots, JSON and other files with `add_file`.
        Change a few lines with `replace_in_note` (one row, `[ ]` to `[x]`) or `update_section` (one section). Read one section with `read_section`. For a list that keeps the newest entry first, use `append_to_note` with `position: top`. Several changes at once go in one `batch_edit`.
        Keep the Plan as a checklist (`- [ ] 1. The step`) and mark a step done with `set_plan_item`. `project_context` shows how many steps are done.

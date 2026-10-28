@@ -37,6 +37,7 @@ package struct UseCases: Sendable {
     package let capture: QuickCaptureUseCase
     package let purgeTrash: PurgeTrashUseCase
     package let snapshot: SnapshotHistoryUseCase
+    package let saveVersion: SaveVersionUseCase
     package let restoreVersion: RestoreVersionUseCase
     package let restoreFileVersion: RestoreFileVersionUseCase
     package let clearHistory: ClearHistoryUseCase
@@ -78,6 +79,7 @@ package struct UseCases: Sendable {
         capture = QuickCaptureUseCase(create: create, append: append, config: ports.config, keyValues: ports.keyValues)
         purgeTrash = PurgeTrashUseCase(trash: ports.trash, keyValues: ports.keyValues, clock: ports.clock)
         snapshot = SnapshotHistoryUseCase(history: ports.history, keyValues: ports.keyValues)
+        saveVersion = SaveVersionUseCase(history: ports.history, keyValues: ports.keyValues, snapshot: snapshot)
         restoreVersion = RestoreVersionUseCase(history: ports.history, files: ports.files, save: save)
         restoreFileVersion = RestoreFileVersionUseCase(history: ports.history, files: ports.files)
         clearHistory = ClearHistoryUseCase(history: ports.history)

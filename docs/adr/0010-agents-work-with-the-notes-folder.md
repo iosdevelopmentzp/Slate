@@ -44,7 +44,7 @@ Three layers, each useful on its own.
 | `update_section` | `id`, `heading`, `text`, `expectedHash?` | replaces the text under one heading and keeps the rest (`NoteSectionPolicy.replacing`); a missing section is added at the end |
 | `update_note` | `id`, `body`, `expectedHash` | replaces the body through `SaveNoteUseCase`; refuses with "the note changed since you read it, read it again" when the hash differs |
 | `batch_edit` | `operations` | up to 50 operations of `replace_in_note`, `update_section`, `append_to_note` and `set_plan_item`, each with its own arguments. All are checked in memory first; one failure writes nothing. Each note is written once, and one version is kept for the batch |
-| `move_note` | `id`, `folder` | through `MoveNoteUseCase` |
+| `move_note` | `id`, `folder` | through `MoveNoteUseCase`. A missing folder is made when agents may write there (`createdFolder`); a folder that the move leaves empty is removed (`removedFolder`, ADR 0019) |
 | `trash_note` | `id` | through `TrashNoteUseCase`; off by default (permissions below) |
 | `set_plan_item` | `task`, `item`, `done?` | marks one checklist step of the Plan section done or open (`PlanPolicy`); `item` is the step number or a part of its text. `project_context` gives each task `plan` (done, total, next) and the current task every step |
 | `attach_image` | `id`, `base64 or path`, `caption?`, `section?` | imports into `_attachments/` and appends the image block at the end of the note or of the section; `placedAt` in the answer says where |

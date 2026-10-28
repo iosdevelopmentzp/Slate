@@ -159,5 +159,20 @@ import Testing
         let log = try await shell.run("git", ["--git-dir", remote.url.path, "log", "--oneline", "main"], cwd: nil)
         #expect(log.exitCode == 0)
         #expect(log.stdout.contains("snapshot"))
+        #expect(await repository.lastPushedHash() == (try await repository.lastSnapshot())?.hash)
+    }
+
+    @Test func renameChangesOnlyTheMessageOfTheLastSnapshot() async throws {
+        _ = try vault.write("x", to: "Notes/A.md")
+        try await repository.ensureRepository()
+        _ = try await repository.snapshot(message: "agent: append_to_note A")
+        _ = try vault.write("y", to: "Notes/B.md")
+
+        try await repository.renameLastSnapshot(to: "version: end of session")
+
+        let versions = try await repository.history(of: VaultPath(rawValue: "Notes/A.md"))
+        #expect(versions.map(\.message) == ["version: end of session"])
+        #expect(try await repository.history(of: VaultPath(rawValue: "Notes/B.md")).isEmpty)
+        #expect(await repository.lastPushedHash() == nil)
     }
 }

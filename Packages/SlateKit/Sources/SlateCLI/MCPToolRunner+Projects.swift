@@ -36,9 +36,10 @@ extension MCPToolRunner {
     func startTask(_ arguments: MCPArguments) async throws -> String {
         let match = try await project(arguments, directory: directory(arguments))
         let title = try arguments.required("title")
-        try await permissions().checkCreate(in: FolderPath(space: match.space.folder))
+        let subfolder = try await taskFolder(arguments.string("folder"), in: match.space.folder)
+        try await permissions().checkCreate(in: subfolder ?? FolderPath(space: match.space.folder))
         let branch = arguments.string("branch") ?? match.repository?.branch
-        let created = try await useCases.startTask.execute(in: match.space.folder, title: title, ticket: arguments.string("ticket"), branch: branch)
+        let created = try await useCases.startTask.execute(in: match.space.folder, title: title, ticket: arguments.string("ticket"), branch: branch, under: subfolder)
         let document = created.document
         await afterWrite("start_task", title: document.title, path: document.path)
         return json([
@@ -100,8 +101,18 @@ extension MCPToolRunner {
 
     func saveVersion(_ arguments: MCPArguments) async throws -> String {
         let name = try arguments.required("name").replacingOccurrences(of: "\n", with: " ")
-        let outcome = try await useCases.snapshot.execute(push: false, message: "version: \(name)")
-        return outcome.committed ? "Saved the version \(name)." : "Nothing changed since the last version, or versions are off in Slate's settings."
+        guard try await useCases.saveVersion.execute(name: name) else {
+            return "Did not save the version. Nothing changed since the last named version, the last change is already on the backup server, or versions are off in Slate's settings."
+        }
+        return "Saved the version \(name)."
+    }
+
+    private func taskFolder(_ raw: String?, in project: SpaceName) async throws -> FolderPath? {
+        guard let raw else { return nil }
+        let folder = try AgentPathPolicy.folder(from: raw)
+        let root = FolderPath(space: project)
+        let inside = StemPolicy.isSame(folder.space.rawValue, root.rawValue) ? folder : root.appending(folder.rawValue)
+        return try await knownCase(of: inside)
     }
 
     private func directory(_ arguments: MCPArguments) -> URL {

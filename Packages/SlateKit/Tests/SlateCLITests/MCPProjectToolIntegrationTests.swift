@@ -146,6 +146,37 @@ import Testing
         #expect(files.map { $0["name"] as? String } == ["crash.log", "state.json"])
     }
 
+    @Test func aTaskInAFolderOfTheProjectWorksWithEveryTaskTool() async throws {
+        _ = try await useCases.createProject.execute(name: "MyApp")
+        let started = await call("start_task", ["title": "ABC-7 Fix login", "project": "MyApp", "folder": "Features"])
+        #expect(started.isError == false, "\(started.text)")
+        let task = try object(started.text)
+        let id = try #require(task["id"] as? String)
+        let folder = try #require(task["folder"] as? String)
+        _ = await call("update_section", ["id": .string(id), "heading": "Plan", "text": "- [ ] 1. Read the code"])
+
+        let context = try object(await call("project_context", ["project": "MyApp"]).text)
+        let logged = await call("log_progress", ["task": .string(id), "text": "Read the code."])
+        let marked = await call("set_plan_item", ["task": "ABC-7", "item": "1"])
+        let status = await call("set_task_status", ["task": .string(folder), "status": "review"])
+
+        #expect(folder == "MyApp/Features/ABC-7 Fix login")
+        let top = try FileManager.default.contentsOfDirectory(atPath: vault.url.appendingPathComponent("MyApp").path).filter { $0.hasPrefix(".") == false }
+        #expect(top == ["Features"])
+        #expect((context["tasks"] as? [[String: Any]])?.map { $0["title"] as? String } == ["ABC-7 Fix login"])
+        #expect(logged.isError == false, "\(logged.text)")
+        #expect(marked.isError == false, "\(marked.text)")
+        #expect(status.text == "ABC-7 Fix login is review now.")
+    }
+
+    @Test func aTaskFolderOutsideTheProjectIsRefused() async throws {
+        _ = try await useCases.createProject.execute(name: "MyApp")
+
+        let answer = await call("start_task", ["title": "ABC-7 Fix login", "project": "MyApp", "folder": "../Notes"])
+
+        #expect(answer.isError)
+    }
+
     @Test func anUnlinkedDirectoryNamesTheProjectsAndHowToLinkOne() async throws {
         _ = try await useCases.createProject.execute(name: "MyApp")
 

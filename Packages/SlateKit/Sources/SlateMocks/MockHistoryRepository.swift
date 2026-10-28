@@ -47,4 +47,10 @@ struct MockHistoryRepository: HistoryRepository {
     func lastSnapshot() async throws -> Snapshot? {
         Snapshot(hash: "a1b2c3d", date: MockVault.reference.addingTimeInterval(-600), message: "snapshot: 2 files")
     }
+
+    func renameLastSnapshot(to message: String) async throws {}
+
+    func lastPushedHash() async -> String? {
+        nil
+    }
 }

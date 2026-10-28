@@ -58,7 +58,7 @@ enum MCPToolCatalog {
         tool("batch_edit", "Make several small changes in one call, in one or more notes. Slate checks every operation first: when one fails, nothing is written. Each note is written once, and Slate keeps one version for the whole batch.", [
             "operations": operations("The changes, in order. Each one has tool (replace_in_note, update_section, append_to_note or set_plan_item) and the arguments of that tool: id or task, and expectedHash if you want the check."),
         ], required: ["operations"], destructive: true),
-        tool("move_note", "Move a note to another folder. Links to images in the note keep working.", [
+        tool("move_note", "Move a note to another folder. Links to images in the note keep working. A missing folder is made, when agents may write there. A folder that the move leaves empty is removed.", [
             "id": text("The note id."),
             "folder": text("The folder to move the note to."),
         ], required: ["id", "folder"]),
@@ -82,6 +82,7 @@ enum MCPToolCatalog {
         ], required: [], readOnly: true),
         tool("start_task", "Start a task in a project: Slate makes a task folder and a task note with Context, Plan, Findings, Links, Questions and Log, status active.", [
             "title": text("The task title, like ABC-123 Fix the login crash. A ticket at the start is split off."),
+            "folder": text("The folder of the project to make the task folder in, like Features or MyApp/Bugs. Missing folders are made. Default: the project folder."),
             "ticket": text("The ticket, when it is not in the title."),
             "branch": text("The git branch. Default: the current branch of the repository."),
             "project": text("The project name. Default: the project of the working directory."),

@@ -13,7 +13,7 @@ Slate/                          the vault (user-chosen folder, default ~/Documen
   Notes/                        space; the only folder a new vault gets (ADR 0007)
   <Folder>/                     every other space the user makes
   <Project>/                    a space with a `project` object in spaces.json (ADR 0014)
-    <ABC-123 Title>/            a task folder
+    <ABC-123 Title>/            a task folder, directly in the project or in a sub-folder like Features/ (ADR 0019)
       <ABC-123 Title>.md        its task note (type: task, ticket, branch, status)
       <other notes and files>
   _attachments/                 every image and file, flat (section 5)
@@ -291,7 +291,7 @@ A project (ADR 0014) is a space whose entry has a `project` object:
 
 `id` is a UUID string and is required; an object without it is ignored. `repositories` (paths on this Mac) and `remote` (the `origin` URL) are optional. Unknown keys inside `project` are kept when the app writes the file. Removing the object makes the project an ordinary folder again; its notes do not move.
 
-A task in a project is a folder directly in it, named from the ticket and the title (`ABC-123 Fix login`, a taken name gets a number). Its task note has the same stem, `type: task`, `status: active`, the `ticket` and the `branch` (from the given branch or the task type's branch pattern), and the `task.md` body. The `## Log` section at the end is where agents append a dated line per session (S9). Import Folder copies a folder from outside the notes folder into a new project, with its sub-folders, notes and files; files that already exist are kept, hidden files are skipped, and the source stays as it is.
+A task in a project is a folder in it, directly or in a sub-folder like `Features/` (ADR 0019), named from the ticket and the title (`ABC-123 Fix login`, a taken name gets a number). Its task note has the same stem, `type: task`, `status: active`, the `ticket` and the `branch` (from the given branch or the task type's branch pattern), and the `task.md` body. A note with `type: task` in any folder below the project root is a task; a note directly in the project root is not. The `## Log` section at the end is where agents append a dated line per session (S9). Import Folder copies a folder from outside the notes folder into a new project, with its sub-folders, notes and files; files that already exist are kept, hidden files are skipped, and the source stays as it is.
 
 ### 7.2 `links.json`
 

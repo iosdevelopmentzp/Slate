@@ -3,17 +3,10 @@ import SlateDomain
 
 extension MCPToolRunner {
     func createNote(_ arguments: MCPArguments) async throws -> String {
-        let raw = try arguments.required("folder")
         let title = try arguments.required("title")
-        let found = try? await existingFolder(raw)
-        var folder = try AgentPathPolicy.folder(from: raw)
-        if let found {
-            folder = found
-        } else {
-            folder = try await knownCase(of: folder)
-        }
+        let (folder, exists) = try await resolvedFolder(try arguments.required("folder"))
         try await permissions().checkCreate(in: folder)
-        if found == nil {
+        if exists == false {
             try await ports.files.createFolder(folder)
         }
         let body = arguments.raw("body").map { $0.hasSuffix("\n") || $0.isEmpty ? $0 : $0 + "\n" }
@@ -26,7 +19,7 @@ extension MCPToolRunner {
         if lines == 0 {
             answer["warning"] = "The note has no text. Add it with update_note and the argument body."
         }
-        if found == nil {
+        if exists == false {
             answer["createdFolder"] = folder.rawValue
         }
         return json(answer)
@@ -65,15 +58,24 @@ extension MCPToolRunner {
         let id = try arguments.required("id")
         let folderName = try arguments.required("folder")
         let path = try await notePath(id: id)
-        let folder = try await existingFolder(folderName)
+        let (folder, exists) = try await resolvedFolder(folderName)
         let permissions = try await permissions()
         try permissions.checkWrite(path)
         guard permissions.canWrite(in: folder) else { throw AgentError.folderNotAllowed(folder.rawValue, allowed: permissions.writableFolders) }
         await beforeWrite()
+        if exists == false {
+            try await ports.files.createFolder(folder)
+        }
         let target = try await useCases.move.execute(path, toFolder: folder)
+        let removed = await removeIfEmpty(path.folderPath)
         let document = try await document(at: target)
         await afterWrite("move_note", title: document.title, path: target)
-        return json(["id": document.id.rawValue, "path": target.rawValue, "hash": document.hash.rawValue])
+        var answer: [String: Any] = ["id": document.id.rawValue, "path": target.rawValue, "hash": document.hash.rawValue]
+        if exists == false {
+            answer["createdFolder"] = folder.rawValue
+        }
+        answer["removedFolder"] = removed?.rawValue
+        return json(answer)
     }
 
     func trashNote(_ arguments: MCPArguments) async throws -> String {
@@ -117,7 +119,23 @@ extension MCPToolRunner {
         ])
     }
 
-    private func knownCase(of folder: FolderPath) async throws -> FolderPath {
+    private func resolvedFolder(_ raw: String) async throws -> (folder: FolderPath, exists: Bool) {
+        if let found = try? await existingFolder(raw) {
+            return (found, true)
+        }
+        return (try await knownCase(of: try AgentPathPolicy.folder(from: raw)), false)
+    }
+
+    private func removeIfEmpty(_ folder: FolderPath?) async -> FolderPath? {
+        guard let folder, folder.isSpace == false,
+              (try? await ports.files.fileNames(inFolder: folder.rawValue).isEmpty) == true,
+              (try? await ports.files.folders().contains { $0.parent == folder }) == false
+        else { return nil }
+        guard (try? await ports.files.removeFolder(folder)) != nil else { return nil }
+        return folder
+    }
+
+    func knownCase(of folder: FolderPath) async throws -> FolderPath {
         let known = try await folders()
         var parts = folder.components
         var rest: [String] = []

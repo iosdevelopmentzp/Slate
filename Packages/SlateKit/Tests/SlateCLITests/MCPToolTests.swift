@@ -349,6 +349,29 @@ import Testing
         #expect(FileManager.default.fileExists(atPath: vault.path("Notes/Groceries.md")) == false)
     }
 
+    @Test func moveNoteMakesAMissingFolderAndRemovesTheEmptyOne() async throws {
+        let id = try await create("Groceries", in: "Notes/Old")
+
+        let moved = await call("move_note", ["id": .string(id), "folder": "Notes/New/Shop"])
+
+        #expect(moved.isError == false, "\(moved.text)")
+        let answer = try object(moved.text)
+        #expect(answer["createdFolder"] as? String == "Notes/New/Shop")
+        #expect(answer["removedFolder"] as? String == "Notes/Old")
+        #expect(FileManager.default.fileExists(atPath: vault.path("Notes/New/Shop/Groceries.md")))
+        #expect(FileManager.default.fileExists(atPath: vault.path("Notes/Old")) == false)
+    }
+
+    @Test func moveNoteKeepsAFolderThatStillHasFiles() async throws {
+        let id = try await create("Groceries", in: "Notes/Old")
+        try await create("Recipes", in: "Notes/Old")
+
+        let moved = try object(await call("move_note", ["id": .string(id), "folder": "Notes"]).text)
+
+        #expect(moved["removedFolder"] == nil)
+        #expect(FileManager.default.fileExists(atPath: vault.path("Notes/Old/Recipes.md")))
+    }
+
     @Test func trashNoteIsOffByDefault() async throws {
         let id = try await create("Groceries")
 
