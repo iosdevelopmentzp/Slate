@@ -84,7 +84,7 @@ enum MCPToolCatalog {
             "path": text("The working directory of the repository. Default: the directory the server runs in."),
             "project": text("The project name in Slate, when the repository is not linked."),
         ], required: [], readOnly: true),
-        tool("start_task", "Start a task in a project: Slate makes a task folder and a task note with Context, Plan, Findings, Links, Questions and Log, status active.", [
+        tool("start_task", "Start a task in a project: Slate makes a task folder and a task note with Overview, Status, Key facts, Questions, Plan and Log, status active.", [
             "title": text("The task title, like ABC-123 Fix the login crash. A ticket at the start is split off."),
             "folder": text("The folder of the project to make the task folder in, like Features or MyApp/Bugs. Missing folders are made. Default: the project folder."),
             "ticket": text("The ticket, when it is not in the title."),
@@ -101,7 +101,7 @@ enum MCPToolCatalog {
             "item": text("The step number, like 2, or a part of its text that matches one step."),
             "done": flag("true (default) marks the step done, false marks it open again."),
         ], required: ["task", "item"]),
-        tool("log_progress", "Add a dated entry to the Log section of a task note: what was done, what is left, the next step. Returns the entry as written.", [
+        tool("log_progress", "Add a dated entry to the Log section of a task note: one line of what was done, with commit hashes. What is left and the next step go into the Status section. Returns the entry as written.", [
             "task": text("The task: its note id, its folder, or its ticket."),
             "text": text("The Markdown text of the entry."),
         ], required: ["task", "text"]),

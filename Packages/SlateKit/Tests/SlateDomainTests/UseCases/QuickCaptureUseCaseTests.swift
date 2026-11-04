@@ -26,7 +26,7 @@ import Testing
         #expect(document.header.ticket == "ABC-2324")
         #expect(document.header.branch == "feature/ABC-2324-profile-screen-leaks-memory")
         #expect(document.header.status == "todo")
-        #expect(document.body.hasPrefix("## Context"))
+        #expect(document.body.hasPrefix("## Overview"))
     }
 
     @Test func todayAppendsALogLine() async throws {

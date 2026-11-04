@@ -188,10 +188,13 @@ extension MCPToolRunner {
     }
 
     static let projectRules = """
-    Keep the documentation of a task in its task folder. The task note holds Context, Plan, Findings, Links, Questions and Log. \
-    Put longer findings or decisions in more notes in the same folder (create_note with that folder). Add logs, screenshots and other files with add_file. \
+    Keep the documentation of a task in its task folder. The task note is the one page the owner reads, in this order: \
+    Overview (what the task is, then a table of links: tickets, MRs, threads, designs, code, branch), \
+    Status (the state, what blocks, the next step; rewrite it each session), Key facts (only what the reader must know), \
+    Questions (Q1, Q2 … with an Answer: line, decisions at the end), Plan and Log. \
+    Put research, places in code and long results in more notes in a Details folder inside the task folder (create_note with that folder). Add logs, screenshots and other files with add_file. \
     Keep the Plan as a checklist (- [ ] 1. The step) and mark a step done with set_plan_item. \
-    At the end of each session call log_progress with what was done, what is left and the next step, so the next session can go on. \
+    At the end of each session rewrite Status with update_section, and call log_progress with one line of what was done, so the next session can go on. \
     Set the status with set_task_status: todo, active, review, done or dropped.
     """
 }

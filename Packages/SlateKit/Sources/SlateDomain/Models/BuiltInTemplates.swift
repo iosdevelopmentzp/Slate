@@ -4,19 +4,19 @@ package enum BuiltInTemplates {
     package static let bodies: [String: String] = [
         "note": "",
         "task": """
-        ## Context
+        ## Overview
 
         {{cursor}}
+
+        ## Status
+
+        ## Key facts
+
+        ## Questions
 
         ## Plan
 
         - [ ] 
-
-        ## Findings
-
-        ## Links
-
-        ## Questions
 
         ## Log
 

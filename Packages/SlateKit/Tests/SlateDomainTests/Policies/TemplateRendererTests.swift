@@ -36,12 +36,12 @@ import Testing
         #expect(values["datetime"] == "2026-10-16T09:12:33+03:00")
     }
 
-    @Test func builtInTaskTemplatePutsTheCaretUnderContext() {
+    @Test func builtInTaskTemplatePutsTheCaretUnderOverview() {
         let template = BuiltInTemplates.bodies["task"] ?? ""
 
         let rendered = TemplateRenderer.render(template, values: [:])
 
-        #expect(rendered.text.hasPrefix("## Context\n\n\n\n## Plan"))
-        #expect(rendered.caret == "## Context\n\n".utf16.count)
+        #expect(rendered.text.hasPrefix("## Overview\n\n\n\n## Status"))
+        #expect(rendered.caret == "## Overview\n\n".utf16.count)
     }
 }

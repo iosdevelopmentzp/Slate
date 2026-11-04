@@ -23,7 +23,7 @@ import Testing
         #expect(created.document.header.status == "active")
         #expect(created.document.header.ticket == "ABC-123")
         #expect(created.document.header.branch == "feature/ABC-123-fix-login")
-        #expect(created.document.body.hasSuffix("## Questions\n\n## Log\n"))
+        #expect(created.document.body.hasSuffix("## Plan\n\n- [ ] \n\n## Log\n"))
     }
 
     @Test func givenTicketAndBranchWin() async throws {

@@ -63,7 +63,7 @@ branch: feature/ABC-2324-profile-screen-leaks-memory
 mr: https://gitlab.example.com/group/project/-/merge_requests/1234
 status: active
 ---
-## Context
+## Overview
 
 Leak after the second call. …
 ```
@@ -212,19 +212,19 @@ Built-in bodies:
 
 ```markdown
 <!-- task.md -->
-## Context
+## Overview
 
 {{cursor}}
+
+## Status
+
+## Key facts
+
+## Questions
 
 ## Plan
 
 - [ ] 
-
-## Findings
-
-## Links
-
-## Questions
 
 ## Log
 ```

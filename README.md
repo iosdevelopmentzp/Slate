@@ -84,7 +84,7 @@ claude mcp add -s user slate -- slate mcp
 ln -s "$PWD/Skills/slate-task" ~/.claude/skills/slate-task
 ```
 
-The first line gives Claude Code the Slate tools in every folder. The second adds the `slate-task` skill: in a repository linked to a Slate project (Link Repository…), the agent finds its task at the start of a session, keeps Context, Plan, Findings and Log in the task note, and writes what is done and what is next at the end. The skill stays in this repository, so a change to it works in the next session. To use the tools without a question on each call, add `"mcp__slate"` to `permissions.allow` in `~/.claude/settings.json`.
+The first line gives Claude Code the Slate tools in every folder. The second adds the `slate-task` skill: in a repository linked to a Slate project (Link Repository…), the agent finds its task at the start of a session, keeps Overview, Status, Key facts, Questions, Plan and Log in the task note, rewrites Status and logs what is done at the end. The skill stays in this repository, so a change to it works in the next session. To use the tools without a question on each call, add `"mcp__slate"` to `permissions.allow` in `~/.claude/settings.json`.
 
 You need Xcode with the macOS 26.4 SDK. You do not need a developer account: the app is signed to run on this Mac only. After `Scripts/run.sh` the Slate window opens, with an icon in the Dock and a note icon in the menu bar. The close button hides the window; the Dock icon, the menu bar icon or `⌥⌘N` brings it back to the desktop you are on. To see the first launch window again, run `defaults delete local.slate.app vault.path`.
 

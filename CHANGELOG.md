@@ -95,6 +95,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - The width of the list is draggable (260 to 420 points, double-click for the default) and remembered, and so is the sidebar (`⌘0` in the panel too).
 
 ### Changed
+- A new task note has the sections Overview, Status, Key facts, Questions, Plan and Log, in this order (ADR 0021). Overview holds what the task is and a table of links; Status is rewritten each session; the Log has one line per session. Before, it had Context, Plan, Findings, Links, Questions and Log. Existing task notes do not change.
 - The agent rules (`CLAUDE.md` and `AGENTS.md` in the notes folder) say that a list item holds only one line and its nested items. An agent had put a table under a list item, and the app then showed the whole list as plain Markdown.
 - The note text has 96 pt of empty space below its last line, so the end of a note no longer sits at the bottom edge of the window. A click in that space puts the caret at the end.
 - The text of a note is more compact: less space between lines (1.25 instead of 1.4 for body text, 1.2 instead of 1.35 for lists) and between paragraphs. The same note takes about 13 % less height.
@@ -216,6 +217,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - `⌘Z` (Undo) and `⇧⌘Z` (Redo) work in the note text, in the panel and in the window. Before, the editor kept its own undo history but the Undo command did not reach it, and the panel had no Edit keys until the window was opened once.
 
 ### Infrastructure
+- The `slate-task` skill describes the new task note: one page for the owner with Overview, Status, Key facts, Questions, Plan and Log; research goes into `Details/`. ADR 0021.
 - The `slate-task` skill uses `replace_in_note`, `update_section` and `read_section` for small changes, and `update_note` only when most of a note changes.
 - Docs match the phase 2 code: the module tree, the store table and the test list in `docs/ARCHITECTURE.md`, the editor line in `CLAUDE.md` and `.claude/rules/layers.md`, the `panel-window` skill (three columns, sizes, column resizer) and the store rules without `ActionRunner`.
 - `README.md` describes v1: what Slate does, the keys, the build scripts and a table of the screenshots the owner takes. `docs/STATUS.md` has the manual checks of S1 to S4 as a numbered list.

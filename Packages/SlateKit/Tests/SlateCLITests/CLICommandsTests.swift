@@ -41,9 +41,9 @@ import Testing
     @Test func appendByTicketAddsUnderTheSection() async throws {
         try await run(["new", "ABC-7 Crash", "--type", "task"])
 
-        try await run(["append", "--ticket", "ABC-7", "--section", "Findings", "The delegate is strong."])
+        try await run(["append", "--ticket", "ABC-7", "--section", "Key facts", "The delegate is strong."])
 
-        #expect(try text("Tasks/ABC-7 Crash.md").contains("## Findings\n\nThe delegate is strong.\n"))
+        #expect(try text("Tasks/ABC-7 Crash.md").contains("## Key facts\n\nThe delegate is strong.\n"))
     }
 
     @Test func appendToTodayMakesTheDailyNote() async throws {
