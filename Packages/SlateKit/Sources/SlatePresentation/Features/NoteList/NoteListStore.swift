@@ -95,6 +95,11 @@ final class NoteListStore: NoteLookup {
         toaster.copy(fileURL(for: summary).path, label: "Path")
     }
 
+    func copyPath(folder: FolderPath?) {
+        let url = folder.map { vaultRoot.appendingPathComponent($0.rawValue, isDirectory: true) } ?? vaultRoot
+        toaster.copy(url.path, label: "Path")
+    }
+
     func copyLink(_ summary: NoteSummary) {
         guard let link = NoteLinkPolicy.openLink(for: summary.id) else { return }
         toaster.copy(link.absoluteString, label: "Link")

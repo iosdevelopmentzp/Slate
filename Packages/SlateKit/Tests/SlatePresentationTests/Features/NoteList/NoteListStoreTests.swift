@@ -309,4 +309,12 @@ import Testing
         #expect(harness.toaster.text == "Link copied")
         #expect(harness.noteList.fileURL(for: summary).path == "/vault/Notes/Groceries.md")
     }
+
+    @Test func copyPathOfAFolderAndOfTheNotesFolder() {
+        harness.noteList.copyPath(folder: FolderPath(rawValue: "Work/Plans"))
+        harness.noteList.copyPath(folder: nil)
+
+        #expect(harness.copied == ["/vault/Work/Plans", "/vault"])
+        #expect(harness.toaster.text == "Path copied")
+    }
 }

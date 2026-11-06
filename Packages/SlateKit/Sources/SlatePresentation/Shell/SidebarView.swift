@@ -20,6 +20,9 @@ struct SidebarView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
                     sourceRow(.all, title: "All notes", icon: "tray.full", count: store.count(in: nil))
+                        .contextMenu {
+                            Button("Copy Path", systemImage: "doc.on.doc") { store.copyPath(folder: nil) }
+                        }
                     ForEach(rows(for: vault.folderSpaces)) { row in
                         folder(row)
                         if row.id == fieldAfter, case .newInside(let parent) = vault.editing {
@@ -257,6 +260,7 @@ struct SidebarView: View {
             onProject: { isProject in Task { await vault.setProject(isProject, for: model.space) } },
             onNewTask: { vault.startNewTask(in: model.space) },
             onLinkRepository: { linkRepository(for: model.space) },
+            onCopyPath: { store.copyPath(folder: model.id) },
             onDelete: { vault.requestDelete(folder: model.id) }
         )
     }

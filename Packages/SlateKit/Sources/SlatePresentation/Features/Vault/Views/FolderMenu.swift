@@ -15,6 +15,7 @@ struct FolderMenu: View {
     let onProject: (Bool) -> Void
     let onNewTask: () -> Void
     let onLinkRepository: () -> Void
+    let onCopyPath: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -26,6 +27,8 @@ struct FolderMenu: View {
         if model.isSpace {
             spaceItems
         }
+        Divider()
+        Button("Copy Path", systemImage: "doc.on.doc", action: onCopyPath)
         Divider()
         Button("Delete folder", systemImage: "trash", role: .destructive, action: onDelete)
             .disabled(model.canDelete == false)

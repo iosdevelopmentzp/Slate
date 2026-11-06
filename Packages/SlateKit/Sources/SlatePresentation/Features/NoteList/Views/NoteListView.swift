@@ -149,6 +149,9 @@ struct NoteListView: View {
     private func subfolder(_ model: FolderRowModel) -> some View {
         SubfolderCard(model: model, isDropTarget: dropTarget == model.id)
             .onTapGesture { store.show(.folder(model.id)) }
+            .contextMenu {
+                Button("Copy Path", systemImage: "doc.on.doc") { store.copyPath(folder: model.id) }
+            }
             .dropDestination(for: String.self) { items, _ in
                 let ids = items.compactMap(NoteDragPayload.noteID(from:))
                 guard ids.isEmpty == false else { return false }
