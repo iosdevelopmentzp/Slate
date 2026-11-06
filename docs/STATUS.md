@@ -273,6 +273,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 184. Fixes from an agent session report. `add_file` reads a `/` in `name` as sub-folders below `folder` (`AgentPathPolicy.fileTarget`) and makes missing folders through the same `resolvedFolder` as `move_note`; before, `FileNamePolicy.cleaned` turned the slashes into dashes, and a missing folder was an error. `PlanPolicy` reads `3\. Build`, the escaped number that `ListWriter` writes to keep the item from becoming a numbered list, as `3. Build`. `list_notes` and `search_notes` add `plainFile: true` for a note without a header (`NoteID.isPathBased`); such files stay notes, as for Obsidian. New tools `rename_note` (through `RenameNoteUseCase`, the same as a title change in the app) and `trash_file` (macOS Trash, `checkTrash`). A task folder keeps its name on `rename_note`; there is no tool to rename a folder yet. The empty `tasks` of `project_context` in the report came from a server that started before commit 2271130, which taught the task tools about task folders in project sub-folders.
 185. The empty last line of a note has no characters, so its list kind lives in `RichTextController.emptyTailBlock` and TextKit 2 draws it as the extra line of the last layout fragment. No `RichLayoutFragment` belongs to it, and `invalidateLayout` does not make a new fragment, so the bullet, number or checkbox of a new last item was not drawn until the first character. `TailMarkerView`, a small view in the text view, draws that mark at the caret rectangle of the document end (`refreshTailMarker`, from `updateState`, a width change and a fold relayout). The number is the number of the item above at the same level plus one. `ListMarker` holds the mark drawing for both the fragment and the view.
 186. Copy Path of a folder (`NoteListStore.copyPath(folder:)`): the sidebar folder menu, the sub-folder cards of the list, and All notes for the notes folder itself.
+187. Show in Finder of a folder (`FolderFilesStore.reveal(folder:)`, nil is the notes folder) and of a note (`FolderFilesStore.reveal(_:)` with the note path) goes through `WorkspaceOpening.reveal`, as for files: Finder opens the parent folder with the item selected. It sits next to Copy Path in the same menus.
 
 ## Next steps
 
@@ -548,6 +549,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 
 134. Right click a folder in the sidebar, Copy Path, paste in Terminal after `ls `: the folder lists. The same for a sub-folder card in the list, and for All notes (the notes folder).
 135. At the end of a note type `- one`, Enter: the bullet shows on the new empty line before you type. The same for `1. one` (the next line shows `2.`) and for a checklist. Tab on the empty line moves the mark in; Enter on it ends the list and the mark goes away.
+136. Right click a folder in the sidebar, a sub-folder card, All notes and a note card, Show in Finder: Finder opens the folder that holds it, with it selected.
 
 ## Known gaps
 

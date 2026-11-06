@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Show in Finder for folders and notes. Right click a folder in the sidebar, a sub-folder in the list, All notes or a note card: Finder opens the folder that holds it, with it selected. Files already had Show in Finder.
 - Copy Path for folders. Right click a folder in the sidebar or a sub-folder in the list and choose Copy Path: the full path of the folder is on the clipboard. Right click All notes to copy the path of the notes folder itself. Notes and files already had Copy Path.
 - Agents: `rename_note` changes the title of a note; the file name follows, and `[[links]]` in other notes change too. `trash_file` moves a file that is not a note to the macOS Trash, only when the owner allows agents to move notes to the Trash.
 - Read and change the files of a folder in Slate. A click on a file under the notes shows it in the right column. A text file, such as `.txt`, `.swift`, `.json` or `.log`, opens as plain text that you can change; Slate saves it as you type. A PDF, an image, an Office file or a video shows as a preview; Open starts its app to change it. A double click still opens Quick Look. When an agent changes the open file, Slate shows the new text, or asks Keep mine or Take theirs when you have unsaved changes (ADR 0020).

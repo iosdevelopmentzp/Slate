@@ -80,6 +80,10 @@ final class FolderFilesStore {
         await workspace.reveal(url(for: path))
     }
 
+    func reveal(folder: FolderPath?) async {
+        await workspace.reveal(folder.map { vaultRoot.appendingPathComponent($0.rawValue, isDirectory: true) } ?? vaultRoot)
+    }
+
     func copyPath(_ path: VaultPath) {
         toaster.copy(url(for: path).path, label: "Path")
     }

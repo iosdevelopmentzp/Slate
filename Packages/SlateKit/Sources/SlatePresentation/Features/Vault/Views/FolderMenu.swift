@@ -15,6 +15,7 @@ struct FolderMenu: View {
     let onProject: (Bool) -> Void
     let onNewTask: () -> Void
     let onLinkRepository: () -> Void
+    let onReveal: () -> Void
     let onCopyPath: () -> Void
     let onDelete: () -> Void
 
@@ -28,6 +29,7 @@ struct FolderMenu: View {
             spaceItems
         }
         Divider()
+        Button("Show in Finder", systemImage: "folder", action: onReveal)
         Button("Copy Path", systemImage: "doc.on.doc", action: onCopyPath)
         Divider()
         Button("Delete folder", systemImage: "trash", role: .destructive, action: onDelete)

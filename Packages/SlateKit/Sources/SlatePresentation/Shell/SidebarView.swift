@@ -6,6 +6,7 @@ struct SidebarView: View {
     @Environment(NoteListStore.self) private var store
     @Environment(VaultStore.self) private var vault
     @Environment(SearchStore.self) private var search
+    @Environment(FolderFilesStore.self) private var files
     @Environment(WindowLayout.self) private var layout
     @Environment(\.openSettings) private var openSettings
 
@@ -21,6 +22,7 @@ struct SidebarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     sourceRow(.all, title: "All notes", icon: "tray.full", count: store.count(in: nil))
                         .contextMenu {
+                            Button("Show in Finder", systemImage: "folder") { Task { await files.reveal(folder: nil) } }
                             Button("Copy Path", systemImage: "doc.on.doc") { store.copyPath(folder: nil) }
                         }
                     ForEach(rows(for: vault.folderSpaces)) { row in
@@ -260,6 +262,7 @@ struct SidebarView: View {
             onProject: { isProject in Task { await vault.setProject(isProject, for: model.space) } },
             onNewTask: { vault.startNewTask(in: model.space) },
             onLinkRepository: { linkRepository(for: model.space) },
+            onReveal: { Task { await files.reveal(folder: model.id) } },
             onCopyPath: { store.copyPath(folder: model.id) },
             onDelete: { vault.requestDelete(folder: model.id) }
         )

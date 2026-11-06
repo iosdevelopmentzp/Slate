@@ -150,6 +150,7 @@ struct NoteListView: View {
         SubfolderCard(model: model, isDropTarget: dropTarget == model.id)
             .onTapGesture { store.show(.folder(model.id)) }
             .contextMenu {
+                Button("Show in Finder", systemImage: "folder") { Task { await files.reveal(folder: model.id) } }
                 Button("Copy Path", systemImage: "doc.on.doc") { store.copyPath(folder: model.id) }
             }
             .dropDestination(for: String.self) { items, _ in
@@ -173,6 +174,7 @@ struct NoteListView: View {
             move: { folder in Task { await store.moveNote(summary, toFolder: folder) } },
             duplicate: { Task { await store.duplicateNote(summary) } },
             requestTrash: { store.requestTrash(summary.id) },
+            reveal: { Task { await files.reveal(summary.path) } },
             copyPath: { store.copyPath(summary) },
             copyLink: { store.copyLink(summary) },
             drag: { store.dragProvider(for: summary) }

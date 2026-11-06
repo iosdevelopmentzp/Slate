@@ -17,6 +17,7 @@ struct NoteRowMenu: View {
             }
         }
         Button("Duplicate", systemImage: "plus.square.on.square", action: actions.duplicate)
+        Button("Show in Finder", systemImage: "folder", action: actions.reveal)
         Button("Copy Path", systemImage: "doc.on.doc", action: actions.copyPath)
         Button("Copy Link", systemImage: "link", action: actions.copyLink)
         Divider()

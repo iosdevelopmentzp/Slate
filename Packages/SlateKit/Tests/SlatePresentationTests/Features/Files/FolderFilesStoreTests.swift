@@ -93,6 +93,13 @@ import Testing
         #expect(harness.spies.workspace.calls == [.quickLook(url), .open(url), .reveal(url)])
     }
 
+    @Test func revealShowsAFolderOrTheNotesFolderInFinder() async {
+        await files.reveal(folder: folder)
+        await files.reveal(folder: nil)
+
+        #expect(harness.spies.workspace.calls == [.reveal(URL(fileURLWithPath: "/vault/Tasks/ABC-123 Login", isDirectory: true)), .reveal(URL(fileURLWithPath: "/vault", isDirectory: true))])
+    }
+
     @Test func saveToDownloadsCopiesTheFile() async {
         await files.saveToDownloads(log)
 
