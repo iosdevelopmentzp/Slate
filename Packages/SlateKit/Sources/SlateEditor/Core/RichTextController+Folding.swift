@@ -213,5 +213,6 @@ extension RichTextController {
         layout.invalidateLayout(for: layout.documentRange)
         layout.textViewportLayoutController.layoutViewport()
         textView.needsDisplay = true
+        refreshTailMarker()
     }
 }

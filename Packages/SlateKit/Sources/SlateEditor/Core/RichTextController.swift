@@ -22,6 +22,7 @@ final class RichTextController: NSObject {
     var imageTarget: TableImageTarget?
     let imageButton = ImageSaveButton()
     let imageHandle = ImageResizeHandle()
+    let tailMarker = TailMarkerView()
     let linkBar = LinkBar()
     let multiCaret = MultiCaret()
     var foldedHeadings: Set<Int> = []
@@ -385,6 +386,7 @@ final class RichTextController: NSObject {
     }
 
     func updateState() {
+        refreshTailMarker()
         guard let commands else { return }
         let selection = textView.selectedRange()
         let block = block(at: selection.location)
@@ -416,6 +418,7 @@ final class RichTextController: NSObject {
         guard abs(width - lastWidth) > 0.5 else { return }
         lastWidth = width
         refreshCaretOverlay()
+        refreshTailMarker()
         guard let textLayout = textView.textLayoutManager else { return }
         var hasAttachments = false
         storage.enumerateAttribute(.attachment, in: NSRange(location: 0, length: storage.length)) { value, _, stop in

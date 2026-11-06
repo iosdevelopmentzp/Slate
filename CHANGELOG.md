@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Copy Path for folders. Right click a folder in the sidebar or a sub-folder in the list and choose Copy Path: the full path of the folder is on the clipboard. Right click All notes to copy the path of the notes folder itself. Notes and files already had Copy Path.
 - Agents: `rename_note` changes the title of a note; the file name follows, and `[[links]]` in other notes change too. `trash_file` moves a file that is not a note to the macOS Trash, only when the owner allows agents to move notes to the Trash.
 - Read and change the files of a folder in Slate. A click on a file under the notes shows it in the right column. A text file, such as `.txt`, `.swift`, `.json` or `.log`, opens as plain text that you can change; Slate saves it as you type. A PDF, an image, an Office file or a video shows as a preview; Open starts its app to change it. A double click still opens Quick Look. When an agent changes the open file, Slate shows the new text, or asks Keep mine or Take theirs when you have unsaved changes (ADR 0020).
 - Search finds files too. Text files and PDF files are found by their text, every other file by its name. They show under the notes in a Files section, with the line around the match; a click shows the file. The search index is rebuilt once after the update.
@@ -128,6 +129,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - Note kinds and the New menu, tasks, ticket and branch chips, status, `⌘⇧D`, Today and daily notes (`⌥⌘T`, `⌘[`, `⌘]`), snippets, meetings, tags and tag chips, Insert Template, saved searches, Open TODOs, the palette (`⌘K`), actions, Copy for Slack, Copy as Markdown, Save as HTML and PDF, Float on Top and note windows, the outline, ticket details, the Links and History pages of Settings, the history and push state and the Activity button in the footer. The files and the command line keep working; the code for them is in commit `545e0d6`.
 
 ### Fixed
+- Editor: a new empty item at the end of a note showed no bullet, number or checkbox until you typed in it. Now the mark shows at once, with the next number for a numbered list.
 - Agents: `add_file` with a `/` in the name put the file at the top of the folder with dashes in its name, like `Resources-Runs-X.swift`. Now the name is a path: the file goes into those sub-folders. `add_file` also makes a missing folder, like `create_note` and `move_note`, when agents may write there.
 - Agents: a Plan step that the Slate editor wrote as `3\. Build` came back from `project_context` and `set_plan_item` as `3. 3\. Build`. The backslash is gone now.
 - Agents: `list_notes` and `search_notes` mark a Markdown file without a Slate header with `plainFile: true`, so a copied README or a report is not taken for a note made by Slate. `create_note` says that a note has no size limit.
