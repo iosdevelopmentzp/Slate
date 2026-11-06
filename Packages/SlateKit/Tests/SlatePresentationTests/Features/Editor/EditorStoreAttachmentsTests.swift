@@ -27,6 +27,22 @@ import Testing
         #expect(editor.insertion == MarkdownInsertion(token: 1, markdown: "![](../_attachments/20270115-110000-paste.png)"))
     }
 
+    @Test func aDroppedNoteFileBecomesALinkToTheNote() async throws {
+        try await open("Inbox/A.md")
+
+        await editor.pasteFiles([URL(fileURLWithPath: "/vault/Work/Plans/Trip.md")])
+
+        #expect(editor.insertion == MarkdownInsertion(token: 1, markdown: "[[Trip]]"))
+        #expect(harness.spies.attachments.calls.isEmpty)
+    }
+
+    @Test func noteLinkTakesOnlyNotesInsideTheNotesFolder() {
+        #expect(editor.noteLink(for: URL(fileURLWithPath: "/vault/Work/Trip.md")) == "[[Trip]]")
+        #expect(editor.noteLink(for: URL(fileURLWithPath: "/vault/_attachments/Trip.md")) == nil)
+        #expect(editor.noteLink(for: URL(fileURLWithPath: "/vault/Work/photo.png")) == nil)
+        #expect(editor.noteLink(for: URL(fileURLWithPath: "/elsewhere/Trip.md")) == nil)
+    }
+
     @Test func screenshotHidesThePanelAndInsertsTheImage() async throws {
         try await open("Tasks/A.md")
         var steps: [String] = []

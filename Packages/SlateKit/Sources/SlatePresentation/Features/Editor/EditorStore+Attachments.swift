@@ -22,9 +22,15 @@ extension EditorStore {
 
     func pasteFiles(_ urls: [URL]) async {
         guard let path = document?.path, urls.isEmpty == false else { return }
+        let links = urls.compactMap(noteLink(for:))
+        let files = urls.filter { noteLink(for: $0) == nil }
+        guard files.isEmpty == false else {
+            insert(links.joined(separator: "\n"))
+            return
+        }
         do {
-            let result = try await importAttachment.execute(files: urls, for: path)
-            insert(result.text)
+            let result = try await importAttachment.execute(files: files, for: path)
+            insert((links + [result.text]).joined(separator: "\n"))
             if result.linkedInPlace.isEmpty == false {
                 toaster.show("Large files are linked, not copied")
                 activity.log("Linked large files in place", detail: result.linkedInPlace.joined(separator: ", "), outcome: .success)
@@ -32,6 +38,14 @@ extension EditorStore {
         } catch {
             report("Cannot add the file", error)
         }
+    }
+
+    func noteLink(for url: URL) -> String? {
+        let root = vaultRoot.resolvingSymlinksInPath().path + "/"
+        let file = url.resolvingSymlinksInPath().path
+        guard url.isFileURL, file.hasPrefix(root) else { return nil }
+        let path = VaultPath(rawValue: String(file.dropFirst(root.count)))
+        return path.isNote ? "[[\(path.stem)]]" : nil
     }
 
     func screenshot(_ mode: CaptureMode) async {
