@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Editor: Remove in the right-click menu of an image takes the image out of the note. Undo brings it back; the file stays in `_attachments`.
 - Show in Finder for folders and notes. Right click a folder in the sidebar, a sub-folder in the list, All notes or a note card: Finder opens the folder that holds it, with it selected. Files already had Show in Finder.
 - Copy Path for folders. Right click a folder in the sidebar or a sub-folder in the list and choose Copy Path: the full path of the folder is on the clipboard. Right click All notes to copy the path of the notes folder itself. Notes and files already had Copy Path.
 - Agents: `rename_note` changes the title of a note; the file name follows, and `[[links]]` in other notes change too. `trash_file` moves a file that is not a note to the macOS Trash, only when the owner allows agents to move notes to the Trash.

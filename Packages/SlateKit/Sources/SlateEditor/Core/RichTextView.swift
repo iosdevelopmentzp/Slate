@@ -195,6 +195,10 @@ final class RichTextView: NSTextView {
         controller?.setCodeLanguage(at: choice.location, fence: choice.fence)
     }
 
+    @objc func slateRemoveImage(_ sender: NSMenuItem) {
+        controller?.removeImage(at: sender.tag)
+    }
+
     @objc func slateImageAction(_ sender: NSMenuItem) {
         guard let choice = sender.representedObject as? ImageMenuChoice else { return }
         controller?.handlers.attachment(choice.path, choice.action)

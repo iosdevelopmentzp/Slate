@@ -105,6 +105,17 @@ extension RichTextController {
         ImageMenu.items(path: path, target: textView, action: #selector(RichTextView.slateImageAction(_:))).forEach(menu.addItem)
         let current = ImageSize.width(in: BlockAttributes(storage.attributes(at: location, effectiveRange: nil)).imageAlt)
         menu.addItem(ImageMenu.sizeItem(ImageMenu.textSizes, current: current, target: textView, action: #selector(RichTextView.slateImageSize(_:))) { ImageSizeChoice(location: location, width: $0) })
+        menu.addItem(.separator())
+        let remove = NSMenuItem(title: "Remove", action: #selector(RichTextView.slateRemoveImage(_:)), keyEquivalent: "")
+        remove.target = textView
+        remove.tag = location
+        menu.addItem(remove)
         return menu
+    }
+
+    func removeImage(at location: Int) {
+        guard imagePath(at: location) != nil else { return }
+        let paragraph = paragraphRange(at: location)
+        replace(paragraph, with: NSAttributedString(), selection: NSRange(location: paragraph.location, length: 0))
     }
 }

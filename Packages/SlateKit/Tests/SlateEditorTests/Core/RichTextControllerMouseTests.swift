@@ -21,7 +21,7 @@ import Testing
         let save = try #require(menu.items.first { $0.title == "Save to Downloads" })
         harness.textView.slateImageAction(save)
 
-        #expect(menu.items.map(\.title) == ["Quick Look", "Open", "Show in Finder", "Copy Image", "Save to Downloads", "Size"])
+        #expect(menu.items.map(\.title) == ["Quick Look", "Open", "Show in Finder", "Copy Image", "Save to Downloads", "Size", "", "Remove"])
         #expect(actions == [.saveToDownloads])
     }
 
@@ -75,7 +75,7 @@ import Testing
         let picture = try TestPicture(size: CGSize(width: 800, height: 400))
         let url = picture.url
         let harness = EditorHarness(markdown: "Intro\n\n![photo](a.png)\n", resolveImage: { _ in url })
-        let size = try #require(harness.controller.imageMenu(at: 6)?.items.last?.submenu)
+        let size = try #require(harness.controller.imageMenu(at: 6)?.items.first { $0.title == "Size" }?.submenu)
         let medium = try #require(size.items.first { $0.title == "Medium" })
 
         harness.textView.slateImageSize(medium)
@@ -83,13 +83,24 @@ import Testing
         #expect(harness.markdown == "Intro\n\n![photo|420](a.png)\n")
         let image = try #require(harness.controller.storage.attribute(.attachment, at: 6, effectiveRange: nil) as? ImageAttachment)
         #expect(image.displaySize(width: 700) == CGSize(width: 420, height: 210))
-        let again = try #require(harness.controller.imageMenu(at: 6)?.items.last?.submenu)
+        let again = try #require(harness.controller.imageMenu(at: 6)?.items.first { $0.title == "Size" }?.submenu)
         #expect(again.items.first { $0.title == "Medium" }?.state == .on)
+    }
+
+    @Test func removeTakesTheImageOutAndUndoBringsItBack() throws {
+        let harness = EditorHarness(markdown: "Intro\n\n![photo](a.png)\n\nAfter\n")
+        let remove = try #require(harness.controller.imageMenu(at: 6)?.items.first { $0.title == "Remove" })
+
+        harness.textView.slateRemoveImage(remove)
+
+        #expect(harness.markdown == "Intro\n\nAfter\n")
+        harness.controller.undoEdit()
+        #expect(harness.markdown == "Intro\n\n![photo](a.png)\n\nAfter\n")
     }
 
     @Test func originalSizeRemovesTheWidth() throws {
         let harness = EditorHarness(markdown: "![photo|420](a.png)\n")
-        let size = try #require(harness.controller.imageMenu(at: 0)?.items.last?.submenu)
+        let size = try #require(harness.controller.imageMenu(at: 0)?.items.first { $0.title == "Size" }?.submenu)
         let original = try #require(size.items.first { $0.title == "Original Size" })
 
         harness.textView.slateImageSize(original)

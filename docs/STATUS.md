@@ -571,7 +571,6 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - Editor (S3): the agent checked the editor with tests in a window and with offscreen pictures, not by typing in the running app. Input methods (accents, Japanese), spell checking, drag and drop from Finder and the paste of web pages need a check by hand.
 - Editor (S3): in one offscreen picture of the whole window the list, quote and image buttons of the format bar looked faded while the others did not. The picture of the editor alone looked right. Check it on screen.
 - Editor (S3): typing latency was measured by a test on the 5,000-line fixture (1.3 ms median, open 120 ms), not with Instruments. Markdown for a long note is written 250 ms after the last key (decision 88).
-- Editor (S3): images have no resize handle; the right-click menu has no Remove (Backspace removes, Undo brings back).
 - Editor (S3): a pasted URL is not turned into a link with a title (P1). There is no hover preview of a link.
 - S5: the agent did not run Claude Code against `slate mcp`. A stdio test sent `initialize`, `tools/list`, `tools/call create_note` and `resources/list` and got the right answers; the tools are tested over a temporary notes folder.
 - S5: a card dropped into the note text of Slate now gives the editor a file, so the editor adds a link to a copy of the note file in `_attachments/` instead of the text `slate-note:<id>`. Neither is useful; a drop of a card into the text should make a link to the note.
@@ -583,4 +582,4 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - S6: accessibility shows the table as one element with a label ("Table, 3 rows, 2 columns"); rows and cells are not exposed yet.
 - S7: drop, paste and Quick Look in a cell were tested through the controller, not with a real drag or a real double-click. Thumbnails cannot be resized, and a thumbnail is not selected by a single click (use Shift-arrow in the cell).
 - S6: no manual column resize (ADR 0009 level 1). A wide table scrolls sideways (decision 138), but there is no drag on the scroll bar: it only shows the position.
-- Sub-folders (ADR 0011): no drag of a folder into another folder, no colour, icon or manual order per sub-folder, no `⌘1`…`⌘9` for sub-folders. Esc does not go up to the parent folder yet; the back chevron does.
+- Sub-folders (ADR 0011): no colour, icon or manual order per sub-folder, no `⌘1`…`⌘9` for sub-folders. Esc does not go up to the parent folder yet; the back chevron does.
