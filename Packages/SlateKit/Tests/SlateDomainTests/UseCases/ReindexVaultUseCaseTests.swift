@@ -29,6 +29,17 @@ import Testing
         #expect(Set(spies.index.indexed.keys) == [a, b])
     }
 
+    @Test func fullScanReportsProgressAfterEachBatch() async throws {
+        for number in 0..<450 {
+            spies.files.seed(VaultPath(rawValue: "Inbox/N\(number).md"), NoteText.make(id: "n\(number)", title: "N\(number)", body: ""))
+        }
+        let steps = ProgressSteps()
+
+        _ = try await UseCases(ports: ports).reindex.execute(.all) { done, total in steps.add(done, total) }
+
+        #expect(await steps.all == [[200, 450], [400, 450], [450, 450]])
+    }
+
     @Test func otherFilesAreIndexedWithTheirTextOrOnlyTheirName() async throws {
         let code = VaultPath(rawValue: "Work/App.swift")
         let image = VaultPath(rawValue: "Work/shot.png")
@@ -123,5 +134,14 @@ import Testing
 
         #expect(report.failed == [bad])
         #expect(report.indexed == [VaultPath(rawValue: "Inbox/A.md")])
+    }
+}
+
+@MainActor
+private final class ProgressSteps {
+    private(set) var all: [[Int]] = []
+
+    func add(_ done: Int, _ total: Int) {
+        all.append([done, total])
     }
 }

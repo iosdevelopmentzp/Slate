@@ -63,7 +63,10 @@ final class VaultChangeFeed {
 
     private func scan(_ scope: ReindexScope) async {
         do {
-            let report = try await reindex.execute(scope)
+            let report = try await reindex.execute(scope) { [events] done, total in
+                guard scope == .all else { return }
+                events.post(.indexProgress(done: done, total: total))
+            }
             for path in report.failed {
                 activity.log("Cannot read a note", detail: path.rawValue, outcome: .failure)
             }

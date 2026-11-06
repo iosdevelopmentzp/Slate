@@ -3,6 +3,7 @@ import SlateDomain
 
 package enum AppEvent: Equatable, Sendable {
     case indexUpdated
+    case indexProgress(done: Int, total: Int)
     case spacesChanged
     case vaultChanged(Set<VaultPath>)
     case vaultRescanned

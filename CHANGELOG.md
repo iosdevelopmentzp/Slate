@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- The first scan of a large notes folder shows how far it is: a filled line and "Reading notes, 3,120 of 10,000" under the search field. Cards fill in as the scan runs.
 - Quick note takes images and files. Paste with `⌘V` or drag them on the field: each one shows as a chip under the text, × removes it. On save they go to the end of the note. A file alone names the note.
 - Drop a Markdown file from Finder on the list of a folder: it is copied there and shows as a note. Before, Slate skipped it. A note card or a file that is already in the notes folder is not copied again.
 - Esc in a sub-folder goes up to its parent folder, like the back arrow. When the search field has text, Esc clears it first.

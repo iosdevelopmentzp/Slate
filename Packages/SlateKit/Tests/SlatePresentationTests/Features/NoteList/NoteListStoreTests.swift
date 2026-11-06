@@ -330,4 +330,15 @@ import Testing
         harness.noteList.showParent()
         #expect(harness.noteList.source == .space(SpaceName(rawValue: "Work")))
     }
+
+    @Test func indexProgressShowsForALargeScanAndEndsWithTheIndex() {
+        harness.events.post(.indexProgress(done: 200, total: 50))
+        #expect(harness.noteList.indexing == nil)
+
+        harness.events.post(.indexProgress(done: 3120, total: 10000))
+        #expect(harness.noteList.indexing?.text == "Reading notes, \(3120.formatted()) of \(10000.formatted())")
+
+        harness.events.post(.indexUpdated)
+        #expect(harness.noteList.indexing == nil)
+    }
 }

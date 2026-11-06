@@ -23,7 +23,7 @@ final class BacklinksStore {
             switch event {
             case .indexUpdated, .vaultChanged, .vaultRescanned, .noteMoved, .noteTrashed:
                 Task { await self.refresh() }
-            case .spacesChanged, .noteCreated, .noteSaved, .searchOpened:
+            case .indexProgress, .spacesChanged, .noteCreated, .noteSaved, .searchOpened:
                 break
             }
         }

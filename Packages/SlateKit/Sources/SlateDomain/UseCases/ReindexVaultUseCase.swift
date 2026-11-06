@@ -15,7 +15,7 @@ package struct ReindexVaultUseCase: Sendable {
     }
 
     @concurrent
-    package func execute(_ scope: ReindexScope) async throws -> ReindexReport {
+    package func execute(_ scope: ReindexScope, progress: @MainActor @Sendable (Int, Int) async -> Void = { _, _ in }) async throws -> ReindexReport {
         let states = try await index.fileStates()
         var report = ReindexReport()
         var metas: [FileMeta] = []
@@ -58,6 +58,7 @@ package struct ReindexVaultUseCase: Sendable {
             if batch.isEmpty == false {
                 try await index.upsert(contentsOf: batch)
             }
+            await progress(min(start, changed.count), changed.count)
         }
         report.files = try await reindexFiles(scope)
         return report

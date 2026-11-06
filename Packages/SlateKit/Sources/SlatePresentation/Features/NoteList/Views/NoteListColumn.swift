@@ -125,7 +125,21 @@ struct NoteListColumn: View {
 
     private var progressLine: some View {
         ZStack {
-            if store.isLoading || search.isSearching {
+            if let indexing = store.indexing {
+                VStack(alignment: .leading, spacing: 2) {
+                    ProgressView(value: indexing.fraction)
+                        .progressViewStyle(.linear)
+                        .controlSize(.mini)
+                    Text(indexing.text)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+                .padding(.horizontal, Theme.columnPadding + 4)
+                .padding(.vertical, 4)
+                .transition(.opacity)
+                .accessibilityElement(children: .combine)
+            } else if store.isLoading || search.isSearching {
                 ProgressView()
                     .progressViewStyle(.linear)
                     .controlSize(.mini)
@@ -134,8 +148,9 @@ struct NoteListColumn: View {
                     .accessibilityLabel("Reading notes")
             }
         }
-        .frame(height: 8)
+        .frame(minHeight: 8)
         .animation(Theme.hoverAnimation, value: store.isLoading || search.isSearching)
+        .animation(Theme.hoverAnimation, value: store.indexing == nil)
     }
 }
 

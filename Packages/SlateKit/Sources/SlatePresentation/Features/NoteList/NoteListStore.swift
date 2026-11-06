@@ -15,6 +15,7 @@ final class NoteListStore: NoteLookup {
         }
     }
     private(set) var isLoading = true
+    private(set) var indexing: IndexProgress?
     private(set) var failure: String?
     private(set) var confirmingTrash: NoteID?
 
@@ -406,6 +407,14 @@ final class NoteListStore: NoteLookup {
     private func handle(_ event: AppEvent) {
         switch event {
         case .indexUpdated, .noteSaved:
+            if event == .indexUpdated { indexing = nil }
+            Task { [weak self] in
+                guard let self else { return }
+                await refresh()
+            }
+        case .indexProgress(let done, let total):
+            indexing = IndexProgress(done: done, total: total)
+            guard indexing != nil else { return }
             Task { [weak self] in
                 guard let self else { return }
                 await refresh()
