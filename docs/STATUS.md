@@ -276,6 +276,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 187. Show in Finder of a folder (`FolderFilesStore.reveal(folder:)`, nil is the notes folder) and of a note (`FolderFilesStore.reveal(_:)` with the note path) goes through `WorkspaceOpening.reveal`, as for files: Finder opens the parent folder with the item selected. It sits next to Copy Path in the same menus.
 188. A note card dropped into the text, or a note file pasted from Finder, inserts `[[stem]]` (`EditorStore.noteLink(for:)`): a file URL inside the notes folder whose `VaultPath` is a note. Other files still go to `_attachments`. Before, the card gave its file URL and the note was copied into `_attachments`. The editor did not change.
 189. Esc in the window clears the search when it has text; otherwise it shows the parent of a sub-folder (`NoteListStore.showParent`). `MainWindow.cancelOperation` gets Esc only when no text view takes it, so Esc in the note text or the title does not move the list.
+190. A drop on the list copies every file from outside the notes folder into the shown folder (`FolderFilesStore.importFiles`), `.md` files too: they are copied as they are, so the watcher indexes them as notes (a file without a Slate header is a plain note, as for Obsidian). A URL inside the notes folder (`URL.relativePath(inside:)`) is skipped, so a note card or a file row dropped on the list makes no copy. Before, every `.md` was skipped and a file row dropped on the list was copied again.
 
 ## Next steps
 
@@ -558,7 +559,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - `slate mcp` refuses every call after an install until the client reconnects it (decision 174). A server that restarts itself would need the client to send `initialize` again, which Claude Code does not do; letting the old code run on would bring back the old tool rules. The owner reconnects with `/mcp` → slate → Reconnect.
 - Tables, second round: a drag that starts in the text of the cell being edited selects text only; start the drag on another cell or use Shift-click.
 
-- S2: a text file dropped on the list does not make a note yet (`UX.md` section 6). Folders reorder with Move up and Move down, not by drag.
+- S2: folders reorder with Move up and Move down, not by drag. A `.txt` file dropped on the list stays a text file (ADR 0020); only a `.md` file becomes a note.
 - The agent did not run the manual checks. A scripted click opens the panel but does not make Slate the active app, so scripted keystrokes go to the frontmost app (a few of them went to the Terminal during this session). The borderless panel also hides its content from the Accessibility API.
 - No `⌘⇧M` move picker. Move to is in the card menu, and cards can be dragged onto a folder.
 - Esc closes the panel from the list and from the note text (S4); the search field clears on Esc first. The agent tested the editor part only in a test window.

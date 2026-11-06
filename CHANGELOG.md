@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Drop a Markdown file from Finder on the list of a folder: it is copied there and shows as a note. Before, Slate skipped it. A note card or a file that is already in the notes folder is not copied again.
 - Esc in a sub-folder goes up to its parent folder, like the back arrow. When the search field has text, Esc clears it first.
 - Drag a note card into the text of another note: Slate adds a `[[link]]` to that note. Before, it put a copy of the note file in `_attachments`. A note file dropped or pasted from Finder does the same.
 - Editor: Remove in the right-click menu of an image takes the image out of the note. Undo brings it back; the file stays in `_attachments`.

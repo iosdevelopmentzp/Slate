@@ -105,7 +105,7 @@ final class FolderFilesStore {
     func importFiles(_ urls: [URL]) async -> [VaultPath] {
         guard let folder, urls.isEmpty == false else { return [] }
         var added: [VaultPath] = []
-        for url in urls where url.pathExtension.lowercased() != VaultPath.noteExtension {
+        for url in urls where url.relativePath(inside: vaultRoot) == nil {
             do {
                 added.append(try await store.importFile(url, into: folder))
             } catch {

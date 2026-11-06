@@ -41,10 +41,8 @@ extension EditorStore {
     }
 
     func noteLink(for url: URL) -> String? {
-        let root = vaultRoot.resolvingSymlinksInPath().path + "/"
-        let file = url.resolvingSymlinksInPath().path
-        guard url.isFileURL, file.hasPrefix(root) else { return nil }
-        let path = VaultPath(rawValue: String(file.dropFirst(root.count)))
+        guard let relative = url.relativePath(inside: vaultRoot) else { return nil }
+        let path = VaultPath(rawValue: relative)
         return path.isNote ? "[[\(path.stem)]]" : nil
     }
 

@@ -37,14 +37,34 @@ import Testing
     @Test func importAddsTheFilesToTheShownFolder() async throws {
         let temporary = try TemporaryDirectory()
         let source = try temporary.write("pdf", to: "spec.pdf")
-        let note = try temporary.write("# Note", to: "note.md")
         await files.show(folder)
 
-        let added = await files.importFiles([source, note])
+        let added = await files.importFiles([source])
 
         #expect(added == [VaultPath(rawValue: "Tasks/ABC-123 Login/spec.pdf")])
         #expect(files.files.map(\.path) == added)
         #expect(harness.toaster.text == "Added spec.pdf")
+    }
+
+    @Test func aMarkdownFileFromOutsideIsCopiedInAsANote() async throws {
+        let temporary = try TemporaryDirectory()
+        let note = try temporary.write("# Trip", to: "Trip.md")
+        await files.show(folder)
+
+        let added = await files.importFiles([note])
+
+        #expect(added == [VaultPath(rawValue: "Tasks/ABC-123 Login/Trip.md")])
+        #expect(files.files.isEmpty)
+        #expect(harness.toaster.text == "Added Trip.md")
+    }
+
+    @Test func aFileFromTheNotesFolderIsNotCopiedAgain() async {
+        await files.show(folder)
+
+        let added = await files.importFiles([URL(fileURLWithPath: "/vault/Inbox/Groceries.md")])
+
+        #expect(added.isEmpty)
+        #expect(harness.spies.files.calls.isEmpty)
     }
 
     @Test func renameKeepsTheExtensionWhenItIsLeftOut() async {
