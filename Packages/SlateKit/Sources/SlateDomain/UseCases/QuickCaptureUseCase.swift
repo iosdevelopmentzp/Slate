@@ -5,9 +5,28 @@ package struct QuickCaptureUseCase: Sendable {
     let append: AppendToNoteUseCase
     let config: any VaultConfigRepository
     let keyValues: any KeyValueStore
+    let importAttachment: ImportAttachmentUseCase
 
     package func execute(_ input: CaptureInput) async throws -> NoteDocument? {
-        let text = input.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let document = try await note(for: input) else { return nil }
+        guard input.attachments.isEmpty == false else { return document }
+        var markdown: [String] = []
+        for attachment in input.attachments {
+            switch attachment {
+            case .image(let data, let fileExtension):
+                markdown.append(try await importAttachment.execute(data: data, fileExtension: fileExtension, for: document.path))
+            case .file(let url):
+                markdown.append(try await importAttachment.execute(files: [url], for: document.path).text)
+            }
+        }
+        return try await append.execute(markdown.joined(separator: "\n\n"), to: .path(document.path), section: nil)
+    }
+
+    private func note(for input: CaptureInput) async throws -> NoteDocument? {
+        var text = input.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.isEmpty, let first = input.attachments.first {
+            text = first.isImage ? StemPolicy.untitled : (first.name as NSString).deletingPathExtension
+        }
         guard text.isEmpty == false else { return nil }
         if input.destination == .today {
             return try await append.execute(text, to: .today, section: nil)

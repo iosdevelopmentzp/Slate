@@ -77,7 +77,7 @@ package struct UseCases: Sendable {
         attachScreenshot = AttachScreenshotUseCase(capture: ports.capture, attachments: ports.attachments, clock: ports.clock)
         ensureDaily = EnsureDailyNoteUseCase(files: ports.files, config: ports.config, create: create, keyValues: ports.keyValues, clock: ports.clock)
         append = AppendToNoteUseCase(files: ports.files, index: ports.index, save: save, create: create, ensureDaily: ensureDaily, clock: ports.clock)
-        capture = QuickCaptureUseCase(create: create, append: append, config: ports.config, keyValues: ports.keyValues)
+        capture = QuickCaptureUseCase(create: create, append: append, config: ports.config, keyValues: ports.keyValues, importAttachment: importAttachment)
         purgeTrash = PurgeTrashUseCase(trash: ports.trash, keyValues: ports.keyValues, clock: ports.clock)
         snapshot = SnapshotHistoryUseCase(history: ports.history, keyValues: ports.keyValues)
         saveVersion = SaveVersionUseCase(history: ports.history, keyValues: ports.keyValues, snapshot: snapshot)

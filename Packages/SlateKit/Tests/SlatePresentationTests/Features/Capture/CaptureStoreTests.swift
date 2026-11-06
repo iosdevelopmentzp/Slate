@@ -64,4 +64,28 @@ import Testing
 
         #expect(capture.focusToken == before + 1)
     }
+
+    @Test func anAttachedImageAloneCanBeSavedAndIsClearedAfter() async throws {
+        #expect(capture.canSave == false)
+
+        capture.attach([.image(Data([1]), fileExtension: "png")])
+        capture.attach([.image(Data([1]), fileExtension: "png")])
+
+        #expect(capture.attachments.count == 1)
+        #expect(capture.canSave)
+        let document = try #require(await capture.save())
+        #expect(document.body.contains("paste.png"))
+        #expect(capture.attachments.isEmpty)
+    }
+
+    @Test func removeAttachmentTakesOneOut() {
+        let first = CaptureAttachment.file(URL(fileURLWithPath: "/tmp/a.pdf"))
+        let second = CaptureAttachment.file(URL(fileURLWithPath: "/tmp/b.pdf"))
+        capture.attach([first, second])
+
+        capture.removeAttachment(at: 0)
+        capture.removeAttachment(at: 5)
+
+        #expect(capture.attachments == [second])
+    }
 }

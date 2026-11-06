@@ -40,4 +40,34 @@ import Testing
         #expect(try await UseCases(ports: ports).capture.execute(CaptureInput(text: "  \n ")) == nil)
         #expect(spies.files.calls.isEmpty)
     }
+
+    @Test func pastedImagesAndFilesGoUnderTheText() async throws {
+        let temporary = try TemporaryDirectory()
+        let spec = try temporary.write("pdf", to: "spec.pdf")
+        let input = CaptureInput(text: "Login bug\nsee the picture", attachments: [.image(Data([1]), fileExtension: "png"), .file(spec)])
+
+        let document = try #require(try await UseCases(ports: ports).capture.execute(input))
+
+        #expect(document.path == VaultPath(rawValue: "Inbox/Login bug.md"))
+        #expect(document.body.hasPrefix("see the picture\n"))
+        #expect(document.body.contains("![](../_attachments/20270115-110000-paste.png)"))
+        #expect(document.body.contains("spec.pdf"))
+        #expect(spies.attachments.calls.count == 2)
+    }
+
+    @Test func aFileAloneNamesTheNote() async throws {
+        let temporary = try TemporaryDirectory()
+        let spec = try temporary.write("pdf", to: "Release plan.pdf")
+
+        let document = try #require(try await UseCases(ports: ports).capture.execute(CaptureInput(text: "", attachments: [.file(spec)])))
+
+        #expect(document.path == VaultPath(rawValue: "Inbox/Release plan.md"))
+    }
+
+    @Test func anImageAloneMakesAnUntitledNote() async throws {
+        let document = try #require(try await UseCases(ports: ports).capture.execute(CaptureInput(text: " ", attachments: [.image(Data([1]), fileExtension: "png")])))
+
+        #expect(document.path == VaultPath(rawValue: "Inbox/Untitled.md"))
+        #expect(document.body.contains("paste.png"))
+    }
 }

@@ -54,7 +54,7 @@ forbid SlatePresentation '^import (GRDB|Markdown)' 'SlatePresentation imports a 
 forbid SlatePresentation '^import SlateMocks' 'SlatePresentation imports SlateMocks outside PresentationAssembly+Preview.swift' '/SlatePresentation/Shared/PresentationAssembly\+Preview\.swift:'
 forbid SlatePresentation '\bProcess\(' 'SlatePresentation runs a process'
 forbid SlatePresentation '\.shared\b' 'SlatePresentation uses a shared singleton' 'NSWorkspace\.shared|NSApplication\.shared|NSStatusBar\.system|NSApp\b'
-forbid SlatePresentation 'NSPasteboard' 'NSPasteboard used outside SlatePresentation/Shared/PasteboardWriter.swift' '/SlatePresentation/Shared/PasteboardWriter\.swift:'
+forbid SlatePresentation 'NSPasteboard' 'NSPasteboard used outside SlatePresentation/Shared/Pasteboard(Writer|Reader).swift' '/SlatePresentation/Shared/Pasteboard(Writer|Reader)\.swift:'
 forbid SlatePresentation '\bUserDefaults\b' 'SlatePresentation uses UserDefaults'
 
 forbid SlateCLI '^import (SwiftUI|AppKit|SlatePresentation|SlateUI|SlateEditor|SlateComposition)' 'SlateCLI imports a UI module'

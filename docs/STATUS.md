@@ -277,6 +277,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 188. A note card dropped into the text, or a note file pasted from Finder, inserts `[[stem]]` (`EditorStore.noteLink(for:)`): a file URL inside the notes folder whose `VaultPath` is a note. Other files still go to `_attachments`. Before, the card gave its file URL and the note was copied into `_attachments`. The editor did not change.
 189. Esc in the window clears the search when it has text; otherwise it shows the parent of a sub-folder (`NoteListStore.showParent`). `MainWindow.cancelOperation` gets Esc only when no text view takes it, so Esc in the note text or the title does not move the list.
 190. A drop on the list copies every file from outside the notes folder into the shown folder (`FolderFilesStore.importFiles`), `.md` files too: they are copied as they are, so the watcher indexes them as notes (a file without a Slate header is a plain note, as for Obsidian). A URL inside the notes folder (`URL.relativePath(inside:)`) is skipped, so a note card or a file row dropped on the list makes no copy. Before, every `.md` was skipped and a file row dropped on the list was copied again.
+191. The quick note field takes images and files (`SPEC.md` 3.4): `CaptureNoteTextView` reads `⌘V` and a drop through `PasteboardReader.attachments(in:)` (file URLs first, then PNG, TIFF, JPEG) and gives them to `CaptureStore.attach`; they show as chips under the text with a remove button and stay out of the text. `QuickCaptureUseCase` makes the note first, then copies each attachment with `ImportAttachmentUseCase` for the new note path and appends the Markdown lines at the end (`AppendToNoteUseCase`, `.path`). With no text, a file names the note by its name and an image makes "Untitled". `check-layers.sh` allows `NSPasteboard` in `Shared/PasteboardReader.swift` next to `PasteboardWriter.swift`.
 
 ## Next steps
 
@@ -553,6 +554,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 134. Right click a folder in the sidebar, Copy Path, paste in Terminal after `ls `: the folder lists. The same for a sub-folder card in the list, and for All notes (the notes folder).
 135. At the end of a note type `- one`, Enter: the bullet shows on the new empty line before you type. The same for `1. one` (the next line shows `2.`) and for a checklist. Tab on the empty line moves the mark in; Enter on it ends the list and the mark goes away.
 136. Right click a folder in the sidebar, a sub-folder card, All notes and a note card, Show in Finder: Finder opens the folder that holds it, with it selected.
+137. Press `⌃⌥Space`, type a line, press `⌘V` with a screenshot on the clipboard, drag a PDF from Finder on the field: two chips show under the text; × removes one. Enter: the note has the text and, at the end, the image and the PDF link. An image alone with no text makes "Untitled".
 
 ## Known gaps
 
@@ -563,7 +565,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - The agent did not run the manual checks. A scripted click opens the panel but does not make Slate the active app, so scripted keystrokes go to the frontmost app (a few of them went to the Terminal during this session). The borderless panel also hides its content from the Accessibility API.
 - No `⌘⇧M` move picker. Move to is in the card menu, and cards can be dragged onto a folder.
 - Esc closes the panel from the list and from the note text (S4); the search field clears on Esc first. The agent tested the editor part only in a test window.
-- Capture (M4): the field does not take pasted images or files yet (`SPEC.md` 3.4). The agent did not test that the source app keeps the focus; scripted key presses do not reach the panel (first gap above).
+- Capture (M4): The agent did not test that the source app keeps the focus; scripted key presses do not reach the panel (first gap above).
 - Search (M3): no progress bar or "Indexing 3,120 of 10,000" line during the first full scan (`UX.md` section 5). The list fills as the scan runs.
 - History (M5): the first snapshot of a large folder runs at launch in the background and can take seconds. Every snapshot walks the notes folder once to find files over 50 MB.
 - Quit waits up to 3 s for the save and the last snapshot; a slow push is cut off and runs at the next snapshot.

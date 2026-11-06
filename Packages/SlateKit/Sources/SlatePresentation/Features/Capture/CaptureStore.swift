@@ -7,6 +7,7 @@ import SlateDomain
 final class CaptureStore {
     var text = ""
     var space: SpaceName?
+    private(set) var attachments: [CaptureAttachment] = []
     private(set) var isSaving = false
     private(set) var focusToken = 0
 
@@ -25,7 +26,16 @@ final class CaptureStore {
     }
 
     var canSave: Bool {
-        text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false && isSaving == false
+        (text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false || attachments.isEmpty == false) && isSaving == false
+    }
+
+    func attach(_ added: [CaptureAttachment]) {
+        attachments += added.filter { attachments.contains($0) == false }
+    }
+
+    func removeAttachment(at index: Int) {
+        guard attachments.indices.contains(index) else { return }
+        attachments.remove(at: index)
     }
 
     func addFromService(_ selection: String) async {
@@ -50,8 +60,9 @@ final class CaptureStore {
         isSaving = true
         defer { isSaving = false }
         do {
-            guard let document = try await capture.execute(CaptureInput(text: text, space: space, type: NoteType.defaultName)) else { return nil }
+            guard let document = try await capture.execute(CaptureInput(text: text, space: space, type: NoteType.defaultName, attachments: attachments)) else { return nil }
             text = ""
+            attachments = []
             events.post(.indexUpdated)
             events.post(.vaultChanged([document.path]))
             if select {

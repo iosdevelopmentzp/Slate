@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Quick note takes images and files. Paste with `⌘V` or drag them on the field: each one shows as a chip under the text, × removes it. On save they go to the end of the note. A file alone names the note.
 - Drop a Markdown file from Finder on the list of a folder: it is copied there and shows as a note. Before, Slate skipped it. A note card or a file that is already in the notes folder is not copied again.
 - Esc in a sub-folder goes up to its parent folder, like the back arrow. When the search field has text, Esc clears it first.
 - Drag a note card into the text of another note: Slate adds a `[[link]]` to that note. Before, it put a copy of the note file in `_attachments`. A note file dropped or pasted from Finder does the same.
@@ -224,6 +225,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - `⌘Z` (Undo) and `⇧⌘Z` (Redo) work in the note text, in the panel and in the window. Before, the editor kept its own undo history but the Undo command did not reach it, and the panel had no Edit keys until the window was opened once.
 
 ### Infrastructure
+- `check-layers.sh` allows `NSPasteboard` in `Shared/PasteboardReader.swift` of Presentation, next to `PasteboardWriter.swift`.
 - The `slate-task` skill describes the new task note: one page for the owner with Overview, Status, Key facts, Questions, Plan and Log; research goes into `Details/`. ADR 0021.
 - The `slate-task` skill uses `replace_in_note`, `update_section` and `read_section` for small changes, and `update_note` only when most of a note changes.
 - Docs match the phase 2 code: the module tree, the store table and the test list in `docs/ARCHITECTURE.md`, the editor line in `CLAUDE.md` and `.claude/rules/layers.md`, the `panel-window` skill (three columns, sizes, column resizer) and the store rules without `ActionRunner`.

@@ -10,7 +10,7 @@ paths:
 
 - SlatePresentation depends on SlateDomain, SlateUI and SlateMocks. Every file imports `SlateDomain` and
   `SlateUI` when it uses them. `import SlateMocks` only in `Shared/PresentationAssembly+Preview.swift`. Never
-  `import SlateData`; never `UserDefaults`, `Process` or `NSPasteboard` (only `Shared/PasteboardWriter.swift`).
+  `import SlateData`; never `UserDefaults`, `Process` or `NSPasteboard` (only `Shared/PasteboardWriter.swift` and `Shared/PasteboardReader.swift`).
 - SlateUI depends on nothing in the package: SwiftUI, AppKit, Foundation, Observation only. A component that would
   need a Domain type takes plain values instead (`FolderPicker.chooseFolder(directory:prompt:message:)`).
 - MainActor is the module default in both. Stores, row models, mappers and views stay internal; tests reach them with

@@ -142,7 +142,7 @@ Packages/SlateKit/
       Styling/                   RichTextStyler, RichLayoutFragment, ParagraphDecoration, ImageAttachment, DividerAttachment
       Paste/                     PasteboardReader, HTMLImport, RichTextController+Paste (NSPasteboard allowed here)
     SlatePresentation/
-      Shared/                    Surface, ListSource, Navigator, ActivityLog, ActivityRecorder (CommandRecording → ActivityLog), Toaster (+ ToastAction for Undo), PasteboardWriter, WindowLayout, TextFocus, NoteDragPayload, RefreshTask, VaultChangeFeed, NoteLookup, PresentationAssembly (+Preview), View+Inject, View+PreviewEnvironment
+      Shared/                    Surface, ListSource, Navigator, ActivityLog, ActivityRecorder (CommandRecording → ActivityLog), Toaster (+ ToastAction for Undo), PasteboardWriter, PasteboardReader, WindowLayout, TextFocus, NoteDragPayload, RefreshTask, VaultChangeFeed, NoteLookup, PresentationAssembly (+Preview), View+Inject, View+PreviewEnvironment
       Shared/Events/             AppEvent, AppEvents, SubscriptionToken
       Shell/                     AppWindows (status item, panel, window, capture panel), MenuBarPanel, CapturePanel, MainMenuBuilder, MenuTarget, FirstLaunchWindow, FirstLaunchView, RootView, SidebarView, ColumnResizer, drag and resize
       Features/Vault/            VaultStore, Models/ (FolderRowModel, FolderRowMapper, FolderTreeMapper, FolderNode, FolderEdit, FolderIcon, FolderTint), Views/ (FolderRow, FolderNameField, FolderMenu, FolderDeleteConfirmation)
@@ -544,7 +544,7 @@ Must exist by the end of the milestone that introduces the type (`ROADMAP.md`):
 - `SlateDomain` imports only `Foundation` (and `CryptoKit` for the hash).
 - `SlateData`: no `SwiftUI`; `AppKit` only under `System/`; `Process` only in `Shell/ShellRunner.swift`; `NSFileCoordinator` only under `Files/`; `UserDefaults` only in `Persistence/UserDefaultsKeyValueStore.swift`; `import GRDB` only under `Index/`; `import Markdown` only under `Index/` and `Export/`.
 - `SlateEditor`: no import of any package module; `import Markdown` only under `Markdown/`; `NSPasteboard` only under `Paste/`; no `layoutManager` token anywhere.
-- `SlatePresentation`: no `GRDB`, no `FileManager` writes, no `Process`, no `NSPasteboard` outside `Shared/PasteboardWriter.swift`; `import SlateMocks` only in `PresentationAssembly+Preview.swift`.
+- `SlatePresentation`: no `GRDB`, no `FileManager` writes, no `Process`, no `NSPasteboard` outside `Shared/PasteboardWriter.swift` and `Shared/PasteboardReader.swift`; `import SlateMocks` only in `PresentationAssembly+Preview.swift`.
 - Everywhere: no `.shared` except Apple singletons listed in `layer-exceptions.txt`, no comment lines (`//` not followed by `MARK`), one top-level type per file, no hex colours outside `Theme.swift`.
 
 ---

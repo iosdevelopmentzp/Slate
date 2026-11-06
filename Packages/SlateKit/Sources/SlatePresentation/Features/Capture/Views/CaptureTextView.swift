@@ -1,4 +1,5 @@
 import AppKit
+import SlateDomain
 import SwiftUI
 
 struct CaptureTextView: NSViewRepresentable {
@@ -7,13 +8,16 @@ struct CaptureTextView: NSViewRepresentable {
     let onSave: () -> Void
     let onOpen: () -> Void
     let onCancel: () -> Void
+    let onAttach: ([CaptureAttachment]) -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
     }
 
     func makeNSView(context: Context) -> NSScrollView {
-        let textView = NSTextView(usingTextLayoutManager: true)
+        let textView = CaptureNoteTextView(usingTextLayoutManager: true)
+        textView.onAttach = onAttach
+        textView.registerForDraggedTypes(PasteboardReader.dragTypes)
         textView.isRichText = false
         textView.allowsUndo = true
         textView.font = .systemFont(ofSize: 15)
@@ -38,7 +42,8 @@ struct CaptureTextView: NSViewRepresentable {
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         context.coordinator.parent = self
-        guard let textView = scrollView.documentView as? NSTextView else { return }
+        guard let textView = scrollView.documentView as? CaptureNoteTextView else { return }
+        textView.onAttach = onAttach
         if textView.string != text {
             textView.string = text
         }
