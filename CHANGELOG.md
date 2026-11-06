@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Esc in a sub-folder goes up to its parent folder, like the back arrow. When the search field has text, Esc clears it first.
 - Drag a note card into the text of another note: Slate adds a `[[link]]` to that note. Before, it put a copy of the note file in `_attachments`. A note file dropped or pasted from Finder does the same.
 - Editor: Remove in the right-click menu of an image takes the image out of the note. Undo brings it back; the file stays in `_attachments`.
 - Show in Finder for folders and notes. Right click a folder in the sidebar, a sub-folder in the list, All notes or a note card: Finder opens the folder that holds it, with it selected. Files already had Show in Finder.

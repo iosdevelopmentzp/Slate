@@ -275,6 +275,7 @@ Numbered. What, then why. A later session must not undo these without a new numb
 186. Copy Path of a folder (`NoteListStore.copyPath(folder:)`): the sidebar folder menu, the sub-folder cards of the list, and All notes for the notes folder itself.
 187. Show in Finder of a folder (`FolderFilesStore.reveal(folder:)`, nil is the notes folder) and of a note (`FolderFilesStore.reveal(_:)` with the note path) goes through `WorkspaceOpening.reveal`, as for files: Finder opens the parent folder with the item selected. It sits next to Copy Path in the same menus.
 188. A note card dropped into the text, or a note file pasted from Finder, inserts `[[stem]]` (`EditorStore.noteLink(for:)`): a file URL inside the notes folder whose `VaultPath` is a note. Other files still go to `_attachments`. Before, the card gave its file URL and the note was copied into `_attachments`. The editor did not change.
+189. Esc in the window clears the search when it has text; otherwise it shows the parent of a sub-folder (`NoteListStore.showParent`). `MainWindow.cancelOperation` gets Esc only when no text view takes it, so Esc in the note text or the title does not move the list.
 
 ## Next steps
 
@@ -582,4 +583,4 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - S6: accessibility shows the table as one element with a label ("Table, 3 rows, 2 columns"); rows and cells are not exposed yet.
 - S7: drop, paste and Quick Look in a cell were tested through the controller, not with a real drag or a real double-click. Thumbnails cannot be resized, and a thumbnail is not selected by a single click (use Shift-arrow in the cell).
 - S6: no manual column resize (ADR 0009 level 1). A wide table scrolls sideways (decision 138), but there is no drag on the scroll bar: it only shows the position.
-- Sub-folders (ADR 0011): no colour, icon or manual order per sub-folder, no `⌘1`…`⌘9` for sub-folders. Esc does not go up to the parent folder yet; the back chevron does.
+- Sub-folders (ADR 0011): no colour, icon or manual order per sub-folder, no `⌘1`…`⌘9` for sub-folders.

@@ -159,6 +159,11 @@ final class NoteListStore: NoteLookup {
         }
     }
 
+    func showParent() {
+        guard case .folder(let folder) = source, let parent = folder.parent else { return }
+        show(.showing(parent))
+    }
+
     func show(_ source: ListSource) {
         navigator.show(source)
         cancelTrash()

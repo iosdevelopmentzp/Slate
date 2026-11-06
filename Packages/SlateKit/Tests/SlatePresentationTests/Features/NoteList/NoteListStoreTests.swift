@@ -317,4 +317,17 @@ import Testing
         #expect(harness.copied == ["/vault/Work/Plans", "/vault"])
         #expect(harness.toaster.text == "Path copied")
     }
+
+    @Test func showParentGoesUpOneFolderAndStopsAtTheTop() {
+        harness.noteList.show(.folder(FolderPath(rawValue: "Work/Plans/2026")))
+
+        harness.noteList.showParent()
+        #expect(harness.noteList.source == .folder(FolderPath(rawValue: "Work/Plans")))
+
+        harness.noteList.showParent()
+        #expect(harness.noteList.source == .space(SpaceName(rawValue: "Work")))
+
+        harness.noteList.showParent()
+        #expect(harness.noteList.source == .space(SpaceName(rawValue: "Work")))
+    }
 }

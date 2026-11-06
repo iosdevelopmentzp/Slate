@@ -481,7 +481,11 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         window.setFrameAutosaveName(WindowLayout.windowAutosaveName)
         window.onCancel = { [weak self] in
             guard let self else { return }
-            assembly.search.clear()
+            guard assembly.search.isActive == false else {
+                assembly.search.clear()
+                return
+            }
+            assembly.noteList.showParent()
         }
         return window
     }
