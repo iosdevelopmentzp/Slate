@@ -171,6 +171,10 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - An earlier version of an image or another binary file came back broken: the history read it as text. It now comes back byte for byte.
 - Quick Look shows the image again when you open it from the panel. The preview opened under the panel, so it looked empty; now it opens above every Slate window.
 
+### Infrastructure
+- The `slate-map` skill in `.claude/skills/`: where to look for each topic of the repository (documents, module folders, the other skills, the checks before a commit). `CLAUDE.md` lists it first; `update-docs` keeps it current.
+- `docs/ROADMAP.md` has a "Future ideas" list. Diagrams from Mermaid code blocks are there, because they need a new library.
+
 ### Added
 - Float on Top keeps a note in a small window above other apps, for a checklist next to Xcode. Open in New Window (`⌘⇧N`) opens a note in its own window.
 - While the window is open, Slate has a menu bar with every command and its shortcut.

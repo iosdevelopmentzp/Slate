@@ -4,7 +4,7 @@ Personal macOS notes app for an iOS developer: one normal window, a Dock icon an
 
 Current stage: **Phase 2 built and merged; Phase 3 S5 (agents, `slate mcp`, ADR 0010) and S6, S7 (tables with images in cells, ADR 0009) built**, the owner's manual checks are open (`docs/STATUS.md`, "Manual checks"). v1 shows only Folders and Notes (ADR 0007); the parked features keep their Domain and Data code, their views are gone (the list is in `docs/STATUS.md`). Folders can be made, renamed, coloured and deleted with Undo; the look is soft and rounded (`docs/UX.md` revision 2). The editor is a TextKit 2 rich text editor with a format bar; files stay Markdown (ADR 0008). The quick note field, Settings with backup, and Undo toasts for Move and Trash are done. Tables are block attachments in the editor. Next: the manual checks, then M8 ideas. `docs/STATUS.md` says what is real.
 
-Read first, in this order: this file, `docs/STATUS.md`, `docs/ROADMAP.md`, then the document for the milestone (`docs/SPEC.md`, `docs/STORAGE-FORMAT.md`, `docs/ARCHITECTURE.md`, `docs/UX.md`). `docs/PLAYBOOK.md` has verified solutions and traps per topic; read its section before touching that topic.
+Read first, in this order: this file, the `slate-map` skill, `docs/STATUS.md`, `docs/ROADMAP.md`, then the document for the milestone (`docs/SPEC.md`, `docs/STORAGE-FORMAT.md`, `docs/ARCHITECTURE.md`, `docs/UX.md`). `docs/PLAYBOOK.md` has verified solutions and traps per topic; read its section before touching that topic.
 
 ## Project
 
@@ -50,7 +50,7 @@ Modules, one direction: `Composition → Presentation → Domain ← Data`; Pres
 | `docs/` | `SPEC.md`, `STORAGE-FORMAT.md`, `ARCHITECTURE.md`, `UX.md`, `ROADMAP.md`, `PLAYBOOK.md`, `BOOTSTRAP.md`, `STATUS.md`, `adr/` |
 | `.claude/rules/` | `layers.md` (always), `domain.md`, `data.md`, `presentation.md`, `testing.md` (by path) |
 | `Skills/slate-task/` | The skill for agents in other repositories: keep task documentation in Slate through `slate mcp`. Linked into `~/.claude/skills/`, so a change here is live at once |
-| `.claude/skills/` | `add-feature`, `add-use-case`, `build-and-run`, `panel-window`, `testing`, `ui-components`, `update-docs` (copied from DevHub; examples still name DevHub features) |
+| `.claude/skills/` | `slate-map` (where to look for a topic; load it first), `add-feature`, `add-use-case`, `build-and-run`, `panel-window`, `testing`, `ui-components`, `update-docs` (copied from DevHub; examples still name DevHub features) |
 | `.claude/hooks/` | session brief on start, changelog check on stop |
 
 ## Rules that apply from day one

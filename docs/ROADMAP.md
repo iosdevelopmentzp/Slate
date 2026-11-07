@@ -61,3 +61,11 @@ Starts from `main` after the second round of tables. Same rules as Phase 2. The 
 | S9 | **Agents and projects** | `slate mcp` finds the project of its working directory (path, worktree, remote) and says so in its instructions; tools `project_context`, `start_task`, `set_task_status`, `log_progress`, `add_file`, `list_files`, `save_version`; `slate project` and `slate task`; registration with `-s user` | A real Claude Code session in a repository starts a task, logs progress, and a second session reads the log |
 | S10 | **Versions** (ADR 0015) | A history repository per project; preview and diff of a version; versions of files; the Changes list of a project; Save Version with a name; Clear History | Manual checks of the versions section pass |
 
+
+## Future ideas
+
+Not planned. Each needs the owner's yes before work starts.
+
+| Idea | Note |
+|---|---|
+| Diagrams from Mermaid code blocks | Drawing them needs a new library (Mermaid in a web view, or a native port). New libraries need the owner's permission (`CLAUDE.md`) |

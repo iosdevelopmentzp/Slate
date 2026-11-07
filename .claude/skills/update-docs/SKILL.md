@@ -50,6 +50,7 @@ Update only the parts that moved:
 ## 5. `CLAUDE.md` and skills
 
 - `Layout` table in `CLAUDE.md` when a folder or a key file was added.
+- `/slate-map` when a folder, a document, a skill or the home of a topic changed.
 - `Conventions` when a new pattern was established and should be reused.
 - `/ui-components` when a shared component, formatter or `Tint` case was added or its signature changed.
 - `/add-feature` when the way to add a model, port, store, row model or screen changed.
