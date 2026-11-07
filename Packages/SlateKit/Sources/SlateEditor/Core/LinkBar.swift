@@ -1,31 +1,27 @@
 import AppKit
 
 final class LinkBar: NSView {
-    static let height: CGFloat = 30
+    static let height: CGFloat = 40
     static let gap: CGFloat = 4
-    static let addressWidth: CGFloat = 260
 
     var onAction: (LinkAction, NSRange) -> Void = { _, _ in }
     private(set) var range: NSRange?
-    private let icon = NSImageView()
-    private let address = NSTextField(labelWithString: "")
+    let preview = LinkPreviewView()
     private let stack = NSStackView()
 
     init() {
         super.init(frame: .zero)
         isHidden = true
-        address.lineBreakMode = .byTruncatingMiddle
-        address.font = .systemFont(ofSize: 12)
-        address.textColor = .secondaryLabelColor
-        address.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        address.widthAnchor.constraint(lessThanOrEqualToConstant: Self.addressWidth).isActive = true
-        icon.contentTintColor = .secondaryLabelColor
-        stack.setViews([icon, address] + LinkAction.allCases.map(button), in: .leading)
+        preview.onOpen = { [weak self] in
+            guard let self, let range else { return }
+            onAction(.open, range)
+        }
+        preview.heightAnchor.constraint(equalToConstant: Self.height - 8).isActive = true
+        stack.setViews([preview] + LinkAction.allCases.filter { $0 != .open }.map(button), in: .leading)
         stack.orientation = .horizontal
         stack.spacing = 2
-        stack.edgeInsets = NSEdgeInsets(top: 0, left: 10, bottom: 0, right: 4)
-        stack.setCustomSpacing(6, after: icon)
-        stack.setCustomSpacing(8, after: address)
+        stack.edgeInsets = NSEdgeInsets(top: 0, left: 4, bottom: 0, right: 4)
+        stack.setCustomSpacing(6, after: preview)
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
         NSLayoutConstraint.activate([
@@ -80,9 +76,7 @@ final class LinkBar: NSView {
 
     func show(href: String, range: NSRange, below rect: CGRect, in view: NSView) {
         self.range = range
-        icon.image = NSImage(systemSymbolName: LinkAddress.isNote(href) ? "doc.text" : "globe", accessibilityDescription: nil)
-        address.stringValue = LinkAddress.display(href)
-        address.toolTip = address.stringValue
+        preview.show(LinkPreview(href: href), address: LinkAddress.display(href))
         if superview === view {
             view.addSubview(self, positioned: .above, relativeTo: nil)
         } else {

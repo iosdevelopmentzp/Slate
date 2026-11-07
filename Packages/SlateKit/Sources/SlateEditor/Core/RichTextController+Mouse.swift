@@ -27,7 +27,7 @@ extension RichTextController {
         return false
     }
 
-    private func characterIndex(at point: CGPoint) -> Int? {
+    func characterIndex(at point: CGPoint) -> Int? {
         let index = textView.characterIndexForInsertion(at: point)
         guard storage.length > 0 else { return nil }
         let candidates = [index, index - 1].filter { $0 >= 0 && $0 < storage.length }

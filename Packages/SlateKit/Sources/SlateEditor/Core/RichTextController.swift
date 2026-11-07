@@ -24,6 +24,9 @@ final class RichTextController: NSObject {
     let imageHandle = ImageResizeHandle()
     let tailMarker = TailMarkerView()
     let linkBar = LinkBar()
+    var hoveredLink: NSRange?
+    var linkHoverTask: Task<Void, Never>?
+    static let linkHoverDelay: Duration = .milliseconds(300)
     let multiCaret = MultiCaret()
     var foldedHeadings: Set<Int> = []
     var hiddenSections: [NSRange] = []

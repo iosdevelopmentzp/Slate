@@ -73,8 +73,16 @@ extension RichTextController {
     func updateLinkBar() {
         let selection = textView.selectedRange()
         guard selection.length == 0, activeLinkPopover == nil, multiCaret.isActive == false,
-              let window = textView.window, window.firstResponder === textView,
-              let range = linkRange(at: selection.location),
+              textView.window?.firstResponder === textView,
+              let range = linkRange(at: selection.location) else {
+            linkBar.hide()
+            return
+        }
+        showLinkBar(for: range)
+    }
+
+    func showLinkBar(for range: NSRange) {
+        guard let window = textView.window, NSMaxRange(range) <= storage.length,
               let href = storage.attribute(.slateHref, at: range.location, effectiveRange: nil) as? String else {
             linkBar.hide()
             return
