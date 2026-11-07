@@ -14,11 +14,9 @@ import Testing
         return CGPoint(x: rect.midX, y: rect.midY)
     }
 
-    private func hover(_ harness: EditorHarness, at point: CGPoint?) async throws {
+    private func hover(_ harness: EditorHarness, at point: CGPoint?) async {
         harness.controller.hoverLink(at: point, after: .zero)
-        for _ in 0..<200 where harness.controller.linkHoverTask != nil {
-            try await Task.sleep(for: .milliseconds(10))
-        }
+        await harness.controller.linkHoverTask?.value
     }
 
     @Test func hoverOnALinkShowsItsPreview() async throws {
@@ -58,7 +56,7 @@ import Testing
 
         try await hover(harness, at: point(of: "map", in: harness))
         let frame = harness.controller.linkBar.frame
-        try await hover(harness, at: CGPoint(x: frame.midX, y: frame.midY))
+        await hover(harness, at: CGPoint(x: frame.midX, y: frame.midY))
 
         #expect(harness.controller.linkBar.isHidden == false)
     }

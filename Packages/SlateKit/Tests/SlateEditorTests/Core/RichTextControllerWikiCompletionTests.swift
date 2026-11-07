@@ -11,17 +11,15 @@ import Testing
         return harness
     }
 
-    private func waitForList(_ harness: EditorHarness) async throws {
-        for _ in 0..<200 where harness.controller.suggestionList.isHidden {
-            try await Task.sleep(for: .milliseconds(10))
-        }
+    private func waitForList(_ harness: EditorHarness) async {
+        await harness.controller.wikiNamesTask?.value
     }
 
     @Test func typingTwoBracketsListsNotesAndReturnInsertsTheLink() async throws {
         let harness = harness()
 
         harness.type(" [[tri")
-        try await waitForList(harness)
+        await waitForList(harness)
         let list = harness.controller.suggestionList
         #expect(list.isHidden == false)
         #expect(list.suggestions.first?.name == "Trip Plan")
@@ -35,7 +33,7 @@ import Testing
         let harness = harness()
 
         harness.type(" [[plan")
-        try await waitForList(harness)
+        await waitForList(harness)
         harness.command(#selector(NSResponder.moveDown(_:)))
         harness.command(#selector(NSResponder.insertTab(_:)))
 
@@ -46,7 +44,7 @@ import Testing
         let harness = harness()
 
         harness.type(" [[tri")
-        try await waitForList(harness)
+        await waitForList(harness)
         harness.command(#selector(NSResponder.cancelOperation(_:)))
 
         #expect(harness.controller.suggestionList.isHidden)
@@ -67,8 +65,8 @@ import Testing
         harness.select(1)
 
         harness.type(" [[tri")
-        try await Task.sleep(for: .milliseconds(50))
 
+        #expect(harness.controller.wikiNamesTask == nil)
         #expect(harness.controller.suggestionList.isHidden)
     }
 }
