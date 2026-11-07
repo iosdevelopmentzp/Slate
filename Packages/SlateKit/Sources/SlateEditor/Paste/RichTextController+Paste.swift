@@ -41,7 +41,8 @@ extension RichTextController {
             } else if let text = pasteboard.string(forType: .string) {
                 insertPlain(text)
             }
-        case .text(let text):
+        case .text(let pasted):
+            let text = currentBlock.kind.keepsLineBreaks ? XcodeLog.cleaned(pasted) ?? pasted : pasted
             if TableMarkdown.looksLikeTable(text) {
                 insertFragment(MarkdownReader.read(text.trimmingCharacters(in: .whitespacesAndNewlines)))
             } else if insertCode(text) == false {

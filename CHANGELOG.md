@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Paste a log from the Xcode console or from `log stream`: the date, the process and the thread at the start of each line go, and the lines become a Log code block. Inside a code block only the prefixes go.
 - See what agents changed. A note that an agent changed since you last opened it has a purple dot on its card. In the note a strip says "An agent changed this note 5 min. ago" with Show Changes, which opens Versions at the version before the agent's change with the changes since, and Got It. Leaving the note also clears the mark. Changes made while Slate was closed are found at the next start.
 - A link to a section: `[[Note#Heading]]` opens the note at that heading, `[[#Heading]]` goes to a heading of the same note, as in Obsidian.
 - Code paths, tickets, merge requests and commits in the text are links, but stay plain text in the file. In a note of a project, `Sources/Login/LoginView.swift:42` opens the file in Xcode at that line (Slate looks for it in the linked repository), `!123` opens the merge request and a commit hash opens the commit on the project's git server. A ticket key like `ABC-123` opens the new Settings → General → Ticket address with the key at the end. They are dotted underlined; the pointer on one shows the link card.

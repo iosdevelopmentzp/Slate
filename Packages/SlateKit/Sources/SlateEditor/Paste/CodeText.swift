@@ -14,6 +14,9 @@ enum CodeText {
         let normalized = trimmingBlankLines(text.replacingOccurrences(of: "\r\n", with: "\n"), leading: false)
         let trimmed = normalized.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.isEmpty == false else { return nil }
+        if let log = XcodeLog.cleaned(normalized) {
+            return Block(code: trimmingBlankLines(log, leading: true), language: "log")
+        }
         if isJSON(trimmed) {
             return Block(code: trimmed.contains("\n") ? trimmingBlankLines(normalized, leading: true) : prettyJSON(trimmed), language: "json")
         }

@@ -305,6 +305,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 206. Agent marks: `AgentMarks` (Presentation, shared like `Navigator`) reads `AgentChangeLog.changes(after:)` at the first scan and after each file event, keeps the first unread change date per path, and stores both that map and the last date it read in `agent.unread`, so changes made while Slate was closed count too. A note path that moved keeps no mark. Show Changes selects the newest version not later than the first unread change, which is the version Slate keeps before every agent write.
 
+207. Log paste (G8 of `SPEC.md`): `XcodeLog.cleaned` strips the two prefixes only when at least half of the non-empty lines have one, so a note that quotes one log line in a paragraph is not changed. It runs before the JSON and code checks of `CodeText`.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -594,6 +596,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 148. Settings → General → Ticket address: `https://example.atlassian.net/browse/`. In a note type `ABC-123`: it is dotted underlined; the pointer on it shows a card "ABC-123 · Ticket"; a click opens the browser. In a task note of a project with a linked repository type a path of a file of that repository with `:20`: a click opens Xcode at line 20. Type `!1` and a commit hash: they open the merge request and the commit. Reopen the note in another editor: the text has no link marks.
 149. In a note type `[[` and a note name with `#` and one of its headings, then `]]`. A click on the link card opens that note with that heading at the top. `[[#Log]]` in a long note jumps to its Log.
 150. Close a note. Ask Claude Code to change it through `slate mcp`. The card of the note gets a purple dot. Open it: the strip says an agent changed it. Show Changes: Versions opens with the agent's changes in green and red. Open another note and come back: no dot, no strip.
+151. Copy ten lines from the Xcode console with the date and process shown, paste into a note: a Log code block with only the messages.
 
 ## Known gaps
 
