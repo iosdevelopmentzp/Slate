@@ -33,5 +33,7 @@ package enum EditorMenuActions {
     package static let expandAllSections = #selector(RichTextView.slateExpandAllSections(_:))
     package static let find = #selector(RichTextView.slateFind(_:))
     package static let table = #selector(RichTextView.slateTable(_:))
+    package static let copyForJira = #selector(RichTextView.slateCopyForJira(_:))
+    package static let copyForSlack = #selector(RichTextView.slateCopyForSlack(_:))
     package static let pasteTable = #selector(RichTextView.slatePasteTable(_:))
 }

@@ -32,6 +32,7 @@ All code is in `Packages/SlateKit/Sources/`. Tests mirror it in `Packages/SlateK
 | Files on disk, index, watcher, git history | `SlateData/` (`Files/`, `Index/`, `Watch/`, `History/`, `Git/`, `Assembly/Ports+Live.swift`) |
 | Editor: text view, commands, hover cards, menus | `SlateEditor/Core/` (`RichTextController+<Concern>.swift`) |
 | Markdown to rich text and back | `SlateEditor/Markdown/` (`MarkdownReader`, `MarkdownWriter`, `InlineReader`, `InlineWriter`) |
+| Copy for Jira and Slack (Markdown to wiki markup and Slack text) | `SlateEditor/Markdown/Export/` |
 | Look of blocks (quote bar, code, lists) | `SlateEditor/Styling/` (`RichTextStyler`, `RichLayoutFragment`) |
 | Attributes of the rich text | `SlateEditor/Model/` (`RichText`, `BlockKind`, `InlineStyle`) |
 | Paste, copy, the pasteboard | `SlateEditor/Paste/` (the only editor folder that may use `NSPasteboard`) |

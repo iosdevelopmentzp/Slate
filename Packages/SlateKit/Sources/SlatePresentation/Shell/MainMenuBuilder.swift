@@ -44,6 +44,8 @@ struct MainMenuBuilder {
             .separator(),
             standard("Cut", #selector(NSText.cut(_:)), key: "x"),
             standard("Copy", #selector(NSText.copy(_:)), key: "c"),
+            standard("Copy for Jira", EditorMenuActions.copyForJira),
+            standard("Copy for Slack", EditorMenuActions.copyForSlack),
             standard("Paste", #selector(NSText.paste(_:)), key: "v"),
             standard("Paste as Table", EditorMenuActions.pasteTable),
             standard("Select All", #selector(NSText.selectAll(_:)), key: "a"),

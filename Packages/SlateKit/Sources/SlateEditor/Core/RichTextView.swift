@@ -154,6 +154,8 @@ final class RichTextView: NSTextView {
     @objc func slateCaretAbove(_ sender: Any?) { _ = controller?.addCaret(.up) }
     @objc func slateCaretBelow(_ sender: Any?) { _ = controller?.addCaret(.down) }
     @objc func slatePasteTable(_ sender: Any?) { controller?.pasteAsTable(from: PasteboardBridge.general) }
+    @objc func slateCopyForJira(_ sender: Any?) { controller?.copy(for: .jira) }
+    @objc func slateCopyForSlack(_ sender: Any?) { controller?.copy(for: .slack) }
 
     @objc func slateFind(_ sender: Any?) {
         controller?.perform(.findInNote)

@@ -293,6 +293,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 200. MCP notes: `MCPToolRunner.notePath(id:)` resolves an id, then a `slate://note/<id>` or `slate://open?id=` link, then a path ending in `.md` (relative or absolute, through `AgentPathPolicy.notePath`), then one note with that exact title (case does not matter; two notes with the title are an error). The schemas keep the name `id`, so old agents work unchanged. `move_folder` takes `folder` and its new path `to`: a new parent runs `MoveFolderUseCase` (missing parents are made), a new last part runs `RenameFolderUseCase`; both folders must be writable, a top-level folder is refused. `list_trash` lists trashed notes by their old path; `restore_note` takes that path and restores the newest match through `RestoreNoteUseCase`, when the folder is writable. Each write keeps a version first, like the other tools. Versions of a single note are not in MCP yet.
 
+201. Copy for Jira and Copy for Slack (Edit menu and the right-click menu of the text) convert the Markdown of the selection, or of the whole note when nothing is selected, in `SlateEditor/Markdown/Export/` with swift-markdown. Jira gets the old wiki markup as plain text (`h2.`, `*bold*`, `{code:swift}`, `{noformat}` for a language Jira does not know, `||head||`, `[label|url]`, `!file.png|width=420!`), because the owner's Jira uses the wiki renderer. Slack gets HTML for the message field and mrkdwn-like text as the plain fallback; tables become aligned text in a code block, because Slack has no tables. Note links become their names, highlights lose their marks, checklists show ☐ and ☑. Agents get no export tool: the converter lives in the editor module, which the CLI may not import, and agents can write wiki markup themselves.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -576,6 +578,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 142. In a note type `[[` and two letters of a note name: a list of notes shows under the text. ↓ and Return: the link shows as a link and opens that note on click of its card. Type `[[Some Note]]` by hand: it turns into a link when you type the last `]`. Reopen the note: both are still links.
 143. Open three notes in turn, one in another folder. Click the left arrow at the top left of the note twice: the notes come back in reverse order, with their folder in the list. The right arrow and `⌃⌘→` go forward again. Open a new note after going back: the right arrow dims.
 144. In Claude Code ask: "append a line to Notes/Groceries.md" and "move the folder Notes/Old to Notes/Archive/Old": both work with the path, no id. Ask to trash a note and then to bring it back: `list_trash` and `restore_note` return it to its folder.
+145. Select a part of a note with a heading, a list, a link and a table. Edit → Copy for Jira, paste into a Jira comment in text mode: headings, bold, the list, the link and the table show as in the note. With nothing selected the whole note is copied. Copy for Slack and paste into a Slack message: bold, links and the list stay; the table is aligned text in a code block.
 
 ## Known gaps
 
