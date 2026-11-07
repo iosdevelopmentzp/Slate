@@ -87,6 +87,7 @@ struct MainMenuBuilder {
             standard("Table", EditorMenuActions.table, key: "t", modifiers: [.command, .option]),
             standard("Format JSON", EditorMenuActions.formatJSON, key: "j", modifiers: [.command, .option, .shift]),
             standard("Screenshot", EditorMenuActions.screenshot, key: "s", modifiers: [.command, .shift]),
+            standard("Simulator Screenshot", EditorMenuActions.simulatorScreenshot, key: "s", modifiers: [.command, .option, .shift]),
         ]))
         main.addItem(submenu("Note", items: note.map(item)))
         main.addItem(submenu("Go", items: go.map(item)))

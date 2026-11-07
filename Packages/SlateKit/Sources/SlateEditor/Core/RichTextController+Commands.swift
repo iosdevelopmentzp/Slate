@@ -18,13 +18,13 @@ extension RichTextController {
             case .link:
                 activeTable.cellEditor.slateLink(nil)
                 return
-            case .image, .screenshot:
+            case .image, .screenshot, .simulatorScreenshot:
                 if let target = activeTable.imageTarget {
                     imageTarget = target
                     if command == .image {
                         chooseImage()
                     } else {
-                        handlers.requestScreenshot(.region)
+                        handlers.requestScreenshot(command == .simulatorScreenshot ? .simulator : .region)
                     }
                     return
                 }
@@ -58,6 +58,8 @@ extension RichTextController {
             insertDivider()
         case .screenshot:
             handlers.requestScreenshot(.region)
+        case .simulatorScreenshot:
+            handlers.requestScreenshot(.simulator)
         case .indent(let delta):
             _ = indentLists(by: delta)
         case .formatJSON:

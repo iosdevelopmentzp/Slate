@@ -55,6 +55,18 @@ import Testing
         #expect(editor.insertion?.markdown == "![](../_attachments/20270115-110000-screenshot.png)")
     }
 
+    @Test func aSimulatorScreenshotKeepsTheWindowAndInsertsTheImage() async throws {
+        try await open("Tasks/A.md")
+        var steps: [String] = []
+        harness.panelVisibility.hideForCapture = { steps.append("hide") }
+
+        await editor.screenshot(.simulator)
+
+        #expect(steps.isEmpty)
+        #expect(harness.spies.capture.calls == [.simulator])
+        #expect(editor.insertion?.markdown == "![](../_attachments/20270115-110000-simulator.png)")
+    }
+
     @Test func cancelledScreenshotInsertsNothing() async throws {
         try await open("Tasks/A.md")
         harness.spies.capture.producesFile = false

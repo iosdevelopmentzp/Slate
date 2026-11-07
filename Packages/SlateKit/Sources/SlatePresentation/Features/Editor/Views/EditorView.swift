@@ -219,7 +219,14 @@ struct EditorView: View {
             },
             pasteImage: { data, fileExtension in Task { await editor.pasteImage(data, fileExtension: fileExtension) } },
             pasteFiles: { urls in Task { await editor.pasteFiles(urls) } },
-            requestScreenshot: { kind in Task { await editor.screenshot(kind == .region ? .region : .window) } },
+            requestScreenshot: { kind in
+                let mode: CaptureMode = switch kind {
+                case .region: .region
+                case .window: .window
+                case .simulator: .simulator
+                }
+                Task { await editor.screenshot(mode) }
+            },
             notice: { editor.toaster.show($0) },
             noteNames: { await editor.linkTargets() },
             collapsedSections: { editor.setCollapsedSections($0) }

@@ -13,6 +13,7 @@ package enum EditorCommand: Hashable, Sendable {
     case file
     case divider
     case screenshot
+    case simulatorScreenshot
     case indent(Int)
     case table
     case formatJSON

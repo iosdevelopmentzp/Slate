@@ -6,13 +6,18 @@ struct ScreencaptureTool: ScreenCapturing {
 
     func capture(_ mode: CaptureMode, to url: URL) async throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        _ = try await shell.run("screencapture", Self.arguments(for: mode, path: url.path), cwd: nil)
+        _ = try await shell.run(Self.executable(for: mode), Self.arguments(for: mode, path: url.path), cwd: nil)
+    }
+
+    static func executable(for mode: CaptureMode) -> String {
+        mode == .simulator ? "xcrun" : "screencapture"
     }
 
     static func arguments(for mode: CaptureMode, path: String) -> [String] {
         switch mode {
         case .region: ["-i", "-x", "-t", "png", path]
         case .window: ["-i", "-W", "-o", "-x", "-t", "png", path]
+        case .simulator: ["simctl", "io", "booted", "screenshot", "--type=png", path]
         }
     }
 }

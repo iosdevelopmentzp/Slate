@@ -307,6 +307,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 207. Log paste (G8 of `SPEC.md`): `XcodeLog.cleaned` strips the two prefixes only when at least half of the non-empty lines have one, so a note that quotes one log line in a paragraph is not changed. It runs before the JSON and code checks of `CodeText`.
 
+208. Simulator Screenshot is a third `CaptureMode`: `xcrun simctl io booted screenshot --type=png <file>` through `ScreencaptureTool`, with the same file name rule (`<date>-simulator.png`) and the same insert as a screenshot. The window is not hidden, because the Simulator draws itself. With several booted Simulators simctl picks one; Slate does not ask which.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -597,6 +599,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 149. In a note type `[[` and a note name with `#` and one of its headings, then `]]`. A click on the link card opens that note with that heading at the top. `[[#Log]]` in a long note jumps to its Log.
 150. Close a note. Ask Claude Code to change it through `slate mcp`. The card of the note gets a purple dot. Open it: the strip says an agent changed it. Show Changes: Versions opens with the agent's changes in green and red. Open another note and come back: no dot, no strip.
 151. Copy ten lines from the Xcode console with the date and process shown, paste into a note: a Log code block with only the messages.
+152. Start an iOS Simulator. In a note press `⌥⇧⌘S`: the Simulator screen is in the note. Quit the Simulator and press it again: the toast says no Simulator is running.
 
 ## Known gaps
 

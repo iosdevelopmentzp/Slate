@@ -49,14 +49,18 @@ extension EditorStore {
     func screenshot(_ mode: CaptureMode) async {
         guard let path = document?.path, isCapturing == false else { return }
         isCapturing = true
-        panel.hideForCapture()
+        let hides = mode != .simulator
+        if hides { panel.hideForCapture() }
         defer {
-            panel.showAfterCapture()
+            if hides { panel.showAfterCapture() }
             isCapturing = false
         }
         do {
             guard let markdown = try await attachScreenshot.execute(mode, for: path) else { return }
             insert(markdown)
+        } catch where mode == .simulator {
+            toaster.show("No Simulator is running. Start one in Xcode, then try again.")
+            activity.log("Simulator screenshot failed", detail: error.localizedDescription, outcome: .failure)
         } catch {
             toaster.show("Screenshot failed")
             activity.log("Screenshot failed. Allow Slate in System Settings → Privacy & Security → Screen Recording.", detail: error.localizedDescription, outcome: .failure)

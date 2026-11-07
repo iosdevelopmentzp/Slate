@@ -138,6 +138,7 @@ Rules for text: a sentence, not a label with a colon, wherever there is room. Ve
 | `⌘0` | Show or hide the folders |
 | `⌥⌘0` | Show or hide the notes list |
 | `⌃⌘←`, `⌃⌘→` | Back and Forward through the opened notes |
+| `⌥⇧⌘S` | Simulator Screenshot: a screenshot of the booted iOS Simulator into the note |
 | `⌘⇧O` | Open as window |
 | `⌘1` … `⌘9` | Folder by position |
 | `⌘↑` / `⌘↓` in the list | Previous and next note |
