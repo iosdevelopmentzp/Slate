@@ -19,7 +19,7 @@ Read first, in this order: this file, `docs/STATUS.md`, `docs/ROADMAP.md`, then 
 
 | Command | What it does |
 |---|---|
-| `Scripts/build.sh [Debug\|Release]` | Runs `Scripts/check-layers.sh`, then builds with `xcodebuild -quiet` into `DerivedData/` and prints the `.app` path. `SKIP_LAYER_CHECK=1` skips the check |
+| `Scripts/build.sh [Debug\|Release]` | Runs `Scripts/check-layers.sh` and `Scripts/check-deps.sh`, then builds with `xcodebuild -quiet` into `DerivedData/` and prints the `.app` path. `SKIP_LAYER_CHECK=1` skips the check |
 | `Scripts/test.sh [args]` | Runs `swift test -q` on the package and prints one summary line. `--skip integration` skips the process suites, `--filter <Suite>` runs one suite |
 | `Scripts/run.sh` | Builds Debug, quits a running Slate, opens the new build |
 | `Scripts/install.sh` | Builds Release, copies to `/Applications/Slate.app`, installs the `slate` CLI to `~/.local/bin` |
@@ -46,7 +46,7 @@ Modules, one direction: `Composition → Presentation → Domain ← Data`; Pres
 | `…/SlateTestSupport/` | spies and test helpers |
 | `…/SlateCLI/` | the `slate` command |
 | `Packages/SlateKit/Tests/` | six test targets (`SlateCLITests` runs the commands over a temporary folder), folders mirror `Sources/` |
-| `Scripts/` | `build.sh`, `test.sh`, `check-layers.sh`, `layer-exceptions.txt`, `run.sh`, `install.sh`, `generate-vault.sh` |
+| `Scripts/` | `build.sh`, `test.sh`, `check-layers.sh`, `check-deps.sh`, `layer-exceptions.txt`, `run.sh`, `install.sh`, `generate-vault.sh` |
 | `docs/` | `SPEC.md`, `STORAGE-FORMAT.md`, `ARCHITECTURE.md`, `UX.md`, `ROADMAP.md`, `PLAYBOOK.md`, `BOOTSTRAP.md`, `STATUS.md`, `adr/` |
 | `.claude/rules/` | `layers.md` (always), `domain.md`, `data.md`, `presentation.md`, `testing.md` (by path) |
 | `Skills/slate-task/` | The skill for agents in other repositories: keep task documentation in Slate through `slate mcp`. Linked into `~/.claude/skills/`, so a change here is live at once |
@@ -55,6 +55,7 @@ Modules, one direction: `Composition → Presentation → Domain ← Data`; Pres
 
 ## Rules that apply from day one
 
+- Third-party packages: exact versions only (`exact:` in `Package.swift`, both `Package.resolved` files in git, `Scripts/check-deps.sh`). A new package, a version update or a removal needs the owner's permission first. Never run `swift package update` or reset package caches to newer versions without it.
 - The storage format in `docs/STORAGE-FORMAT.md` is a contract shared with other tools (Obsidian, the CLI, scripts). Change it only with a new ADR in `docs/adr/`.
 - Every screen follows `docs/UX.md` revision 2: native but soft, rounded, two visible concepts (Folders, Notes), keyboard first, no modal dialogs, plain words from its section 7.
 - v1 scope is `SPEC.md` section 0.9 (ADR 0007). A parked feature never appears in the UI. The editor is rich text with Markdown files (ADR 0008); no Markdown marks on screen.

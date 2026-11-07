@@ -227,6 +227,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - `⌘Z` (Undo) and `⇧⌘Z` (Redo) work in the note text, in the panel and in the window. Before, the editor kept its own undo history but the Undo command did not reach it, and the panel had no Edit keys until the window was opened once.
 
 ### Infrastructure
+- Third-party packages are pinned to exact versions in `Package.swift`. `Scripts/check-deps.sh` (run by `build.sh`) fails on a version range or when the two `Package.resolved` files differ. `build.sh`, `test.sh` and `install.sh` use only the versions in `Package.resolved` and never update a package on their own.
 - `check-layers.sh` allows `NSPasteboard` in `Shared/PasteboardReader.swift` of Presentation, next to `PasteboardWriter.swift`.
 - The `slate-task` skill describes the new task note: one page for the owner with Overview, Status, Key facts, Questions, Plan and Log; research goes into `Details/`. ADR 0021.
 - The `slate-task` skill uses `replace_in_note`, `update_section` and `read_section` for small changes, and `update_note` only when most of a note changes.

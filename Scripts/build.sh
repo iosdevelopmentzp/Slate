@@ -8,6 +8,7 @@ DERIVED="${SLATE_DERIVED_DATA:-$ROOT/DerivedData}"
 if [ "${SKIP_LAYER_CHECK:-0}" != "1" ]; then
     "$ROOT/Scripts/check-layers.sh"
 fi
+"$ROOT/Scripts/check-deps.sh"
 
 xcodebuild \
     -project "$ROOT/Slate.xcodeproj" \
@@ -15,6 +16,7 @@ xcodebuild \
     -configuration "$CONFIG" \
     -destination 'platform=macOS,arch=arm64' \
     -derivedDataPath "$DERIVED" \
+    -onlyUsePackageVersionsFromResolvedFile \
     -quiet \
     build
 

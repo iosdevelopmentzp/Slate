@@ -14,5 +14,5 @@ while [ $# -gt 0 ]; do
     fi
 done
 
-swift test --package-path "$ROOT/Packages/SlateKit" -q "${args[@]}" 2>&1 \
+swift test --package-path "$ROOT/Packages/SlateKit" --force-resolved-versions -q "${args[@]}" 2>&1 \
     | grep -E '✘|recorded an issue|Test run with|error:'

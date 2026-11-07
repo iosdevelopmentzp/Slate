@@ -16,7 +16,7 @@ sign() {
   codesign --force --sign "$IDENTITY" --preserve-metadata=identifier,entitlements "$1"
 }
 
-swift build --package-path "$ROOT/Packages/SlateKit" --scratch-path "$ROOT/DerivedData/InstallCLI" -c release --product slate -q
+swift build --package-path "$ROOT/Packages/SlateKit" --scratch-path "$ROOT/DerivedData/InstallCLI" -c release --product slate --force-resolved-versions -q
 mkdir -p "$BIN"
 cp "$ROOT/DerivedData/InstallCLI/release/slate" "$BIN/slate.new"
 sign "$BIN/slate.new"
