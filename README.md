@@ -69,13 +69,7 @@ Scripts/run.sh        # build, quit the running app, open the new one
 Scripts/install.sh    # Release build to /Applications and the slate CLI to ~/.local/bin
 ```
 
-To keep `/Applications/Slate.app` at the last commit on `main`, add two git hooks once:
-
-```sh
-for h in post-commit post-merge; do printf '#!/bin/sh\nexec "$(git rev-parse --show-toplevel)/Scripts/auto-install.sh"\n' > .git/hooks/$h; chmod +x .git/hooks/$h; done
-```
-
-After a commit that changes code, Slate is built and installed in the background, and a notification says when it is done. The log is `.git/slate-install.log`.
+Run `Scripts/install.sh` once. It also makes a separate clone of the repository in `~/Library/Application Support/Slate/source` and writes which commit is installed. From then on Slate checks the pushed `main` every 5 minutes. When there are new commits, the sidebar shows "Update available"; a click lists the changes and Update Now builds the new version from that clone, shows the step and the time, then closes Slate for a few seconds to install it and opens it again. Slate → Check for Updates checks at once. The update writes `~/Library/Application Support/Slate/update/update.log`.
 
 ## Claude Code
 

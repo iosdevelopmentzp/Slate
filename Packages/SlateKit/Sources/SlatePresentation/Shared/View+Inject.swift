@@ -21,6 +21,7 @@ extension View {
             .environment(assembly.history)
             .environment(assembly.versions)
             .environment(assembly.backlinks)
+            .environment(assembly.updates)
             .environment(\.hintCenter, assembly.hints)
             .environment(\.copyToPasteboard, { value, label in assembly.toaster.copy(value, label: label) })
     }

@@ -22,6 +22,7 @@ package struct PortSpies: Sendable {
     package let tracker = SpyIssueTracker()
     package let agentChanges = SpyAgentChangeLog()
     package let repositories = SpyRepositoryInspector()
+    package let updater = SpyAppUpdater()
 
     package init() {
         trash = SpyTrashRepository(files: files)

@@ -25,7 +25,8 @@ extension Ports {
             secrets: MockSecretStore(),
             tracker: MockIssueTracker(),
             agentChanges: MockAgentChangeLog(),
-            repositories: MockRepositoryInspector()
+            repositories: MockRepositoryInspector(),
+            updater: MockAppUpdater()
         )
     }
 }

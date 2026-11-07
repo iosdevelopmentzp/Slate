@@ -17,6 +17,7 @@ final class StoreHarness {
     private var recorder: SubscriptionToken?
 
     lazy var navigator = Navigator(store: keyValues)
+    lazy var updates = UpdateStore(updater: spies.updater, clock: ports.clock, toaster: toaster, activity: activity, pollInterval: .zero)
     lazy var agentMarks = AgentMarks(store: keyValues, log: spies.agentChanges, now: Date(timeIntervalSince1970: 0))
     lazy var toaster = Toaster { [weak self] in self?.copied.append($0) }
     lazy var vault = VaultStore(

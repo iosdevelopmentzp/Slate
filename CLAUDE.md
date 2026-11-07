@@ -23,7 +23,7 @@ Read first, in this order: this file, the `slate-map` skill, `docs/STATUS.md`, `
 | `Scripts/test.sh [args]` | Runs `swift test -q` on the package and prints one summary line. `--skip integration` skips the process suites, `--filter <Suite>` runs one suite |
 | `Scripts/run.sh` | Builds Debug, quits a running Slate, opens the new build |
 | `Scripts/install.sh` | Builds Release, copies to `/Applications/Slate.app`, installs the `slate` CLI to `~/.local/bin` |
-| `Scripts/auto-install.sh` | Run by the `post-commit` and `post-merge` hooks: after a commit on `main` that changes code, runs `install.sh` in the background (log `.git/slate-install.log`). Your commits restart the installed Slate |
+| `Scripts/update.sh` | Run by the app (Update Now in the sidebar): in the build clone `~/Library/Application Support/Slate/source`, fetches `main`, resets to it and runs `install.sh`, writing each step to `~/Library/Application Support/Slate/update/status.json` (ADR 0023). A commit no longer installs anything; the installed Slate offers the update once `main` is pushed |
 | `Scripts/generate-vault.sh <folder> <count>` | Writes sample notes for performance checks. `SLATE_PERF_VAULT=<folder> swift test --filter IndexPerformanceTests` times a full scan and a search over it |
 
 Run `Scripts/build.sh` and `Scripts/test.sh` after every change. `build.sh` prints `layers: ok` and the app path; anything else is a layer violation, an error or a warning. `test.sh` prints one `Test run with … passed` line. A failing test, or a missing test for new logic, counts as a failure.

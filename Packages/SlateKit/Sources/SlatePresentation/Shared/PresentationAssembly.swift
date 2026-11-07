@@ -12,6 +12,7 @@ package final class PresentationAssembly {
     let layout: WindowLayout
     let feed: VaultChangeFeed
     let agentMarks: AgentMarks
+    let updates: UpdateStore
     let vault: VaultStore
     let noteList: NoteListStore
     let files: FolderFilesStore
@@ -123,6 +124,7 @@ package final class PresentationAssembly {
             events: events
         )
         backlinks = BacklinksStore(load: useCases.backlinks, navigator: navigator, activity: activity, events: events)
+        updates = UpdateStore(updater: ports.updater, clock: ports.clock, toaster: toaster, activity: activity)
         versions = VersionsStore(
             history: ports.history,
             files: ports.files,
@@ -140,6 +142,7 @@ package final class PresentationAssembly {
     package func start() {
         feed.start()
         history.start()
+        updates.start()
         Task {
             await vault.refresh()
         }
@@ -147,6 +150,7 @@ package final class PresentationAssembly {
 
     package func stop() {
         feed.stop()
+        updates.stop()
         history.stop()
     }
 

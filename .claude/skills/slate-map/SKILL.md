@@ -43,6 +43,7 @@ All code is in `Packages/SlateKit/Sources/`. Tests mirror it in `Packages/SlateK
 | Folders, sidebar, menus, window | `SlatePresentation/Features/Vault/`, `Shell/` (`SidebarView`, `MainMenuBuilder`, `AppWindows`) |
 | Versions and folder changes | `SlatePresentation/Features/History/`, `SlateData/History/` |
 | Search | `SlatePresentation/Features/Search/`, `SlateData/Index/` |
+| App updates (check, Update Now, progress) | `SlatePresentation/Features/Update/`, `SlateData/Update/`, `Scripts/update.sh`, ADR 0023 |
 | Settings | `SlatePresentation/Features/Settings/` |
 | Shared SwiftUI blocks, colours | `SlateUI/` |
 | Building the object graph | `SlatePresentation/Shared/PresentationAssembly.swift`, `SlateComposition/` |

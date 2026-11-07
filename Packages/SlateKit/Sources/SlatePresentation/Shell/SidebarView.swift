@@ -54,6 +54,7 @@ struct SidebarView: View {
                 .padding(.horizontal, 8)
                 .padding(.bottom, 8)
             }
+            UpdateButton()
             newFolderButton
         }
         .frame(maxHeight: .infinity)

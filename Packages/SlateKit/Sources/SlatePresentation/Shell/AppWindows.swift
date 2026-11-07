@@ -121,6 +121,7 @@ package final class AppWindows: NSObject, NSWindowDelegate {
 
     private func mainMenu() -> NSMenu {
         let noteList = assembly.noteList
+        let updates = assembly.updates
         let search = assembly.search
         let layout = layout
         let spaces = assembly.vault.spaces
@@ -148,7 +149,10 @@ package final class AppWindows: NSObject, NSWindowDelegate {
             go.append(Command(title: space.folder.rawValue, key: "\(position + 1)", modifiers: [.command]) { noteList.show(.space(space.folder)) })
         }
         let builder = MainMenuBuilder(
-            app: [Command(title: "Settings…", key: ",", modifiers: [.command]) { [weak self] in self?.openSettings() }],
+            app: [
+                Command(title: "Settings…", key: ",", modifiers: [.command]) { [weak self] in self?.openSettings() },
+                Command(title: "Check for Updates", key: "", modifiers: []) { Task { await updates.checkNow() } },
+            ],
             file: [
                 Command(title: "New Note", key: "n", modifiers: [.command]) { Task { await noteList.createNote() } },
                 Command(title: "New Folder", key: "n", modifiers: [.command, .shift]) {

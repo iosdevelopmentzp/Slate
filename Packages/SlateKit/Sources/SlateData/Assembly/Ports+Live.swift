@@ -30,7 +30,8 @@ extension Ports {
             secrets: secrets,
             tracker: JiraIssueClient(keyValues: keyValues, secrets: secrets, session: URLSession.shared),
             agentChanges: FileAgentChangeLog(url: support.appendingPathComponent(FileAgentChangeLog.fileName)),
-            repositories: GitRepositoryInspector(shell: shell)
+            repositories: GitRepositoryInspector(shell: shell),
+            updater: GitAppUpdater(shell: shell, folder: GitAppUpdater.defaultFolder)
         )
     }
 }

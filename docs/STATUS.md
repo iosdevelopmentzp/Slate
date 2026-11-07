@@ -311,6 +311,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 209. Annotated screenshots use Preview's Markup, not an editor of Slate's own: Preview has arrows, shapes, text and a magnifier, saves into the same file, and costs one menu item. Any non-note path in a `vaultChanged` event bumps `EditorStore.imageRevision`, and the editor then reloads its images (`RichTextController.reloadImages`). The `com.apple.MarkupUI.Markup` sharing service was not used: how it returns the edited image is not documented.
 
+210. App updates follow ADR 0023. `AppUpdating` (Domain) has `GitAppUpdater` (Data/Update) with `/usr/bin/git` and the JSON files; `UpdateStore` owns the state (`idle`, `available`, `running`, `failed`), checks at launch and every 5 minutes, and while an update runs reads `status.json` every second. A running phase with no live pid in `update.lock` is a failure. At launch a `done` status whose commit equals `installed.json` gives the toast once and is deleted. Check for Updates in the Slate menu checks at once and says "Slate is up to date".
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -603,6 +605,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 151. Copy ten lines from the Xcode console with the date and process shown, paste into a note: a Log code block with only the messages.
 152. Start an iOS Simulator. In a note press `⌥⇧⌘S`: the Simulator screen is in the note. Quit the Simulator and press it again: the toast says no Simulator is running.
 153. Right-click an image in a note → Mark Up in Preview. Draw an arrow in Preview, press `⌘S`, come back to Slate: the image in the note has the arrow.
+154. Run `Scripts/install.sh` once. `~/Library/Application Support/Slate/source` and `…/update/installed.json` exist. Push a commit to `main`. Within 5 minutes (or Slate → Check for Updates) the sidebar shows "Update available · 1 change"; a click lists it. Update Now: the button shows "Getting changes", then "Building · m:ss"; Slate closes, opens again and says "Updated to <hash>". Break the build on `main` and push: the button shows "Update failed" with the log, the old Slate keeps working.
 
 ## Known gaps
 

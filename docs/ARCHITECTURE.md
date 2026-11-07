@@ -536,7 +536,7 @@ Must exist by the end of the milestone that introduces the type (`ROADMAP.md`):
 | `Scripts/run.sh` | Debug build, `quit.sh`, open |
 | `Scripts/install.sh` | Release build (in `DerivedData/Install` and `DerivedData/InstallCLI`) to `/Applications/Slate.app`, the `slate` CLI to `~/.local/bin/slate` |
 | `Scripts/quit.sh` | asks Slate to quit so it saves the open note; `pkill` after 10 seconds |
-| `Scripts/auto-install.sh` | called by the `post-commit` and `post-merge` hooks in `.git/hooks/`: on `main`, when a commit changes code, runs `install.sh` in the background, one at a time, with a notification; the log is `.git/slate-install.log` |
+| `Scripts/update.sh` | started detached by the app (`GitAppUpdater.start`): one at a time (`update.lock` with its pid), fetches and resets the build clone to `origin/main`, runs `install.sh` from it; `update-status.sh` writes `status.json` (phase, start time, commit, message) for the app (ADR 0023) |
 | `Scripts/generate-vault.sh <folder> <count>` | writes `<count>` sample notes with headers, tags, todos, code and images for performance checks |
 | `Scripts/check-layers.sh` | the rules below |
 
