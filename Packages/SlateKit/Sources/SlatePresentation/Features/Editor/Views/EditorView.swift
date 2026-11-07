@@ -13,6 +13,7 @@ struct EditorView: View {
     @FocusState private var isTitleFocused: Bool
 
     @State private var showsSaved = false
+    @State private var showsFileHeader = true
 
     static let textWidth: CGFloat = 720
     static let sidePadding: CGFloat = 24
@@ -113,6 +114,9 @@ struct EditorView: View {
                 TaskLine(model: task) { status in
                     Task { await editor.setStatus(status) }
                 }
+            }
+            if let lines = FileHeaderMapper.lines(for: document) {
+                FileHeaderBlock(lines: lines, isOpaque: document.isHeaderOpaque, isExpanded: $showsFileHeader)
             }
         }
         .padding(.horizontal, Self.sidePadding)
