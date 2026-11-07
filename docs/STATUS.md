@@ -606,6 +606,8 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 
 ## Known gaps
 
+- `FSEventsVaultWatcherIntegrationTests` (4 tests) fail on this Mac on 2026-11-07, also on commit `7013e4e` from before that day's work, so the cause is the machine, not the code: the events arrive late or not at all. The watcher code did not change. Check again after a restart.
+
 - `slate mcp` refuses every call after an install until the client reconnects it (decision 174). A server that restarts itself would need the client to send `initialize` again, which Claude Code does not do; letting the old code run on would bring back the old tool rules. The owner reconnects with `/mcp` → slate → Reconnect.
 - Tables, second round: a drag that starts in the text of the cell being edited selects text only; start the drag on another cell or use Shift-click.
 
