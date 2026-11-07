@@ -54,6 +54,7 @@ final class RichTextView: NSTextView {
         controller?.hoverImage(at: convert(event.locationInWindow, from: nil))
         controller?.hoverHeading(at: convert(event.locationInWindow, from: nil))
         controller?.hoverLink(at: convert(event.locationInWindow, from: nil))
+        controller?.hoverCode(at: convert(event.locationInWindow, from: nil))
     }
 
     override func mouseExited(with event: NSEvent) {
@@ -62,6 +63,7 @@ final class RichTextView: NSTextView {
         controller?.hoverImage(at: nil)
         controller?.hoverHeading(at: nil)
         controller?.hoverLink(at: nil)
+        controller?.hoverCode(at: nil)
     }
 
     @objc func undo(_ sender: Any?) {

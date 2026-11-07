@@ -110,7 +110,7 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
         textLayoutManager?.textContainer?.lineFragmentPadding ?? 5
     }
 
-    private var blockRect: CGRect {
+    var blockRect: CGRect {
         let text = textBounds
         return CGRect(x: padding - layoutFragmentFrame.minX, y: text.minY - 6, width: containerWidth - padding * 2, height: text.height + 12)
     }

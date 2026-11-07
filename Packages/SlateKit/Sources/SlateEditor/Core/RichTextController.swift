@@ -24,6 +24,7 @@ final class RichTextController: NSObject {
     let imageHandle = ImageResizeHandle()
     let tailMarker = TailMarkerView()
     let linkBar = LinkBar()
+    let codeCopyButton = CodeCopyButton()
     var hoveredLink: NSRange?
     var linkHoverTask: Task<Void, Never>?
     static let linkHoverDelay: Duration = .milliseconds(300)
@@ -67,6 +68,10 @@ final class RichTextController: NSObject {
         linkBar.onAction = { [weak self] action, range in
             guard let self else { return }
             performLinkAction(action, range: range)
+        }
+        codeCopyButton.onCopy = { [weak self] location in
+            guard let self else { return }
+            copyCode(at: location)
         }
         imageButton.onSave = { [weak self] path in
             guard let self else { return }
@@ -132,6 +137,7 @@ final class RichTextController: NSObject {
         activeTable?.endEditing(commit: false)
         imageTarget = nil
         linkBar.hide()
+        codeCopyButton.hide()
         publishTask?.cancel()
         publishTask = nil
         let text = MarkdownReader.read(value)

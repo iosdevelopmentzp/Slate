@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- A code block shows a Copy button on hover, next to its language. A click copies the code; the button shows a check for a moment.
 - Web addresses in the text are links now: a `https://…` address in a note, one you type (it becomes a link after a space or Return) and one you paste. They show the link card and stay a plain address in the file.
 - Paste a web address on selected text: the text becomes a link to it.
 - A pasted address of a ticket, merge request, pull request, issue, commit, wiki page or design file gets a short name from the address itself, for example `ABC-123`, `ios-app !1234` or `tool #42`. No internet is used.
