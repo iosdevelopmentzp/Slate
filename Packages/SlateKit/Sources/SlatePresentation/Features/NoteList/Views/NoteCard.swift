@@ -20,6 +20,13 @@ struct NoteCard: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
                 Spacer(minLength: 4)
+                if model.changedByAgent {
+                    Circle()
+                        .fill(Tint.purple.color)
+                        .frame(width: 7, height: 7)
+                        .hint("Changed by an agent since you read it")
+                        .accessibilityLabel("Changed by an agent")
+                }
                 if model.isPinned {
                     Image(systemName: "pin.fill")
                         .font(.caption2)

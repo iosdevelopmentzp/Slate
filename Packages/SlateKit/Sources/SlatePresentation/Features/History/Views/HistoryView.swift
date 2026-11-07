@@ -6,6 +6,7 @@ struct HistoryView: View {
     @Environment(HistoryStore.self) private var history
     @Environment(VersionsStore.self) private var versions
     let path: VaultPath
+    var since: Date?
 
     @State private var selected: String?
     @State private var showsChanges = true
@@ -32,6 +33,10 @@ struct HistoryView: View {
             versions.clearPreview()
             selected = nil
             await history.load(for: path)
+            guard let since, let version = VersionRowMapper.version(before: since, in: history.snapshots) else { return }
+            selected = version.hash
+            showsChanges = true
+            await versions.select(version, of: path)
         }
     }
 

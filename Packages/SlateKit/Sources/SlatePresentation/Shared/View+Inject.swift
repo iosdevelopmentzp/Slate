@@ -6,6 +6,7 @@ extension View {
     func inject(_ assembly: PresentationAssembly) -> some View {
         self
             .environment(assembly.navigator)
+            .environment(assembly.agentMarks)
             .environment(assembly.activity)
             .environment(assembly.toaster)
             .environment(assembly.layout)

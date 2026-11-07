@@ -7,6 +7,7 @@ struct NoteRowModel: Identifiable, Hashable {
     let preview: String
     let date: String
     let isPinned: Bool
+    var changedByAgent = false
 
     static let preview = NoteRowModel(
         id: NoteID(rawValue: "preview"),

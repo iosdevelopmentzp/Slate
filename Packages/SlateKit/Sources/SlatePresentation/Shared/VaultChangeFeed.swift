@@ -9,16 +9,18 @@ final class VaultChangeFeed {
     private let events: AppEvents
     private let agentChanges: any AgentChangeLog
     private let clock: any Clock
+    private let marks: AgentMarks?
     private var task: Task<Void, Never>?
     private var agentsCheckedAt: Date
 
-    init(watcher: any VaultWatching, reindex: ReindexVaultUseCase, activity: ActivityLog, events: AppEvents, agentChanges: any AgentChangeLog, clock: any Clock) {
+    init(watcher: any VaultWatching, reindex: ReindexVaultUseCase, activity: ActivityLog, events: AppEvents, agentChanges: any AgentChangeLog, clock: any Clock, marks: AgentMarks? = nil) {
         self.watcher = watcher
         self.reindex = reindex
         self.activity = activity
         self.events = events
         self.agentChanges = agentChanges
         self.clock = clock
+        self.marks = marks
         agentsCheckedAt = clock.now()
     }
 
@@ -28,6 +30,7 @@ final class VaultChangeFeed {
         task = Task { [weak self] in
             guard let self else { return }
             await scan(.all)
+            await marks?.refresh()
             for await change in changes {
                 guard Task.isCancelled == false else { return }
                 await apply(change)
@@ -46,6 +49,7 @@ final class VaultChangeFeed {
             await scan(.paths(paths))
             events.post(.vaultChanged(paths))
             await reportAgentChanges()
+            await marks?.refresh()
         case .rescan:
             await scan(.all)
             events.post(.spacesChanged)

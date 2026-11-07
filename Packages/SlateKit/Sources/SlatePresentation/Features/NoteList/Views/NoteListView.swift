@@ -6,6 +6,7 @@ struct NoteListView: View {
     @Environment(NoteListStore.self) private var store
     @Environment(VaultStore.self) private var vault
     @Environment(Navigator.self) private var navigator
+    @Environment(AgentMarks.self) private var agentMarks
     @Environment(SearchStore.self) private var search
     @Environment(FolderFilesStore.self) private var files
     @Environment(FileViewerStore.self) private var fileViewer
@@ -78,7 +79,7 @@ struct NoteListView: View {
 
     private func card(_ summary: NoteSummary, now: Date) -> some View {
         NoteCard(
-            model: NoteRowMapper.model(for: summary, now: now),
+            model: NoteRowMapper.model(for: summary, now: now, changedByAgent: agentMarks.since(summary.path) != nil),
             isSelected: summary.id == navigator.selectedNote,
             isConfirmingTrash: store.confirmingTrash == summary.id,
             actions: actions(for: summary),

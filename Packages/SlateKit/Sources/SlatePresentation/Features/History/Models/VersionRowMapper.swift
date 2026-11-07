@@ -44,4 +44,8 @@ enum VersionRowMapper {
         default: "Changed"
         }
     }
+
+    static func version(before date: Date, in snapshots: [Snapshot]) -> Snapshot? {
+        snapshots.filter { $0.date <= date }.max { $0.date < $1.date }
+    }
 }

@@ -11,6 +11,7 @@ package final class PresentationAssembly {
     let hints: HintCenter
     let layout: WindowLayout
     let feed: VaultChangeFeed
+    let agentMarks: AgentMarks
     let vault: VaultStore
     let noteList: NoteListStore
     let files: FolderFilesStore
@@ -32,7 +33,8 @@ package final class PresentationAssembly {
         hints = HintCenter()
         panelVisibility = PanelVisibility()
         layout = WindowLayout(store: ports.keyValues)
-        feed = VaultChangeFeed(watcher: ports.watcher, reindex: useCases.reindex, activity: activity, events: events, agentChanges: ports.agentChanges, clock: ports.clock)
+        agentMarks = AgentMarks(store: ports.keyValues, log: ports.agentChanges, now: ports.clock.now())
+        feed = VaultChangeFeed(watcher: ports.watcher, reindex: useCases.reindex, activity: activity, events: events, agentChanges: ports.agentChanges, clock: ports.clock, marks: agentMarks)
         vault = VaultStore(
             config: ports.config,
             createSpace: useCases.createSpace,

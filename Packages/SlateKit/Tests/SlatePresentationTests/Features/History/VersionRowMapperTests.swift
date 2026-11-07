@@ -34,4 +34,13 @@ import Testing
         #expect(summary("snapshot: 3 files") == "Saved by Slate")
         #expect(summary("history of MyApp cleared") == "History cleared")
     }
+
+    @Test func theVersionBeforeAChangeIsTheNewestNotLaterThanIt() {
+        let old = Snapshot(hash: "a", date: Date(timeIntervalSince1970: 100), message: "auto")
+        let before = Snapshot(hash: "b", date: Date(timeIntervalSince1970: 200), message: "agent: update_section")
+        let after = Snapshot(hash: "c", date: Date(timeIntervalSince1970: 300), message: "auto")
+
+        #expect(VersionRowMapper.version(before: Date(timeIntervalSince1970: 250), in: [after, before, old]) == before)
+        #expect(VersionRowMapper.version(before: Date(timeIntervalSince1970: 50), in: [after, before, old]) == nil)
+    }
 }

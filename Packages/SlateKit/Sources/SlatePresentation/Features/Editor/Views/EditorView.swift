@@ -8,7 +8,9 @@ struct EditorView: View {
     @Environment(SettingsStore.self) private var settings
     @Environment(Toaster.self) private var toaster
     @Environment(VaultStore.self) private var vault
+    @Environment(AgentMarks.self) private var agentMarks
     @State private var showsHistory = false
+    @State private var historySince: Date?
     @State private var commands = EditorCommands()
     @FocusState private var isTitleFocused: Bool
 
@@ -26,6 +28,17 @@ struct EditorView: View {
                         onKeepMine: { Task { await editor.keepMine() } },
                         onTakeTheirs: { Task { await editor.takeTheirs() } },
                         onOpenBoth: { Task { await editor.openBoth() } }
+                    )
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                } else if let changed = agentMarks.since(document.path) {
+                    AgentChangeBanner(
+                        changedAt: changed.relativeDescription(to: .now),
+                        onShowChanges: {
+                            historySince = changed
+                            showsHistory = true
+                            agentMarks.markRead(document.path)
+                        },
+                        onDismiss: { agentMarks.markRead(document.path) }
                     )
                     .transition(.move(edge: .top).combined(with: .opacity))
                 } else if let recovered = editor.recovered {
@@ -69,6 +82,9 @@ struct EditorView: View {
             .onAppear {
                 editor.flushBody = { [commands] in commands.flush() }
                 editor.findInBody = { [commands] in commands.findIfFocused() }
+            }
+            .onChange(of: document.path) { previous, _ in
+                agentMarks.markRead(previous)
             }
             .onChange(of: editor.titleFocusToken) {
                 isTitleFocused = true
@@ -161,10 +177,11 @@ struct EditorView: View {
             .hint("Export the note to Downloads")
             .accessibilityLabel("Export")
             IconButton(systemImage: "clock.arrow.circlepath", help: "Versions of this note") {
+                historySince = nil
                 showsHistory.toggle()
             }
             .popover(isPresented: $showsHistory, arrowEdge: .bottom) {
-                HistoryView(path: document.path)
+                HistoryView(path: document.path, since: historySince)
             }
             .accessibilityLabel("Versions")
         }

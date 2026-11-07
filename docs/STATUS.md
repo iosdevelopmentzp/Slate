@@ -303,6 +303,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 205. Section links: `WikilinkPolicy.parse` already read `#heading`. `openWikilink` keeps it as `pendingHeading` until the note is shown, then asks the editor for a `BodyFocus` with `heading`; the controller finds the first heading with that text (case does not matter) through `OutlineItem` and uses `jumpToHeading`. A heading that is not there leaves the caret where it was. The `[[` list does not offer headings yet.
 
+206. Agent marks: `AgentMarks` (Presentation, shared like `Navigator`) reads `AgentChangeLog.changes(after:)` at the first scan and after each file event, keeps the first unread change date per path, and stores both that map and the last date it read in `agent.unread`, so changes made while Slate was closed count too. A note path that moved keeps no mark. Show Changes selects the newest version not later than the first unread change, which is the version Slate keeps before every agent write.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -591,6 +593,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 147. In a task note write a `> [!QUESTION]` callout. In Claude Code in the repository ask: "answer my questions in Slate". The agent calls `list_questions` and `answer_question`; the callout turns green with "Answer" and the answer under the question.
 148. Settings → General → Ticket address: `https://example.atlassian.net/browse/`. In a note type `ABC-123`: it is dotted underlined; the pointer on it shows a card "ABC-123 · Ticket"; a click opens the browser. In a task note of a project with a linked repository type a path of a file of that repository with `:20`: a click opens Xcode at line 20. Type `!1` and a commit hash: they open the merge request and the commit. Reopen the note in another editor: the text has no link marks.
 149. In a note type `[[` and a note name with `#` and one of its headings, then `]]`. A click on the link card opens that note with that heading at the top. `[[#Log]]` in a long note jumps to its Log.
+150. Close a note. Ask Claude Code to change it through `slate mcp`. The card of the note gets a purple dot. Open it: the strip says an agent changed it. Show Changes: Versions opens with the agent's changes in green and red. Open another note and come back: no dot, no strip.
 
 ## Known gaps
 
