@@ -3,6 +3,7 @@ import SlateDomain
 
 struct WorkspaceOpener: WorkspaceOpening {
     let quickLook = QuickLookPresenter()
+    let shell: ShellRunner
 
     func open(_ url: URL) async {
         await MainActor.run {
@@ -18,5 +19,14 @@ struct WorkspaceOpener: WorkspaceOpening {
 
     func quickLook(_ url: URL) async {
         await quickLook.present(url)
+    }
+
+    func openCode(_ path: String, line: Int?, in roots: [URL]) async -> Bool {
+        guard let url = await Task.detached(operation: { CodeFileFinder.find(path, in: roots) }).value else { return false }
+        if let line, let result = try? await shell.run("/usr/bin/xed", ["--line", String(line), url.path], cwd: nil), result.exitCode == 0 {
+            return true
+        }
+        await open(url)
+        return true
     }
 }

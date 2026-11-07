@@ -83,18 +83,33 @@ extension RichTextController {
     }
 
     func showLinkBar(for range: NSRange) {
-        guard let window = textView.window, NSMaxRange(range) <= storage.length,
-              let href = storage.attribute(.slateHref, at: range.location, effectiveRange: nil) as? String else {
+        guard let window = textView.window, NSMaxRange(range) <= storage.length, range.length > 0 else {
             linkBar.hide()
             return
         }
         let screen = textView.firstRect(forCharacterRange: range, actualRange: nil)
-        linkBar.show(href: href, range: range, below: textView.convert(window.convertFromScreen(screen), from: nil), in: textView)
+        let rect = textView.convert(window.convertFromScreen(screen), from: nil)
+        if let href = storage.attribute(.slateHref, at: range.location, effectiveRange: nil) as? String {
+            linkBar.show(href: href, range: range, below: rect, in: textView)
+        } else if let reference = reference(at: range.location) {
+            linkBar.show(reference: reference, text: string.substring(with: range), range: range, below: rect, in: textView)
+        } else {
+            linkBar.hide()
+        }
+    }
+
+    func reference(at location: Int) -> TextReference? {
+        guard location < storage.length else { return nil }
+        return (storage.attribute(.slateReference, at: location, effectiveRange: nil) as? String).flatMap(TextReference.init(raw:))
     }
 
     func performLinkAction(_ action: LinkAction, range: NSRange) {
-        guard range.length > 0, NSMaxRange(range) <= storage.length,
-              let href = storage.attribute(.slateHref, at: range.location, effectiveRange: nil) as? String else { return }
+        guard range.length > 0, NSMaxRange(range) <= storage.length else { return }
+        if let reference = reference(at: range.location), storage.attribute(.slateHref, at: range.location, effectiveRange: nil) == nil {
+            performReferenceAction(action, reference: reference, range: range)
+            return
+        }
+        guard let href = storage.attribute(.slateHref, at: range.location, effectiveRange: nil) as? String else { return }
         switch action {
         case .open:
             openLink(href)
@@ -118,7 +133,24 @@ extension RichTextController {
         return menu
     }
 
+    private func performReferenceAction(_ action: LinkAction, reference: TextReference, range: NSRange) {
+        switch action {
+        case .open:
+            handlers.openLink(.reference(reference))
+        case .copy:
+            PasteboardBridge.general.clearContents()
+            PasteboardBridge.general.setString(string.substring(with: range), forType: .string)
+            handlers.notice("Copied the text")
+        case .edit, .remove:
+            break
+        }
+    }
+
     func openLink(at location: Int) -> Bool {
+        if let reference = reference(at: location), storage.attribute(.slateHref, at: location, effectiveRange: nil) == nil {
+            handlers.openLink(.reference(reference))
+            return true
+        }
         guard location < storage.length, let href = storage.attribute(.slateHref, at: location, effectiveRange: nil) as? String else { return false }
         openLink(href)
         return true

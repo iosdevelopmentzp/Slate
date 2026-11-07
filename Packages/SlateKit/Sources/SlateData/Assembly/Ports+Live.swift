@@ -20,7 +20,7 @@ extension Ports {
             clock: SystemClock(),
             attachments: FileAttachmentStore(root: root),
             capture: ScreencaptureTool(shell: shell),
-            workspace: WorkspaceOpener(),
+            workspace: WorkspaceOpener(shell: shell),
             loginItem: LoginItemService(),
             system: SystemChecks(root: root, indexURL: indexURL, shell: shell),
             history: GitHistoryRepository(shell: shell, gitDirectory: support.appendingPathComponent("history.git", isDirectory: true), workTree: root),

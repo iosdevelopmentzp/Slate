@@ -46,7 +46,10 @@ struct EditorView: View {
                     .frame(maxWidth: .infinity)
                 RichTextEditorView(
                     markdown: Bindable(editor).text,
-                    configuration: EditorConfiguration(textSize: CGFloat(settings.editorFontSize)),
+                    configuration: EditorConfiguration(
+                        textSize: CGFloat(settings.editorFontSize),
+                        references: ReferenceKindsMapper.kinds(project: project, ticketAddress: settings.ticketAddress)
+                    ),
                     commands: commands,
                     focus: editor.bodyFocus.map { EditorFocusRequest(token: $0.token, atStart: $0.atStart, words: $0.words) },
                     insertion: editor.insertion.map { EditorInsertion(token: $0.token, markdown: $0.markdown) },
@@ -167,8 +170,14 @@ struct EditorView: View {
         }
     }
 
+    private var project: ProjectInfo? {
+        editor.document?.path.space.flatMap { vault.config.space($0)?.project }
+    }
+
     private var handlers: EditorHandlers {
         let editor = editor
+        let project = project
+        let ticketAddress = settings.ticketAddress
         return EditorHandlers(
             didEndEditing: { editor.bodyEditingEnded() },
             resolveImage: { editor.resolveLink($0) },
@@ -177,6 +186,7 @@ struct EditorView: View {
                     switch link {
                     case .url(let target): await editor.openURL(target)
                     case .wiki(let target): await editor.openWikilink(target)
+                    case .reference(let reference): await editor.openReference(reference, project: project, ticketAddress: ticketAddress)
                     }
                 }
             },

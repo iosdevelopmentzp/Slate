@@ -53,6 +53,13 @@ struct GeneralSettingsView: View {
                 }
             }
             Section {
+                TextField("Ticket address", text: $settings.ticketAddress, prompt: Text("https://example.atlassian.net/browse/"))
+                    .accessibilityLabel("Ticket address")
+                Text("A ticket key like ABC-123 in a note becomes a link to this address with the key at the end. In a project, file paths open in Xcode, and !123 and commit hashes open on the project's git server.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Section {
                 TextField("Back up to", text: $remote, prompt: Text("git@example.com:me/notes.git"))
                     .onSubmit { history.setRemote(remote) }
                     .accessibilityLabel("Back up to")

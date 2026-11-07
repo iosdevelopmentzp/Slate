@@ -8,6 +8,7 @@ final class LinkBar: NSView {
     private(set) var range: NSRange?
     let preview = LinkPreviewView()
     private let stack = NSStackView()
+    private var buttons: [LinkAction: NSView] = [:]
 
     init() {
         super.init(frame: .zero)
@@ -17,7 +18,9 @@ final class LinkBar: NSView {
             onAction(.open, range)
         }
         preview.heightAnchor.constraint(equalToConstant: Self.height - 8).isActive = true
-        stack.setViews([preview] + LinkAction.allCases.filter { $0 != .open }.map(button), in: .leading)
+        let actions = LinkAction.allCases.filter { $0 != .open }
+        for action in actions { buttons[action] = button(for: action) }
+        stack.setViews([preview] + actions.compactMap { buttons[$0] }, in: .leading)
         stack.orientation = .horizontal
         stack.spacing = 2
         stack.edgeInsets = NSEdgeInsets(top: 0, left: 4, bottom: 0, right: 4)
@@ -75,8 +78,18 @@ final class LinkBar: NSView {
     }
 
     func show(href: String, range: NSRange, below rect: CGRect, in view: NSView) {
+        show(LinkPreview(href: href), address: LinkAddress.display(href), editable: true, range: range, below: rect, in: view)
+    }
+
+    func show(reference: TextReference, text: String, range: NSRange, below rect: CGRect, in view: NSView) {
+        show(LinkPreview(reference: reference), address: text, editable: false, range: range, below: rect, in: view)
+    }
+
+    private func show(_ model: LinkPreview, address: String, editable: Bool, range: NSRange, below rect: CGRect, in view: NSView) {
         self.range = range
-        preview.show(LinkPreview(href: href), address: LinkAddress.display(href))
+        buttons[.edit]?.isHidden = editable == false
+        buttons[.remove]?.isHidden = editable == false
+        preview.show(model, address: address)
         if superview === view {
             view.addSubview(self, positioned: .above, relativeTo: nil)
         } else {

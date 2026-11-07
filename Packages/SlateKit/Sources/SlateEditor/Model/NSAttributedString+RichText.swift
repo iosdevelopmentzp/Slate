@@ -9,6 +9,7 @@ extension NSAttributedString.Key {
     nonisolated static let slateImageAlt = NSAttributedString.Key("slate.imageAlt")
     nonisolated static let slateGroup = NSAttributedString.Key("slate.group")
     nonisolated static let slateCallout = NSAttributedString.Key("slate.callout")
+    nonisolated static let slateReference = NSAttributedString.Key("slate.reference")
     nonisolated static let slateCalloutHeader = NSAttributedString.Key("slate.calloutHeader")
     nonisolated static let slateInline = NSAttributedString.Key("slate.inline")
     nonisolated static let slateHref = NSAttributedString.Key("slate.href")

@@ -17,6 +17,13 @@ final class SettingsStore {
     var trashRetentionDays: Int {
         didSet { store.set(trashRetentionDays, forKey: Keys.retention) }
     }
+    var ticketAddress: String {
+        didSet {
+            var tracker = TrackerSettings.load(from: store)
+            tracker.trackerBaseURL = ticketAddress.trimmingCharacters(in: .whitespaces)
+            tracker.save(to: store)
+        }
+    }
     private(set) var loginStatus: LoginItemStatus = .disabled
     private(set) var checks: [DoctorCheck] = []
     private(set) var isChecking = false
@@ -63,6 +70,7 @@ final class SettingsStore {
         appearance = store.string(forKey: Keys.appearance).flatMap(AppAppearance.init(rawValue:)) ?? .system
         let retention = store.integer(forKey: Keys.retention)
         trashRetentionDays = retention > 0 ? retention : 30
+        ticketAddress = TrackerSettings.load(from: store).trackerBaseURL
     }
 
     var loginHint: String? {

@@ -28,7 +28,9 @@ extension RichTextController {
     private func hoverableLink(at point: CGPoint) -> NSRange? {
         guard activeLinkPopover == nil, multiCaret.isActive == false, let index = characterIndex(at: point) else { return nil }
         var range = NSRange(location: 0, length: 0)
-        guard storage.attribute(.slateHref, at: index, longestEffectiveRange: &range, in: NSRange(location: 0, length: storage.length)) != nil else { return nil }
+        let whole = NSRange(location: 0, length: storage.length)
+        if storage.attribute(.slateHref, at: index, longestEffectiveRange: &range, in: whole) != nil { return range }
+        guard storage.attribute(.slateReference, at: index, longestEffectiveRange: &range, in: whole) != nil else { return nil }
         return range
     }
 }

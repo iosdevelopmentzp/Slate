@@ -159,6 +159,7 @@ final class RichTextStyler {
         }
         var updates: [(NSRange, [NSAttributedString.Key: Any])] = []
         let tokens = codeTokens(in: text, content: content, block: block)
+        let references = references(in: text, content: content, block: block)
         text.enumerateAttributes(in: range) { existing, run, _ in
             let inline = InlineStyle(rawValue: existing[.slateInline] as? Int ?? 0)
             var wanted = attributes(
@@ -174,9 +175,15 @@ final class RichTextStyler {
             if block.kind.isAttachment {
                 wanted[.attachment] = attachment(for: block, existing: existing[.attachment] as? NSTextAttachment)
             }
-            for (piece, color) in Self.pieces(of: run, tokens: tokens) {
+            let plain = wanted[.slateHref] == nil && inline.contains(.code) == false
+            for (piece, color, reference) in Self.pieces(of: run, tokens: tokens, references: plain ? references : []) {
                 var colored = wanted
                 if let color { colored[.foregroundColor] = color }
+                if let reference {
+                    colored[.slateReference] = reference.raw
+                    colored[.foregroundColor] = configuration.colors.link
+                    colored[.underlineStyle] = NSUnderlineStyle.single.union(.patternDot).rawValue
+                }
                 if (existing as NSDictionary).isEqual(to: colored) == false {
                     updates.append((piece, colored))
                 }
@@ -185,6 +192,30 @@ final class RichTextStyler {
         for (run, wanted) in updates {
             text.setAttributes(wanted, range: run)
         }
+    }
+
+    private func references(in text: NSAttributedString, content: NSRange, block: BlockAttributes) -> [(range: NSRange, reference: TextReference)] {
+        guard configuration.references.isEmpty == false, block.kind.keepsLineBreaks == false, block.kind.isAttachment == false, content.length > 0 else { return [] }
+        let source = (text.string as NSString).substring(with: content)
+        return TextReferenceScanner.references(in: source, kinds: configuration.references).map { found in
+            (NSRange(location: found.range.location + content.location, length: found.range.length), found.reference)
+        }
+    }
+
+    static func pieces(of run: NSRange, tokens: [CodeToken], references: [(range: NSRange, reference: TextReference)]) -> [(NSRange, NSColor?, TextReference?)] {
+        var result: [(NSRange, NSColor?, TextReference?)] = []
+        for (piece, color) in pieces(of: run, tokens: tokens) {
+            var start = piece.location
+            for found in references {
+                let overlap = NSIntersectionRange(found.range, NSRange(location: start, length: NSMaxRange(piece) - start))
+                guard overlap.length > 0 else { continue }
+                if overlap.location > start { result.append((NSRange(location: start, length: overlap.location - start), color, nil)) }
+                result.append((overlap, color, found.reference))
+                start = NSMaxRange(overlap)
+            }
+            if start < NSMaxRange(piece) { result.append((NSRange(location: start, length: NSMaxRange(piece) - start), color, nil)) }
+        }
+        return result
     }
 
     private func codeTokens(in text: NSAttributedString, content: NSRange, block: BlockAttributes) -> [CodeToken] {

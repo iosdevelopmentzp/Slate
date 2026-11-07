@@ -21,6 +21,20 @@ struct LinkPreview: Equatable {
         }
     }
 
+    init(reference: TextReference) {
+        switch reference {
+        case .file(let path, let line):
+            let name = (path as NSString).lastPathComponent
+            self.init(symbol: "chevron.left.forwardslash.chevron.right", title: name + (line.map { ":\($0)" } ?? ""), detail: "Opens in Xcode")
+        case .ticket(let key):
+            self.init(symbol: "ticket", title: key, detail: "Ticket")
+        case .mergeRequest(let number):
+            self.init(symbol: "arrow.triangle.merge", title: "!\(number)", detail: "Merge request")
+        case .commit(let hash):
+            self.init(symbol: "smallcircle.filled.circle", title: String(hash.prefix(10)), detail: "Commit")
+        }
+    }
+
     private init(symbol: String, title: String, detail: String) {
         self.symbol = symbol
         self.title = title
