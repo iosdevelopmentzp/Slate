@@ -156,7 +156,7 @@ Packages/SlateKit/
     SlateComposition/            AppContainer, URLCommandParser, URLCommandHandler, ServicesProvider, LoginItem
     SlateTestSupport/            Spy<Port> per port, PortSpies, Ports+Spies, TemporaryDirectory, WaitUntil, TestError, VaultFixture (writes a sample vault into a temporary folder)
     SlateCLI/                    SlateCommand (root), New, Open, Append, Today, Search, List, Path, MCP, CLIContainer;
-                                 MCPServerFactory, MCPToolCatalog (the eleven tools), MCPToolRunner (+Read, +Write), MCPArguments
+                                 MCPServerFactory, MCPToolCatalog (32 tools), MCPToolRunner (+Read, +Write, +Sections, +Files, +Folders, +Projects), MCPArguments, MCPArgumentCheck
   Tests/
     SlateDomainTests/ SlateDataTests/ (+ Integration/) SlateEditorTests/ SlateUITests/ SlatePresentationTests/
 Scripts/

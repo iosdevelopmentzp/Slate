@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Agents (`slate mcp`): every tool that takes a note `id` also takes the note path (inside the notes folder or absolute, like a note card dropped into a terminal), its `slate://` link or its exact title. New tools `move_folder` (move or rename a folder), `list_trash` and `restore_note`. The guide in the notes folder `CLAUDE.md` now lists every format the editor shows: plain web addresses, `[[Note|text]]`, image width, highlights and text colours, code languages, line breaks and images in table cells.
 - Back and Forward through the notes you opened, like in a browser: the two arrows at the top left of the note, `⌃⌘←` and `⌃⌘→`, or the Go menu. Each step also brings back the folder that was shown. A note that is gone is skipped.
 - Type `[[` in a note: a list of notes shows under the text and narrows as you type. ↑ and ↓ choose, Return or Tab adds the link, Esc closes the list, a click picks a note. A name no note has gives "Link to “name”".
 - A code block shows a Copy button on hover, next to its language. A click copies the code; the button shows a check for a moment.

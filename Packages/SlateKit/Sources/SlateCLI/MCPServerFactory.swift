@@ -3,7 +3,7 @@ import MCP
 import SlateDomain
 
 enum MCPServerFactory {
-    static let instructions = "Slate notes: Markdown files in folders. Read CLAUDE.md in the notes folder for the rules. Find a note with list_notes or search_notes, read it with read_note, read one part with read_section. Change a few lines with replace_in_note or update_section, add text with append_to_note, make several changes in one call with batch_edit, and replace the whole body with update_note only when most of it changes. Files that are not notes: list_files, read_file, replace_in_file, update_file, trash_file."
+    static let instructions = "Slate notes: Markdown files in folders. Read CLAUDE.md in the notes folder for the rules. Find a note with list_notes or search_notes, read it with read_note, read one part with read_section. Change a few lines with replace_in_note or update_section, add text with append_to_note, make several changes in one call with batch_edit, and replace the whole body with update_note only when most of it changes. A note id argument also takes the note path, its slate:// link or its exact title. Move or rename a folder with move_folder; bring back a trashed note with list_trash and restore_note. Files that are not notes: list_files, read_file, replace_in_file, update_file, trash_file."
 
     static func instructions(for match: ProjectMatch?, root: URL) -> String {
         guard let match else {

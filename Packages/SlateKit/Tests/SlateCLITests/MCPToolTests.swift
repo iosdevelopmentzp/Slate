@@ -60,10 +60,11 @@ import Testing
         return try object(answer.text)["id"] as? String ?? ""
     }
 
-    @Test func theCatalogHasTheTwentyNineTools() {
+    @Test func theCatalogHasTheThirtyTwoTools() {
         #expect(MCPToolCatalog.tools.map(\.name) == [
             "list_folders", "list_notes", "search_notes", "read_note", "read_section", "list_backlinks", "create_note", "append_to_note",
-            "replace_in_note", "update_section", "update_note", "batch_edit", "move_note", "rename_note", "trash_note", "attach_image", "open_in_slate",
+            "replace_in_note", "update_section", "update_note", "batch_edit", "move_note", "rename_note", "trash_note", "list_trash", "restore_note",
+            "move_folder", "attach_image", "open_in_slate",
             "project_context", "start_task", "set_task_status", "set_plan_item", "log_progress", "add_file", "list_files",
             "read_file", "replace_in_file", "update_file", "trash_file", "save_version",
         ])
@@ -621,7 +622,7 @@ import Testing
 
     @Test func missingArgumentsAndUnknownToolsAnswerWithASentence() async throws {
         #expect(await call("append_to_note", ["id": "x"]).text == "Missing: text. append_to_note takes id, text, position, section; required: id, text. Nothing was changed. Call it again with these names.")
-        #expect(await call("append_to_note", ["id": "x", "text": "y"]).text.hasPrefix("No note has the id x."))
+        #expect(await call("append_to_note", ["id": "x", "text": "y"]).text.hasPrefix("No note matches x."))
         #expect(await call("delete_everything").text.hasPrefix("Slate has no tool delete_everything."))
     }
 
@@ -693,5 +694,65 @@ import Testing
         #expect(answer.isError == true)
         #expect(FileManager.default.fileExists(atPath: vault.url.appendingPathComponent("Notes/Plan.md").path) == false)
         #expect(await call("list_folders").isError == false)
+    }
+
+    @Test func aNoteCanBeNamedByPathLinkOrTitle() async throws {
+        let id = try await create("Groceries")
+        let absolute = vault.url.appendingPathComponent("Notes/Groceries.md").path
+
+        for reference in ["Notes/Groceries.md", absolute, "slate://note/\(id)", "slate://open?id=\(id)", "groceries"] {
+            let answer = await call("append_to_note", ["id": .string(reference), "text": .string("- \(reference.count)")])
+            #expect(answer.isError == false, "\(reference): \(answer.text)")
+        }
+
+        let text = try file("Notes/Groceries.md")
+        #expect(text.components(separatedBy: "\n- ").count == 6)
+    }
+
+    @Test func anUnknownOrSharedTitleIsNotFound() async throws {
+        try await create("Plan")
+        try "---\ntitle: Plan\n---\nOther\n".write(to: vault.url.appendingPathComponent("Notes/Plan copy.md"), atomically: true, encoding: .utf8)
+
+        let shared = await call("append_to_note", ["id": .string("Plan"), "text": .string("x")])
+        let unknown = await call("append_to_note", ["id": .string("Nothing"), "text": .string("x")])
+
+        #expect(shared.isError)
+        #expect(unknown.isError)
+    }
+
+    @Test func aTrashedNoteIsListedAndComesBack() async throws {
+        try await allow(AgentPermissions(writableFolders: ["Notes"], allowTrash: true))
+        let id = try await create("Groceries")
+        #expect(await call("trash_note", ["id": .string(id)]).isError == false)
+
+        let listed = try array(await call("list_trash").text)
+        let restored = await call("restore_note", ["path": "Notes/Groceries.md"])
+
+        #expect(listed.map { $0["path"] as? String } == ["Notes/Groceries.md"])
+        #expect(restored.isError == false, "\(restored.text)")
+        #expect(try object(restored.text)["id"] as? String == id)
+        #expect(FileManager.default.fileExists(atPath: vault.url.appendingPathComponent("Notes/Groceries.md").path))
+        #expect(await call("restore_note", ["path": "Notes/Other.md"]).isError)
+    }
+
+    @Test func aFolderMovesAndRenames() async throws {
+        try await create("Plan", in: "Notes/Old")
+
+        let moved = await call("move_folder", ["folder": "Notes/Old", "to": "Notes/Archive/Old"])
+        let renamed = await call("move_folder", ["folder": "Notes/Archive/Old", "to": "Notes/Archive/Older"])
+
+        #expect(moved.isError == false, "\(moved.text)")
+        #expect(renamed.isError == false, "\(renamed.text)")
+        #expect(try object(renamed.text)["folder"] as? String == "Notes/Archive/Older")
+        #expect(FileManager.default.fileExists(atPath: vault.url.appendingPathComponent("Notes/Archive/Older/Plan.md").path))
+    }
+
+    @Test func aFolderOutsideTheAllowedOnesStays() async throws {
+        try await create("Plan", in: "Notes/Old")
+
+        let answer = await call("move_folder", ["folder": "Notes/Old", "to": "Work/Old"])
+
+        #expect(answer.isError)
+        #expect(FileManager.default.fileExists(atPath: vault.url.appendingPathComponent("Notes/Old/Plan.md").path))
     }
 }

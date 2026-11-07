@@ -32,6 +32,7 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
     case isNote(String)
     case notText(String)
     case staleFile
+    case notInTrash(String)
 
     private static let settingsHint = "The owner can change this in Slate: Settings → General → AI access."
 
@@ -50,7 +51,7 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
         case .noFolder(let folder):
             "There is no folder \(folder). Use a name from list_folders."
         case .noteNotFound(let id):
-            "No note has the id \(id). Use list_notes or search_notes to find the id."
+            "No note matches \(id). Use an id, a path or a title from list_notes or search_notes."
         case .staleNote:
             "The note changed since you read it, read it again."
         case .missingArgument(let name):
@@ -101,6 +102,8 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
             "\(path) is not a text file, so it cannot be changed here. Add a new file with add_file instead."
         case .staleFile:
             "The file changed since you read it, read it again."
+        case .notInTrash(let name):
+            "No note in the Trash matches \(name). Use a path from list_trash."
         }
     }
 

@@ -42,6 +42,9 @@ struct MCPToolRunner: Sendable {
         case "move_note": try await moveNote(arguments)
         case "rename_note": try await renameNote(arguments)
         case "trash_note": try await trashNote(arguments)
+        case "list_trash": try await listTrash()
+        case "restore_note": try await restoreNote(arguments)
+        case "move_folder": try await moveFolder(arguments)
         case "attach_image": try await attachImage(arguments)
         case "open_in_slate": try await openInSlate(arguments)
         case "project_context": try await projectContext(arguments)
@@ -84,9 +87,27 @@ struct MCPToolRunner: Sendable {
         try await ports.config.agentPermissions()
     }
 
-    func notePath(id: String) async throws -> VaultPath {
-        guard let summary = try await ports.index.summary(id: NoteID(rawValue: id)) else { throw AgentError.noteNotFound(id) }
+    func notePath(id raw: String) async throws -> VaultPath {
+        let reference = Self.noteID(in: raw.trimmingCharacters(in: .whitespacesAndNewlines))
+        if let summary = try await ports.index.summary(id: NoteID(rawValue: reference)) {
+            return summary.path
+        }
+        if reference.lowercased().hasSuffix(".\(VaultPath.noteExtension)") {
+            return try AgentPathPolicy.notePath(from: reference, root: root)
+        }
+        let titled = try await ports.index.summaries(space: nil).filter { $0.title.caseInsensitiveCompare(reference) == .orderedSame }
+        guard titled.count == 1, let summary = titled.first else { throw AgentError.noteNotFound(raw) }
         return summary.path
+    }
+
+    static func noteID(in reference: String) -> String {
+        if reference.hasPrefix(notePrefix) {
+            return String(reference.dropFirst(notePrefix.count)).removingPercentEncoding ?? reference
+        }
+        if reference.hasPrefix("slate://"), let id = URLComponents(string: reference)?.queryItems?.first(where: { $0.name == "id" })?.value {
+            return id
+        }
+        return reference
     }
 
     func notePath(_ arguments: MCPArguments) async throws -> VaultPath {
