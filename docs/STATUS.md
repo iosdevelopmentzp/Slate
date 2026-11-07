@@ -289,6 +289,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 198. Note completion: after each edit and selection change `updateWikiCompletion` looks for an open `[[` before the caret in the same paragraph (`WikiQuery.open`, at most 80 characters, no bracket or line break, not in code or a link). The note names come from `EditorHandlers.noteNames` once per open list. `NoteSuggestionList` is a subview of the text view like the link card; `handle(_:)` gives ↑ ↓ Return Tab Esc to it first while it is shown. A closing `]]` typed by hand runs `convertClosedWikilink` in `textChanged`; before, the writer escaped the brackets and the link was lost. Table cells have no completion yet.
 
+199. Back and Forward: `Navigator` keeps a `NavigationHistory` (at most 100 places back). Each change of the selected note or file records a `NavigationPlace` (list source, note, file); no selection and the same note again are not new places, and a new place clears Forward. `NoteListStore.goBack` and `goForward` skip a note that is no longer in the index; restoring sets the source and the selection without recording. The history lives only while the app runs. `⌘[` and `⌘]` stay Outdent and Indent, so Back and Forward use `⌃⌘←` and `⌃⌘→` as in Xcode. Mouse side buttons and the trackpad swipe do nothing yet.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -570,6 +572,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 140. Type `https://example.com/a` and a space: it turns into a link and shows the link card on hover. Select a word, copy a web address, press `⌘V`: the word is a link. Paste a ticket address with `/browse/ABC-123` on an empty line: the link reads `ABC-123`. Open the file in another editor: the typed address is still a plain address.
 141. Hover a code block: a Copy button shows left of the language. Click it: the icon turns to a check, a toast says "Copied the code", and a paste into Terminal gives the code with its lines.
 142. In a note type `[[` and two letters of a note name: a list of notes shows under the text. ↓ and Return: the link shows as a link and opens that note on click of its card. Type `[[Some Note]]` by hand: it turns into a link when you type the last `]`. Reopen the note: both are still links.
+143. Open three notes in turn, one in another folder. Click the left arrow at the top left of the note twice: the notes come back in reverse order, with their folder in the list. The right arrow and `⌃⌘→` go forward again. Open a new note after going back: the right arrow dims.
 
 ## Known gaps
 

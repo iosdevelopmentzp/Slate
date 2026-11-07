@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Back and Forward through the notes you opened, like in a browser: the two arrows at the top left of the note, `⌃⌘←` and `⌃⌘→`, or the Go menu. Each step also brings back the folder that was shown. A note that is gone is skipped.
 - Type `[[` in a note: a list of notes shows under the text and narrows as you type. ↑ and ↓ choose, Return or Tab adds the link, Esc closes the list, a click picks a note. A name no note has gives "Link to “name”".
 - A code block shows a Copy button on hover, next to its language. A click copies the code; the button shows a check for a moment.
 - Web addresses in the text are links now: a `https://…` address in a note, one you type (it becomes a link after a space or Return) and one you paste. They show the link card and stay a plain address in the file.

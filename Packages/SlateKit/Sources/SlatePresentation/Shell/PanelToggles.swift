@@ -3,6 +3,7 @@ import SlateUI
 
 struct PanelToggles: View {
     @Environment(WindowLayout.self) private var layout
+    @Environment(NoteListStore.self) private var noteList
 
     var body: some View {
         HStack(spacing: 4) {
@@ -14,6 +15,12 @@ struct PanelToggles: View {
                 layout.showsList.toggle()
             }
             .accessibilityLabel(layout.showsList ? "Hide the notes list" : "Show the notes list")
+            IconButton(systemImage: "chevron.left", help: "Back (⌃⌘←)") { noteList.goBack() }
+                .disabled(noteList.canGoBack == false)
+                .accessibilityLabel("Back")
+            IconButton(systemImage: "chevron.right", help: "Forward (⌃⌘→)") { noteList.goForward() }
+                .disabled(noteList.canGoForward == false)
+                .accessibilityLabel("Forward")
         }
         .padding(.top, 4)
         .padding(.leading, layout.showsSidebar || layout.showsList ? 10 : WindowLayout.trafficLightsWidth)

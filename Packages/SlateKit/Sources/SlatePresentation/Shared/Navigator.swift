@@ -16,6 +16,7 @@ final class Navigator {
         didSet {
             guard selectedNote != oldValue else { return }
             store.set(selectedNote?.rawValue, forKey: Keys.selectedNote)
+            recordPlace()
         }
     }
 
@@ -23,9 +24,12 @@ final class Navigator {
         didSet {
             guard selectedFile != oldValue else { return }
             store.set(selectedFile?.rawValue, forKey: Keys.selectedFile)
+            recordPlace()
         }
     }
 
+    private(set) var history = NavigationHistory()
+    @ObservationIgnored private var isRestoring = false
     @ObservationIgnored private let store: any KeyValueStore
 
     init(store: any KeyValueStore) {
@@ -33,6 +37,34 @@ final class Navigator {
         source = ListSource(storedValue: store.string(forKey: Keys.source))
         selectedNote = store.string(forKey: Keys.selectedNote).map(NoteID.init(rawValue:))
         selectedFile = store.string(forKey: Keys.selectedFile).map(VaultPath.init(rawValue:))
+        history.visit(place)
+    }
+
+    var place: NavigationPlace {
+        NavigationPlace(source: source, note: selectedNote, file: selectedFile)
+    }
+
+    func goBack(where isAvailable: (NavigationPlace) -> Bool) {
+        guard let target = history.goBack(where: isAvailable) else { return }
+        restore(target)
+    }
+
+    func goForward(where isAvailable: (NavigationPlace) -> Bool) {
+        guard let target = history.goForward(where: isAvailable) else { return }
+        restore(target)
+    }
+
+    private func restore(_ target: NavigationPlace) {
+        isRestoring = true
+        source = target.source
+        selectedFile = target.file
+        selectedNote = target.file == nil ? target.note : nil
+        isRestoring = false
+    }
+
+    private func recordPlace() {
+        guard isRestoring == false else { return }
+        history.visit(place)
     }
 
     var space: SpaceName? {

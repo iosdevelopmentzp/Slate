@@ -341,4 +341,35 @@ import Testing
         harness.events.post(.indexUpdated)
         #expect(harness.noteList.indexing == nil)
     }
+
+    @Test func backAndForwardReturnToTheNotesSeenBefore() async throws {
+        try await seedFour()
+        await store.refresh()
+        store.show(.space(SpaceName(rawValue: "Inbox")))
+        store.select(id("a"))
+        store.show(.space(SpaceName(rawValue: "Tasks")))
+        let shown = harness.navigator.selectedNote
+
+        store.goBack()
+        #expect(harness.navigator.selectedNote == id("a"))
+        #expect(store.source == .space(SpaceName(rawValue: "Inbox")))
+        #expect(store.canGoForward)
+
+        store.goForward()
+        #expect(harness.navigator.selectedNote == shown)
+        #expect(store.source == .space(SpaceName(rawValue: "Tasks")))
+        #expect(store.canGoForward == false)
+    }
+
+    @Test func backSkipsANoteThatIsGone() async throws {
+        try await seedFour()
+        await store.refresh()
+        store.select(id("a"))
+        store.select(id("zzz"))
+        store.select(id("b"))
+
+        store.goBack()
+
+        #expect(harness.navigator.selectedNote == id("a"))
+    }
 }

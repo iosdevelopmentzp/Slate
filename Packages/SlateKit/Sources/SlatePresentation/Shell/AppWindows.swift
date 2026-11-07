@@ -132,6 +132,8 @@ package final class AppWindows: NSObject, NSWindowDelegate {
         }
         typealias Command = MainMenuBuilder.Command
         var go: [Command] = [
+            Command(title: "Back", key: String(UnicodeScalar(NSLeftArrowFunctionKey)!), modifiers: [.command, .control]) { noteList.goBack() },
+            Command(title: "Forward", key: String(UnicodeScalar(NSRightArrowFunctionKey)!), modifiers: [.command, .control]) { noteList.goForward() },
             Command(title: "Previous Note", key: String(UnicodeScalar(NSUpArrowFunctionKey)!), modifiers: [.command]) {
                 if TextFocus.isEditingText { TextFocus.send(#selector(NSResponder.moveToBeginningOfDocument(_:))) } else { selectNeighbour(-1) }
             },

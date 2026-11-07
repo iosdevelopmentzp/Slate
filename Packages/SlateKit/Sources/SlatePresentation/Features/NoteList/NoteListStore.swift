@@ -185,6 +185,29 @@ final class NoteListStore: NoteLookup {
         navigator.select(id)
     }
 
+    var canGoBack: Bool {
+        navigator.history.canGoBack
+    }
+
+    var canGoForward: Bool {
+        navigator.history.canGoForward
+    }
+
+    func goBack() {
+        cancelTrash()
+        navigator.goBack(where: isAvailable)
+    }
+
+    func goForward() {
+        cancelTrash()
+        navigator.goForward(where: isAvailable)
+    }
+
+    private func isAvailable(_ place: NavigationPlace) -> Bool {
+        guard place.file == nil, let note = place.note else { return true }
+        return summaries.contains { $0.id == note }
+    }
+
     func createNote() async {
         do {
             let created = try await create.execute(NoteDraft(space: source.space, folder: source.folder))
