@@ -88,11 +88,20 @@ extension EditorStore {
 
     func openWikilink(_ target: String) async {
         let parsed = WikilinkPolicy.parse(target)
-        guard parsed.stem.isEmpty == false else { return }
+        let heading = parsed.heading.flatMap { $0.isEmpty ? nil : $0 }
+        guard parsed.stem.isEmpty == false else {
+            if let heading { revealHeading(heading) }
+            return
+        }
         do {
             let candidates = try await index.notes(named: parsed.stem)
             let name = parsed.space.map { "\($0)/\(parsed.stem)" } ?? parsed.stem
             if let found = WikilinkPolicy.resolve(name, candidates: candidates, from: document?.path) {
+                if let heading, found.id == document?.id {
+                    revealHeading(heading)
+                    return
+                }
+                if let heading { pendingHeading = (found.id, heading) }
                 navigator.select(found.id)
                 return
             }

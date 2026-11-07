@@ -51,7 +51,7 @@ struct EditorView: View {
                         references: ReferenceKindsMapper.kinds(project: project, ticketAddress: settings.ticketAddress)
                     ),
                     commands: commands,
-                    focus: editor.bodyFocus.map { EditorFocusRequest(token: $0.token, atStart: $0.atStart, words: $0.words) },
+                    focus: editor.bodyFocus.map { EditorFocusRequest(token: $0.token, atStart: $0.atStart, words: $0.words, heading: $0.heading) },
                     insertion: editor.insertion.map { EditorInsertion(token: $0.token, markdown: $0.markdown) },
                     handlers: handlers,
                     collapsedSections: editor.collapsedSections

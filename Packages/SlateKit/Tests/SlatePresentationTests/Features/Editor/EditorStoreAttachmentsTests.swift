@@ -88,6 +88,25 @@ import Testing
         #expect(harness.navigator.selectedNote == NoteID(rawValue: "b"))
     }
 
+    @Test func aLinkToASectionOpensTheNoteAtThatHeading() async throws {
+        harness.seed("Notes/Other.md", id: "b", title: "Other")
+        try await open("Tasks/A.md")
+
+        await editor.openWikilink("Other#Plan")
+        await editor.open(NoteID(rawValue: "b"))
+
+        #expect(editor.bodyFocus?.heading == "Plan")
+    }
+
+    @Test func aLinkToASectionOfTheSameNoteOnlyMovesToIt() async throws {
+        try await open("Tasks/A.md")
+
+        await editor.openWikilink("#Log")
+
+        #expect(editor.bodyFocus?.heading == "Log")
+        #expect(harness.navigator.selectedNote == NoteID(rawValue: "a"))
+    }
+
     @Test func wikilinkToAMissingNoteMakesItInTheSameFolder() async throws {
         try await open("Tasks/A.md")
 

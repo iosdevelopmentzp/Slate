@@ -4,4 +4,5 @@ struct BodyFocus: Equatable {
     let token: Int
     let atStart: Bool
     let words: [String]
+    var heading: String?
 }

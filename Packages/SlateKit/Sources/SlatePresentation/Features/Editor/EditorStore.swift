@@ -53,6 +53,7 @@ final class EditorStore {
     @ObservationIgnored private var inFlight: Task<Void, Never>?
     @ObservationIgnored private var pendingCreation: (id: NoteID, caret: Int)?
     @ObservationIgnored private var pendingMatch: (id: NoteID, words: [String])?
+    @ObservationIgnored var pendingHeading: (id: NoteID, heading: String)?
     @ObservationIgnored private var bodyCaret: Int?
     @ObservationIgnored var flushBody: () -> Void = {}
     @ObservationIgnored var findInBody: () -> Bool = { false }
@@ -153,6 +154,10 @@ final class EditorStore {
             if let match = pendingMatch, match.id == id {
                 pendingMatch = nil
                 revealMatch(of: match.words)
+            }
+            if let target = pendingHeading, target.id == id {
+                pendingHeading = nil
+                revealHeading(target.heading)
             }
             if let creation = pendingCreation, creation.id == id {
                 pendingCreation = nil
@@ -351,6 +356,11 @@ final class EditorStore {
     private func revealMatch(of words: [String]) {
         guard SearchHighlightPolicy.ranges(of: words, in: text).isEmpty == false else { return }
         requestBodyFocus(atStart: false, words: words)
+    }
+
+    func revealHeading(_ heading: String) {
+        focusCounter += 1
+        bodyFocus = BodyFocus(token: focusCounter, atStart: false, words: [], heading: heading)
     }
 
     private func requestBodyFocus(atStart: Bool, words: [String] = []) {

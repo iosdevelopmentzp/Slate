@@ -33,4 +33,14 @@ import Testing
         #expect(menu.items.map(\.title) == ["No headings in this note"])
         #expect(menu.items.first?.isEnabled == false)
     }
+
+    @Test func aFocusRequestWithAHeadingPutsTheCaretOnIt() async {
+        let harness = EditorHarness(markdown: "# Title\n\n## Plan\n\nText\n\n## Log\n\nMore\n")
+
+        harness.controller.apply(focus: EditorFocusRequest(token: 1, heading: "log"))
+        await Task.yield()
+        await Task.yield()
+
+        #expect(harness.textView.selectedRange().location == (harness.text as NSString).range(of: "Log").location)
+    }
 }

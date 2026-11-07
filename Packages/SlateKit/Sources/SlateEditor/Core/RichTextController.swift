@@ -206,6 +206,10 @@ final class RichTextController: NSObject {
     func apply(focus: EditorFocusRequest?) {
         guard let focus, focus.token != focusToken else { return }
         focusToken = focus.token
+        if let heading = focus.heading, let item = OutlineItem.items(in: storage).first(where: { $0.title.caseInsensitiveCompare(heading) == .orderedSame }) {
+            Task { @MainActor [weak self] in self?.jumpToHeading(at: item.location) }
+            return
+        }
         let location = focus.atStart ? 0 : firstMatch(of: focus.words) ?? storage.length
         reveal(location)
         highlightMatches(of: focus.atStart ? [] : focus.words)

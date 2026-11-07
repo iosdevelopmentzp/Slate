@@ -301,6 +301,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 204. References in the text (file paths, tickets, `!123`, commit hashes) are found by `TextReferenceScanner` while the styler styles a paragraph and carried as `slate.reference`, which the writer ignores, so files do not change. `EditorConfiguration.references` says which kinds to look for; `ReferenceKindsMapper` turns them on per note: tickets when Settings → General → Ticket address is set (stored in the old `TrackerSettings.trackerBaseURL`, `{key}` in it is replaced, otherwise the key is added at the end), files when the project has a repository, merge requests and commits when its remote gives a web address. The web address is `https://` plus the remote without user, port and `.git`; merge requests use `/-/merge_requests/N` (the `!N` form is the GitLab one), commits `/commit/<hash>`, which GitLab and GitHub both answer. Files: the path relative to a repository, else the shortest path in the repository that ends with it (build folders, `.git` and `Pods` skipped, at most 200,000 entries), opened with `xed --line`; without a line or without `xed`, the default app opens it. A commit hash needs a digit and a letter.
 
+205. Section links: `WikilinkPolicy.parse` already read `#heading`. `openWikilink` keeps it as `pendingHeading` until the note is shown, then asks the editor for a `BodyFocus` with `heading`; the controller finds the first heading with that text (case does not matter) through `OutlineItem` and uses `jumpToHeading`. A heading that is not there leaves the caret where it was. The `[[` list does not offer headings yet.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -588,6 +590,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 146. Select two paragraphs, Format → Callout → Warning: a tinted block with an orange bar, a warning icon and "Warning" in the empty title line. Type a title, press Return, type text. Reopen the note: it looks the same; the file has `> [!WARNING] <title>`. Format → Callout → Tip with the caret in it: it turns green.
 147. In a task note write a `> [!QUESTION]` callout. In Claude Code in the repository ask: "answer my questions in Slate". The agent calls `list_questions` and `answer_question`; the callout turns green with "Answer" and the answer under the question.
 148. Settings → General → Ticket address: `https://example.atlassian.net/browse/`. In a note type `ABC-123`: it is dotted underlined; the pointer on it shows a card "ABC-123 · Ticket"; a click opens the browser. In a task note of a project with a linked repository type a path of a file of that repository with `:20`: a click opens Xcode at line 20. Type `!1` and a commit hash: they open the merge request and the commit. Reopen the note in another editor: the text has no link marks.
+149. In a note type `[[` and a note name with `#` and one of its headings, then `]]`. A click on the link card opens that note with that heading at the top. `[[#Log]]` in a long note jumps to its Log.
 
 ## Known gaps
 
