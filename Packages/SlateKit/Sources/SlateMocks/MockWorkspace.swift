@@ -8,6 +8,8 @@ struct MockWorkspace: WorkspaceOpening {
 
     func quickLook(_ url: URL) async {}
 
+    func markUp(_ url: URL) async {}
+
     func openCode(_ path: String, line: Int?, in roots: [URL]) async -> Bool {
         false
     }

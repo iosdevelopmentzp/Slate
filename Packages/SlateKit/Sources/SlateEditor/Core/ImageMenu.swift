@@ -4,6 +4,7 @@ enum ImageMenu {
     static let entries: [(String, AttachmentAction)] = [
         ("Quick Look", .quickLook),
         ("Open", .open),
+        ("Mark Up in Preview", .markUp),
         ("Show in Finder", .reveal),
         ("Copy Image", .copyImage),
         ("Save to Downloads", .saveToDownloads),

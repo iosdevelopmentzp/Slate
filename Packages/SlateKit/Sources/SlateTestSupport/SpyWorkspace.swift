@@ -6,6 +6,7 @@ package final class SpyWorkspace: WorkspaceOpening, @unchecked Sendable {
         case open(URL)
         case reveal(URL)
         case quickLook(URL)
+        case markUp(URL)
         case openCode(String, line: Int?, roots: [URL])
     }
 
@@ -34,6 +35,10 @@ package final class SpyWorkspace: WorkspaceOpening, @unchecked Sendable {
 
     package func quickLook(_ url: URL) async {
         lock.withLock { _calls.append(.quickLook(url)) }
+    }
+
+    package func markUp(_ url: URL) async {
+        lock.withLock { _calls.append(.markUp(url)) }
     }
 
     package func openCode(_ path: String, line: Int?, in roots: [URL]) async -> Bool {

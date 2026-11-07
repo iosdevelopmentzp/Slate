@@ -67,7 +67,8 @@ struct EditorView: View {
                     focus: editor.bodyFocus.map { EditorFocusRequest(token: $0.token, atStart: $0.atStart, words: $0.words, heading: $0.heading) },
                     insertion: editor.insertion.map { EditorInsertion(token: $0.token, markdown: $0.markdown) },
                     handlers: handlers,
-                    collapsedSections: editor.collapsedSections
+                    collapsedSections: editor.collapsedSections,
+                    imageRevision: editor.imageRevision
                 )
                 .padding(.horizontal, Self.sidePadding - 4 - RichTextEditorView.sideMargin)
                 .frame(maxWidth: Self.textWidth + Self.sidePadding * 2)
@@ -211,6 +212,7 @@ struct EditorView: View {
                 switch action {
                 case .quickLook: Task { await editor.attachment(link, quickLook: true) }
                 case .open: Task { await editor.attachment(link, quickLook: false) }
+                case .markUp: Task { await editor.markUp(link) }
                 case .reveal: Task { await editor.reveal(link) }
                 case .saveToDownloads: Task { await editor.saveToDownloads(link) }
                 case .copyImage:

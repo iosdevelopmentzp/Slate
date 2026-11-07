@@ -25,6 +25,7 @@ final class EditorStore {
     var insertion: MarkdownInsertion?
     var recovered: JournalEntry?
     var isCapturing = false
+    private(set) var imageRevision = 0
 
     @ObservationIgnored private let files: any VaultFileStore
     @ObservationIgnored let index: any SearchIndex
@@ -379,6 +380,7 @@ final class EditorStore {
                 pendingMatch = (id, words)
             }
         case .vaultChanged(let paths):
+            if document != nil, paths.contains(where: { $0.isNote == false }) { imageRevision += 1 }
             guard let path = document?.path, paths.contains(path) else { return }
             Task { await checkDisk(relocate: false) }
         case .vaultRescanned:

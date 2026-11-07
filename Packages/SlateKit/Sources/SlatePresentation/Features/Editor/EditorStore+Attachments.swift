@@ -120,6 +120,12 @@ extension EditorStore {
         }
     }
 
+    func markUp(_ link: String) async {
+        guard let url = resolveLink(link) else { return }
+        await workspace.markUp(url)
+        toaster.show("Save in Preview, and the note shows the new image.")
+    }
+
     func attachment(_ link: String, quickLook: Bool) async {
         guard let url = resolveLink(link) else { return }
         if quickLook {

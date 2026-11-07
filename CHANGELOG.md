@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Mark Up in Preview in the right-click menu of an image: Preview opens the image with its Markup tools (arrows, boxes, text). When you save there, the note shows the new image. Any image file that changes on disk is drawn again in the open note.
 - Format → Simulator Screenshot (`⌥⇧⌘S`) puts a screenshot of the running iOS Simulator into the note, or into the cell being edited. The Slate window stays where it is. With no Simulator running, a toast says so.
 - Paste a log from the Xcode console or from `log stream`: the date, the process and the thread at the start of each line go, and the lines become a Log code block. Inside a code block only the prefixes go.
 - See what agents changed. A note that an agent changed since you last opened it has a purple dot on its card. In the note a strip says "An agent changed this note 5 min. ago" with Show Changes, which opens Versions at the version before the agent's change with the changes since, and Got It. Leaving the note also clears the mark. Changes made while Slate was closed are found at the next start.

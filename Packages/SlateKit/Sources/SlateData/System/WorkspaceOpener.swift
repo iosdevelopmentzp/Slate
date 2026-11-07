@@ -17,6 +17,16 @@ struct WorkspaceOpener: WorkspaceOpening {
         }
     }
 
+    func markUp(_ url: URL) async {
+        await MainActor.run {
+            guard let preview = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.Preview") else {
+                _ = NSWorkspace.shared.open(url)
+                return
+            }
+            NSWorkspace.shared.open([url], withApplicationAt: preview, configuration: NSWorkspace.OpenConfiguration())
+        }
+    }
+
     func quickLook(_ url: URL) async {
         await quickLook.present(url)
     }

@@ -309,6 +309,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 208. Simulator Screenshot is a third `CaptureMode`: `xcrun simctl io booted screenshot --type=png <file>` through `ScreencaptureTool`, with the same file name rule (`<date>-simulator.png`) and the same insert as a screenshot. The window is not hidden, because the Simulator draws itself. With several booted Simulators simctl picks one; Slate does not ask which.
 
+209. Annotated screenshots use Preview's Markup, not an editor of Slate's own: Preview has arrows, shapes, text and a magnifier, saves into the same file, and costs one menu item. Any non-note path in a `vaultChanged` event bumps `EditorStore.imageRevision`, and the editor then reloads its images (`RichTextController.reloadImages`). The `com.apple.MarkupUI.Markup` sharing service was not used: how it returns the edited image is not documented.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -600,6 +602,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 150. Close a note. Ask Claude Code to change it through `slate mcp`. The card of the note gets a purple dot. Open it: the strip says an agent changed it. Show Changes: Versions opens with the agent's changes in green and red. Open another note and come back: no dot, no strip.
 151. Copy ten lines from the Xcode console with the date and process shown, paste into a note: a Log code block with only the messages.
 152. Start an iOS Simulator. In a note press `⌥⇧⌘S`: the Simulator screen is in the note. Quit the Simulator and press it again: the toast says no Simulator is running.
+153. Right-click an image in a note → Mark Up in Preview. Draw an arrow in Preview, press `⌘S`, come back to Slate: the image in the note has the arrow.
 
 ## Known gaps
 

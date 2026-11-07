@@ -67,6 +67,23 @@ import Testing
         #expect(editor.insertion?.markdown == "![](../_attachments/20270115-110000-simulator.png)")
     }
 
+    @Test func markUpOpensTheImageInPreview() async throws {
+        try await open("Tasks/A.md")
+
+        await editor.markUp("../_attachments/x.png")
+
+        #expect(harness.spies.workspace.calls == [.markUp(URL(fileURLWithPath: "/vault/_attachments/x.png"))])
+    }
+
+    @Test func aChangedImageFileRedrawsTheImages() async throws {
+        try await open("Tasks/A.md")
+        let before = editor.imageRevision
+
+        harness.events.post(.vaultChanged([VaultPath(rawValue: "_attachments/x.png")]))
+
+        #expect(editor.imageRevision == before + 1)
+    }
+
     @Test func cancelledScreenshotInsertsNothing() async throws {
         try await open("Tasks/A.md")
         harness.spies.capture.producesFile = false
