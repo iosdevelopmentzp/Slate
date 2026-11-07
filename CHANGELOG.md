@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Type `[[` in a note: a list of notes shows under the text and narrows as you type. ↑ and ↓ choose, Return or Tab adds the link, Esc closes the list, a click picks a note. A name no note has gives "Link to “name”".
 - A code block shows a Copy button on hover, next to its language. A click copies the code; the button shows a check for a moment.
 - Web addresses in the text are links now: a `https://…` address in a note, one you type (it becomes a link after a space or Return) and one you paste. They show the link card and stay a plain address in the file.
 - Paste a web address on selected text: the text becomes a link to it.
@@ -142,6 +143,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - Note kinds and the New menu, tasks, ticket and branch chips, status, `⌘⇧D`, Today and daily notes (`⌥⌘T`, `⌘[`, `⌘]`), snippets, meetings, tags and tag chips, Insert Template, saved searches, Open TODOs, the palette (`⌘K`), actions, Copy for Slack, Copy as Markdown, Save as HTML and PDF, Float on Top and note windows, the outline, ticket details, the Links and History pages of Settings, the history and push state and the Activity button in the footer. The files and the command line keep working; the code for them is in commit `545e0d6`.
 
 ### Fixed
+- A link typed by hand as `[[Note]]` or `[[Note|text]]` was saved as plain text with backslashes (`\[\[Note\]\]`) and was no link. The closing `]]` now turns it into a link at once.
 - Editor: a new empty item at the end of a note showed no bullet, number or checkbox until you typed in it. Now the mark shows at once, with the next number for a numbered list.
 - Agents: `add_file` with a `/` in the name put the file at the top of the folder with dashes in its name, like `Resources-Runs-X.swift`. Now the name is a path: the file goes into those sub-folders. `add_file` also makes a missing folder, like `create_note` and `move_note`, when agents may write there.
 - Agents: a Plan step that the Slate editor wrote as `3\. Build` came back from `project_context` and `set_plan_item` as `3. 3\. Build`. The backslash is gone now.

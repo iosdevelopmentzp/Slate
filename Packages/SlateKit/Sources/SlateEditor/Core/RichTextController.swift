@@ -25,6 +25,9 @@ final class RichTextController: NSObject {
     let tailMarker = TailMarkerView()
     let linkBar = LinkBar()
     let codeCopyButton = CodeCopyButton()
+    let suggestionList = NoteSuggestionList()
+    var wikiNames: [String]?
+    var wikiNamesTask: Task<Void, Never>?
     var hoveredLink: NSRange?
     var linkHoverTask: Task<Void, Never>?
     static let linkHoverDelay: Duration = .milliseconds(300)
@@ -68,6 +71,10 @@ final class RichTextController: NSObject {
         linkBar.onAction = { [weak self] action, range in
             guard let self else { return }
             performLinkAction(action, range: range)
+        }
+        suggestionList.onPick = { [weak self] suggestion in
+            guard let self else { return }
+            pickWikiSuggestion(suggestion)
         }
         codeCopyButton.onCopy = { [weak self] location in
             guard let self else { return }
@@ -138,6 +145,7 @@ final class RichTextController: NSObject {
         imageTarget = nil
         linkBar.hide()
         codeCopyButton.hide()
+        hideWikiCompletion()
         publishTask?.cancel()
         publishTask = nil
         let text = MarkdownReader.read(value)
@@ -269,9 +277,11 @@ final class RichTextController: NSObject {
             isStyling = false
         }
         refreshFoldsAfterEdit()
+        convertClosedWikilink()
         publish()
         updateTypingAttributes()
         updateState()
+        updateWikiCompletion()
     }
 
     func storageEdited(_ mask: NSTextStorageEditActions, range: NSRange, delta: Int) {

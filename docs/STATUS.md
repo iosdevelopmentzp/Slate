@@ -287,6 +287,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 197. The Copy button of a code block (SPEC D3) is a subview of the text view like the image button (`CodeCopyButton`). `hoverCode` shows it while the pointer is inside the block rectangle of a `.monospaced` paragraph, left of the language label; `copyCode` lives in `Paste/` (the only editor folder that may name `NSPasteboard`) and turns the line separators into `\n`.
 
+198. Note completion: after each edit and selection change `updateWikiCompletion` looks for an open `[[` before the caret in the same paragraph (`WikiQuery.open`, at most 80 characters, no bracket or line break, not in code or a link). The note names come from `EditorHandlers.noteNames` once per open list. `NoteSuggestionList` is a subview of the text view like the link card; `handle(_:)` gives ↑ ↓ Return Tab Esc to it first while it is shown. A closing `]]` typed by hand runs `convertClosedWikilink` in `textChanged`; before, the writer escaped the brackets and the link was lost. Table cells have no completion yet.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -567,6 +569,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 139. Put a note from Obsidian with a header such as `aliases:` and `  - Trip` lines into the notes folder and open it: "File header · N lines" shows under the title with the header text. A note made in Slate shows no such row.
 140. Type `https://example.com/a` and a space: it turns into a link and shows the link card on hover. Select a word, copy a web address, press `⌘V`: the word is a link. Paste a ticket address with `/browse/ABC-123` on an empty line: the link reads `ABC-123`. Open the file in another editor: the typed address is still a plain address.
 141. Hover a code block: a Copy button shows left of the language. Click it: the icon turns to a check, a toast says "Copied the code", and a paste into Terminal gives the code with its lines.
+142. In a note type `[[` and two letters of a note name: a list of notes shows under the text. ↓ and Return: the link shows as a link and opens that note on click of its card. Type `[[Some Note]]` by hand: it turns into a link when you type the last `]`. Reopen the note: both are still links.
 
 ## Known gaps
 
@@ -587,7 +590,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 - Editor (S3): the agent checked the editor with tests in a window and with offscreen pictures, not by typing in the running app. Input methods (accents, Japanese), spell checking, drag and drop from Finder and the paste of web pages need a check by hand.
 - Editor (S3): in one offscreen picture of the whole window the list, quote and image buttons of the format bar looked faded while the others did not. The picture of the editor alone looked right. Check it on screen.
 - Editor (S3): typing latency was measured by a test on the 5,000-line fixture (1.3 ms median, open 120 ms), not with Instruments. Markdown for a long note is written 250 ms after the last key (decision 88).
-- Editor (S3): a pasted URL is not turned into a link with a title (P1). Links in table cells have no link card; they open on `⌘`-click.
+- Editor (S3): links in table cells have no link card, they open on `⌘`-click; `[[` in a table cell shows no list of notes.
 - S5: the agent did not run Claude Code against `slate mcp`. A stdio test sent `initialize`, `tools/list`, `tools/call create_note` and `resources/list` and got the right answers; the tools are tested over a temporary notes folder.
 - S5: the Activity line of an agent change can come late when the watcher reports the file before `slate mcp` wrote its change line; it then shows with the next change. `⌥`-click on the title was not tried on screen: a text field may take the click first.
 - S9: the agent ran `slate mcp` over stdio in a temporary repository (instructions name the project, `start_task` and `project_context` answer), not a real Claude Code session; manual check 63 is that run.

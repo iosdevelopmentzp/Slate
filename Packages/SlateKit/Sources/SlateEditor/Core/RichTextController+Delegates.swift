@@ -13,10 +13,12 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
         updateTypingAttributes()
         updateState()
         updateLinkBar()
+        updateWikiCompletion()
     }
 
     func textDidEndEditing(_ notification: Notification) {
         linkBar.hide()
+        hideWikiCompletion()
         flush()
         handlers.didEndEditing()
     }
