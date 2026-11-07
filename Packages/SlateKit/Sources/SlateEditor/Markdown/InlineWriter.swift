@@ -85,6 +85,9 @@ enum InlineWriter {
             let target = String(href.dropFirst(RichText.wikiPrefix.count))
             return label == target || label.isEmpty ? "[[\(target)]]" : "[[\(target)|\(label)]]"
         }
+        if label == href, segment.allSatisfy({ $0.isBareURL && $0.style.isEmpty }), BareURL.isBare(href) {
+            return href
+        }
         let inner = styled(segment, context: context, offset: offset, inLabel: true)
         return "[\(inner)](\(destination(href)))"
     }

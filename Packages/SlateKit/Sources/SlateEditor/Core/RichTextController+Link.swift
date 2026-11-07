@@ -49,6 +49,7 @@ extension RichTextController {
             guard range.length > 0 else { return }
             let text = NSMutableAttributedString(attributedString: storage.attributedSubstring(from: range))
             text.removeAttribute(.slateHref, range: NSRange(location: 0, length: text.length))
+            text.removeAttribute(.slateBareURL, range: NSRange(location: 0, length: text.length))
             replace(range, with: text, selection: range)
         case .set(let label, let href):
             let current = range.length > 0 ? string.substring(with: range) : ""

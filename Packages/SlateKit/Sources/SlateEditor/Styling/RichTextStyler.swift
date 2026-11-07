@@ -160,6 +160,9 @@ final class RichTextStyler {
                 isHardBreak: existing[.slateHardBreak] as? Bool ?? false,
                 number: block.kind == .numbered ? number : nil
             )
+            if wanted[.slateHref] != nil, existing[.slateBareURL] != nil {
+                wanted[.slateBareURL] = true
+            }
             if block.kind.isAttachment {
                 wanted[.attachment] = attachment(for: block, existing: existing[.attachment] as? NSTextAttachment)
             }

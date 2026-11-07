@@ -5,6 +5,7 @@ struct InlineRun: Equatable {
     var style: InlineStyle
     var href: String?
     var isHardBreak = false
+    var isBareURL = false
     var allowsWiki = false
     var imagePath: String?
     var imageAlt: String?
@@ -14,6 +15,7 @@ struct InlineRun: Equatable {
         var attributes: [NSAttributedString.Key: Any] = [:]
         if style.isEmpty == false { attributes[.slateInline] = style.rawValue }
         if let href { attributes[.slateHref] = href }
+        if isBareURL { attributes[.slateBareURL] = true }
         if isHardBreak { attributes[.slateHardBreak] = true }
         if let imagePath { attributes[.slateImagePath] = imagePath }
         if let imageAlt, imageAlt.isEmpty == false { attributes[.slateImageAlt] = imageAlt }

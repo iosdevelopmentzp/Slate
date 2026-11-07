@@ -7,6 +7,9 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Web addresses in the text are links now: a `https://…` address in a note, one you type (it becomes a link after a space or Return) and one you paste. They show the link card and stay a plain address in the file.
+- Paste a web address on selected text: the text becomes a link to it.
+- A pasted address of a ticket, merge request, pull request, issue, commit, wiki page or design file gets a short name from the address itself, for example `ABC-123`, `ios-app !1234` or `tool #42`. No internet is used.
 - A note shows its file header when Slate cannot read it (for example nested YAML or `- item` lists from another app) or when it has fields Slate does not use. "File header · 3 lines" under the title opens the header as plain text you can select and copy. Slate still keeps the header as it is.
 - Link preview: rest the pointer on a link, or put the caret in it, and a card shows under it with an icon, the site (or note name, file name, email) and the page. One click on the card opens the link; no `⌘` needed. The card has Edit, Copy and Remove. Slate reads nothing from the internet for it.
 - The first scan of a large notes folder shows how far it is: a filled line and "Reading notes, 3,120 of 10,000" under the search field. Cards fill in as the scan runs.

@@ -111,6 +111,7 @@ extension RichTextController {
     func handleReturn() -> Bool {
         let selection = textView.selectedRange()
         guard selection.length == 0 else { return false }
+        linkTypedURL(endingAt: selection.location)
         let caret = selection.location
         let block = block(at: caret)
         if isEmptyTail(caret) {
@@ -295,6 +296,9 @@ extension RichTextController {
                 replace(range, with: inserted, selection: NSRange(location: range.location + 1 + (replacement as NSString).length, length: 0))
                 return false
             }
+        }
+        if replacement == " " || replacement == "\t", range.length == 0 {
+            linkTypedURL(endingAt: range.location)
         }
         if replacement == " ", range.length == 0, block.kind == .body, range.location > content.location {
             let prefix = string.substring(with: NSRange(location: content.location, length: range.location - content.location))

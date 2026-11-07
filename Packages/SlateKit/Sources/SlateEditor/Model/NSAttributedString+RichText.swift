@@ -10,6 +10,7 @@ extension NSAttributedString.Key {
     nonisolated static let slateGroup = NSAttributedString.Key("slate.group")
     nonisolated static let slateInline = NSAttributedString.Key("slate.inline")
     nonisolated static let slateHref = NSAttributedString.Key("slate.href")
+    nonisolated static let slateBareURL = NSAttributedString.Key("slate.bareURL")
     nonisolated static let slateHardBreak = NSAttributedString.Key("slate.hardBreak")
     nonisolated static let slateListNumber = NSAttributedString.Key("slate.listNumber")
     nonisolated static let slateTable = NSAttributedString.Key("slate.table")

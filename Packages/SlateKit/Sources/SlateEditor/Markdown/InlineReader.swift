@@ -10,7 +10,7 @@ enum InlineReader {
             guard collect(child, style: [], href: nil, source: source, inCell: inCell, colors: &colors, into: &runs) else { return nil }
         }
         guard colors.isClosed else { return nil }
-        return WikilinkScanner.expand(merge(HighlightScanner.apply(runs))).reduce(into: NSMutableAttributedString()) { result, run in
+        return BareURL.expand(WikilinkScanner.expand(merge(HighlightScanner.apply(runs)))).reduce(into: NSMutableAttributedString()) { result, run in
             result.append(run.attributed)
         }
     }

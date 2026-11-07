@@ -5,6 +5,7 @@ struct InlineCell {
     var style: InlineStyle
     let href: String?
     let isHardBreak: Bool
+    var isBareURL = false
     var imagePath: String?
     var imageAlt: String?
 
@@ -26,7 +27,7 @@ struct InlineCell {
                 return
             }
             for character in piece where character != Character(RichText.attachmentString) {
-                cells.append(InlineCell(character: character, style: character == RichText.lineBreak ? [] : style, href: character == RichText.lineBreak ? nil : href, isHardBreak: isHard))
+                cells.append(InlineCell(character: character, style: character == RichText.lineBreak ? [] : style, href: character == RichText.lineBreak ? nil : href, isHardBreak: isHard, isBareURL: attributes[.slateBareURL] != nil))
             }
         }
         return cells

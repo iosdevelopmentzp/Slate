@@ -23,6 +23,7 @@ extension RichTextController {
     }
 
     func paste(from pasteboard: NSPasteboard) {
+        if pasteURL(from: pasteboard) { return }
         guard let content = PasteboardReader.read(pasteboard) else { return }
         switch content {
         case .markdown(let markdown):
