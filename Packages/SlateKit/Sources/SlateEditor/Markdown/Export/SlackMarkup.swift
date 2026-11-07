@@ -20,10 +20,7 @@ enum SlackMarkup {
         case let code as CodeBlock:
             "```\n" + ExportText.codeText(code) + "\n```"
         case let quote as BlockQuote:
-            blocks(Array(quote.children)).joined(separator: "\n\n")
-                .components(separatedBy: "\n")
-                .map { "> " + $0 }
-                .joined(separator: "\n")
+            quoted(quoteParts(quote))
         case let list as UnorderedList:
             listLines(Array(list.listItems), ordered: nil, depth: 0).joined(separator: "\n")
         case let list as OrderedList:
@@ -37,6 +34,21 @@ enum SlackMarkup {
         default:
             markup.format()
         }
+    }
+
+    private static func quoteParts(_ quote: BlockQuote) -> [String] {
+        guard let callout = ExportCallout(quote) else { return blocks(Array(quote.children)) }
+        let title = inline(callout.title).trimmingCharacters(in: .whitespaces)
+        var parts = ["*" + (title.isEmpty ? callout.label : title) + "*" + (callout.body.isEmpty ? "" : "\n" + inline(callout.body))]
+        parts += blocks(callout.rest)
+        return parts
+    }
+
+    private static func quoted(_ parts: [String]) -> String {
+        parts.joined(separator: "\n\n")
+            .components(separatedBy: "\n")
+            .map { "> " + $0 }
+            .joined(separator: "\n")
     }
 
     private static func listLines(_ items: [ListItem], ordered start: Int?, depth: Int) -> [String] {

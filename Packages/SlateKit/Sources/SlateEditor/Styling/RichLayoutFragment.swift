@@ -11,6 +11,7 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
     var colors: EditorColors = .system
     var fontSize: CGFloat = 15
     var languageLabel: String?
+    var calloutPlaceholder: String?
 
     static var labelFont: NSFont { .systemFont(ofSize: 10, weight: .medium) }
 
@@ -21,6 +22,8 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
             bounds = bounds.union(blockRect.insetBy(dx: -1, dy: -1))
         case .quote:
             bounds = bounds.union(quoteRect)
+        case .callout:
+            bounds = bounds.union(calloutRect)
         case .bullet, .number, .checkbox:
             bounds = bounds.union(markerRect.insetBy(dx: -2, dy: -2))
         case .none:
@@ -41,6 +44,7 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
         context.saveGState()
         context.translateBy(x: point.x, y: point.y)
         drawMarker(in: context)
+        drawCalloutHeader(in: context)
         drawLanguageLabel(in: context)
         drawFold(in: context)
         context.restoreGState()
@@ -130,9 +134,40 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
             context.addPath(CGPath(roundedRect: quoteRect, cornerWidth: 1.5, cornerHeight: 1.5, transform: nil))
             context.setFillColor(colors.quoteBar.cgColor)
             context.fillPath()
+        case .callout(let marker, _):
+            let color = CalloutKind(marker: marker).color
+            let rect = calloutRect
+            context.setFillColor(color.withAlphaComponent(0.09).cgColor)
+            context.fill(rect)
+            context.setFillColor(color.cgColor)
+            context.fill(CGRect(x: rect.minX, y: rect.minY, width: 3, height: rect.height))
         default:
             break
         }
+    }
+
+    private var calloutRect: CGRect {
+        CGRect(x: padding - layoutFragmentFrame.minX, y: 0, width: containerWidth - padding * 2, height: layoutFragmentFrame.height)
+    }
+
+    private func drawCalloutHeader(in context: CGContext) {
+        guard case .callout(let marker, true) = decoration, let line = textLineFragments.first else { return }
+        let kind = CalloutKind(marker: marker)
+        let baseline = line.typographicBounds.minY + line.glyphOrigin.y
+        let left = padding - layoutFragmentFrame.minX + RichTextStyler.quoteIndent
+        let configuration = NSImage.SymbolConfiguration(pointSize: fontSize * 0.9, weight: .semibold).applying(.init(paletteColors: [kind.color]))
+        if let image = NSImage(systemSymbolName: kind.symbol, accessibilityDescription: kind.title)?.withSymbolConfiguration(configuration) {
+            let size = image.size
+            let rect = CGRect(x: left, y: baseline - fontSize * 0.36 - size.height / 2, width: size.width, height: size.height)
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)
+            image.draw(in: rect)
+            NSGraphicsContext.restoreGraphicsState()
+        }
+        guard let calloutPlaceholder else { return }
+        let font = NSFont.systemFont(ofSize: fontSize, weight: .bold)
+        let text = NSAttributedString(string: calloutPlaceholder, attributes: [.font: font, .foregroundColor: kind.color])
+        draw(text, at: CGPoint(x: left + RichTextStyler.calloutIconWidth, y: baseline - font.ascender), in: context)
     }
 
     private func drawMarker(in context: CGContext) {

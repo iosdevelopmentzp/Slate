@@ -33,6 +33,7 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
     case notText(String)
     case staleFile
     case notInTrash(String)
+    case noQuestion(Int, open: Int)
 
     private static let settingsHint = "The owner can change this in Slate: Settings → General → AI access."
 
@@ -104,6 +105,8 @@ package enum AgentError: LocalizedError, Hashable, Sendable {
             "The file changed since you read it, read it again."
         case .notInTrash(let name):
             "No note in the Trash matches \(name). Use a path from list_trash."
+        case .noQuestion(let number, let open):
+            open == 0 ? "The note has no open question." : "No open question \(number). The note has \(open) open questions; use a number from list_questions."
         }
     }
 

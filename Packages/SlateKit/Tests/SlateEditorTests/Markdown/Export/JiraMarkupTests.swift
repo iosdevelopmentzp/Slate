@@ -57,4 +57,9 @@ import Testing
 
         #expect(JiraMarkup.render(markdown) == "a b {color:red}c{color}")
     }
+
+    @Test func calloutsBecomePanels() {
+        #expect(JiraMarkup.render("> [!WARNING] Slow\n> The build is slow.\n") == "{note:title=Slow}\nThe build is slow.\n{note}")
+        #expect(JiraMarkup.render("> [!TIP]\n> Use it.\n") == "{tip:title=Tip}\nUse it.\n{tip}")
+    }
 }

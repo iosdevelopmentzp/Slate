@@ -60,12 +60,12 @@ import Testing
         return try object(answer.text)["id"] as? String ?? ""
     }
 
-    @Test func theCatalogHasTheThirtyTwoTools() {
+    @Test func theCatalogHasTheThirtyFourTools() {
         #expect(MCPToolCatalog.tools.map(\.name) == [
             "list_folders", "list_notes", "search_notes", "read_note", "read_section", "list_backlinks", "create_note", "append_to_note",
             "replace_in_note", "update_section", "update_note", "batch_edit", "move_note", "rename_note", "trash_note", "list_trash", "restore_note",
             "move_folder", "attach_image", "open_in_slate",
-            "project_context", "start_task", "set_task_status", "set_plan_item", "log_progress", "add_file", "list_files",
+            "project_context", "start_task", "set_task_status", "list_questions", "answer_question", "set_plan_item", "log_progress", "add_file", "list_files",
             "read_file", "replace_in_file", "update_file", "trash_file", "save_version",
         ])
         #expect(MCPToolCatalog.tools.allSatisfy { ($0.description ?? "").isEmpty == false })
@@ -733,6 +733,24 @@ import Testing
         #expect(try object(restored.text)["id"] as? String == id)
         #expect(FileManager.default.fileExists(atPath: vault.url.appendingPathComponent("Notes/Groceries.md").path))
         #expect(await call("restore_note", ["path": "Notes/Other.md"]).isError)
+    }
+
+    @Test func questionsAreListedAndAnswered() async throws {
+        let id = try await create("Plan", in: "Notes/Task", body: "> [!QUESTION]\n> Which cache?\n\n> [!QUESTION] Owner\n> Who owns it?")
+        try await create("Other", in: "Notes", body: "> [!QUESTION]\n> Not in the task.")
+
+        let listed = try array(await call("list_questions", ["folder": "Notes/Task"]).text)
+        let answered = await call("answer_question", ["id": .string(id), "number": 2, "answer": "The platform team."])
+        let after = try array(await call("list_questions", ["id": .string(id)]).text)
+
+        #expect(listed.map { $0["question"] as? String } == ["Which cache?", "Who owns it?"])
+        #expect(listed.last?["title"] as? String == "Owner")
+        #expect(answered.isError == false, "\(answered.text)")
+        #expect(try object(answered.text)["open"] as? Int == 1)
+        #expect(after.map { $0["number"] as? Int } == [1])
+        #expect(try file("Notes/Task/Plan.md").contains("> [!ANSWER] Owner\n> Who owns it?\n>\n> **Answer:** The platform team."))
+        #expect(await call("answer_question", ["id": .string(id), "number": 5, "answer": "x"]).isError)
+        #expect(await call("list_questions").isError)
     }
 
     @Test func aFolderMovesAndRenames() async throws {

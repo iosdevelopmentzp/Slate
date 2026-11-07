@@ -25,4 +25,8 @@ import Testing
 
         #expect(SlackMarkup.render(markdown) == "```\nName       Size\n---------  ----\nlong name  1\n```")
     }
+
+    @Test func calloutsShowTheirTitleInBold() {
+        #expect(SlackMarkup.render("> [!NOTE]\n> Read.\n") == "> *Note*\n> Read.")
+    }
 }

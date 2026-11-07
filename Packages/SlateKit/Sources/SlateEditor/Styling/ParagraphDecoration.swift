@@ -6,6 +6,7 @@ nonisolated enum ParagraphDecoration: Equatable {
     case number(Int)
     case checkbox(done: Bool)
     case quote
+    case callout(marker: String, header: Bool)
     case block(raw: Bool)
 
     static func of(_ attributes: [NSAttributedString.Key: Any]) -> ParagraphDecoration {
@@ -14,7 +15,7 @@ nonisolated enum ParagraphDecoration: Equatable {
         case .bullet: return .bullet(level: block.indent)
         case .numbered: return .number(attributes[.slateListNumber] as? Int ?? 1)
         case .checklist: return .checkbox(done: block.isDone)
-        case .quote: return .quote
+        case .quote: return block.callout.map { .callout(marker: $0, header: block.isCalloutHeader) } ?? .quote
         case .monospaced: return .block(raw: false)
         case .raw: return .block(raw: true)
         default: return .none

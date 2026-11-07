@@ -39,6 +39,8 @@ struct MCPToolRunner: Sendable {
         case "list_backlinks": try await listBacklinks(arguments)
         case "batch_edit": try await batchEdit(arguments)
         case "set_plan_item": try await setPlanItem(arguments)
+        case "list_questions": try await listQuestions(arguments)
+        case "answer_question": try await answerQuestion(arguments)
         case "move_note": try await moveNote(arguments)
         case "rename_note": try await renameNote(arguments)
         case "trash_note": try await trashNote(arguments)

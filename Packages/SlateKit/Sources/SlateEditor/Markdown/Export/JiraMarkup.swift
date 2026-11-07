@@ -29,7 +29,11 @@ enum JiraMarkup {
         case let code as CodeBlock:
             codeBlock(code)
         case let quote as BlockQuote:
-            "{quote}\n" + blocks(Array(quote.children)).joined(separator: "\n\n") + "\n{quote}"
+            if let callout = ExportCallout(quote) {
+                calloutText(callout)
+            } else {
+                "{quote}\n" + blocks(Array(quote.children)).joined(separator: "\n\n") + "\n{quote}"
+            }
         case let list as UnorderedList:
             listLines(Array(list.listItems), prefix: "*").joined(separator: "\n")
         case let list as OrderedList:
@@ -43,6 +47,18 @@ enum JiraMarkup {
         default:
             markup.format()
         }
+    }
+
+    private static func calloutText(_ callout: ExportCallout) -> String {
+        let title = ExportText.clean(callout.title.map { ($0 as? PlainTextConvertibleMarkup)?.plainText ?? "" }.joined())
+            .replacingOccurrences(of: "|", with: " ")
+            .replacingOccurrences(of: "}", with: ")")
+            .trimmingCharacters(in: .whitespaces)
+        var parts: [String] = []
+        if callout.body.isEmpty == false { parts.append(inline(callout.body)) }
+        parts += blocks(callout.rest)
+        let macro = callout.jiraMacro
+        return "{\(macro):title=\(title.isEmpty ? callout.label : title)}\n" + parts.joined(separator: "\n\n") + "\n{\(macro)}"
     }
 
     private static func codeBlock(_ code: CodeBlock) -> String {

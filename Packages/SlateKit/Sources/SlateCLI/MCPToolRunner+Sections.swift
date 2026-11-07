@@ -118,6 +118,8 @@ extension MCPToolRunner {
                 return { NoteSectionPolicy.prepend(text, toSection: section, in: $0) }
             }
             return { SectionAppendPolicy.append(text, toSection: section, in: $0) }
+        case "answer_question":
+            return try questionChange(arguments)
         case "set_plan_item":
             let item = try arguments.required("item")
             let done = arguments.bool("done") ?? true

@@ -16,7 +16,7 @@ enum SlackHTML {
         case let code as CodeBlock:
             "<pre>" + escaped(ExportText.codeText(code)) + "</pre>"
         case let quote as BlockQuote:
-            "<blockquote>" + Array(quote.children).map(block).joined() + "</blockquote>"
+            "<blockquote>" + quoteBody(quote) + "</blockquote>"
         case let list as UnorderedList:
             "<ul>" + Array(list.listItems).map(item).joined() + "</ul>"
         case let list as OrderedList:
@@ -30,6 +30,14 @@ enum SlackHTML {
         default:
             "<p>" + escaped(markup.format()) + "</p>"
         }
+    }
+
+    private static func quoteBody(_ quote: BlockQuote) -> String {
+        guard let callout = ExportCallout(quote) else { return Array(quote.children).map(block).joined() }
+        let title = inline(callout.title).trimmingCharacters(in: .whitespaces)
+        var html = "<p><b>" + (title.isEmpty ? escaped(callout.label) : title) + "</b></p>"
+        if callout.body.isEmpty == false { html += "<p>" + inline(callout.body) + "</p>" }
+        return html + callout.rest.map(block).joined()
     }
 
     private static func item(_ item: ListItem) -> String {

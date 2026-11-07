@@ -70,6 +70,7 @@ struct MainMenuBuilder {
             standard("Bulleted List", EditorMenuActions.bulleted, key: "7", modifiers: [.command, .shift]),
             standard("Numbered List", EditorMenuActions.numbered, key: "9", modifiers: [.command, .shift]),
             standard("Quote", EditorMenuActions.quote, key: "'"),
+            CalloutMenu.item(),
             standard("Indent", EditorMenuActions.indent, key: "]"),
             standard("Outdent", EditorMenuActions.outdent, key: "["),
             .separator(),

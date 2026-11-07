@@ -195,6 +195,7 @@ extension MCPToolRunner {
     Put research, places in code and long results in more notes in a Details folder inside the task folder (create_note with that folder). Add logs, screenshots and other files with add_file. \
     Keep the Plan as a checklist (- [ ] 1. The step) and mark a step done with set_plan_item. \
     At the end of each session rewrite Status with update_section, and call log_progress with one line of what was done, so the next session can go on. \
-    Set the status with set_task_status: todo, active, review, done or dropped.
+    Set the status with set_task_status: todo, active, review, done or dropped. \
+    At the start of a session call list_questions with the task folder and answer each open question with answer_question.
     """
 }

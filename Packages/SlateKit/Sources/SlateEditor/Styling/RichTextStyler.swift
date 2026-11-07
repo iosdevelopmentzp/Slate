@@ -5,6 +5,7 @@ final class RichTextStyler {
     nonisolated static let markerWidth: CGFloat = 26
     nonisolated static let quoteIndent: CGFloat = 16
     nonisolated static let blockInset: CGFloat = 12
+    nonisolated static let calloutIconWidth: CGFloat = 22
 
     var configuration: EditorConfiguration {
         didSet {
@@ -68,7 +69,7 @@ final class RichTextStyler {
     }
 
     func paragraphStyle(for block: BlockAttributes) -> NSParagraphStyle {
-        let key = StyleKey(kind: block.kind, indent: block.continuesList ? block.indent : 0)
+        let key = StyleKey(kind: block.kind, indent: block.continuesList ? block.indent : 0, callout: block.callout == nil ? 0 : (block.isCalloutHeader ? 2 : 1))
         if let cached = styles[key] { return cached }
         let scale = configuration.scale
         let style = NSMutableParagraphStyle()
@@ -89,10 +90,13 @@ final class RichTextStyler {
             style.lineHeightMultiple = 1.25
             style.paragraphSpacing = 5 * scale
         case .quote:
+            let indent = Self.quoteIndent + (key.callout == 2 ? Self.calloutIconWidth : 0)
             style.lineHeightMultiple = 1.25
-            style.firstLineHeadIndent = Self.quoteIndent
-            style.headIndent = Self.quoteIndent
-            style.paragraphSpacing = 4 * scale
+            style.firstLineHeadIndent = indent
+            style.headIndent = indent
+            style.tailIndent = key.callout == 0 ? 0 : -Self.blockInset
+            style.paragraphSpacingBefore = key.callout == 2 ? 6 * scale : 0
+            style.paragraphSpacing = (key.callout == 0 ? 4 : 6) * scale
         case .bullet, .numbered, .checklist:
             let indent = Self.markerWidth + CGFloat(key.indent) * Self.listIndent
             style.lineHeightMultiple = 1.2
@@ -129,7 +133,11 @@ final class RichTextStyler {
         attributes[.paragraphStyle] = paragraphStyle(for: block)
         let colors = configuration.colors
         var color = colors.text
-        if block.kind == .quote || (block.kind == .checklist && block.isDone) { color = colors.secondaryText }
+        if (block.kind == .quote && block.callout == nil) || (block.kind == .checklist && block.isDone) { color = colors.secondaryText }
+        if block.isCalloutHeader, let callout = block.callout {
+            color = CalloutKind(marker: callout).color
+            attributes[.font] = font(for: block.kind, inline: effective.union(.bold))
+        }
         if href != nil, block.kind.keepsLineBreaks == false {
             color = colors.link
             attributes[.underlineStyle] = NSUnderlineStyle.single.rawValue

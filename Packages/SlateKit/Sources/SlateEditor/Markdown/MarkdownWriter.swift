@@ -74,7 +74,8 @@ package enum MarkdownWriter {
         case .bullet, .numbered, .checklist:
             return ListWriter.write(group, alternate: false)
         case .quote:
-            return group.map { InlineWriter.lines(of: $0.text).map { $0.isEmpty ? ">" : "> " + $0 }.joined(separator: "\n") }.joined(separator: "\n>\n")
+            if let callout = first.block.callout { return calloutText(callout, group) }
+            return quoteText(group)
         case .title:
             return heading(1, first.text)
         case .heading:
@@ -94,6 +95,23 @@ package enum MarkdownWriter {
         case .table:
             return first.block.table?.markdown
         }
+    }
+
+    private static func quoteText(_ group: [WriterParagraph]) -> String {
+        group.map { InlineWriter.lines(of: $0.text).map { $0.isEmpty ? ">" : "> " + $0 }.joined(separator: "\n") }.joined(separator: "\n>\n")
+    }
+
+    private static func calloutText(_ callout: String, _ group: [WriterParagraph]) -> String {
+        var body = group
+        let fold = callout.last.map { "+-".contains($0) } == true ? String(callout.suffix(1)) : ""
+        var header = "> [!" + callout.dropLast(fold.count) + "]" + fold
+        if let first = group.first, first.block.isCalloutHeader {
+            body.removeFirst()
+            let title = InlineWriter.lines(of: first.text).joined(separator: " ").trimmingCharacters(in: .whitespaces)
+            if title.isEmpty == false { header += " " + title }
+        }
+        guard body.isEmpty == false else { return header }
+        return header + "\n" + quoteText(body)
     }
 
     private static func heading(_ level: Int, _ text: NSAttributedString) -> String? {

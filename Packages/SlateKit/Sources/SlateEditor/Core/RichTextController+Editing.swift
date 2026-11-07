@@ -84,6 +84,7 @@ extension RichTextController {
         switch block.kind {
         case .title, .heading, .subheading, .image, .divider: BlockAttributes()
         case .checklist: BlockAttributes(kind: .checklist, indent: block.indent, group: block.group)
+        case .quote where block.isCalloutHeader: BlockAttributes(kind: .quote, group: block.group, callout: block.callout)
         default: block
         }
     }

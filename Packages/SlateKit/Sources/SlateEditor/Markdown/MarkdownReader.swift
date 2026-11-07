@@ -82,7 +82,7 @@ package enum MarkdownReader {
                 guard let paragraph = child as? Paragraph, isPlainParagraph(paragraph), let text = InlineReader.read(paragraph.children, source: lines) else { return nil }
                 blocks.append(ReadBlock(text: text, attributes: BlockAttributes(kind: .quote, group: group)))
             }
-            return blocks.isEmpty ? nil : blocks
+            return blocks.isEmpty ? nil : CalloutReader.read(blocks)
         case let list as UnorderedList:
             return ListReader.read(list, indent: 0, group: builder.nextGroup(), source: lines)
         case let list as OrderedList:

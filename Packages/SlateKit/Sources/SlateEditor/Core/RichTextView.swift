@@ -136,6 +136,11 @@ final class RichTextView: NSTextView {
     @objc func slateBulleted(_ sender: Any?) { controller?.perform(.list(.bullet)) }
     @objc func slateNumbered(_ sender: Any?) { controller?.perform(.list(.numbered)) }
     @objc func slateQuote(_ sender: Any?) { controller?.perform(.quote) }
+
+    @objc func slateCallout(_ sender: Any?) {
+        guard let marker = (sender as? NSMenuItem)?.representedObject as? String else { return }
+        controller?.perform(.callout(marker))
+    }
     @objc func slateBold(_ sender: Any?) { controller?.perform(.inline(.bold)) }
     @objc func slateItalic(_ sender: Any?) { controller?.perform(.inline(.italic)) }
     @objc func slateStrikethrough(_ sender: Any?) { controller?.perform(.inline(.strikethrough)) }

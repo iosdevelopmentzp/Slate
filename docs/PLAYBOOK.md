@@ -171,6 +171,8 @@ Copy `ShellRunner`, `ShellResult`, `LineBatcher`, `CommandFormatter` from `../De
 - Never `cp` a new binary over a signed binary that already exists. macOS keeps the code signature of the old file, so the new one is killed at start (exit 137, `Killed: 9`), and `codesign -v` still says it is valid. Copy to a new file and `mv` it over the old one. `install.sh` does this for `~/.local/bin/slate`.
 - Do not start a test copy of Slate with `--args -vault.path <folder>` to keep the real notes safe. The copy shares the settings of the installed Slate (`local.slate.app`), and `AppContainer` saves the folder it opened back to `vault.path`. The installed Slate and `slate mcp` then open the test folder. If it happens, restore it with `defaults write local.slate.app vault.path <real folder>` and restart Slate.
 
+- After a new case in a `package` enum of one module (for example `EditorCommand`), `swift test` can run the test target of another module with stale objects: enum values print as other cases and unrelated tests fail. Delete `Packages/SlateKit/.build/arm64-apple-macosx/debug` and run the tests again.
+
 ## 14. Performance measurement
 
 - `Scripts/generate-vault.sh <folder> <count>` writes notes with a header, 3 to 40 paragraphs, tags, 0 to 5 todos, one code fence in a third of them, one image link in a tenth (a shared 200 KB PNG), spread over the six default spaces. Use it for M3 and M2 budgets.

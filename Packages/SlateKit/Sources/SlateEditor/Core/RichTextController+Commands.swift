@@ -40,6 +40,8 @@ extension RichTextController {
             applyParagraph(kind, toggles: true)
         case .quote:
             applyParagraph(.quote, toggles: true)
+        case .callout(let marker):
+            makeCallout(CalloutKind(marker: marker))
         case .inline(let style):
             toggleInline(style)
         case .highlight(let color):

@@ -295,6 +295,10 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 201. Copy for Jira and Copy for Slack (Edit menu and the right-click menu of the text) convert the Markdown of the selection, or of the whole note when nothing is selected, in `SlateEditor/Markdown/Export/` with swift-markdown. Jira gets the old wiki markup as plain text (`h2.`, `*bold*`, `{code:swift}`, `{noformat}` for a language Jira does not know, `||head||`, `[label|url]`, `!file.png|width=420!`), because the owner's Jira uses the wiki renderer. Slack gets HTML for the message field and mrkdwn-like text as the plain fallback; tables become aligned text in a code block, because Slack has no tables. Note links become their names, highlights lose their marks, checklists show ☐ and ☑. Agents get no export tool: the converter lives in the editor module, which the CLI may not import, and agents can write wiki markup themselves.
 
+202. Callouts follow ADR 0022. The model: the quote paragraphs of a callout carry `slate.callout` (the kind word as written); the first one also carries `slate.calloutHeader` and holds the title. `CalloutReader` splits the first Markdown paragraph at its first line break into the title and the body. Return in the title starts a body paragraph. The layout fragment draws the tint, the bar, the icon and, for an empty title, the kind name; nothing of it is text. The empty title paragraph is dropped by the writer like any empty paragraph, so the marker line is written from the first body paragraph.
+
+203. Questions for agents: `QuestionPolicy` (Domain) finds `> [!QUESTION]` callouts by lines, outside code fences; the number counts per note. `answer_question` is also a `batch_edit` step. Slate itself shows no list of open questions yet; the callouts are the list.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -579,6 +583,8 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 143. Open three notes in turn, one in another folder. Click the left arrow at the top left of the note twice: the notes come back in reverse order, with their folder in the list. The right arrow and `⌃⌘→` go forward again. Open a new note after going back: the right arrow dims.
 144. In Claude Code ask: "append a line to Notes/Groceries.md" and "move the folder Notes/Old to Notes/Archive/Old": both work with the path, no id. Ask to trash a note and then to bring it back: `list_trash` and `restore_note` return it to its folder.
 145. Select a part of a note with a heading, a list, a link and a table. Edit → Copy for Jira, paste into a Jira comment in text mode: headings, bold, the list, the link and the table show as in the note. With nothing selected the whole note is copied. Copy for Slack and paste into a Slack message: bold, links and the list stay; the table is aligned text in a code block.
+146. Select two paragraphs, Format → Callout → Warning: a tinted block with an orange bar, a warning icon and "Warning" in the empty title line. Type a title, press Return, type text. Reopen the note: it looks the same; the file has `> [!WARNING] <title>`. Format → Callout → Tip with the caret in it: it turns green.
+147. In a task note write a `> [!QUESTION]` callout. In Claude Code in the repository ask: "answer my questions in Slate". The agent calls `list_questions` and `answer_question`; the callout turns green with "Answer" and the answer under the question.
 
 ## Known gaps
 

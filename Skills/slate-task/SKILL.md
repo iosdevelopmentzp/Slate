@@ -20,7 +20,8 @@ Write to Slate only through the `slate` MCP tools, never with file tools. The to
    2. the task with the ticket the user named;
    3. no task yet: call `start_task` with a title like `ABC-123 Fix the login crash`. Take the ticket from the user's message or the branch name. Ask the user when neither has one. To make the task folder in a folder of the project, like `Features`, pass it as `folder`.
 4. `project_context` shows the plan of the current task: how many steps are done and the next one. Read the task note once with `read_note`: Status, Questions (the owner writes answers on the `Answer:` lines), Plan and the last two or three Log entries. Later in the session read one part with `read_section`.
-5. Tell the user in two or three lines where the last session stopped and what the next step is.
+5. Call `list_questions` with the task folder. The owner asks questions with `> [!QUESTION]` callouts in any note of the task. Answer each one with `answer_question` (its number from the list); the callout becomes `> [!ANSWER]`. When you need the owner's answer, write a `> [!QUESTION]` callout in the task note and say so.
+6. Tell the user in two or three lines where the last session stopped, which questions you answered, and what the next step is.
 6. If the status is `todo` and work starts now, call `set_task_status` with `active`.
 
 ## 2. During the session

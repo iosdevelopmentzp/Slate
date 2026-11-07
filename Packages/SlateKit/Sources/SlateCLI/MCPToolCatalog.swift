@@ -56,7 +56,7 @@ enum MCPToolCatalog {
             "expectedHash": text("The hash that read_note returned."),
         ], required: ["id", "body", "expectedHash"], destructive: true),
         tool("batch_edit", "Make several small changes in one call, in one or more notes. Slate checks every operation first: when one fails, nothing is written. Each note is written once, and Slate keeps one version for the whole batch.", [
-            "operations": operations("The changes, in order. Each one has tool (replace_in_note, update_section, append_to_note or set_plan_item) and the arguments of that tool: id or task, and expectedHash if you want the check."),
+            "operations": operations("The changes, in order. Each one has tool (replace_in_note, update_section, append_to_note, set_plan_item or answer_question) and the arguments of that tool: id or task, and expectedHash if you want the check."),
         ], required: ["operations"], destructive: true),
         tool("move_note", "Move a note to another folder. Links to images in the note keep working. A missing folder is made, when agents may write there. A folder that the move leaves empty is removed.", [
             "id": note,
@@ -104,6 +104,16 @@ enum MCPToolCatalog {
             "task": text("The task: its note id, its folder like MyApp/ABC-123 Fix login, or its ticket."),
             "status": text("todo, active, review, done or dropped."),
         ], required: ["task", "status"]),
+        tool("list_questions", "List the open questions for agents in a note or in a folder. The owner asks a question with a callout: > [!QUESTION] on the first line, the question on the next > lines. Call it at the start of a session on the task folder. Answer with answer_question.", [
+            "id": note,
+            "folder": text("Only notes in this folder and its sub-folders, like MyApp/Features. Give id or folder."),
+        ], required: [], readOnly: true),
+        tool("answer_question", "Answer an open question in a note. The answer goes into the callout under the question, and the callout becomes > [!ANSWER], so the question is no longer open.", [
+            "id": note,
+            "number": number("The number of the question from list_questions, counted in this note."),
+            "answer": text("The Markdown text of the answer. Short; several lines are fine."),
+            "expectedHash": text("The hash from read_note. When set and the note changed since, nothing is written."),
+        ], required: ["id", "number", "answer"]),
         tool("set_plan_item", "Mark a step of the Plan of a task note done or not done. The Plan is a checklist: - [ ] 1. The step. Returns the plan with every step.", [
             "task": text("The task: its note id, its folder, or its ticket."),
             "item": text("The step number, like 2, or a part of its text that matches one step."),
@@ -175,7 +185,7 @@ enum MCPToolCatalog {
             "items": [
                 "type": "object",
                 "properties": [
-                    "tool": ["type": "string", "enum": ["replace_in_note", "update_section", "append_to_note", "set_plan_item"]],
+                    "tool": ["type": "string", "enum": ["replace_in_note", "update_section", "append_to_note", "set_plan_item", "answer_question"]],
                     "id": ["type": "string"],
                     "task": ["type": "string"],
                     "old": ["type": "string"],
@@ -186,6 +196,8 @@ enum MCPToolCatalog {
                     "position": ["type": "string"],
                     "item": ["type": "string"],
                     "done": ["type": "boolean"],
+                    "number": ["type": "integer"],
+                    "answer": ["type": "string"],
                     "expectedHash": ["type": "string"],
                 ],
                 "required": ["tool"],
