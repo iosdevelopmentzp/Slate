@@ -21,7 +21,7 @@ import Testing
         let save = try #require(menu.items.first { $0.title == "Save to Downloads" })
         harness.textView.slateImageAction(save)
 
-        #expect(menu.items.map(\.title) == ["Quick Look", "Open", "Show in Finder", "Copy Image", "Save to Downloads", "Size", "", "Remove"])
+        #expect(menu.items.map(\.title) == ["Quick Look", "Open", "Mark Up in Preview", "Show in Finder", "Copy Image", "Save to Downloads", "Size", "", "Remove"])
         #expect(actions == [.saveToDownloads])
     }
 

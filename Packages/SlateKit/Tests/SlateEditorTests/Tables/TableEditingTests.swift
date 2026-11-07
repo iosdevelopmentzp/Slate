@@ -267,8 +267,8 @@ import Testing
         let save = try #require(menu.items.first { $0.title == "Save to Downloads" })
         view.cellImageAction(save)
 
-        #expect(menu.items.prefix(5).map(\.title) == ImageMenu.entries.map(\.0))
-        #expect(menu.items[5].title == "Size")
+        #expect(menu.items.prefix(ImageMenu.entries.count).map(\.title) == ImageMenu.entries.map(\.0))
+        #expect(menu.items[ImageMenu.entries.count].title == "Size")
         #expect(menu.items.contains { $0.title == "Delete Row" })
         #expect(actions == [.saveToDownloads])
     }
