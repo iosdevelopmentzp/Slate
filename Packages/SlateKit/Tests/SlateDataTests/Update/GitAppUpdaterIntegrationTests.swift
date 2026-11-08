@@ -56,6 +56,21 @@ import Testing
         #expect(try await updater.newCommits(for: InstalledBuild(commit: String(repeating: "a", count: 40), branch: "main", source: source)).isEmpty)
     }
 
+    @Test func startBringsTheCloneToTheRemoteBeforeItRunsTheScript() async throws {
+        let first = try await setUp()
+        let marker = root.url.appendingPathComponent("ran")
+        let scripts = URL(fileURLWithPath: remote).appendingPathComponent("Scripts")
+        try FileManager.default.createDirectory(at: scripts, withIntermediateDirectories: true)
+        let script = scripts.appendingPathComponent("update.sh")
+        try Data("#!/bin/zsh\ntouch '\(marker.path)'\n".utf8).write(to: script)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        _ = try await commit("script")
+
+        try await updater.start(InstalledBuild(commit: first, branch: "main", source: source))
+
+        try await waitUntil { FileManager.default.fileExists(atPath: marker.path) }
+    }
+
     @Test func theStatusAndTheLockAreRead() async throws {
         let folder = root.url.appendingPathComponent("update")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

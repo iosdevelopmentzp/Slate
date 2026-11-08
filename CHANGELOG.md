@@ -156,6 +156,8 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - Note kinds and the New menu, tasks, ticket and branch chips, status, `⌘⇧D`, Today and daily notes (`⌥⌘T`, `⌘[`, `⌘]`), snippets, meetings, tags and tag chips, Insert Template, saved searches, Open TODOs, the palette (`⌘K`), actions, Copy for Slack, Copy as Markdown, Save as HTML and PDF, Float on Top and note windows, the outline, ticket details, the Links and History pages of Settings, the history and push state and the Activity button in the footer. The files and the command line keep working; the code for them is in commit `545e0d6`.
 
 ### Fixed
+- The banners over a note (an agent changed it, a conflict, unsaved text) no longer sit under the window buttons at the top left.
+- Update Now no longer fails with "The update script is missing" when the update copy of the code was made before the update script existed. Slate brings that copy to the pushed `main` before it starts the script.
 - A link typed by hand as `[[Note]]` or `[[Note|text]]` was saved as plain text with backslashes (`\[\[Note\]\]`) and was no link. The closing `]]` now turns it into a link at once.
 - Editor: a new empty item at the end of a note showed no bullet, number or checkbox until you typed in it. Now the mark shows at once, with the next number for a numbered list.
 - Agents: `add_file` with a `/` in the name put the file at the top of the folder with dashes in its name, like `Resources-Runs-X.swift`. Now the name is a path: the file goes into those sub-folders. `add_file` also makes a missing folder, like `create_note` and `move_note`, when agents may write there.

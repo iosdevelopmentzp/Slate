@@ -20,7 +20,7 @@ struct AgentChangeBanner: View {
         .padding(.vertical, 8)
         .background(Tint.purple.color.opacity(0.12), in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
         .padding(.horizontal, 16)
-        .padding(.top, 8)
+        .padding(.top, PanelToggles.height + 8)
     }
 }
 

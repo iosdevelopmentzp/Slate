@@ -5,6 +5,9 @@ struct PanelToggles: View {
     @Environment(WindowLayout.self) private var layout
     @Environment(NoteListStore.self) private var noteList
 
+    static let topPadding: CGFloat = 4
+    static let height = topPadding + IconButton.side
+
     var body: some View {
         HStack(spacing: 4) {
             if layout.showsSidebar == false, layout.showsList == false {
@@ -22,7 +25,7 @@ struct PanelToggles: View {
                 .disabled(noteList.canGoForward == false)
                 .accessibilityLabel("Forward")
         }
-        .padding(.top, 4)
+        .padding(.top, Self.topPadding)
         .padding(.leading, layout.showsSidebar || layout.showsList ? 10 : WindowLayout.trafficLightsWidth)
     }
 

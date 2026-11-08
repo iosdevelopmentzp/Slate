@@ -24,7 +24,7 @@ struct ConflictBanner: View {
         .padding(.vertical, 8)
         .background(Tint.orange.color.opacity(0.14), in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
         .padding(.horizontal, 16)
-        .padding(.top, 8)
+        .padding(.top, PanelToggles.height + 8)
     }
 }
 

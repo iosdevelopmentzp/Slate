@@ -22,8 +22,7 @@ struct GitAppUpdater: AppUpdating {
 
     func newCommits(for build: InstalledBuild) async throws -> [UpdateCommit] {
         let remote = "origin/" + build.branch
-        let fetch = try await shell.run(Self.git, ["-C", build.source, "fetch", "--quiet", "origin", build.branch], cwd: nil)
-        guard fetch.exitCode == 0 else { throw UpdateError.fetchFailed(fetch.stderr.trimmingCharacters(in: .whitespacesAndNewlines)) }
+        try await fetch(build)
         let ancestor = try await shell.run(Self.git, ["-C", build.source, "merge-base", "--is-ancestor", build.commit, remote], cwd: nil, tolerating: [1, 128])
         guard ancestor.exitCode == 0 else { return [] }
         let log = try await shell.run(Self.git, ["-C", build.source, "log", "--format=%h%x1f%s", "\(build.commit)..\(remote)"], cwd: nil)
@@ -31,6 +30,9 @@ struct GitAppUpdater: AppUpdating {
     }
 
     func start(_ build: InstalledBuild) async throws {
+        try await fetch(build)
+        let reset = try await shell.run(Self.git, ["-C", build.source, "reset", "--quiet", "--hard", "origin/" + build.branch], cwd: nil)
+        guard reset.exitCode == 0 else { throw UpdateError.fetchFailed(reset.stderr.trimmingCharacters(in: .whitespacesAndNewlines)) }
         let script = URL(fileURLWithPath: build.source).appendingPathComponent("Scripts/update.sh").path
         guard FileManager.default.isExecutableFile(atPath: script) else { throw UpdateError.noScript(script) }
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -54,6 +56,11 @@ struct GitAppUpdater: AppUpdating {
 
     func log() async -> String {
         (try? String(contentsOf: logURL, encoding: .utf8)) ?? ""
+    }
+
+    private func fetch(_ build: InstalledBuild) async throws {
+        let result = try await shell.run(Self.git, ["-C", build.source, "fetch", "--quiet", "origin", build.branch], cwd: nil)
+        guard result.exitCode == 0 else { throw UpdateError.fetchFailed(result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)) }
     }
 
     private func quoted(_ path: String) -> String {
