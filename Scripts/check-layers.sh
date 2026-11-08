@@ -46,6 +46,7 @@ forbid SlateUI '^import Slate' 'SlateUI imports a Slate module'
 
 forbid SlateEditor '^import Slate' 'SlateEditor imports a Slate module'
 forbid SlateEditor '^import Markdown' 'SlateEditor imports Markdown outside SlateEditor/Markdown' '/SlateEditor/Markdown/'
+forbid SlateEditor '^import WebKit' 'SlateEditor imports WebKit outside SlateEditor/Diagrams' '/SlateEditor/Diagrams/'
 forbid SlateEditor 'NSPasteboard' 'NSPasteboard used outside SlateEditor/Paste' '/SlateEditor/Paste/'
 forbid SlateEditor '\blayoutManager\b' 'SlateEditor touches the TextKit 1 layoutManager (use textLayoutManager)'
 

@@ -41,6 +41,11 @@ final class RichTextView: NSTextView {
         super.setMarkedText(string, selectedRange: selectedRange, replacementRange: replacementRange)
     }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        controller?.diagramsChangedLook()
+    }
+
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         guard hoverArea == nil else { return }

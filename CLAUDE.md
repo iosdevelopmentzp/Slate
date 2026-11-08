@@ -55,7 +55,7 @@ Modules, one direction: `Composition → Presentation → Domain ← Data`; Pres
 
 ## Rules that apply from day one
 
-- Third-party packages: exact versions only (`exact:` in `Package.swift`, both `Package.resolved` files in git, `Scripts/check-deps.sh`). A new package, a version update or a removal needs the owner's permission first. Never run `swift package update` or reset package caches to newer versions without it.
+- Third-party packages: exact versions only (`exact:` in `Package.swift`, both `Package.resolved` files in git, `Scripts/check-deps.sh`). Bundled files (now only `mermaid.min.js`, ADR 0024) are pinned by SHA-256 in `Packages/SlateKit/Vendored.lock`. A new package or bundled library, a version update or a removal needs the owner's permission first. Never run `swift package update` or reset package caches to newer versions without it.
 - The storage format in `docs/STORAGE-FORMAT.md` is a contract shared with other tools (Obsidian, the CLI, scripts). Change it only with a new ADR in `docs/adr/`.
 - Every screen follows `docs/UX.md` revision 2: native but soft, rounded, two visible concepts (Folders, Notes), keyboard first, no modal dialogs, plain words from its section 7.
 - v1 scope is `SPEC.md` section 0.9 (ADR 0007). A parked feature never appears in the UI. The editor is rich text with Markdown files (ADR 0008); no Markdown marks on screen.

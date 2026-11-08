@@ -32,6 +32,7 @@ final class RichTextController: NSObject {
     var linkHoverTask: Task<Void, Never>?
     static let linkHoverDelay: Duration = .milliseconds(300)
     let multiCaret = MultiCaret()
+    let diagrams: DiagramCache
     var foldedHeadings: Set<Int> = []
     var hiddenSections: [NSRange] = []
     var hoveredHeading: Int?
@@ -57,7 +58,8 @@ final class RichTextController: NSObject {
     private var focusToken: Int?
     private var lastWidth: CGFloat = 0
 
-    init(configuration: EditorConfiguration) {
+    init(configuration: EditorConfiguration, diagrams: DiagramCache = DiagramCache()) {
+        self.diagrams = diagrams
         styler = RichTextStyler(configuration: configuration)
         textView = RichTextView(usingTextLayoutManager: true)
         scrollView = NSScrollView()
@@ -68,6 +70,14 @@ final class RichTextController: NSObject {
             return loadImage(path)
         }
         styler.tableHost = self
+        styler.diagram = { [weak self] source in
+            guard let self else { return nil }
+            return diagramPicture(for: source)
+        }
+        styler.showsDiagramCode = { [weak self] location in
+            guard let self else { return true }
+            return showsDiagramCode(at: location)
+        }
         linkBar.onAction = { [weak self] action, range in
             guard let self else { return }
             performLinkAction(action, range: range)
@@ -149,6 +159,7 @@ final class RichTextController: NSObject {
         publishTask?.cancel()
         publishTask = nil
         let text = MarkdownReader.read(value)
+        diagrams.openParagraph = nil
         restyle(text, range: NSRange(location: 0, length: text.length))
         isStyling = true
         storage.setAttributedString(text)
@@ -190,6 +201,18 @@ final class RichTextController: NSObject {
         storage.endEditing()
         isStyling = false
         updateTypingAttributes()
+    }
+
+    func restyleParagraphs(at locations: [Int]) {
+        let ranges = locations.filter { $0 < storage.length }.map { paragraphRange(at: $0) }
+        guard ranges.isEmpty == false else { return }
+        isStyling = true
+        storage.beginEditing()
+        for range in ranges {
+            restyle(storage, range: range)
+        }
+        storage.endEditing()
+        isStyling = false
     }
 
     func apply(insertion: EditorInsertion?) {
@@ -281,6 +304,7 @@ final class RichTextController: NSObject {
             isStyling = false
         }
         refreshFoldsAfterEdit()
+        updateOpenDiagram()
         convertClosedWikilink()
         publish()
         updateTypingAttributes()
@@ -440,6 +464,8 @@ final class RichTextController: NSObject {
         let width = textView.textContainer?.size.width ?? 0
         guard abs(width - lastWidth) > 0.5 else { return }
         lastWidth = width
+        styler.blockWidth = width - (textView.textContainer?.lineFragmentPadding ?? 5) * 2
+        diagramsChangedLook()
         refreshCaretOverlay()
         refreshTailMarker()
         guard let textLayout = textView.textLayoutManager else { return }

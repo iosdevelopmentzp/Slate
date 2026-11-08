@@ -17,6 +17,9 @@ extension NSAttributedString.Key {
     nonisolated static let slateHardBreak = NSAttributedString.Key("slate.hardBreak")
     nonisolated static let slateListNumber = NSAttributedString.Key("slate.listNumber")
     nonisolated static let slateTable = NSAttributedString.Key("slate.table")
+    nonisolated static let slateDiagram = NSAttributedString.Key("slate.diagram")
+    nonisolated static let slateDiagramArea = NSAttributedString.Key("slate.diagramArea")
+    nonisolated static let slateDiagramHidden = NSAttributedString.Key("slate.diagramHidden")
 
     nonisolated static let blockKeys: [NSAttributedString.Key] = [.slateBlock, .slateIndent, .slateDone, .slateLanguage, .slateImagePath, .slateImageAlt, .slateGroup, .slateTable, .slateCallout, .slateCalloutHeader]
 }

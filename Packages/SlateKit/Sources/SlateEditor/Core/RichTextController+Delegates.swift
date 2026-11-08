@@ -10,6 +10,7 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
         guard isEditingInternally == false else { return }
         if multiCaret.isApplying == false { dropExtraCarets() }
         pendingInline = nil
+        updateOpenDiagram()
         updateTypingAttributes()
         updateState()
         updateLinkBar()
@@ -19,6 +20,7 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
     func textDidEndEditing(_ notification: Notification) {
         linkBar.hide()
         hideWikiCompletion()
+        updateOpenDiagram(focused: false)
         flush()
         handlers.didEndEditing()
     }
@@ -85,6 +87,13 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
         }
         if decoration == .block(raw: false) {
             fragment.languageLabel = CodeLanguage.label(for: attributes[.slateLanguage] as? String)
+        }
+        if let area = attributes[.slateDiagramArea] as? CGFloat {
+            fragment.isDiagram = true
+            fragment.diagramArea = area
+            fragment.diagram = attributes[.slateDiagram] as? DiagramPicture
+            fragment.diagramScale = styler.configuration.scale
+            fragment.hidesCode = attributes[.slateDiagramHidden] as? Bool == true
         }
         return fragment
     }

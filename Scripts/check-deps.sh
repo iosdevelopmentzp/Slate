@@ -23,4 +23,14 @@ if ! diff <(pins "$PACKAGE_PINS") <(pins "$XCODE_PINS") >/dev/null; then
     exit 1
 fi
 
+VENDORED="$ROOT/Packages/SlateKit/Vendored.lock"
+while read -r name version hash file url; do
+    [ -z "$name" ] && continue
+    actual=$(shasum -a 256 "$ROOT/Packages/SlateKit/$file" 2>/dev/null | cut -d' ' -f1 || true)
+    if [ "$actual" != "$hash" ]; then
+        echo "deps: $file is not $name $version from Vendored.lock"
+        exit 1
+    fi
+done < "$VENDORED"
+
 echo "deps: ok"

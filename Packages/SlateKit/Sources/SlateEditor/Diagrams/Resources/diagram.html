@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+html, body { margin: 0; padding: 0; background: transparent; }
+#out { display: inline-block; }
+</style>
+<script src="mermaid.min.js"></script>
+<script>
+let count = 0;
+
+async function draw(source, dark) {
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: "strict",
+    theme: dark ? "dark" : "default",
+    fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+  });
+  count += 1;
+  const id = "diagram" + count;
+  const out = document.getElementById("out");
+  out.innerHTML = "";
+  try {
+    const result = await mermaid.render(id, source);
+    out.innerHTML = result.svg;
+  } catch (error) {
+    document.getElementById(id)?.remove();
+    document.getElementById("d" + id)?.remove();
+    return { error: String((error && error.message) || error) };
+  }
+  const svg = out.querySelector("svg");
+  const box = svg.viewBox.baseVal;
+  svg.style.maxWidth = "none";
+  if (box && box.width > 0 && box.height > 0) {
+    svg.setAttribute("width", box.width);
+    svg.setAttribute("height", box.height);
+  }
+  const rect = svg.getBoundingClientRect();
+  return { width: Math.ceil(rect.width), height: Math.ceil(rect.height) };
+}
+</script>
+</head>
+<body><div id="out"></div></body>
+</html>

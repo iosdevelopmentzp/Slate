@@ -10,6 +10,7 @@ enum CodeHighlighter {
         case "bash", "sh", "zsh", "shell", "console", "fish": .shell
         case "diff", "patch": .diff
         case "log", "logs", "crash": .log
+        case "mermaid": .mermaid
         default: .plain
         }
     }

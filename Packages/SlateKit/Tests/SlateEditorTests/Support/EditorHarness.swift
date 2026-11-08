@@ -8,8 +8,13 @@ final class EditorHarness {
     let commands = EditorCommands()
     private(set) var published: [String] = []
 
-    init(markdown: String = "", configuration: EditorConfiguration = .standard, resolveImage: @escaping (String) -> URL? = { _ in nil }) {
-        controller = RichTextController(configuration: configuration)
+    init(
+        markdown: String = "",
+        configuration: EditorConfiguration = .standard,
+        resolveImage: @escaping (String) -> URL? = { _ in nil },
+        drawDiagram: @escaping (String, Bool) async -> DiagramPicture = { _, _ in EditorHarness.diagramPicture() }
+    ) {
+        controller = RichTextController(configuration: configuration, diagrams: DiagramCache(render: drawDiagram))
         controller.handlers = EditorHandlers(resolveImage: resolveImage)
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 800, height: 600), styleMask: [.titled], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
@@ -99,6 +104,18 @@ final class EditorHarness {
             if let table = value as? TableAttachment { tables.append(table) }
         }
         return index < tables.count ? tables[index] : nil
+    }
+
+    static func diagramPicture(size: CGSize = CGSize(width: 200, height: 100)) -> DiagramPicture {
+        DiagramPicture(image: NSImage(size: size), size: size)
+    }
+
+    func waitForDiagrams() async {
+        for _ in 0..<100 {
+            if controller.diagrams.task == nil, controller.diagramParagraphs().allSatisfy({ controller.storage.attribute(.slateDiagram, at: $0.location, effectiveRange: nil) != nil }) { break }
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        layout()
     }
 
     static func fixture(_ name: String) throws -> String {

@@ -38,6 +38,7 @@ let package = Package(
         .target(
             name: "SlateEditor",
             dependencies: [.product(name: "Markdown", package: "swift-markdown")],
+            resources: [.copy("Diagrams/Resources")],
             swiftSettings: mainActor
         ),
         .target(

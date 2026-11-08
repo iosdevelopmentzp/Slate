@@ -129,6 +129,14 @@ Copy `ShellRunner`, `ShellResult`, `LineBatcher`, `CommandFormatter` from `../De
 - When the row height changes, `invalidateLayout(for:)` on the attachment range resizes the view; the focus of the cell editor stays (checked with an XCTest in a window). `viewWillMove(toWindow:)` keeps the selection in case TextKit moves the view.
 - Trap: `NSTextView` is a Quick Look panel controller (`acceptsPreviewPanelControl(_:)` returns true). When the panel opens while a text view is first responder, the text view takes control, replaces the panel's `dataSource` and shows its selected attachments: an empty panel with "No items selected". `RichTextView` and `TableCellEditor` return false (`nonisolated override`, `import QuickLookUI`; `import Quartz` brings ImageKit and breaks the build with an `isSelectable` selector conflict), so `QuickLookSource` keeps the panel.
 
+### Mermaid diagrams (ADR 0024)
+
+- A hidden `WKWebView` without a window loads the page, runs `mermaid` and makes a PDF (`pdf(configuration:)` with the SVG's rect) inside `swift test` too; the first diagram takes about 0.5 s, later ones a few milliseconds.
+- Trap: the PDF has a white page under the diagram unless the web view draws no background: `setValue(false, forKey: "drawsBackground")` and `underPageBackgroundColor = .clear`. Draw the page with `CGContext.drawPDFPage` in an `NSImage` drawing handler; the image stays vector.
+- Trap: a content rule list `url-filter` has no `|` ("Disjunctions are not supported yet"); write one rule per scheme.
+- Trap: two code blocks in a row with the same language are one run of `slate.language`; walk the paragraphs inside a run.
+- Trap: `cacheDisplay(in:to:)` of a TextKit 2 text view gives an empty picture offscreen. For a picture of the editor in a test, call `draw(at:in:)` of each layout fragment into a bitmap context.
+
 ## 10. GRDB and FTS5 — verified (M3)
 
 - `DatabasePool(path:configuration:)` with `configuration.busyMode = .timeout(2)` and WAL (the pool's default). One pool per vault, owned by `GRDBSearchIndex`.

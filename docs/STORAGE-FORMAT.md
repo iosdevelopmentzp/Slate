@@ -489,7 +489,7 @@ The rich text editor reads any Markdown but writes only this subset. A construct
 | Heading | `## text` |
 | Subheading | `### text` |
 | Body paragraph | the text; paragraphs separated by one blank line |
-| Code block | a fenced block: ```` ``` ```` (the original language word kept when the file had one) |
+| Code block | a fenced block: ```` ``` ```` (the original language word kept when the file had one). With the language `mermaid` the editor draws the diagram above the code (ADR 0024); the file does not change |
 | Quote | `> ` before each line |
 | Callout (ADR 0022) | `> [!KIND]` with an optional title after it, then the text on the next `> ` lines, as in GitHub and Obsidian. The kind word, its case and a `+` or `-` after the bracket are kept. `> [!QUESTION]` is an open question for agents; an answered one is `> [!ANSWER]` |
 | Bulleted list, levels 0 to 2 | `- item`, nested with two spaces per level |

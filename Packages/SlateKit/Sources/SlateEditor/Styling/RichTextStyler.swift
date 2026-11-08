@@ -15,6 +15,9 @@ final class RichTextStyler {
         }
     }
     var loadImage: (String) -> NSImage? = { _ in nil }
+    var diagram: (String) -> DiagramPicture? = { _ in nil }
+    var showsDiagramCode: (Int) -> Bool = { _ in true }
+    var blockWidth: CGFloat = 0
     weak var tableHost: (any TableHost)?
 
     private var fonts: [FontKey: NSFont] = [:]
@@ -158,7 +161,8 @@ final class RichTextStyler {
             block = block.with(kind: .body)
         }
         var updates: [(NSRange, [NSAttributedString.Key: Any])] = []
-        let tokens = codeTokens(in: text, content: content, block: block)
+        let diagram = DiagramSource.isDiagram(block) ? diagramAttributes(in: text, paragraph: range, content: content, block: block) : nil
+        let tokens = diagram?[.slateDiagramHidden] == nil ? codeTokens(in: text, content: content, block: block) : []
         let references = references(in: text, content: content, block: block)
         text.enumerateAttributes(in: range) { existing, run, _ in
             let inline = InlineStyle(rawValue: existing[.slateInline] as? Int ?? 0)
@@ -174,6 +178,9 @@ final class RichTextStyler {
             }
             if block.kind.isAttachment {
                 wanted[.attachment] = attachment(for: block, existing: existing[.attachment] as? NSTextAttachment)
+            }
+            if let diagram {
+                wanted.merge(diagram) { _, new in new }
             }
             let plain = wanted[.slateHref] == nil && inline.contains(.code) == false
             for (piece, color, reference) in Self.pieces(of: run, tokens: tokens, references: plain ? references : []) {
@@ -192,6 +199,29 @@ final class RichTextStyler {
         for (run, wanted) in updates {
             text.setAttributes(wanted, range: run)
         }
+    }
+
+    private func diagramAttributes(in text: NSAttributedString, paragraph: NSRange, content: NSRange, block: BlockAttributes) -> [NSAttributedString.Key: Any] {
+        let source = DiagramSource.text(of: (text.string as NSString).substring(with: content))
+        let shown = text.attribute(.slateDiagram, at: paragraph.location, effectiveRange: nil) as? DiagramPicture
+        var picture = diagram(source) ?? shown
+        if let found = picture, found.image == nil, let error = found.error, let image = shown?.image {
+            picture = DiagramPicture(image: image, size: shown?.size ?? .zero, error: error)
+        }
+        let area = DiagramLayout.areaHeight(of: picture, blockWidth: blockWidth, scale: configuration.scale)
+        let style = (paragraphStyle(for: block).mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
+        style.paragraphSpacingBefore += area
+        var attributes: [NSAttributedString.Key: Any] = [.slateDiagramArea: area, .paragraphStyle: style]
+        if let picture { attributes[.slateDiagram] = picture }
+        guard showsDiagramCode(paragraph.location) == false else { return attributes }
+        style.lineHeightMultiple = 0
+        style.minimumLineHeight = DiagramLayout.hiddenLineHeight
+        style.maximumLineHeight = DiagramLayout.hiddenLineHeight
+        style.paragraphSpacing = 0
+        attributes[.slateDiagramHidden] = true
+        attributes[.font] = NSFont.monospacedSystemFont(ofSize: DiagramLayout.hiddenLineHeight, weight: .regular)
+        attributes[.foregroundColor] = NSColor.clear
+        return attributes
     }
 
     private func references(in text: NSAttributedString, content: NSRange, block: BlockAttributes) -> [(range: NSRange, reference: TextReference)] {

@@ -313,6 +313,8 @@ Numbered. What, then why. A later session must not undo these without a new numb
 
 210. App updates follow ADR 0023. `AppUpdating` (Domain) has `GitAppUpdater` (Data/Update) with `/usr/bin/git` and the JSON files; `UpdateStore` owns the state (`idle`, `available`, `running`, `failed`), checks at launch and every 5 minutes, and while an update runs reads `status.json` every second. A running phase with no live pid in `update.lock` is a failure. At launch a `done` status whose commit equals `installed.json` gives the toast once and is deleted. Check for Updates in the Slate menu checks at once and says "Slate is up to date".
 
+211. Mermaid diagrams follow ADR 0024. The styler looks a diagram up by its source and the window's dark or light look in `DiagramCache` (one per editor); a miss starts one pass of `RichTextController+Diagrams`, which waits 0.4 s, draws every diagram source of the note that has no picture, and restyles the blocks with that source. The picture area is `paragraphSpacingBefore`, so the code under it keeps its places for the caret and for undo. Only the paragraph with the caret shows its code (`DiagramCache.openParagraph`); a selection change restyles the old and the new one. Two blocks in a row share one `slate.language` run, so `diagramParagraphs` walks the paragraphs inside each run.
+
 ## Next steps
 
 1. The owner runs the manual checks below, first 40 to 48 for phase 3 in parallel and reports gaps; fixes come one numbered gap at a time.
@@ -606,6 +608,7 @@ Run these on the Release build (`Scripts/install.sh`), in light and dark mode. M
 152. Start an iOS Simulator. In a note press `⌥⇧⌘S`: the Simulator screen is in the note. Quit the Simulator and press it again: the toast says no Simulator is running.
 153. Right-click an image in a note → Mark Up in Preview. Draw an arrow in Preview, press `⌘S`, come back to Slate: the image in the note has the arrow.
 154. Run `Scripts/install.sh` once. `~/Library/Application Support/Slate/source` and `…/update/installed.json` exist. Push a commit to `main`. Within 5 minutes (or Slate → Check for Updates) the sidebar shows "Update available · 1 change"; a click lists it. Update Now: the button shows "Getting changes", then "Building · m:ss"; Slate closes, opens again and says "Updated to <hash>". Break the build on `main` and push: the button shows "Update failed" with the log, the old Slate keeps working.
+155. Write a ` ```mermaid ` block with `flowchart LR` and `A --> B` in a note. A moment later the block shows the diagram and no code. Click the diagram: the code shows under it; type ` --> C`: the diagram gets C. Click outside: only the diagram stays. Break the code: the last picture stays with a red error under it. Switch macOS to Dark: the diagram is drawn dark. The file still has the code block.
 
 ## Known gaps
 

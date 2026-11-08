@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Mermaid diagrams: a ` ```mermaid ` code block shows the diagram (flowcharts, sequence, state, class and other diagrams), in the light or dark look of the window. The code shows under the diagram only while the caret is in the block; edits redraw it after a moment. A broken diagram keeps the last picture and shows the error. The file keeps the code block, as GitHub, GitLab and Obsidian expect. Mermaid diagram is in the language menu of a code block; agents learn about it from the guide in the notes folder.
 - Slate updates itself from the pushed `main`. Run `Scripts/install.sh` once; then Slate checks every 5 minutes and shows "Update available" in the sidebar with the list of changes. Update Now builds the new version while you keep working, shows the step and the time, and closes Slate only for the few seconds of the install. A failed build leaves the old Slate running and shows the log. Slate → Check for Updates checks at once.
 - Mark Up in Preview in the right-click menu of an image: Preview opens the image with its Markup tools (arrows, boxes, text). When you save there, the note shows the new image. Any image file that changes on disk is drawn again in the open note.
 - Format → Simulator Screenshot (`⌥⇧⌘S`) puts a screenshot of the running iOS Simulator into the note, or into the cell being edited. The Slate window stays where it is. With no Simulator running, a toast says so.
@@ -182,6 +183,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - Quick Look shows the image again when you open it from the panel. The preview opened under the panel, so it looked empty; now it opens above every Slate window.
 
 ### Infrastructure
+- `mermaid` 12.2.0 is bundled as one JavaScript file in `SlateEditor/Diagrams/Resources/` (ADR 0024). `Packages/SlateKit/Vendored.lock` pins its SHA-256, and `Scripts/check-deps.sh` checks it. `Scripts/check-layers.sh` allows `import WebKit` only in `SlateEditor/Diagrams/`. "Diagrams from Mermaid" left the "Future ideas" list.
 - The `post-commit` and `post-merge` hooks and `Scripts/auto-install.sh` are gone (ADR 0023). `Scripts/update.sh` and `Scripts/update-status.sh` are new; `install.sh` makes the build clone and writes `installed.json`.
 - The `slate-map` skill in `.claude/skills/`: where to look for each topic of the repository (documents, module folders, the other skills, the checks before a commit). `CLAUDE.md` lists it first; `update-docs` keeps it current.
 - `docs/ROADMAP.md` has a "Future ideas" list. Diagrams from Mermaid code blocks are there, because they need a new library.

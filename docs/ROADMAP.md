@@ -68,4 +68,3 @@ Not planned. Each needs the owner's yes before work starts.
 
 | Idea | Note |
 |---|---|
-| Diagrams from Mermaid code blocks | Drawing them needs a new library (Mermaid in a web view, or a native port). New libraries need the owner's permission (`CLAUDE.md`) |

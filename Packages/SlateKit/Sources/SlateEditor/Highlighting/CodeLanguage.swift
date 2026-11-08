@@ -16,7 +16,7 @@ struct CodeLanguage {
     let name: String
     let rules: [Rule]
 
-    static let choices: [CodeLanguage] = [.swift, .objectiveC, .json, .yaml, .shell, .diff, .log]
+    static let choices: [CodeLanguage] = [.swift, .objectiveC, .json, .yaml, .shell, .diff, .log, .mermaid]
 
     var title: String {
         switch name {
@@ -27,6 +27,7 @@ struct CodeLanguage {
         case "bash": "Shell"
         case "diff": "Diff"
         case "log": "Log"
+        case "mermaid": "Mermaid diagram"
         default: "Plain text"
         }
     }

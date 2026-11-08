@@ -141,6 +141,7 @@ Packages/SlateKit/
       Commands/                  KeyboardMap
       Styling/                   RichTextStyler, RichLayoutFragment, ParagraphDecoration, ImageAttachment, DividerAttachment
       Paste/                     PasteboardReader, HTMLImport, RichTextController+Paste (NSPasteboard allowed here)
+      Diagrams/                  MermaidRenderer (WebKit allowed here only), DiagramCache, DiagramLayout, DiagramPicture, Resources/ (mermaid.min.js, diagram.html; ADR 0024)
     SlatePresentation/
       Shared/                    Surface, ListSource, Navigator, ActivityLog, ActivityRecorder (CommandRecording → ActivityLog), Toaster (+ ToastAction for Undo), PasteboardWriter, PasteboardReader, WindowLayout, TextFocus, NoteDragPayload, RefreshTask, VaultChangeFeed, NoteLookup, PresentationAssembly (+Preview), View+Inject, View+PreviewEnvironment
       Shared/Events/             AppEvent, AppEvents, SubscriptionToken
@@ -380,6 +381,7 @@ package struct EditorHandlers {
 - The storage holds the real fonts. `RichTextStyler` derives fonts, paragraph styles and attachments from the `slate.*` attributes; after an edit the controller restyles the edited paragraphs and the list around them (numbers in one pass).
 - Commands go through `replace(_:with:selection:)`: `shouldChangeText`, `replaceCharacters`, `didChangeText`, so undo works. The editor has its own `UndoManager`.
 - `RichLayoutFragment` draws the bullet, the number, the round checkbox, the quote bar and the code and raw backgrounds. A click on a checkbox toggles `slate.done`.
+- Mermaid diagrams (ADR 0024): a code block with the language `mermaid` gets its picture from `DiagramCache`, drawn by `MermaidRenderer` in a hidden web view. The styler puts the picture and its height in `slate.diagram` and `slate.diagramArea`, adds the height to `paragraphSpacingBefore`, and hides the code (`slate.diagramHidden`) unless the caret is in the block. `RichLayoutFragment` draws the picture, the error or "Drawing diagram…" in that space.
 - `publish()` writes the whole document. Up to 12,000 characters it writes at once; above that it waits 250 ms after the last edit. `flush()` (called when editing ends and before the store saves or switches notes) writes at once.
 - Performance: the 5,000-line fixture opens in about 120 ms and types at about 1.3 ms per key in a debug test build (`RichTextPerformanceTests`, limit 16 ms).
 

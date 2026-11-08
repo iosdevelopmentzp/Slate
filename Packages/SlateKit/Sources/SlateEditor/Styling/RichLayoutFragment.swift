@@ -12,6 +12,11 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
     var fontSize: CGFloat = 15
     var languageLabel: String?
     var calloutPlaceholder: String?
+    var isDiagram = false
+    var diagram: DiagramPicture?
+    var diagramArea: CGFloat = 0
+    var diagramScale: CGFloat = 1
+    var hidesCode = false
 
     static var labelFont: NSFont { .systemFont(ofSize: 10, weight: .medium) }
 
@@ -44,6 +49,7 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
         context.saveGState()
         context.translateBy(x: point.x, y: point.y)
         drawMarker(in: context)
+        drawDiagram(in: context)
         drawCalloutHeader(in: context)
         drawLanguageLabel(in: context)
         drawFold(in: context)
@@ -116,7 +122,42 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
 
     var blockRect: CGRect {
         let text = textBounds
-        return CGRect(x: padding - layoutFragmentFrame.minX, y: text.minY - 6, width: containerWidth - padding * 2, height: text.height + 12)
+        let top = text.minY - 6 - diagramArea
+        let bottom = text.maxY + (hidesCode ? 0 : 6)
+        return CGRect(x: padding - layoutFragmentFrame.minX, y: top, width: containerWidth - padding * 2, height: bottom - top)
+    }
+
+    var diagramRect: CGRect {
+        guard isDiagram else { return .zero }
+        let block = blockRect
+        return CGRect(x: block.minX, y: block.minY, width: block.width, height: diagramArea)
+    }
+
+    private func drawDiagram(in context: CGContext) {
+        let area = diagramRect
+        guard area.isEmpty == false else { return }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)
+        defer { NSGraphicsContext.restoreGraphicsState() }
+        guard let diagram, diagram.image != nil || diagram.error != nil else {
+            let text = NSAttributedString(string: "Drawing diagram…", attributes: [.font: Self.labelFont, .foregroundColor: colors.secondaryText])
+            let size = text.size()
+            text.draw(at: CGPoint(x: area.midX - size.width / 2, y: area.midY - size.height / 2))
+            return
+        }
+        var top = area.minY + DiagramLayout.topPadding
+        if let image = diagram.image {
+            let size = DiagramLayout.displaySize(of: diagram.size, blockWidth: area.width, scale: diagramScale)
+            let rect = CGRect(x: (area.midX - size.width / 2).rounded(), y: top, width: size.width, height: size.height)
+            image.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1, respectFlipped: true, hints: nil)
+            top = rect.maxY + DiagramLayout.errorGap
+        }
+        guard let error = diagram.error else { return }
+        for line in DiagramLayout.errorLines(error) {
+            let text = NSAttributedString(string: line, attributes: [.font: DiagramLayout.errorFont, .foregroundColor: NSColor.systemRed])
+            text.draw(with: CGRect(x: area.minX + DiagramLayout.padding, y: top, width: area.width - DiagramLayout.padding * 2, height: DiagramLayout.errorLineHeight), options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine])
+            top += DiagramLayout.errorLineHeight
+        }
     }
 
     private var quoteRect: CGRect {
