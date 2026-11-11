@@ -83,6 +83,7 @@ struct EditorView: View {
             .onAppear {
                 editor.flushBody = { [commands] in commands.flush() }
                 editor.findInBody = { [commands] in commands.findIfFocused() }
+                editor.findInNote = { [commands] in commands.find() }
             }
             .onChange(of: document.path) { previous, _ in
                 agentMarks.markRead(previous)

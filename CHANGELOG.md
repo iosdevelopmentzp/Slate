@@ -123,6 +123,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - The width of the list is draggable (260 to 420 points, double-click for the default) and remembered, and so is the sidebar (`⌘0` in the panel too).
 
 ### Changed
+- `⌃F` opens Find in Note whenever a note is open, also when the focus is in the notes list or the search field. `⌘F` works as before; `⇧⌘F` searches all notes.
 - A new task note has the sections Overview, Status, Key facts, Questions, Plan and Log, in this order (ADR 0021). Overview holds what the task is and a table of links; Status is rewritten each session; the Log has one line per session. Before, it had Context, Plan, Findings, Links, Questions and Log. Existing task notes do not change.
 - The agent rules (`CLAUDE.md` and `AGENTS.md` in the notes folder) say that a list item holds only one line and its nested items. An agent had put a table under a list item, and the app then showed the whole list as plain Markdown.
 - The note text has 96 pt of empty space below its last line, so the end of a note no longer sits at the bottom edge of the window. A click in that space puts the caret at the end.

@@ -21,6 +21,12 @@ package final class EditorCommands {
         controller?.focus()
     }
 
+    package func find() -> Bool {
+        guard let controller else { return false }
+        controller.perform(.findInNote)
+        return true
+    }
+
     package func findIfFocused() -> Bool {
         guard let controller, controller.isFocused else { return false }
         controller.perform(.findInNote)

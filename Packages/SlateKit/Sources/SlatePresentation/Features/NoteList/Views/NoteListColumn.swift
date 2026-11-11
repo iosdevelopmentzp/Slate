@@ -91,13 +91,18 @@ struct NoteListColumn: View {
     private var searchShortcuts: some View {
         ZStack {
             searchShortcut("f", modifiers: .command) { findHere() }
-            searchShortcut("f", modifiers: .control) { findHere() }
+            searchShortcut("f", modifiers: .control) { findInNote() }
             searchShortcut("f", modifiers: [.command, .shift]) { focusSearch() }
         }
     }
 
     private func findHere() {
         guard editor.findInBody() == false else { return }
+        focusSearch()
+    }
+
+    private func findInNote() {
+        guard editor.findInNote() == false else { return }
         focusSearch()
     }
 

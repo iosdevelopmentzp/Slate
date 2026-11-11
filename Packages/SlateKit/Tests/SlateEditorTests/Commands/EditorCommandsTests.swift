@@ -11,6 +11,18 @@ import Testing
         #expect(harness.commands.findIfFocused())
     }
 
+    @Test func findOpensFindInNoteAndFocusesTheTextFromElsewhere() {
+        let harness = EditorHarness(markdown: "Text\n")
+        harness.window.makeFirstResponder(nil)
+
+        #expect(harness.commands.find())
+        #expect(harness.controller.isFocused)
+    }
+
+    @Test func findWithoutAnEditorLeavesTheSearchToTheApp() {
+        #expect(EditorCommands().find() == false)
+    }
+
     @Test func findIfFocusedLeavesTheSearchToTheAppElsewhere() {
         let harness = EditorHarness(markdown: "Text\n")
         harness.window.makeFirstResponder(nil)

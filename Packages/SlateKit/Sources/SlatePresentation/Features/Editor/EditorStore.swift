@@ -58,6 +58,7 @@ final class EditorStore {
     @ObservationIgnored private var bodyCaret: Int?
     @ObservationIgnored var flushBody: () -> Void = {}
     @ObservationIgnored var findInBody: () -> Bool = { false }
+    @ObservationIgnored var findInNote: () -> Bool = { false }
     @ObservationIgnored private var focusCounter = 0
 
     init(
