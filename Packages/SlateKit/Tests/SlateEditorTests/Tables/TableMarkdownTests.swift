@@ -41,6 +41,21 @@ import Testing
         #expect(TableMarkdown.parse(TableMarkdown.render(model)) == model)
     }
 
+    @Test func aPipeInsideCodeKeepsTheRowWhenItWouldAddACell() throws {
+        let source = "| a | b |\n|---|---|\n| `get|find` | 2 |\n| x | `y` and `z` |"
+        let model = try #require(TableMarkdown.parse(source))
+
+        #expect(model.rows.map { $0.map(\.markdown) } == [["`get|find`", "2"], ["x", "`y` and `z`"]])
+        #expect(TableBlock(model: model, source: source).markdown == source)
+        #expect(TableMarkdown.render(model).contains("| `get\\|find` | 2 |"))
+    }
+
+    @Test func aPipeInsideCodeStillSplitsWhenTheRowFits() throws {
+        let model = try #require(TableMarkdown.parse("| a | b |\n|---|---|\n| `x | y` |"))
+
+        #expect(model.rows[0].map(\.markdown) == ["`x", "y`"])
+    }
+
     @Test func aBrokenTableStaysARawBlock() {
         let source = "| a | b |\n|---|---|\n| 1 |\n"
         let text = MarkdownReader.read(source)

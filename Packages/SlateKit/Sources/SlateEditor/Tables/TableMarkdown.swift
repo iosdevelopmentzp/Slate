@@ -11,7 +11,8 @@ nonisolated package enum TableMarkdown {
         guard alignments.count == markers.count else { return nil }
         var rows: [[TableCell]] = []
         for line in lines.dropFirst(2) {
-            let row = cells(of: line)
+            var row = cells(of: line)
+            if row.count > header.count { row = cells(of: line, keepingCodePipes: true) }
             guard row.count == header.count else { return nil }
             rows.append(row.map(TableCell.init))
         }
@@ -32,26 +33,64 @@ nonisolated package enum TableMarkdown {
         return trimmed.contains("\n") && parse(trimmed) != nil
     }
 
-    static func cells(of line: String) -> [String] {
+    static func cells(of line: String, keepingCodePipes: Bool = false) -> [String] {
         var text = line.trimmingCharacters(in: .whitespaces)
         guard text.isEmpty == false else { return [] }
         if text.hasPrefix("|") { text.removeFirst() }
         if text.hasSuffix("|"), isEscaped(text, before: text.index(before: text.endIndex)) == false { text.removeLast() }
+        let characters = Array(text)
         var cells: [String] = []
         var current = ""
         var backslashes = 0
-        for character in text {
-            if character == "|", backslashes % 2 == 0 {
+        var codeFence = 0
+        var index = 0
+        while index < characters.count {
+            let character = characters[index]
+            if keepingCodePipes, character == "`", backslashes % 2 == 0 || codeFence > 0 {
+                let run = backtickRun(in: characters, at: index)
+                if codeFence == run {
+                    codeFence = 0
+                } else if codeFence == 0, hasClosingRun(run, in: characters, after: index + run) {
+                    codeFence = run
+                }
+                current.append(String(repeating: "`", count: run))
+                backslashes = 0
+                index += run
+                continue
+            }
+            if character == "|", backslashes % 2 == 0, codeFence == 0 {
                 cells.append(current)
                 current = ""
                 backslashes = 0
+                index += 1
                 continue
             }
             backslashes = character == "\\" ? backslashes + 1 : 0
             current.append(character)
+            index += 1
         }
         cells.append(current)
         return cells.map { unescapePipes($0.trimmingCharacters(in: .whitespaces)) }
+    }
+
+    private static func backtickRun(in characters: [Character], at start: Int) -> Int {
+        var end = start
+        while end < characters.count, characters[end] == "`" { end += 1 }
+        return end - start
+    }
+
+    private static func hasClosingRun(_ length: Int, in characters: [Character], after start: Int) -> Bool {
+        var index = start
+        while index < characters.count {
+            guard characters[index] == "`" else {
+                index += 1
+                continue
+            }
+            let run = backtickRun(in: characters, at: index)
+            if run == length { return true }
+            index += run
+        }
+        return false
     }
 
     private static func isEscaped(_ text: String, before index: String.Index) -> Bool {

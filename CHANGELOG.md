@@ -156,6 +156,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 - Note kinds and the New menu, tasks, ticket and branch chips, status, `⌘⇧D`, Today and daily notes (`⌥⌘T`, `⌘[`, `⌘]`), snippets, meetings, tags and tag chips, Insert Template, saved searches, Open TODOs, the palette (`⌘K`), actions, Copy for Slack, Copy as Markdown, Save as HTML and PDF, Float on Top and note windows, the outline, ticket details, the Links and History pages of Settings, the history and push state and the Activity button in the footer. The files and the command line keep working; the code for them is in commit `545e0d6`.
 
 ### Fixed
+- A table with a `|` inside `` `code` `` in a cell (for example `` `get|find` ``) shows as a table, not as plain Markdown, when that pipe would give the row one cell too many. The file is not changed until the table is edited; then the pipe is written as `\|`. The guide for agents says to write `\|` in cells.
 - The banners over a note (an agent changed it, a conflict, unsaved text) no longer sit under the window buttons at the top left.
 - Update Now no longer fails with "The update script is missing" when the update copy of the code was made before the update script existed. Slate brings that copy to the pushed `main` before it starts the script.
 - A link typed by hand as `[[Note]]` or `[[Note|text]]` was saved as plain text with backslashes (`\[\[Note\]\]`) and was no link. The closing `]]` now turns it into a link at once.
