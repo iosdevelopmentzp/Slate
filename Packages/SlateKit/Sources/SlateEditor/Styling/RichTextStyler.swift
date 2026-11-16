@@ -15,6 +15,7 @@ final class RichTextStyler {
         }
     }
     var loadImage: (String) -> NSImage? = { _ in nil }
+    var resolveFile: (String) -> URL? = { _ in nil }
     var diagram: (String) -> DiagramPicture? = { _ in nil }
     var showsDiagramCode: (Int) -> Bool = { _ in true }
     var blockWidth: CGFloat = 0
@@ -23,6 +24,7 @@ final class RichTextStyler {
     private var fonts: [FontKey: NSFont] = [:]
     private var styles: [StyleKey: NSParagraphStyle] = [:]
     private var attachments: [String: ImageAttachment] = [:]
+    private var files: [String: FileAttachment] = [:]
 
     init(configuration: EditorConfiguration) {
         self.configuration = configuration
@@ -30,6 +32,7 @@ final class RichTextStyler {
 
     func forgetImages() {
         attachments.removeAll()
+        files.removeAll()
     }
 
     func size(for kind: BlockKind) -> CGFloat {
@@ -114,7 +117,7 @@ final class RichTextStyler {
             style.tailIndent = -Self.blockInset
             style.paragraphSpacingBefore = 8 * scale
             style.paragraphSpacing = 12 * scale
-        case .image, .divider, .table:
+        case .image, .file, .divider, .table:
             style.paragraphSpacingBefore = 4 * scale
             style.paragraphSpacing = 6 * scale
             if key.indent > 0 {
@@ -293,6 +296,9 @@ final class RichTextStyler {
             created.host = tableHost
             return created
         }
+        if block.kind == .file {
+            return fileAttachment(for: block, existing: existing)
+        }
         if block.kind == .divider {
             if let divider = existing as? DividerAttachment, divider.color == configuration.colors.divider { return divider }
             return DividerAttachment(color: configuration.colors.divider)
@@ -304,6 +310,18 @@ final class RichTextStyler {
         if let cached = attachments[key], cached.maxHeight == configuration.imageMaxHeight, cached.width == width { return cached }
         let created = ImageAttachment(path: path, picture: loadImage(path), maxHeight: configuration.imageMaxHeight, borderColor: configuration.colors.imageBorder, width: width)
         attachments[key] = created
+        return created
+    }
+
+    private func fileAttachment(for block: BlockAttributes, existing: NSTextAttachment?) -> FileAttachment {
+        let path = block.filePath ?? ""
+        let name = block.fileName ?? (path as NSString).lastPathComponent
+        let colors = configuration.colors
+        if let file = existing as? FileAttachment, file.path == path, file.name == name, file.colors == colors { return file }
+        let key = path + "|" + name
+        if let cached = files[key], cached.colors == colors { return cached }
+        let created = FileAttachment(path: path, name: name, url: resolveFile(path), colors: colors)
+        files[key] = created
         return created
     }
 }

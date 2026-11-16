@@ -499,6 +499,7 @@ The rich text editor reads any Markdown but writes only this subset. A construct
 | Image under a list item (ADR 0018) | a blank line, the image line indented to the start of the item text, a blank line; the list goes on after it |
 | Divider | `---` |
 | Bold, italic, strikethrough, inline code | `**x**`, `*x*`, `~~x~~`, `` `x` `` |
+| File card (ADR 0026) | `[<name>](../_attachments/<file>)` or `[<name>](file:///…)` alone on its line, the name plain text. Slate writes a blank line before and after it |
 | Link | `[text](url)`; a wikilink `[[Name]]` in a file is shown as a link and written back as a wikilink |
 | Table (S6, ADR 0009) | a GFM pipe table: header row, alignment row with `:` markers kept, one line per row, `\|` for a pipe inside a cell; cells hold inline content only, and since S7 also images: `![](../_attachments/<file>)` inside the cell. A line break inside a cell is `<br>` (ADR 0012; `<br/>` and `<br />` are read too). A table that the editor did not change is written back exactly as read; a changed table is written as `\| a \| b \|` with `---`, `:---`, `:---:` or `---:` markers. A table with uneven rows, without an alignment row, or with block content (a heading, a list, a quote) in a cell stays a raw block |
 | Raw block | the source lines exactly as read |

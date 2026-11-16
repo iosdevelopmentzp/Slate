@@ -54,7 +54,7 @@ package enum AgentGuide {
     1. Use the Slate tools (MCP below) or the `slate` command when you can. They write the header, the file name and the search index for you.
     2. Keep the header of every note.
     3. Never write into `.slate/` or `.trash/`.
-    4. Put images into `_attachments/` with the name `yyyyMMdd-HHmmss-<source>.<ext>`, and link them with a path relative to the note: `../_attachments/<file>` from `Folder/Note.md`.
+    4. Put images into `_attachments/` with the name `yyyyMMdd-HHmmss-<source>.<ext>`, and link them with a path relative to the note: `../_attachments/<file>` from `Folder/Note.md`. Link any other file as `[<name>](../_attachments/<file>)` on its own line, with a blank line before and after: Slate shows it as a file card.
     5. Write a whole file in one operation. Do not write a file line by line.
     6. Do not delete files. Do not change files outside this folder. Do not store passwords, tokens or other secrets in notes.
 

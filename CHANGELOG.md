@@ -7,6 +7,7 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- File cards: a file added to a note (a `.swift` file, a PDF, a log) shows as a card with its icon, name, kind and size, not as a text link. Double-click opens the file; the right-click menu has Open, Quick Look, Show in Finder, Save to Downloads and Remove. The file stays a Markdown link, so Obsidian and GitHub show it as before.
 - Lists inside quotes and callouts: numbered lists, bullets and checklists behind `> ` show as lists with the quote bar or the callout tint, not as grey Markdown text. Return on an empty item goes back to the quote text; `- ` or `1. ` typed in a quote starts a list there. The agent guide in the notes folder says which blocks a quote may hold.
 - A numbered list keeps its first number: a list that starts at 5 stays 5, 6, 7 on save instead of starting again at 1.
 - Mermaid diagrams: a ` ```mermaid ` code block shows the diagram (flowcharts, sequence, state, class and other diagrams), in the light or dark look of the window. The code shows under the diagram only while the caret is in the block; edits redraw it after a moment. A broken diagram keeps the last picture and shows the error. The file keeps the code block, as GitHub, GitLab and Obsidian expect. Mermaid diagram is in the language menu of a code block; agents learn about it from the guide in the notes folder.

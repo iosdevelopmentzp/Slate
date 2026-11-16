@@ -13,8 +13,10 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
     package var isCalloutHeader: Bool
     package var isQuoted: Bool
     package var firstNumber: Int
+    package var filePath: String?
+    package var fileName: String?
 
-    package init(kind: BlockKind = .body, indent: Int = 0, isDone: Bool = false, language: String? = nil, imagePath: String? = nil, imageAlt: String? = nil, group: Int = 0, table: TableBlock? = nil, callout: String? = nil, isCalloutHeader: Bool = false, isQuoted: Bool = false, firstNumber: Int = 1) {
+    package init(kind: BlockKind = .body, indent: Int = 0, isDone: Bool = false, language: String? = nil, imagePath: String? = nil, imageAlt: String? = nil, group: Int = 0, table: TableBlock? = nil, callout: String? = nil, isCalloutHeader: Bool = false, isQuoted: Bool = false, firstNumber: Int = 1, filePath: String? = nil, fileName: String? = nil) {
         self.kind = kind
         self.indent = indent
         self.isDone = isDone
@@ -27,6 +29,8 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
         self.isCalloutHeader = isCalloutHeader
         self.isQuoted = isQuoted
         self.firstNumber = firstNumber
+        self.filePath = filePath
+        self.fileName = fileName
     }
 
     package init(_ attributes: [NSAttributedString.Key: Any]) {
@@ -43,6 +47,8 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
         callout = kind == .quote || isQuoted ? attributes[.slateCallout] as? String : nil
         isCalloutHeader = kind == .quote && callout != nil && attributes[.slateCalloutHeader] as? Bool == true
         firstNumber = kind == .numbered ? attributes[.slateFirstNumber] as? Int ?? 1 : 1
+        filePath = kind == .file ? attributes[.slateFilePath] as? String : nil
+        fileName = kind == .file ? attributes[.slateFileName] as? String : nil
     }
 
     package var attributes: [NSAttributedString.Key: Any] {
@@ -52,6 +58,8 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
         if kind == .monospaced, let language { result[.slateLanguage] = language }
         if kind == .image, let imagePath { result[.slateImagePath] = imagePath }
         if kind == .image, let imageAlt, imageAlt.isEmpty == false { result[.slateImageAlt] = imageAlt }
+        if kind == .file, let filePath { result[.slateFilePath] = filePath }
+        if kind == .file, let fileName { result[.slateFileName] = fileName }
         if kind == .quote || kind.isList || isListImage, group != 0 { result[.slateGroup] = group }
         if kind == .table, let table { result[.slateTable] = table }
         if isQuoted, continuesList { result[.slateQuoted] = true }

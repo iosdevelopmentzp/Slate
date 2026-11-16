@@ -69,6 +69,10 @@ final class RichTextController: NSObject {
             guard let self else { return nil }
             return loadImage(path)
         }
+        styler.resolveFile = { [weak self] path in
+            guard let self else { return nil }
+            return resolveFile(path)
+        }
         styler.tableHost = self
         styler.diagram = { [weak self] source in
             guard let self else { return nil }
@@ -484,6 +488,11 @@ final class RichTextController: NSObject {
         let decoded = path.removingPercentEncoding ?? path
         guard let url = handlers.resolveImage(decoded) else { return nil }
         return NSImage(contentsOf: url)
+    }
+
+    private func resolveFile(_ path: String) -> URL? {
+        if path.lowercased().hasPrefix("file://") { return URL(string: path) }
+        return handlers.resolveImage(path.removingPercentEncoding ?? path)
     }
 
     func makeGroup() -> Int {

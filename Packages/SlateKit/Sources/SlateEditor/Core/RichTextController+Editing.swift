@@ -82,7 +82,7 @@ extension RichTextController {
 
     private func nextBlock(after block: BlockAttributes) -> BlockAttributes {
         switch block.kind {
-        case .title, .heading, .subheading, .image, .divider: BlockAttributes()
+        case .title, .heading, .subheading, .image, .file, .divider: BlockAttributes()
         case .checklist: BlockAttributes(kind: .checklist, indent: block.indent, group: block.group, callout: block.callout, isQuoted: block.isQuoted)
         case .quote where block.isCalloutHeader: BlockAttributes(kind: .quote, group: block.group, callout: block.callout)
         default: block
@@ -149,7 +149,7 @@ extension RichTextController {
             }
             splitParagraph(at: caret, paragraph: paragraph, next: BlockAttributes())
             return true
-        case .image, .divider, .table:
+        case .image, .file, .divider, .table:
             if caret == content.location {
                 replace(NSRange(location: caret, length: 0), with: styled("\n", block: BlockAttributes()), selection: NSRange(location: caret + 1, length: 0))
             } else {
@@ -221,7 +221,7 @@ extension RichTextController {
         case .quote, .title, .heading, .subheading, .monospaced, .raw:
             setBlock(BlockAttributes(), ofParagraphAt: caret)
             return true
-        case .image, .divider, .table:
+        case .image, .file, .divider, .table:
             return false
         case .body:
             guard caret > 0 else { return false }

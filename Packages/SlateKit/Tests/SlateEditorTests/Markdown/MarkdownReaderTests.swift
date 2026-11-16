@@ -94,4 +94,32 @@ import Testing
 
         #expect(Self.kinds(text) == [.raw])
     }
+
+    @Test func aFileLinkOnItsOwnLineIsAFileCard() {
+        let text = MarkdownReader.read("[CallPrompt.swift](../_attachments/20261116-101500-CallPrompt.swift)")
+        let block = MarkdownWriter.paragraphs(of: text)[0].block
+
+        #expect(Self.kinds(text) == [.file])
+        #expect(block.filePath == "../_attachments/20261116-101500-CallPrompt.swift")
+        #expect(block.fileName == "CallPrompt.swift")
+    }
+
+    @Test func twoFileLinesInOneParagraphAreTwoCards() {
+        let text = MarkdownReader.read("Files:\n[a.swift](../_attachments/a.swift)\n[Spec 2.pdf](../_attachments/Spec%202.pdf)")
+
+        #expect(Self.kinds(text) == [.body, .file, .file])
+        #expect(MarkdownWriter.write(text) == "Files:\n\n[a.swift](../_attachments/a.swift)\n\n[Spec 2.pdf](../_attachments/Spec%202.pdf)\n")
+    }
+
+    @Test func aLargeFileLinkedInPlaceIsAFileCard() {
+        let text = MarkdownReader.read("[movie.mov](file:///Users/me/movie.mov)")
+
+        #expect(Self.kinds(text) == [.file])
+    }
+
+    @Test func otherLinksStayText() {
+        let text = MarkdownReader.read("[site](https://example.com)\n\nSee [a.swift](../_attachments/a.swift) here\n\n[**bold**](../_attachments/a.swift)\n\n- [a.swift](../_attachments/a.swift)")
+
+        #expect(Self.kinds(text) == [.body, .body, .body, .bullet])
+    }
 }

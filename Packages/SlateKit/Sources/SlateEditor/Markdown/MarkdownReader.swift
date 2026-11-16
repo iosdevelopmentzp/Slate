@@ -115,10 +115,13 @@ package enum MarkdownReader {
         if children.count == 1, let image = children.first as? Image {
             return imageBlock(image).map { [$0] }
         }
+        if children.contains(where: { $0 is Link }), let blocks = splitAtAttachmentLines(children, lines: lines) {
+            return blocks
+        }
         if let text = InlineReader.read(children, source: lines) {
             return [ReadBlock(text: text, attributes: BlockAttributes(kind: .body))]
         }
-        return splitAtImageLines(children, lines: lines)
+        return splitAtAttachmentLines(children, lines: lines)
     }
 
     private static func imageBlock(_ image: Image) -> ReadBlock? {
@@ -127,7 +130,7 @@ package enum MarkdownReader {
         return ReadBlock(text: NSAttributedString(string: RichText.attachmentString), attributes: BlockAttributes(kind: .image, imagePath: path, imageAlt: alt.isEmpty ? nil : alt))
     }
 
-    private static func splitAtImageLines(_ children: [Markup], lines: SourceLines) -> [ReadBlock]? {
+    private static func splitAtAttachmentLines(_ children: [Markup], lines: SourceLines) -> [ReadBlock]? {
         var blocks: [ReadBlock] = []
         var pending: [Markup] = []
         var line: [Markup] = []
@@ -140,6 +143,11 @@ package enum MarkdownReader {
             guard isBreak || offset == children.count - 1 else { continue }
             if line.count == 1, let image = line.first as? Image {
                 guard let text = bodyText(pending, lines: lines), let block = imageBlock(image) else { return nil }
+                blocks += text + [block]
+                pending = []
+                foundImage = true
+            } else if line.count == 1, let link = line.first as? Link, let block = FileLink.block(link) {
+                guard let text = bodyText(pending, lines: lines) else { return nil }
                 blocks += text + [block]
                 pending = []
                 foundImage = true

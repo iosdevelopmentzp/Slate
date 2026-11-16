@@ -15,6 +15,7 @@ enum FormatBarMapper {
         case .numbered: "Numbered list"
         case .quote: "Quote"
         case .image: "Image"
+        case .file: "File"
         case .divider: "Divider"
         case .table: "Table"
         case .body: "Body"

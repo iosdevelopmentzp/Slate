@@ -7,6 +7,8 @@ extension NSAttributedString.Key {
     nonisolated static let slateLanguage = NSAttributedString.Key("slate.language")
     nonisolated static let slateImagePath = NSAttributedString.Key("slate.imagePath")
     nonisolated static let slateImageAlt = NSAttributedString.Key("slate.imageAlt")
+    nonisolated static let slateFilePath = NSAttributedString.Key("slate.filePath")
+    nonisolated static let slateFileName = NSAttributedString.Key("slate.fileName")
     nonisolated static let slateGroup = NSAttributedString.Key("slate.group")
     nonisolated static let slateCallout = NSAttributedString.Key("slate.callout")
     nonisolated static let slateReference = NSAttributedString.Key("slate.reference")
@@ -23,5 +25,5 @@ extension NSAttributedString.Key {
     nonisolated static let slateDiagramArea = NSAttributedString.Key("slate.diagramArea")
     nonisolated static let slateDiagramHidden = NSAttributedString.Key("slate.diagramHidden")
 
-    nonisolated static let blockKeys: [NSAttributedString.Key] = [.slateBlock, .slateIndent, .slateDone, .slateLanguage, .slateImagePath, .slateImageAlt, .slateGroup, .slateTable, .slateCallout, .slateCalloutHeader, .slateQuoted, .slateFirstNumber]
+    nonisolated static let blockKeys: [NSAttributedString.Key] = [.slateBlock, .slateIndent, .slateDone, .slateLanguage, .slateImagePath, .slateImageAlt, .slateFilePath, .slateFileName, .slateGroup, .slateTable, .slateCallout, .slateCalloutHeader, .slateQuoted, .slateFirstNumber]
 }

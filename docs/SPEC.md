@@ -298,7 +298,7 @@ The editor is a **thin Markdown text view**, not a rich text editor (ADR 0005). 
 ### 5.4 Attachments (D4)
 
 - `![alt](../_attachments/file.png)` renders the image under its line, scaled to the editor width and capped at 360 points high; double-click opens Quick Look; a context menu offers Open, Reveal in Finder, Copy image, Remove (asks inline, deletes the reference and moves the file to Trash when no other note references it). Built: Quick Look, Open, Show in Finder, Copy Image and Save to Downloads; on hover a round button at the top right of an image saves a copy to Downloads.
-- Any other file link to `_attachments/` renders as a chip with an icon and the file name; double-click opens it; drag out copies it to Finder.
+- Any other file link to `_attachments/` renders as a chip with an icon and the file name; double-click opens it; drag out copies it to Finder. Built (ADR 0026): a link alone on its line is a card with the Finder icon, the name, the kind and the size; double-click opens it; the menu has Open, Quick Look, Show in Finder, Save to Downloads and Remove. Drag out is not built.
 - Attachment files are stored and named per `STORAGE-FORMAT.md` section 5.
 
 ### 5.5 Paste rules (B5)

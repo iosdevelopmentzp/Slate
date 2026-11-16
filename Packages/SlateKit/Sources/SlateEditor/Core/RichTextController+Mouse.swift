@@ -24,6 +24,10 @@ extension RichTextController {
             handlers.attachment(path, .quickLook)
             return true
         }
+        if event.clickCount == 2, let index, let path = filePath(at: index) {
+            handlers.attachment(path, .open)
+            return true
+        }
         return false
     }
 
@@ -88,6 +92,12 @@ extension RichTextController {
         return block.kind == .image ? block.imagePath : nil
     }
 
+    func filePath(at index: Int) -> String? {
+        guard index < storage.length else { return nil }
+        let block = BlockAttributes(storage.attributes(at: index, effectiveRange: nil))
+        return block.kind == .file ? block.filePath : nil
+    }
+
     private func checkboxHit(at point: CGPoint) -> Int? {
         guard let textLayout = textView.textLayoutManager, let contentManager = textLayout.textContentManager else { return nil }
         let origin = textView.textContainerOrigin
@@ -113,8 +123,21 @@ extension RichTextController {
         return menu
     }
 
+    func fileMenu(at index: Int) -> NSMenu? {
+        let candidates = [index, index - 1].filter { $0 >= 0 }
+        guard let location = candidates.first(where: { self.filePath(at: $0) != nil }), let path = filePath(at: location) else { return nil }
+        let menu = NSMenu()
+        FileMenu.items(path: path, target: textView, action: #selector(RichTextView.slateImageAction(_:))).forEach(menu.addItem)
+        menu.addItem(.separator())
+        let remove = NSMenuItem(title: "Remove", action: #selector(RichTextView.slateRemoveImage(_:)), keyEquivalent: "")
+        remove.target = textView
+        remove.tag = location
+        menu.addItem(remove)
+        return menu
+    }
+
     func removeImage(at location: Int) {
-        guard imagePath(at: location) != nil else { return }
+        guard imagePath(at: location) != nil || filePath(at: location) != nil else { return }
         let paragraph = paragraphRange(at: location)
         replace(paragraph, with: NSAttributedString(), selection: NSRange(location: paragraph.location, length: 0))
     }

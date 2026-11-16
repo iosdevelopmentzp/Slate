@@ -93,6 +93,8 @@ package enum MarkdownWriter {
             return first.text.string.replacingOccurrences(of: RichText.lineBreakString, with: "\n")
         case .image:
             return image(first.block)
+        case .file:
+            return FileLink.markdown(first.block)
         case .divider:
             return "---"
         case .table:
