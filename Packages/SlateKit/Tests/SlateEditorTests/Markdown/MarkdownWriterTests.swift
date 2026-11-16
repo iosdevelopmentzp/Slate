@@ -78,10 +78,10 @@ import Testing
         #expect(MarkdownWriter.write(read) == written, "seed \(seed) is not stable")
     }
 
-    @Test func numberedListsAreRenumbered() {
+    @Test func numberedListsAreRenumberedFromTheirFirstNumber() {
         let text = MarkdownReader.read("3. a\n7. b\n")
 
-        #expect(MarkdownWriter.write(text) == "1. a\n2. b\n")
+        #expect(MarkdownWriter.write(text) == "3. a\n4. b\n")
     }
 
     @Test func emptyParagraphsAndItemsAreDropped() {

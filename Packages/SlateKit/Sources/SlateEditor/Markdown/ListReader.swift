@@ -7,7 +7,8 @@ enum ListReader {
         guard indent <= RichText.maxIndent else { return nil }
         let isOrdered = list is OrderedList
         var blocks: [ReadBlock] = []
-        for item in list.listItems {
+        let firstNumber = (list as? OrderedList).map { Int(clamping: $0.startIndex) } ?? 1
+        for (offset, item) in list.listItems.enumerated() {
             let children = Array(item.children)
             var rest = children[...]
             var text = NSAttributedString()
@@ -25,7 +26,7 @@ enum ListReader {
             case (true, .some):
                 return nil
             case (true, .none):
-                attributes = BlockAttributes(kind: .numbered, indent: indent, group: group)
+                attributes = BlockAttributes(kind: .numbered, indent: indent, group: group, firstNumber: offset == 0 && indent == 0 ? firstNumber : 1)
             case (false, .some(let box)):
                 attributes = BlockAttributes(kind: .checklist, indent: indent, isDone: box == .checked, group: group)
             case (false, .none):

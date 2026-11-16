@@ -79,6 +79,11 @@ package enum MarkdownReader {
             let group = builder.nextGroup()
             var blocks: [ReadBlock] = []
             for child in quote.children {
+                if let list = child as? ListItemContainer {
+                    guard let items = ListReader.read(list, indent: 0, group: group, source: lines) else { return nil }
+                    blocks += items.map(quotedItem)
+                    continue
+                }
                 guard let paragraph = child as? Paragraph, isPlainParagraph(paragraph), let text = InlineReader.read(paragraph.children, source: lines) else { return nil }
                 blocks.append(ReadBlock(text: text, attributes: BlockAttributes(kind: .quote, group: group)))
             }
@@ -90,6 +95,18 @@ package enum MarkdownReader {
         default:
             return nil
         }
+    }
+
+    private static func quotedItem(_ item: ReadBlock) -> ReadBlock {
+        var attributes = item.attributes
+        attributes.isQuoted = true
+        let prefix = item.text.length >= 4 ? item.text.attributedSubstring(from: NSRange(location: 0, length: 4)).string : ""
+        guard attributes.kind == .bullet, let isDone = ["[ ] ": false, "[x] ": true, "[X] ": true][prefix] else {
+            return ReadBlock(text: item.text, attributes: attributes)
+        }
+        attributes.kind = .checklist
+        attributes.isDone = isDone
+        return ReadBlock(text: item.text.attributedSubstring(from: NSRange(location: 4, length: item.text.length - 4)), attributes: attributes)
     }
 
     private static func convert(_ paragraph: Paragraph, source: String, lines: SourceLines) -> [ReadBlock]? {

@@ -21,4 +21,10 @@ nonisolated enum ParagraphDecoration: Equatable {
         default: return .none
         }
     }
+
+    static func quoteFrame(of attributes: [NSAttributedString.Key: Any]) -> ParagraphDecoration {
+        let block = BlockAttributes(attributes)
+        guard block.isQuoted, block.continuesList else { return .none }
+        return block.callout.map { .callout(marker: $0, header: false) } ?? .quote
+    }
 }

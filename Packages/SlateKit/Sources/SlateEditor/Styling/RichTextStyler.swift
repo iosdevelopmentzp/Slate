@@ -72,7 +72,7 @@ final class RichTextStyler {
     }
 
     func paragraphStyle(for block: BlockAttributes) -> NSParagraphStyle {
-        let key = StyleKey(kind: block.kind, indent: block.continuesList ? block.indent : 0, callout: block.callout == nil ? 0 : (block.isCalloutHeader ? 2 : 1))
+        let key = StyleKey(kind: block.kind, indent: block.continuesList ? block.indent : 0, callout: block.callout == nil ? 0 : (block.isCalloutHeader ? 2 : 1), isQuoted: block.isQuoted)
         if let cached = styles[key] { return cached }
         let scale = configuration.scale
         let style = NSMutableParagraphStyle()
@@ -101,10 +101,11 @@ final class RichTextStyler {
             style.paragraphSpacingBefore = key.callout == 2 ? 6 * scale : 0
             style.paragraphSpacing = (key.callout == 0 ? 4 : 6) * scale
         case .bullet, .numbered, .checklist:
-            let indent = Self.markerWidth + CGFloat(key.indent) * Self.listIndent
+            let indent = Self.markerWidth + CGFloat(key.indent) * Self.listIndent + (key.isQuoted ? Self.quoteIndent : 0)
             style.lineHeightMultiple = 1.2
             style.firstLineHeadIndent = indent
             style.headIndent = indent
+            style.tailIndent = key.callout == 0 ? 0 : -Self.blockInset
             style.paragraphSpacing = 2 * scale
         case .monospaced, .raw:
             style.lineHeightMultiple = 1.2
@@ -117,7 +118,7 @@ final class RichTextStyler {
             style.paragraphSpacingBefore = 4 * scale
             style.paragraphSpacing = 6 * scale
             if key.indent > 0 {
-                style.firstLineHeadIndent = Self.markerWidth + CGFloat(key.indent - 1) * Self.listIndent
+                style.firstLineHeadIndent = Self.markerWidth + CGFloat(key.indent - 1) * Self.listIndent + (key.isQuoted ? Self.quoteIndent : 0)
                 style.headIndent = style.firstLineHeadIndent
             }
         }
@@ -136,7 +137,7 @@ final class RichTextStyler {
         attributes[.paragraphStyle] = paragraphStyle(for: block)
         let colors = configuration.colors
         var color = colors.text
-        if (block.kind == .quote && block.callout == nil) || (block.kind == .checklist && block.isDone) { color = colors.secondaryText }
+        if (block.isInQuote && block.callout == nil) || (block.kind == .checklist && block.isDone) { color = colors.secondaryText }
         if block.isCalloutHeader, let callout = block.callout {
             color = CalloutKind(marker: callout).color
             attributes[.font] = font(for: block.kind, inline: effective.union(.bold))

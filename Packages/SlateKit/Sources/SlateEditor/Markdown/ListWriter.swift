@@ -30,8 +30,8 @@ enum ListWriter {
                 numbers[level] = number
                 kinds[level] = .numbered
             } else {
-                number = 1
-                numbers = Array(numbers.prefix(level)) + [1]
+                number = item.block.kind == .numbered && level == 0 ? item.block.firstNumber : 1
+                numbers = Array(numbers.prefix(level)) + [number]
                 kinds = Array(kinds.prefix(level)) + [item.block.kind]
             }
             let bullet = alternate && level == 0 ? "*" : "-"

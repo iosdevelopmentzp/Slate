@@ -83,7 +83,7 @@ extension RichTextController {
     private func nextBlock(after block: BlockAttributes) -> BlockAttributes {
         switch block.kind {
         case .title, .heading, .subheading, .image, .divider: BlockAttributes()
-        case .checklist: BlockAttributes(kind: .checklist, indent: block.indent, group: block.group)
+        case .checklist: BlockAttributes(kind: .checklist, indent: block.indent, group: block.group, callout: block.callout, isQuoted: block.isQuoted)
         case .quote where block.isCalloutHeader: BlockAttributes(kind: .quote, group: block.group, callout: block.callout)
         default: block
         }
@@ -95,6 +95,9 @@ extension RichTextController {
             outdented.indent -= 1
             return outdented
         }
+        if block.kind.isList, block.isQuoted {
+            return BlockAttributes(kind: .quote, group: block.group, callout: block.callout)
+        }
         return BlockAttributes()
     }
 
@@ -105,7 +108,7 @@ extension RichTextController {
             let above = block(at: previous.location)
             guard above.continuesList else { break }
             if above.kind.isList, above.indent == level {
-                return BlockAttributes(kind: above.kind, indent: above.indent, group: above.group)
+                return BlockAttributes(kind: above.kind, indent: above.indent, group: above.group, callout: above.callout, isQuoted: above.isQuoted)
             }
             start = previous.location
         }
@@ -304,11 +307,15 @@ extension RichTextController {
         if replacement == " " || replacement == "\t", range.length == 0 {
             linkTypedURL(endingAt: range.location)
         }
-        if replacement == " ", range.length == 0, block.kind == .body, range.location > content.location {
+        if replacement == " ", range.length == 0, block.kind == .body || block.kind == .quote && block.isCalloutHeader == false, range.location > content.location {
             let prefix = string.substring(with: NSRange(location: content.location, length: range.location - content.location))
-            if let kind = Self.shortcuts[prefix] {
+            if let kind = Self.shortcuts[prefix], block.kind == .body || kind.isList {
                 var target = BlockAttributes(kind: kind)
-                if kind.isList || kind == .quote { target.group = neighbourGroup(for: kind, around: paragraph) ?? makeGroup() }
+                if block.kind == .quote {
+                    target = BlockAttributes(kind: kind, group: block.group, callout: block.callout, isQuoted: true)
+                } else if kind.isList || kind == .quote {
+                    target.group = neighbourGroup(for: kind, around: paragraph) ?? makeGroup()
+                }
                 let rest = NSRange(location: range.location, length: NSMaxRange(paragraph) - range.location)
                 let text = retagged(storage.attributedSubstring(from: rest), as: target)
                 replace(NSRange(location: content.location, length: NSMaxRange(paragraph) - content.location), with: text, selection: NSRange(location: content.location, length: 0))
@@ -320,7 +327,7 @@ extension RichTextController {
     }
 
     func neighbourGroup(for kind: BlockKind, around paragraph: NSRange) -> Int? {
-        let matches: (BlockAttributes) -> Bool = { other in kind.isList ? other.kind.isList : other.kind == kind }
+        let matches: (BlockAttributes) -> Bool = { other in kind.isList ? other.kind.isList && other.isQuoted == false : other.kind == kind }
         if paragraph.location > 0 {
             let previous = block(at: paragraphRange(at: paragraph.location - 1).location)
             if matches(previous), previous.group != 0 { return previous.group }

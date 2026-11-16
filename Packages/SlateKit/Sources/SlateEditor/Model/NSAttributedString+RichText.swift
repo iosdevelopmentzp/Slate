@@ -11,6 +11,8 @@ extension NSAttributedString.Key {
     nonisolated static let slateCallout = NSAttributedString.Key("slate.callout")
     nonisolated static let slateReference = NSAttributedString.Key("slate.reference")
     nonisolated static let slateCalloutHeader = NSAttributedString.Key("slate.calloutHeader")
+    nonisolated static let slateQuoted = NSAttributedString.Key("slate.quoted")
+    nonisolated static let slateFirstNumber = NSAttributedString.Key("slate.firstNumber")
     nonisolated static let slateInline = NSAttributedString.Key("slate.inline")
     nonisolated static let slateHref = NSAttributedString.Key("slate.href")
     nonisolated static let slateBareURL = NSAttributedString.Key("slate.bareURL")
@@ -21,5 +23,5 @@ extension NSAttributedString.Key {
     nonisolated static let slateDiagramArea = NSAttributedString.Key("slate.diagramArea")
     nonisolated static let slateDiagramHidden = NSAttributedString.Key("slate.diagramHidden")
 
-    nonisolated static let blockKeys: [NSAttributedString.Key] = [.slateBlock, .slateIndent, .slateDone, .slateLanguage, .slateImagePath, .slateImageAlt, .slateGroup, .slateTable, .slateCallout, .slateCalloutHeader]
+    nonisolated static let blockKeys: [NSAttributedString.Key] = [.slateBlock, .slateIndent, .slateDone, .slateLanguage, .slateImagePath, .slateImageAlt, .slateGroup, .slateTable, .slateCallout, .slateCalloutHeader, .slateQuoted, .slateFirstNumber]
 }

@@ -7,6 +7,8 @@ Every session that changes code adds lines under **Unreleased** before it ends. 
 ## [Unreleased]
 
 ### Added
+- Lists inside quotes and callouts: numbered lists, bullets and checklists behind `> ` show as lists with the quote bar or the callout tint, not as grey Markdown text. Return on an empty item goes back to the quote text; `- ` or `1. ` typed in a quote starts a list there. The agent guide in the notes folder says which blocks a quote may hold.
+- A numbered list keeps its first number: a list that starts at 5 stays 5, 6, 7 on save instead of starting again at 1.
 - Mermaid diagrams: a ` ```mermaid ` code block shows the diagram (flowcharts, sequence, state, class and other diagrams), in the light or dark look of the window. The code shows under the diagram only while the caret is in the block; edits redraw it after a moment. A broken diagram keeps the last picture and shows the error. The file keeps the code block, as GitHub, GitLab and Obsidian expect. Mermaid diagram is in the language menu of a code block; agents learn about it from the guide in the notes folder.
 - Slate updates itself from the pushed `main`. Run `Scripts/install.sh` once; then Slate checks every 5 minutes and shows "Update available" in the sidebar with the list of changes. Update Now builds the new version while you keep working, shows the step and the time, and closes Slate only for the few seconds of the install. A failed build leaves the old Slate running and shows the log. Slate → Check for Updates checks at once.
 - Mark Up in Preview in the right-click menu of an image: Preview opens the image with its Markup tools (arrows, boxes, text). When you save there, the note shows the new image. Any image file that changes on disk is drawn again in the open note.

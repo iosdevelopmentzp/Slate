@@ -71,12 +71,14 @@ extension RichTextController: NSTextViewDelegate, NSTextStorageDelegate, NSTextL
         }
         let attributes = paragraph.attributedString.attributes(at: 0, effectiveRange: nil)
         let decoration = ParagraphDecoration.of(attributes)
+        let quoteFrame = ParagraphDecoration.quoteFrame(of: attributes)
         let isHeading = BlockAttributes(attributes).kind.headingLevel != nil
-        guard decoration != .none || isHeading else {
+        guard decoration != .none || quoteFrame != .none || isHeading else {
             return NSTextLayoutFragment(textElement: textElement, range: textElement.elementRange)
         }
         let fragment = RichLayoutFragment(textElement: textElement, range: textElement.elementRange)
         fragment.decoration = decoration
+        fragment.quoteFrame = quoteFrame
         if isHeading {
             fragment.fold = foldMark(at: textLayoutManager.offset(from: textLayoutManager.documentRange.location, to: location))
         }

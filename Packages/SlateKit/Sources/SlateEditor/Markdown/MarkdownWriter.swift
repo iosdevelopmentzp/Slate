@@ -7,7 +7,7 @@ package enum MarkdownWriter {
         var previousList: ListFamily?
         for block in group(paragraphs(of: text)) {
             let output: String?
-            if let item = block.first(where: { $0.block.kind.isList }) {
+            if block.first?.block.isInQuote == false, let item = block.first(where: { $0.block.kind.isList }) {
                 let family = ListFamily.family(of: item.block.kind)
                 let alternate = previousList.map { $0.kind == family && $0.alternate == false } ?? false
                 output = ListWriter.write(block, alternate: alternate)
@@ -59,22 +59,25 @@ package enum MarkdownWriter {
     }
 
     private static func sameListFamily(_ group: [WriterParagraph], _ next: WriterParagraph) -> Bool {
-        guard next.block.kind.isList, next.block.indent == 0, let first = group.first, first.block.kind.isList else { return true }
+        guard next.block.kind.isList, next.block.indent == 0, let first = group.first, first.block.kind.isList, first.block.isQuoted == false else { return true }
         return ListFamily.family(of: first.block.kind) == ListFamily.family(of: next.block.kind)
     }
 
     private static func belongTogether(_ previous: BlockAttributes, _ next: BlockAttributes) -> Bool {
-        if previous.continuesList, next.continuesList { return previous.group == next.group || next.indent > 0 }
-        return previous.kind == .quote && next.kind == .quote && previous.group == next.group
+        if previous.continuesList, next.continuesList, previous.isQuoted == next.isQuoted { return previous.group == next.group || next.indent > 0 }
+        return previous.isInQuote && next.isInQuote && previous.group == next.group
     }
 
     private static func render(_ group: [WriterParagraph]) -> String? {
         guard let first = group.first else { return nil }
+        if first.block.isInQuote {
+            if let callout = first.block.callout { return calloutText(callout, group) }
+            return quoteText(group)
+        }
         switch first.block.kind {
         case .bullet, .numbered, .checklist:
             return ListWriter.write(group, alternate: false)
         case .quote:
-            if let callout = first.block.callout { return calloutText(callout, group) }
             return quoteText(group)
         case .title:
             return heading(1, first.text)
@@ -98,7 +101,32 @@ package enum MarkdownWriter {
     }
 
     private static func quoteText(_ group: [WriterParagraph]) -> String {
-        group.map { InlineWriter.lines(of: $0.text).map { $0.isEmpty ? ">" : "> " + $0 }.joined(separator: "\n") }.joined(separator: "\n>\n")
+        var parts: [[String]] = []
+        var items: [WriterParagraph] = []
+        for paragraph in group {
+            if paragraph.block.continuesList {
+                if startsOtherList(paragraph, after: items) {
+                    parts.append(ListWriter.write(items, alternate: false).components(separatedBy: "\n"))
+                    items = []
+                }
+                items.append(paragraph)
+                continue
+            }
+            if items.isEmpty == false {
+                parts.append(ListWriter.write(items, alternate: false).components(separatedBy: "\n"))
+                items = []
+            }
+            parts.append(InlineWriter.lines(of: paragraph.text))
+        }
+        if items.isEmpty == false {
+            parts.append(ListWriter.write(items, alternate: false).components(separatedBy: "\n"))
+        }
+        return parts.map { $0.map { $0.isEmpty ? ">" : "> " + $0 }.joined(separator: "\n") }.joined(separator: "\n>\n")
+    }
+
+    private static func startsOtherList(_ paragraph: WriterParagraph, after items: [WriterParagraph]) -> Bool {
+        guard paragraph.block.kind.isList, paragraph.block.indent == 0, let first = items.first else { return false }
+        return ListFamily.family(of: first.block.kind) != ListFamily.family(of: paragraph.block.kind)
     }
 
     private static func calloutText(_ callout: String, _ group: [WriterParagraph]) -> String {

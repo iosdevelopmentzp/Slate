@@ -7,6 +7,7 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
     }
 
     var decoration: ParagraphDecoration = .none
+    var quoteFrame: ParagraphDecoration = .none
     var fold: Fold?
     var colors: EditorColors = .system
     var fontSize: CGFloat = 15
@@ -32,6 +33,14 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
         case .bullet, .number, .checkbox:
             bounds = bounds.union(markerRect.insetBy(dx: -2, dy: -2))
         case .none:
+            break
+        }
+        switch quoteFrame {
+        case .quote:
+            bounds = bounds.union(quoteRect)
+        case .callout:
+            bounds = bounds.union(calloutRect)
+        default:
             break
         }
         if fold != nil {
@@ -166,11 +175,17 @@ nonisolated final class RichLayoutFragment: NSTextLayoutFragment {
     }
 
     private func drawBackground(in context: CGContext) {
-        switch decoration {
-        case .block(let raw):
+        if case .block(let raw) = decoration {
             context.addPath(CGPath(roundedRect: blockRect, cornerWidth: 8, cornerHeight: 8, transform: nil))
             context.setFillColor((raw ? colors.rawBackground : colors.codeBackground).cgColor)
             context.fillPath()
+        }
+        drawQuoteFrame(decoration, in: context)
+        drawQuoteFrame(quoteFrame, in: context)
+    }
+
+    private func drawQuoteFrame(_ frame: ParagraphDecoration, in context: CGContext) {
+        switch frame {
         case .quote:
             context.addPath(CGPath(roundedRect: quoteRect, cornerWidth: 1.5, cornerHeight: 1.5, transform: nil))
             context.setFillColor(colors.quoteBar.cgColor)

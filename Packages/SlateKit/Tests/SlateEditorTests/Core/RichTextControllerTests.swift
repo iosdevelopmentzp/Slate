@@ -131,6 +131,17 @@ import Testing
         #expect(harness.markdown == "1. a\n2. new\n3. b\n")
     }
 
+    @Test func aListThatStartsAtFiveCountsOnFromFive() {
+        let harness = EditorHarness(markdown: "5. a\n6. b\n")
+        harness.caret(after: "a")
+
+        harness.type("\nnew")
+
+        let numbers = [0, 2, 6].map { harness.controller.storage.attribute(.slateListNumber, at: $0, effectiveRange: nil) as? Int }
+        #expect(numbers == [5, 6, 7])
+        #expect(harness.markdown == "5. a\n6. new\n7. b\n")
+    }
+
     @Test func monospacedKeepsLinesInOneBlockAndAnEmptyLineLeavesIt() {
         let harness = EditorHarness(markdown: "code\n")
         harness.select(4)

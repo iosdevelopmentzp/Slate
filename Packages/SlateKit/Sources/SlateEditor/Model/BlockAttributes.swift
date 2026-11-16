@@ -11,8 +11,10 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
     package var table: TableBlock?
     package var callout: String?
     package var isCalloutHeader: Bool
+    package var isQuoted: Bool
+    package var firstNumber: Int
 
-    package init(kind: BlockKind = .body, indent: Int = 0, isDone: Bool = false, language: String? = nil, imagePath: String? = nil, imageAlt: String? = nil, group: Int = 0, table: TableBlock? = nil, callout: String? = nil, isCalloutHeader: Bool = false) {
+    package init(kind: BlockKind = .body, indent: Int = 0, isDone: Bool = false, language: String? = nil, imagePath: String? = nil, imageAlt: String? = nil, group: Int = 0, table: TableBlock? = nil, callout: String? = nil, isCalloutHeader: Bool = false, isQuoted: Bool = false, firstNumber: Int = 1) {
         self.kind = kind
         self.indent = indent
         self.isDone = isDone
@@ -23,6 +25,8 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
         self.table = table
         self.callout = callout
         self.isCalloutHeader = isCalloutHeader
+        self.isQuoted = isQuoted
+        self.firstNumber = firstNumber
     }
 
     package init(_ attributes: [NSAttributedString.Key: Any]) {
@@ -35,8 +39,10 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
         imageAlt = attributes[.slateImageAlt] as? String
         group = attributes[.slateGroup] as? Int ?? 0
         table = attributes[.slateTable] as? TableBlock
-        callout = kind == .quote ? attributes[.slateCallout] as? String : nil
-        isCalloutHeader = callout != nil && attributes[.slateCalloutHeader] as? Bool == true
+        isQuoted = (kind.isList || kind == .image && indent > 0) && attributes[.slateQuoted] as? Bool == true
+        callout = kind == .quote || isQuoted ? attributes[.slateCallout] as? String : nil
+        isCalloutHeader = kind == .quote && callout != nil && attributes[.slateCalloutHeader] as? Bool == true
+        firstNumber = kind == .numbered ? attributes[.slateFirstNumber] as? Int ?? 1 : 1
     }
 
     package var attributes: [NSAttributedString.Key: Any] {
@@ -48,9 +54,11 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
         if kind == .image, let imageAlt, imageAlt.isEmpty == false { result[.slateImageAlt] = imageAlt }
         if kind == .quote || kind.isList || isListImage, group != 0 { result[.slateGroup] = group }
         if kind == .table, let table { result[.slateTable] = table }
-        if kind == .quote, let callout {
+        if isQuoted, continuesList { result[.slateQuoted] = true }
+        if kind == .numbered, firstNumber != 1 { result[.slateFirstNumber] = firstNumber }
+        if isInQuote, let callout {
             result[.slateCallout] = callout
-            if isCalloutHeader { result[.slateCalloutHeader] = true }
+            if kind == .quote, isCalloutHeader { result[.slateCalloutHeader] = true }
         }
         return result
     }
@@ -63,16 +71,20 @@ nonisolated package struct BlockAttributes: Hashable, Sendable {
         kind.isList || isListImage
     }
 
+    package var isInQuote: Bool {
+        kind == .quote || isQuoted && continuesList
+    }
+
     package func with(kind: BlockKind) -> BlockAttributes {
         var copy = self
         copy.kind = kind
         if kind.isList == false { copy.indent = 0 }
         if kind != .checklist { copy.isDone = false }
         if kind != .table { copy.table = nil }
-        if kind != .quote {
-            copy.callout = nil
-            copy.isCalloutHeader = false
-        }
+        if kind.isList == false { copy.isQuoted = false }
+        if kind != .numbered { copy.firstNumber = 1 }
+        if kind != .quote { copy.isCalloutHeader = false }
+        if copy.isInQuote == false { copy.callout = nil }
         return copy
     }
 

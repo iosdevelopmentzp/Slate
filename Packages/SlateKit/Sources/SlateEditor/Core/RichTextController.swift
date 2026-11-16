@@ -354,7 +354,7 @@ final class RichTextController: NSObject {
                 counters = Array(counters.prefix(level + 1))
                 while counters.count < level + 1 { counters.append(nil) }
                 if block.kind == .numbered {
-                    let next = (counters[level] ?? 0) + 1
+                    let next = counters[level].map { $0 + 1 } ?? (level == 0 ? block.firstNumber : 1)
                     counters[level] = next
                     number = next
                 } else {

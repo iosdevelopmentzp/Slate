@@ -15,7 +15,6 @@ import Testing
         Document(parsing: markdown, options: [.disableSmartOpts]).debugDescription()
             .split(separator: "\n")
             .map { line in line.replacingOccurrences(of: #" @\S+"#, with: "", options: .regularExpression) }
-            .map { $0.replacingOccurrences(of: #"OrderedList start: \d+"#, with: "OrderedList", options: .regularExpression) }
             .joined(separator: "\n")
     }
 

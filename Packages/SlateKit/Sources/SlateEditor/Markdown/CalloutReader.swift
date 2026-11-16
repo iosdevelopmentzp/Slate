@@ -4,7 +4,7 @@ enum CalloutReader {
     private static let marker = try! NSRegularExpression(pattern: #"^\[!([A-Za-z][A-Za-z0-9_-]*)\]([+-]?)"#)
 
     static func read(_ blocks: [ReadBlock]) -> [ReadBlock] {
-        guard let first = blocks.first, let found = marker.firstMatch(in: first.text.string, range: NSRange(location: 0, length: first.text.length)) else { return blocks }
+        guard let first = blocks.first, first.attributes.kind == .quote, let found = marker.firstMatch(in: first.text.string, range: NSRange(location: 0, length: first.text.length)) else { return blocks }
         let source = first.text.string as NSString
         let name = source.substring(with: found.range(at: 1)) + source.substring(with: found.range(at: 2))
         var start = NSMaxRange(found.range)
@@ -22,7 +22,12 @@ enum CalloutReader {
             let bodyStart = NSMaxRange(lineBreak)
             result.append(ReadBlock(text: first.text.attributedSubstring(from: NSRange(location: bodyStart, length: source.length - bodyStart)), attributes: body))
         }
-        result += blocks.dropFirst().map { ReadBlock(text: $0.text, attributes: body) }
+        result += blocks.dropFirst().map { block in
+            guard block.attributes.isQuoted else { return ReadBlock(text: block.text, attributes: body) }
+            var attributes = block.attributes
+            attributes.callout = name
+            return ReadBlock(text: block.text, attributes: attributes)
+        }
         return result
     }
 }

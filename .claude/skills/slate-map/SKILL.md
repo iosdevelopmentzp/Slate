@@ -35,6 +35,7 @@ All code is in `Packages/SlateKit/Sources/`. Tests mirror it in `Packages/SlateK
 | Copy for Jira and Slack (Markdown to wiki markup and Slack text) | `SlateEditor/Markdown/Export/` |
 | Mermaid diagrams in code blocks | `SlateEditor/Diagrams/`, `Core/RichTextController+Diagrams.swift`, ADR 0024 |
 | Look of blocks (quote bar, code, lists) | `SlateEditor/Styling/` (`RichTextStyler`, `RichLayoutFragment`) |
+| Lists inside quotes, first number of a list | `BlockAttributes.isQuoted`, `firstNumber`; `MarkdownReader` (`quotedItem`), `MarkdownWriter.quoteText`, ADR 0025 |
 | Attributes of the rich text | `SlateEditor/Model/` (`RichText`, `BlockKind`, `InlineStyle`) |
 | Paste, copy, the pasteboard | `SlateEditor/Paste/` (the only editor folder that may use `NSPasteboard`) |
 | Tables | `SlateEditor/Tables/` |

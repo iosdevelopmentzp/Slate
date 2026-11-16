@@ -17,6 +17,38 @@ import Testing
         return kinds
     }
 
+    @Test func listsInsideAQuoteAreQuotedListItems() {
+        let text = MarkdownReader.read("> **Known**\n> 1. Row 3\n> 2. Row 4\n>\n> - Q1\n\n- outside")
+        let blocks = MarkdownWriter.paragraphs(of: text).map(\.block)
+
+        #expect(Self.kinds(text) == [.quote, .numbered, .numbered, .bullet, .bullet])
+        #expect(blocks.map(\.isQuoted) == [false, true, true, true, false])
+        #expect(Set(blocks.prefix(4).map(\.group)).count == 1)
+        #expect(MarkdownWriter.write(text) == "> **Known**\n>\n> 1. Row 3\n> 2. Row 4\n>\n> - Q1\n\n- outside\n")
+    }
+
+    @Test func aListInsideACalloutKeepsTheCallout() {
+        let text = MarkdownReader.read("> [!WARNING] Check\n> - one\n> - two")
+        let blocks = MarkdownWriter.paragraphs(of: text).map(\.block)
+
+        #expect(Self.kinds(text) == [.quote, .bullet, .bullet])
+        #expect(blocks.map(\.callout) == ["WARNING", "WARNING", "WARNING"])
+        #expect(MarkdownWriter.write(text) == "> [!WARNING] Check\n> - one\n> - two\n")
+    }
+
+    @Test func aNumberedListKeepsItsFirstNumber() {
+        let markdown = "> **Fix**\n>\n> 5. Row 9\n> 6. Row 10\n\n3. Three\n4. Four\n   1. nested\n"
+        let text = MarkdownReader.read(markdown)
+
+        #expect(MarkdownWriter.write(text) == markdown)
+    }
+
+    @Test func aCodeBlockInsideAQuoteStaysRaw() {
+        let text = MarkdownReader.read("> text\n> ```\n> code\n> ```")
+
+        #expect(Self.kinds(text) == [.raw])
+    }
+
     @Test func anImageOnItsOwnLineInsideAParagraphIsAnImage() {
         let text = MarkdownReader.read("**Q3.** Question\nAnswer:\n![Q2 sheet](../_attachments/a.png)\nAfter")
 

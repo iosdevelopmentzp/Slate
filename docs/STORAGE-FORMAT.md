@@ -490,10 +490,10 @@ The rich text editor reads any Markdown but writes only this subset. A construct
 | Subheading | `### text` |
 | Body paragraph | the text; paragraphs separated by one blank line |
 | Code block | a fenced block: ```` ``` ```` (the original language word kept when the file had one). With the language `mermaid` the editor draws the diagram above the code (ADR 0024); the file does not change |
-| Quote | `> ` before each line |
-| Callout (ADR 0022) | `> [!KIND]` with an optional title after it, then the text on the next `> ` lines, as in GitHub and Obsidian. The kind word, its case and a `+` or `-` after the bracket are kept. `> [!QUESTION]` is an open question for agents; an answered one is `> [!ANSWER]` |
+| Quote | `> ` before each line. A quote holds paragraphs and lists (ADR 0025): a `>` line between a paragraph and a list, list items as outside a quote; `- [ ] item` inside a quote is a checklist item. Other blocks inside a quote keep it a raw block |
+| Callout (ADR 0022) | `> [!KIND]` with an optional title after it, then the text on the next `> ` lines, as in GitHub and Obsidian. The kind word, its case and a `+` or `-` after the bracket are kept. `> [!QUESTION]` is an open question for agents; an answered one is `> [!ANSWER]`. The body may hold lists, as a quote |
 | Bulleted list, levels 0 to 2 | `- item`, nested with two spaces per level |
-| Numbered list, levels 0 to 2 | `1. item`, renumbered on save |
+| Numbered list, levels 0 to 2 | `1. item`, renumbered on save from the number of its first item (ADR 0025); a nested list starts at 1 |
 | Checklist | `- [ ] item`, `- [x] item` |
 | Image block | `![](../_attachments/<file>)` on its own line, alt text kept when present. A `\|<width>` or `\|<width>x<height>` at the end of the alt text is the shown width in points, as in Obsidian: `![photo\|300](…)` (ADR 0013). Slate writes `\|<width>` only when the size is changed in Slate; in a table cell the pipe is `\|` |
 | Image under a list item (ADR 0018) | a blank line, the image line indented to the start of the item text, a blank line; the list goes on after it |

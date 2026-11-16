@@ -21,17 +21,21 @@ extension RichTextController {
     }
 
     private func openLineAbove() -> Bool {
-        guard Self.closedBlocks.contains(block(at: 0).kind) else { return false }
+        guard isClosed(block(at: 0)) else { return false }
         replace(NSRange(location: 0, length: 0), with: styled("\n", block: BlockAttributes()), selection: NSRange(location: 0, length: 0))
         return true
     }
 
     private func openLineBelow() -> Bool {
         let last = block(at: storage.length - 1)
-        guard Self.closedBlocks.contains(last.kind), string.character(at: storage.length - 1) != 0x0A else { return false }
+        guard isClosed(last), string.character(at: storage.length - 1) != 0x0A else { return false }
         replace(NSRange(location: storage.length, length: 0), with: styled("\n", block: last), selection: NSRange(location: storage.length + 1, length: 0))
         setTailBlock(BlockAttributes())
         return true
+    }
+
+    private func isClosed(_ block: BlockAttributes) -> Bool {
+        Self.closedBlocks.contains(block.kind) || block.isInQuote
     }
 
     private func isOnFirstLine(_ location: Int) -> Bool {
